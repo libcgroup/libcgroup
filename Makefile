@@ -14,12 +14,13 @@ YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
 CFLAGS=-g -O2 -Wextra $(DEBUG)  $(INC) 
-LIBS= 
+LIBS= -lcg
+LDFLAGS= -L .
 
-all: cgconfig
+all: cgconfig libcg.so
 
-cgconfig: config.c y.tab.c lex.yy.c libcg.h file-ops.c
-	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LIBS)
+cgconfig: libcg.so config.c y.tab.c lex.yy.c libcg.h file-ops.c
+	$(CXX) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	byacc -v -d parse.y
@@ -27,5 +28,8 @@ y.tab.c: parse.y lex.yy.c
 lex.yy.c: lex.l
 	flex lex.l
 
+libcg.so: api.c libcg.h
+	$(CXX) $(CFLAGS) -shared -fPIC -o $@ api.c
+
 clean:
-	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig
+	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcg.so

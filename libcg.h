@@ -16,11 +16,21 @@
 #ifndef _LIBCG_H
 #define _LIBCG_H
 
+#include <features.h>
+
+__BEGIN_DECLS
+
 #include <grp.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
+#ifndef __USE_GNU
 #define __USE_GNU
+#endif
 
 /* Maximum number of mount points/controllers */
 #define MAX_MNT_ELEMENTS	8
@@ -92,6 +102,16 @@ enum cg_msg_type {
 	CG_MSG_DONE,
 };
 
+enum cg_errors {
+	ECGROUPNOTCOMPILED=50000,
+	ECGROUPNOTMOUNTED,
+	ECGROUPNOTEXIST,
+	ECGROUPNOTCREATED,
+	ECGROUPSUBSYSNOTMOUNTED,
+	ECGROUPNOTOWNER,
+	ECGROUPNOTALLOWED, // This is the stock error. Default error.
+};
+
 #define CG_MAX_MSG_SIZE		256
 #define CG_SERVER_MSG_PATH	"/tmp/control_group"
 #define CG_BACKLOG		5
@@ -118,4 +138,19 @@ int cg_mount_controllers(void);
 int cg_unmount_controllers(void);
 int cg_load_config(const char *pathname);
 void cg_unload_current_config(void);
+
+/* Functions and structures that can be used by the application*/
+struct control_value {
+	char name[FILENAME_MAX];
+	char *value;
+};
+
+int cg_init(void);
+int cg_attach_task(char *cgroup);
+int cg_modify_cgroup(char *cgroup, struct control_value *values[], int n);
+int cg_create_cgroup(char *cgroup, struct control_value *values[], int n);
+int cg_delete_cgroup(char *cgroup);
+
+__END_DECLS
+
 #endif /* _LIBCG_H  */
