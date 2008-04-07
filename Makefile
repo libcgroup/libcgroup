@@ -20,7 +20,7 @@ LDFLAGS= -L .
 all: cgconfig libcg.so
 
 cgconfig: libcg.so config.c y.tab.c lex.yy.c libcg.h file-ops.c
-	$(CXX) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	byacc -v -d parse.y

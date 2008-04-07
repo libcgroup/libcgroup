@@ -21,6 +21,7 @@
 __BEGIN_DECLS
 
 #include <grp.h>
+#include <linux/types.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -139,17 +140,31 @@ int cg_unmount_controllers(void);
 int cg_load_config(const char *pathname);
 void cg_unload_current_config(void);
 
+#define CG_NV_MAX 100
+#define CG_CONTROLLER_MAX 100
 /* Functions and structures that can be used by the application*/
 struct control_value {
 	char name[FILENAME_MAX];
 	char *value;
 };
 
+struct cgroup{
+	char *name;
+	struct {
+		char *name;
+		struct control_value *values[CG_NV_MAX];
+	} *controller[CG_CONTROLLER_MAX];
+	uid_t tasks_uid;
+	gid_t tasks_gid;
+	uid_t control_uid;
+	gid_t control_gid;
+};
+
 int cg_init(void);
-int cg_attach_task(char *cgroup);
-int cg_modify_cgroup(char *cgroup, struct control_value *values[], int n);
-int cg_create_cgroup(char *cgroup, struct control_value *values[], int n);
-int cg_delete_cgroup(char *cgroup);
+int cg_attach_task(struct cgroup *cgroup);
+int cg_modify_cgroup(struct cgroup *cgroup);
+int cg_create_cgroup(struct cgroup *cgroup);
+int cg_delete_cgroup(struct cgroup *cgroup);
 
 __END_DECLS
 

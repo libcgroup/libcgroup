@@ -75,21 +75,33 @@ static inline pid_t cg_gettid()
 	return syscall(__NR_gettid);
 }
 
-/*
+static char* cg_build_path(char *name, char *path)
+{
+	strcpy(path, MOUNT_POINT);
+	strcat(path, name);
+	strcat(path, "/");
+	return path;
+}
+
+/** cg_attach_task_pid is used to assign tasks to a cgroup.
+ *  struct cgroup *cgroup: The cgroup to assign the thread to.
+ *  pid_t tid: The thread to be assigned to the cgroup.
+ *
+ *  returns 0 on success.
+ *  returns ECGROUPNOTOWNER if the caller does not have access to the cgroup.
+ *  returns ECGROUPNOTALLOWED for other causes of failure.
  */
-int cg_attach_task_pid(char *cgroup, pid_t tid)
+int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
 	FILE *tasks;
 
-	if (cgroup == NULL) {
-		cgroup = (char *) malloc(sizeof(char));
-		cgroup = "\0";
+	if (cgroup == NULL)
+		strcpy(path, MOUNT_POINT);
+	else {
+		cg_build_path(cgroup->name, path);
 	}
 
-	strcpy(path, MOUNT_POINT);
-	strcat(path, "/");
-	strcat(path, cgroup);
 	strcat(path, "/tasks");
 
 	tasks = fopen(path, "w");
@@ -107,12 +119,12 @@ int cg_attach_task_pid(char *cgroup, pid_t tid)
 
 }
 
-/*
- * Used to attach the task to a control group.
+/** cg_attach_task is used to attach the current thread to a cgroup.
+ *  struct cgroup *cgroup: The cgroup to assign the current thread to.
  *
- * WARNING: Will change to use struct cgroup when it is implemented.
+ *  See cg_attach_task_pid for return values.
  */
-int cg_attach_task(char *cgroup)
+int cg_attach_task(struct cgroup *cgroup)
 {
 	pid_t tid = cg_gettid();
 	int error;
@@ -192,46 +204,37 @@ static int cg_set_control_value(char *path, char *val)
 	return 0;
 }
 
-/*
- * WARNING: This API is not final. It WILL change format to use
- * struct cgroup. This API will then become internal and be called something
- * else.
+/** cg_modify_cgroup modifies the cgroup control files.
+ * struct cgroup *cgroup: The name will be the cgroup to be modified.
+ * The values will be the values to be modified, those not mentioned
+ * in the structure will not be modified.
  *
- * I am still not happy with how the data structure is looking at the moment,
- * plus there are a couple of additional details to be worked out. Please
- * do not rely on this API.
+ * The uids cannot be modified yet.
  *
- * Be prepared to change the implementation later once it shifts to
- * struct cgroup in the real alpha release.
+ * returns 0 on success.
  *
- * The final version is expected to be
- *
- * int modify_cgroup(struct cgroup *original, struct cgroup *final);
- *
- * where original is the cgroup which is to be modified and final is how it
- * should look.
- *
- * Also this version is still at one level since we do not have
- * multi-hierarchy support in kernel. The real alpha release should have this
- * issue sorted out as well.
  */
 
-int cg_modify_cgroup(char *cgroup, struct control_value *values[], int n)
+int cg_modify_cgroup(struct cgroup *cgroup)
 {
 	char path[FILENAME_MAX], base[FILENAME_MAX];
 	int i;
 	int error;
 
-	strcpy(base, MOUNT_POINT);
-	strcat(base, "/");
-	strcat(base, cgroup);
-	strcat(base, "/");
+	cg_build_path(cgroup->name, base);
 
-	for (i = 0; i < n; i++, strcpy(path, base)) {
-		strcat(path, values[i]->name);
-		error = cg_set_control_value(path, values[i]->value);
-		if (error)
-			goto err;
+	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
+						i++, strcpy(path, base)) {
+		int j;
+		for(j = 0; j < CG_NV_MAX &&
+			cgroup->controller[i]->values[j];
+			j++, strcpy(path, base)) {
+			strcat(path, cgroup->controller[i]->values[j]->name);
+			error = cg_set_control_value(path,
+				cgroup->controller[i]->values[j]->value);
+			if (error)
+				goto err;
+		}
 	}
 	return 0;
 err:
@@ -261,7 +264,7 @@ err:
  * multi-hierarchy support in kernel. The real alpha release should have this
  * issue sorted out as well.
  */
-int cg_create_cgroup(char *cgroup, struct control_value *values[], int n)
+int cg_create_cgroup(struct cgroup *cgroup)
 {
 	char path[FILENAME_MAX], base[FILENAME_MAX];
 	int i;
@@ -270,46 +273,37 @@ int cg_create_cgroup(char *cgroup, struct control_value *values[], int n)
 	if (MOUNT_POINT == NULL)
 		return ECGROUPNOTMOUNTED;
 
-	strcpy(path, MOUNT_POINT);
-	strcat(path, "/");
-	strcat(path, cgroup);
+	cg_build_path(cgroup->name, path);
 
 	error = cg_create_control_group(path);
-	strcat(path, "/");
+
 	strcpy(base, path);
 
-	for (i = 0; i < n; i++, strcpy(path, base)) {
-		strcat(path, values[i]->name);
-		error = cg_set_control_value(path, values[i]->value);
-		if (!error)
-			return error;
+	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
+						i++, strcpy(path, base)) {
+		int j;
+		for(j = 0; j < CG_NV_MAX && cgroup->controller[i]->values[j];
+						j++, strcpy(path, base)) {
+			strcat(path, cgroup->controller[i]->values[j]->name);
+			error = cg_set_control_value(path,
+					cgroup->controller[i]->values[j]->value);
+			chown(path, cgroup->control_uid, cgroup->control_gid);
+			if (!error)
+				return error;
+		}
 	}
+	strcpy(path, base);
+	strcat(path, "tasks");
+	chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
 	return error;
 }
 
-/*
- * WARNING: This API is not final. It WILL change format to use
- * struct cgroup. This API will then become internal and be called something
- * else.
+/** cg_delete cgroup deletes a control group.
+ *  struct cgroup *cgroup takes the group which is to be deleted.
  *
- * I am still not happy with how the data structure is looking at the moment,
- * plus there are a couple of additional details to be worked out. Please
- * do not rely on this API.
- *
- * Be prepared to change the implementation later once it shifts to
- * struct cgroup in the real alpha release.
- *
- * The final version is expected to be
- *
- * int delete_cgroup(struct cgroup *group);
- *
- * where group is the group to be deleted.
- *
- * Also this version is still at one level since we do not have
- * multi-hierarchy support in kernel. The real alpha release should have this
- * issue sorted out as well.
+ *  returns 0 on success.
  */
-int cg_delete_cgroup(char *cgroup)
+int cg_delete_cgroup(struct cgroup *cgroup)
 {
 	FILE *delete_tasks, *base_tasks;
 	int tids;
@@ -321,10 +315,8 @@ int cg_delete_cgroup(char *cgroup)
 
 	base_tasks = fopen(path, "w");
 
-	strcpy(path, MOUNT_POINT);
-	strcat(path, "/");
-	strcat(path, cgroup);
-	strcat(path,"/tasks");
+	cg_build_path(cgroup->name, path);
+	strcat(path,"tasks");
 
 	delete_tasks = fopen(path, "r");
 
@@ -333,9 +325,7 @@ int cg_delete_cgroup(char *cgroup)
 		fprintf(base_tasks, "%d", tids);
 	}
 
-	strcpy(path, MOUNT_POINT);
-	strcat(path, "/");
-	strcat(path, cgroup);
+	cg_build_path(cgroup->name, path);
 
 	error = rmdir(path);
 
