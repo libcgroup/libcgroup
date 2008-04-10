@@ -48,6 +48,7 @@ int cg_init()
 			return ECGROUPNOTMOUNTED;
 	}
 	strcpy(MOUNT_POINT, ent->mnt_dir);
+	fclose(proc_mount);
 	return 0;
 }
 
@@ -67,6 +68,7 @@ static int cg_test_mounted_fs()
 		if (ent == NULL)
 			return 0;
 	}
+	fclose(proc_mount);
 	return 1;
 }
 
@@ -114,6 +116,7 @@ int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		}
 	}
 	fprintf(tasks, "%d", tid);
+	fclose(tasks);
 
 	return 0;
 
@@ -196,11 +199,13 @@ static int cg_set_control_value(char *path, char *val)
 				if (errno == ENOENT)
 					return ECGROUPSUBSYSNOTMOUNTED;
 			}
+			fclose(control_file);
 			return ECGROUPNOTALLOWED;
 		}
 	}
 
 	fprintf(control_file, "%s", val);
+	fclose(control_file);
 	return 0;
 }
 
@@ -242,27 +247,10 @@ err:
 
 }
 
-/*
- * WARNING: This API is not final. It WILL change format to use
- * struct cgroup. This API will then become internal and be called something
- * else.
+/** create_cgroup creates a new control group.
+ * struct cgroup *cgroup: The control group to be created
  *
- * I am still not happy with how the data structure is looking at the moment,
- * plus there are a couple of additional details to be worked out. Please
- * do not rely on this API.
- *
- * Be prepared to change the implementation later once it shifts to
- * struct cgroup in the real alpha release.
- *
- * The final version is expected to be
- *
- * int create_cgroup(struct cgroup *group);
- *
- * where group is the group to be created
- *
- * Also this version is still at one level since we do not have
- * multi-hierarchy support in kernel. The real alpha release should have this
- * issue sorted out as well.
+ * returns 0 on success.
  */
 int cg_create_cgroup(struct cgroup *cgroup)
 {
