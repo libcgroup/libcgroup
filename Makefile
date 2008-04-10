@@ -16,6 +16,7 @@ INC=-I.
 CFLAGS=-g -O2 -Wextra $(DEBUG)  $(INC) 
 LIBS= -lcg
 LDFLAGS= -L .
+INSTALLPREFIX=
 
 all: cgconfig libcg.so
 
@@ -30,6 +31,14 @@ lex.yy.c: lex.l
 
 libcg.so: api.c libcg.h
 	$(CXX) $(CFLAGS) -shared -fPIC -o $@ api.c
+
+install: libcg.so
+	\cp libcg.h $(INSTALLPREFIX)/usr/include
+	\cp libcg.so $(INSTALLPREFIX)/usr/lib
+
+uninstall: libcg.so
+	\rm $(INSTALLPREFIX)/usr/include/libcg.h
+	\rm $(INSTALLPREFIX)/usr/lib/libcg.so
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcg.so

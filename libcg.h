@@ -148,12 +148,14 @@ struct control_value {
 	char *value;
 };
 
-struct cgroup{
+struct controller {
 	char *name;
-	struct {
-		char *name;
-		struct control_value *values[CG_NV_MAX];
-	} *controller[CG_CONTROLLER_MAX];
+	struct control_value *values[CG_NV_MAX];
+};
+
+struct cgroup {
+	char *name;
+	struct controller *controller[CG_CONTROLLER_MAX];
 	uid_t tasks_uid;
 	gid_t tasks_gid;
 	uid_t control_uid;
