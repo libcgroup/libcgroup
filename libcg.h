@@ -38,14 +38,10 @@ __BEGIN_DECLS
 /* Estimated number of groups created */
 #define MAX_GROUP_ELEMENTS	128
 
-int verbose;
-
 #ifdef DEBUG
-#define dbg(x...)	if (verbose) {			\
-				printf(x);		\
-			}
+#define dbg(x...) printf(x)
 #else
-#define dbg(x...)	do {	} while(0)
+#define dbg(x...) do {} while(0)
 #endif
 
 /*
@@ -90,7 +86,6 @@ struct mount_table {
 /*
  * Maintain a list of all group names. These will be used during cleanup
  */
-/* XX: Why a recursive structure? */
 struct list_of_names {
 	char *name;
 	struct list_of_names *next;
@@ -110,7 +105,8 @@ enum cg_errors {
 	ECGROUPNOTCREATED,
 	ECGROUPSUBSYSNOTMOUNTED,
 	ECGROUPNOTOWNER,
-	ECGROUPNOTALLOWED, // This is the stock error. Default error.
+	ECGROUPMULTIMOUNTED,/* Controllers bound to different mount points */
+	ECGROUPNOTALLOWED,  /* This is the stock error. Default error. */
 };
 
 #define CG_MAX_MSG_SIZE		256
@@ -166,7 +162,7 @@ int cg_init(void);
 int cg_attach_task(struct cgroup *cgroup);
 int cg_modify_cgroup(struct cgroup *cgroup);
 int cg_create_cgroup(struct cgroup *cgroup);
-int cg_delete_cgroup(struct cgroup *cgroup);
+int cg_delete_cgroup(struct cgroup *cgroup, int force);
 
 __END_DECLS
 

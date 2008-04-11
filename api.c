@@ -2,6 +2,7 @@
  * Copyright IBM Corporation. 2007
  *
  * Author:	Dhaval Giani <dhaval@linux.vnet.ibm.com>
+ * Author:	Balbir Singh <balbir@linux.vnet.ibm.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2.1 of the GNU Lesser General Public License
@@ -31,25 +32,110 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <fts.h>
 
+/*
+ * Remember to bump this up for major API changes.
+ */
+const static char cg_version[] = "0.01";
+
+/*
+ * Only one mount point is currently supported. This will be enhanced to
+ * support several hierarchies in the future
+ */
 static char MOUNT_POINT[FILENAME_MAX];
 
+static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
+{
+	int ret = 1;
+	const char *filename = fts->fts_path;
+	dbg("seeing file %s\n", filename);
+	switch (ent->fts_info) {
+	case FTS_ERR:
+		errno = ent->fts_errno;
+		break;
+	case FTS_D:
+	case FTS_DC:
+	case FTS_NSOK:
+	case FTS_NS:
+	case FTS_DNR:
+	case FTS_DP:
+	case FTS_F:
+	case FTS_DEFAULT:
+		ret = chown(filename, owner, group);
+		break;
+	}
+	return ret;
+}
+
+/*
+ * TODO: Need to decide a better place to put this function.
+ */
+static int cg_chown_recursive(const char *path, uid_t owner, gid_t group)
+{
+	int ret = 1;
+	dbg("path is %s\n", path);
+	FTS *fts = fts_open((char **)&path, FTS_PHYSICAL | FTS_NOCHDIR |
+				FTS_NOSTAT, NULL);
+	while (1) {
+		FTSENT *ent;
+		ent = fts_read(fts);
+		if (!ent) {
+			dbg("fts_read failed\n");
+			break;
+		}
+		cg_chown_file(fts, ent, owner, group);
+	}
+	fts_close(fts);
+	return ret;
+}
+
+/**
+ * cg_init(), initializes the MOUNT_POINT.
+ * This code is not currently thread safe (hint: getmntent is not thread safe).
+ * This API is likely to change in the future to push state back to the caller
+ * to achieve thread safety. The code currently supports just one mount point.
+ * Complain if the cgroup filesystem controllers are bound to different mount
+ * points.
+ */
 int cg_init()
 {
 	FILE *proc_mount;
-	struct mntent *ent;
+	struct mntent *ent, *found_ent = NULL;
+	int found_mnt = 0;
+	int ret = 0;
 
 	proc_mount = fopen("/proc/mounts", "r");
-	ent = getmntent(proc_mount);
 
-	while (strcmp(ent->mnt_fsname,"cgroup") != 0) {
-		ent = getmntent(proc_mount);
-		if (ent == NULL)
-			return ECGROUPNOTMOUNTED;
+	while ((ent = getmntent(proc_mount)) != NULL) {
+		if (!strncmp(ent->mnt_fsname,"cgroup", strlen("cgroup"))) {
+			found_ent = ent;
+			found_mnt++;
+			dbg("Found cgroup option %s, count %d\n",
+				found_ent->mnt_opts, found_mnt);
+		}
 	}
-	strcpy(MOUNT_POINT, ent->mnt_dir);
+
+	/*
+	 * Currently we require that all controllers be bound together
+	 */
+	if (!found_mnt)
+		ret = ECGROUPNOTMOUNTED;
+	if (found_mnt > 1)
+		ret = ECGROUPMULTIMOUNTED;
+	else {
+		/*
+		 * NOTE: FILENAME_MAX ensures that we don't need to worry
+		 * about crossing MOUNT_POINT size. For the paranoid, yes
+		 * this is a potential security hole - Balbir
+		 * Dhaval - fix these things.
+		 */
+		strcpy(MOUNT_POINT, found_ent->mnt_dir);
+		strcat(MOUNT_POINT, "/");
+	}
+
 	fclose(proc_mount);
-	return 0;
+	return ret;
 }
 
 static int cg_test_mounted_fs()
@@ -148,8 +234,8 @@ static int cg_create_control_group(char *path)
 	int error;
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
-	error = mkdir(path, 0700);
-	if (!error) {
+	error = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	if (error) {
 		switch(errno) {
 		case EPERM:
 			return ECGROUPNOTOWNER;
@@ -202,6 +288,7 @@ static int cg_set_control_value(char *path, char *val)
 			fclose(control_file);
 			return ECGROUPNOTALLOWED;
 		}
+		return errno;
 	}
 
 	fprintf(control_file, "%s", val);
@@ -250,22 +337,27 @@ err:
 /** create_cgroup creates a new control group.
  * struct cgroup *cgroup: The control group to be created
  *
- * returns 0 on success.
+ * returns 0 on success. We recommend calling cg_delete_cgroup
+ * if this routine fails. That should do the cleanup operation.
  */
 int cg_create_cgroup(struct cgroup *cgroup)
 {
-	char path[FILENAME_MAX], base[FILENAME_MAX];
+	char *path, base[FILENAME_MAX];
 	int i;
 	int error;
 
-	if (MOUNT_POINT == NULL)
-		return ECGROUPNOTMOUNTED;
+	path = (char *)malloc(FILENAME_MAX);
+	if (!path)
+		return ENOMEM;
 
 	cg_build_path(cgroup->name, path);
-
 	error = cg_create_control_group(path);
+	if (error)
+		goto err;
 
 	strcpy(base, path);
+
+	cg_chown_recursive(path, cgroup->control_uid, cgroup->control_gid);
 
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
 						i++, strcpy(path, base)) {
@@ -274,15 +366,21 @@ int cg_create_cgroup(struct cgroup *cgroup)
 						j++, strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
 			error = cg_set_control_value(path,
-					cgroup->controller[i]->values[j]->value);
-			chown(path, cgroup->control_uid, cgroup->control_gid);
-			if (!error)
-				return error;
+				cgroup->controller[i]->values[j]->value);
+
+			/*
+ 			 * Should we undo, what we've done in the loops above?
+ 			 */
+			if (error)
+				goto err;
 		}
 	}
+
 	strcpy(path, base);
-	strcat(path, "tasks");
+	strcat(path, "/tasks");
 	chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+err:
+	free(path);
 	return error;
 }
 
@@ -291,22 +389,26 @@ int cg_create_cgroup(struct cgroup *cgroup)
  *
  *  returns 0 on success.
  */
-int cg_delete_cgroup(struct cgroup *cgroup)
+int cg_delete_cgroup(struct cgroup *cgroup, int force)
 {
 	FILE *delete_tasks, *base_tasks;
 	int tids;
 	char path[FILENAME_MAX];
-	int error;
+	int error = ECGROUPNOTALLOWED;
 
 	strcpy(path, MOUNT_POINT);
 	strcat(path,"/tasks");
 
 	base_tasks = fopen(path, "w");
+	if (!base_tasks)
+		goto base_open_err;
 
 	cg_build_path(cgroup->name, path);
-	strcat(path,"tasks");
+	strcat(path,"/tasks");
 
 	delete_tasks = fopen(path, "r");
+	if (!delete_tasks)
+		goto del_open_err;
 
 	while (!feof(delete_tasks)) {
 		fscanf(delete_tasks, "%d", &tids);
@@ -314,12 +416,15 @@ int cg_delete_cgroup(struct cgroup *cgroup)
 	}
 
 	cg_build_path(cgroup->name, path);
-
 	error = rmdir(path);
 
-	if (!error) {
-			return ECGROUPNOTALLOWED;
-		}
-
+	fclose(delete_tasks);
+del_open_err:
+	fclose(base_tasks);
+base_open_err:
+	if (force) {
+		cg_build_path(cgroup->name, path);
+		error = rmdir(path);
+	}
 	return error;
 }
