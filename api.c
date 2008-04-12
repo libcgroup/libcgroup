@@ -71,11 +71,11 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 /*
  * TODO: Need to decide a better place to put this function.
  */
-static int cg_chown_recursive(const char *path, uid_t owner, gid_t group)
+static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 {
 	int ret = 1;
-	dbg("path is %s\n", path);
-	FTS *fts = fts_open((char **)&path, FTS_PHYSICAL | FTS_NOCHDIR |
+	dbg("path is %s\n", *path);
+	FTS *fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
 		FTSENT *ent;
@@ -342,13 +342,15 @@ err:
  */
 int cg_create_cgroup(struct cgroup *cgroup)
 {
-	char *path, base[FILENAME_MAX];
+	char *fts_path[2], base[FILENAME_MAX], *path;
 	int i;
 	int error;
 
-	path = (char *)malloc(FILENAME_MAX);
-	if (!path)
+	fts_path[0] = (char *)malloc(FILENAME_MAX);
+	if (!fts_path[0])
 		return ENOMEM;
+	fts_path[1] = NULL;
+	path = fts_path[0];
 
 	cg_build_path(cgroup->name, path);
 	error = cg_create_control_group(path);
@@ -357,7 +359,7 @@ int cg_create_cgroup(struct cgroup *cgroup)
 
 	strcpy(base, path);
 
-	cg_chown_recursive(path, cgroup->control_uid, cgroup->control_gid);
+	cg_chown_recursive(fts_path, cgroup->control_uid, cgroup->control_gid);
 
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
 						i++, strcpy(path, base)) {
