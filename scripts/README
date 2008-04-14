@@ -1,0 +1,4 @@
+NOTE: These are temporary intermediate scripts, till libcg is up and running
+on its own. The current parser works, but has a lot of band-aid around it.
+We need a good cleanroom implementation of the parser. Doing so, would
+enable us to build a good daemon and a set of init scripts around it.
