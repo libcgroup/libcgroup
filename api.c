@@ -121,7 +121,7 @@ int cg_init()
 	 */
 	if (!found_mnt)
 		ret = ECGROUPNOTMOUNTED;
-	if (found_mnt > 1)
+	else if (found_mnt > 1)
 		ret = ECGROUPMULTIMOUNTED;
 	else {
 		/*
@@ -340,7 +340,7 @@ err:
  * returns 0 on success. We recommend calling cg_delete_cgroup
  * if this routine fails. That should do the cleanup operation.
  */
-int cg_create_cgroup(struct cgroup *cgroup)
+int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
 	char *fts_path[2], base[FILENAME_MAX], *path;
 	int i;
@@ -359,7 +359,12 @@ int cg_create_cgroup(struct cgroup *cgroup)
 
 	strcpy(base, path);
 
-	cg_chown_recursive(fts_path, cgroup->control_uid, cgroup->control_gid);
+	if (!ignore_ownership)
+		error = cg_chown_recursive(fts_path, cgroup->control_uid,
+						cgroup->control_gid);
+
+	if (error)
+		goto err;
 
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
 						i++, strcpy(path, base)) {
@@ -378,9 +383,11 @@ int cg_create_cgroup(struct cgroup *cgroup)
 		}
 	}
 
-	strcpy(path, base);
-	strcat(path, "/tasks");
-	chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+	if (!ignore_ownership) {
+		strcpy(path, base);
+		strcat(path, "/tasks");
+		chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+	}
 err:
 	free(path);
 	return error;
@@ -391,7 +398,7 @@ err:
  *
  *  returns 0 on success.
  */
-int cg_delete_cgroup(struct cgroup *cgroup, int force)
+int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
 	FILE *delete_tasks, *base_tasks;
 	int tids;
@@ -424,7 +431,7 @@ int cg_delete_cgroup(struct cgroup *cgroup, int force)
 del_open_err:
 	fclose(base_tasks);
 base_open_err:
-	if (force) {
+	if (ignore_migration) {
 		cg_build_path(cgroup->name, path);
 		error = rmdir(path);
 	}

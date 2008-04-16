@@ -161,8 +161,8 @@ struct cgroup {
 int cg_init(void);
 int cg_attach_task(struct cgroup *cgroup);
 int cg_modify_cgroup(struct cgroup *cgroup);
-int cg_create_cgroup(struct cgroup *cgroup);
-int cg_delete_cgroup(struct cgroup *cgroup, int force);
+int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
+int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
 
 __END_DECLS
 

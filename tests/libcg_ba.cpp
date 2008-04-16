@@ -98,7 +98,7 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 	ccg->control_uid = cuid;
 	ccg->control_gid = cgid;
 
-	ret = cg_create_cgroup(ccg);
+	ret = cg_create_cgroup(ccg, 1);
 	if (ret) {
 		cout << "cg create group failed " << errno << endl;
 		ret = cg_delete_cgroup(ccg, 1);
