@@ -55,6 +55,7 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 	gid_t tgid, cgid;
 	struct cgroup *ccg;
 	struct passwd *passwd;
+	struct group *grp;
 	int ret;
 
 	ccg = (struct cgroup *)malloc(sizeof(*ccg));
@@ -64,20 +65,20 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 		return NULL;
 	tuid = passwd->pw_uid;
 
-	passwd = getpwnam(task_gid.c_str());
-	if (!passwd)
+	grp = getgrnam(task_gid.c_str());
+	if (!grp)
 		return NULL;
-	tgid = passwd->pw_gid;
+	tgid = grp->gr_gid;
 
 	passwd = getpwnam(control_uid.c_str());
 	if (!passwd)
 		return NULL;
 	cuid = passwd->pw_uid;
 
-	passwd = getpwnam(control_gid.c_str());
-	if (!passwd)
+	grp = getgrnam(control_gid.c_str());
+	if (!grp)
 		return NULL;
-	cgid = passwd->pw_gid;
+	cgid = grp->gr_gid;
 
 	dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
 
