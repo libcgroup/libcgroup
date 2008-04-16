@@ -41,37 +41,40 @@ parse_controller_file() {
 		'mount')
 			;;
 		*)
-			echo "Creating class $name"
-			class=$name
-			mkdir -p $MOUNTPOINT/$class
-			cd $MOUNTPOINT/$class
-
-			if echo $opts | grep -q "="
+			if ! echo $name | grep -q ^#
 			then
-				for single_opt in $opts
-				do
-					cf=`echo $single_opt | cut -d '=' -f1`
-					co=`echo $single_opt | cut -d '=' -f2`
-					case $cf in
-					"tuid")
-						tuid=$co
-						;;
-					"cuid")
-						cuid=$co
-						;;
-					"tgid")
-						tgid=$co
-						;;
-					"cgid")
-						cgid=$co
-						;;
-					*)
-						echo -n $co > $cf
-						;;
-					esac
-				done
-				chown -R $cuid:$cgid $MOUNTPOINT/$class
-				chown -R $tuid:$tgid $MOUNTPOINT/$class/tasks
+				echo "Creating class $name"
+				class=$name
+				mkdir -p $MOUNTPOINT/$class
+				cd $MOUNTPOINT/$class
+
+				if echo $opts | grep -q "="
+				then
+					for single_opt in $opts
+					do
+						cf=`echo $single_opt | cut -d '=' -f1`
+						co=`echo $single_opt | cut -d '=' -f2`
+						case $cf in
+						"tuid")
+							tuid=$co
+							;;
+						"cuid")
+							cuid=$co
+							;;
+						"tgid")
+							tgid=$co
+							;;
+						"cgid")
+							cgid=$co
+							;;
+						*)
+							echo -n $co > $cf
+							;;
+						esac
+					done
+					chown -R $cuid:$cgid $MOUNTPOINT/$class
+					chown -R $tuid:$tgid $MOUNTPOINT/$class/tasks
+				fi
 			fi
 		esac
 	done < $file
@@ -196,7 +199,7 @@ start() {
 
 move_all_to_init_class() {
 	cd $MOUNTPOINT
-	cat /proc/mounts | grep -w $MOUNTPOINT
+	cat /proc/mounts | grep -wq $MOUNTPOINT
 	if [ $? -ne 0 ]
 	then
 		echo "resource control filesystem not mounted"
