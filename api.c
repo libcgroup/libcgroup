@@ -106,6 +106,9 @@ int cg_init()
 	int ret = 0;
 
 	proc_mount = fopen("/proc/mounts", "r");
+	if (proc_mount == NULL) {
+		return EIO;
+	}
 
 	while ((ent = getmntent(proc_mount)) != NULL) {
 		if (!strncmp(ent->mnt_fsname,"cgroup", strlen("cgroup"))) {
@@ -406,14 +409,14 @@ int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	int error = ECGROUPNOTALLOWED;
 
 	strcpy(path, MOUNT_POINT);
-	strcat(path,"/tasks");
+	strcat(path,"tasks");
 
 	base_tasks = fopen(path, "w");
 	if (!base_tasks)
 		goto base_open_err;
 
 	cg_build_path(cgroup->name, path);
-	strcat(path,"/tasks");
+	strcat(path,"tasks");
 
 	delete_tasks = fopen(path, "r");
 	if (!delete_tasks)
