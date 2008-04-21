@@ -47,7 +47,7 @@ static char MOUNT_POINT[FILENAME_MAX];
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
-	int ret = 1;
+	int ret = 0;
 	const char *filename = fts->fts_path;
 	dbg("seeing file %s\n", filename);
 	switch (ent->fts_info) {
@@ -73,7 +73,7 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
  */
 static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 {
-	int ret = 1;
+	int ret = 0;
 	dbg("path is %s\n", *path);
 	FTS *fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
@@ -84,7 +84,7 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 			dbg("fts_read failed\n");
 			break;
 		}
-		cg_chown_file(fts, ent, owner, group);
+		ret = cg_chown_file(fts, ent, owner, group);
 	}
 	fts_close(fts);
 	return ret;
