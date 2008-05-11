@@ -13,14 +13,15 @@
 YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
-CFLAGS=-g -O2 -Wextra $(DEBUG)  $(INC) 
+CFLAGS=-g -O2 -Wextra $(INC) 
 LIBS= -lcg
 LDFLAGS= -L .
+INSTALLPREFIX=
 
 all: cgconfig libcg.so
 
 cgconfig: libcg.so config.c y.tab.c lex.yy.c libcg.h file-ops.c
-	$(CXX) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	byacc -v -d parse.y
@@ -30,6 +31,14 @@ lex.yy.c: lex.l
 
 libcg.so: api.c libcg.h
 	$(CXX) $(CFLAGS) -shared -fPIC -o $@ api.c
+
+install: libcg.so
+	\cp libcg.h $(INSTALLPREFIX)/usr/include
+	\cp libcg.so $(INSTALLPREFIX)/usr/lib
+
+uninstall: libcg.so
+	\rm $(INSTALLPREFIX)/usr/include/libcg.h
+	\rm $(INSTALLPREFIX)/usr/lib/libcg.so
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcg.so

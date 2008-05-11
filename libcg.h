@@ -21,8 +21,10 @@
 __BEGIN_DECLS
 
 #include <grp.h>
+#include <linux/types.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -37,14 +39,10 @@ __BEGIN_DECLS
 /* Estimated number of groups created */
 #define MAX_GROUP_ELEMENTS	128
 
-int verbose;
-
 #ifdef DEBUG
-#define dbg(x...)	if (verbose) {			\
-				printf(x);		\
-			}
+#define dbg(x...) printf(x)
 #else
-#define dbg(x...)	do {	} while(0)
+#define dbg(x...) do {} while(0)
 #endif
 
 /*
@@ -89,7 +87,6 @@ struct mount_table {
 /*
  * Maintain a list of all group names. These will be used during cleanup
  */
-/* XX: Why a recursive structure? */
 struct list_of_names {
 	char *name;
 	struct list_of_names *next;
@@ -109,7 +106,8 @@ enum cg_errors {
 	ECGROUPNOTCREATED,
 	ECGROUPSUBSYSNOTMOUNTED,
 	ECGROUPNOTOWNER,
-	ECGROUPNOTALLOWED, // This is the stock error. Default error.
+	ECGROUPMULTIMOUNTED,/* Controllers bound to different mount points */
+	ECGROUPNOTALLOWED,  /* This is the stock error. Default error. */
 };
 
 #define CG_MAX_MSG_SIZE		256
@@ -139,17 +137,35 @@ int cg_unmount_controllers(void);
 int cg_load_config(const char *pathname);
 void cg_unload_current_config(void);
 
+#define CG_NV_MAX 100
+#define CG_CONTROLLER_MAX 100
+#define CG_VALUE_MAX 100
 /* Functions and structures that can be used by the application*/
 struct control_value {
 	char name[FILENAME_MAX];
-	char *value;
+	char value[CG_VALUE_MAX];
+};
+
+struct controller {
+	char name[FILENAME_MAX];
+	struct control_value *values[CG_NV_MAX];
+};
+
+struct cgroup {
+	char name[FILENAME_MAX];
+	struct controller *controller[CG_CONTROLLER_MAX];
+	uid_t tasks_uid;
+	gid_t tasks_gid;
+	uid_t control_uid;
+	gid_t control_gid;
 };
 
 int cg_init(void);
-int cg_attach_task(char *cgroup);
-int cg_modify_cgroup(char *cgroup, struct control_value *values[], int n);
-int cg_create_cgroup(char *cgroup, struct control_value *values[], int n);
-int cg_delete_cgroup(char *cgroup);
+int cg_attach_task(struct cgroup *cgroup);
+int cg_modify_cgroup(struct cgroup *cgroup);
+int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
+int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
+int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid);
 
 __END_DECLS
 

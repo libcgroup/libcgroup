@@ -1,0 +1,76 @@
+initscripts - Initialization scripts; they are used to initialize the workload
+management system. The script consists of two major components
+
+Configuration files
+-------------------
+
+The main configuraiton file /etc/wlm.conf. This file has a format
+
+mount <mountpoint>	<list of controllers>
+<controller>		<controller configuration file>
+
+A sample configuration file is included below
+
+#
+# controller    file
+#
+mount   /container      cpu
+cpu     /etc/wlm/cpu.conf
+
+NOTE: Any line beginning with '#' is ignored as comments. The sample
+configuration above, mounts the cpu controller at mount point /container.
+It then parses /etc/wlm/cpu.conf as the configuration file for the
+cpu controller.
+
+The controller configuration file is of the format
+
+<name of the class>	<options>
+
+In the case of the CPU controller a sample configuration would look
+like
+
+class1  cpu.shares=1024
+class2  cpu.shares=512
+
+The configuration below creates two classes class1 and class2 and
+assigns shares of 1024 to class1 and 512 to class1.
+
+The other options that can be specified are
+
+tuid = owner of the tasks file
+tgid = group permissions of the tasks file
+cuid = owner of the newly created node
+cgid = group permissions of the newly created node
+
+Example
+
+class1 cpu.shares = 1024 tuid=root tgid=root cuid=database cgid=database.
+
+By default all these files are owned by root. The flexibilty of specifying
+owners makes it easier for other applications to use resource management.
+
+Intialization script
+--------------------
+
+The initialization script is installed in /etc/init.d, it is called
+"wlm". Depending on the run-level, it is installed in the appropriate
+/etc/rc.d/rc<N>.d. The script comes with two options
+
+a. start
+
+start, starts the workload management, parses the configuration file.
+If required creates the mount point directory and then mounts the
+cgroup filesystem with the controllers specified.
+
+b. stop
+
+stops workload management, moves all tasks from various groups to
+the root class. It then removes all other classes and then unmounts
+the workload management system.
+
+Assumptions
+-----------
+
+1. The kernel is compiled in with the correct options to support
+    cgroups and the CPU controller.
+2. This version has been tested with 2.6.24-rc1 only.
