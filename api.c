@@ -361,16 +361,9 @@ int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 
 	strcpy(base, path);
 
-<<<<<<< .mine
 	if (!ignore_ownership)
 		cg_chown_recursive(fts_path, cgroup->control_uid,
 					cgroup->control_gid);
-=======
-	if (!ignore_ownership)
-		error = cg_chown_recursive(fts_path, cgroup->control_uid,
-						cgroup->control_gid);
->>>>>>> .r18
-
 	if (error)
 		goto err;
 
@@ -406,11 +399,7 @@ err:
  *
  *  returns 0 on success.
  */
-<<<<<<< .mine
-int cg_delete_cgroup(struct cgroup *cgroup, int ignore_tasks)
-=======
 int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
->>>>>>> .r18
 {
 	FILE *delete_tasks, *base_tasks;
 	int tids;
@@ -443,11 +432,7 @@ int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 del_open_err:
 	fclose(base_tasks);
 base_open_err:
-<<<<<<< .mine
-	if (ignore_tasks) {
-=======
 	if (ignore_migration) {
->>>>>>> .r18
 		cg_build_path(cgroup->name, path);
 		error = rmdir(path);
 	}
