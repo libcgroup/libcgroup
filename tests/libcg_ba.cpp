@@ -82,17 +82,14 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 
 	dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
 
-	ccg->name = (char *)malloc(strlen(name.c_str()) + 1);
 	strcpy(ccg->name, name.c_str());
 	ccg->controller[0] = (struct controller *)
 				calloc(1, sizeof(struct controller));
-	ccg->controller[0]->name = (char *)malloc(strlen("cpu") + 1);
 	strcpy(ccg->controller[0]->name,"cpu");
 
 	ccg->controller[0]->values[0] = (struct control_value *)
 					calloc(1, sizeof(struct control_value));
 	strcpy(ccg->controller[0]->values[0]->name,"cpu.shares");
-	ccg->controller[0]->values[0]->value = (char *)malloc(strlen("100") + 1);
 	strcpy(ccg->controller[0]->values[0]->value, "100");
 	ccg->tasks_uid = tuid;
 	ccg->tasks_gid = tgid;
