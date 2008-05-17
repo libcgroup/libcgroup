@@ -22,9 +22,13 @@
 CONF_FILE=/etc/wlm.conf
 PROC_CGROUPS_FILE=/proc/cgroups
 CGROUP_FS=cgroup
-MOUNT_POINT=/dev/container
-#MOUNT_OPTS=cpu
 IGNORE_OPTS="ns cpuset"
+
+# support multiple mount points
+
+declare -a MOUNTPOINT
+declare -a MOUNTOPTS
+maxindex=0
 
 parse_controller_file() {
 	ctlr=$1
@@ -45,36 +49,41 @@ parse_controller_file() {
 			then
 				echo "Creating class $name"
 				class=$name
-				mkdir -p $MOUNTPOINT/$class
-				cd $MOUNTPOINT/$class
+				index=1
+				for i in `seq 1 $maxindex`
+				do 
+					echo "mount pt ${MOUNTPOINT[$i]}"
+					mkdir -p ${MOUNTPOINT[$i]}/$class
+					cd ${MOUNTPOINT[$i]}/$class
 
-				if echo $opts | grep -q "="
-				then
-					for single_opt in $opts
-					do
-						cf=`echo $single_opt | cut -d '=' -f1`
-						co=`echo $single_opt | cut -d '=' -f2`
-						case $cf in
-						"tuid")
-							tuid=$co
-							;;
-						"cuid")
-							cuid=$co
-							;;
-						"tgid")
-							tgid=$co
-							;;
-						"cgid")
-							cgid=$co
-							;;
-						*)
-							echo -n $co > $cf
-							;;
-						esac
-					done
-					chown -R $cuid:$cgid $MOUNTPOINT/$class
-					chown -R $tuid:$tgid $MOUNTPOINT/$class/tasks
-				fi
+					if echo $opts | grep -q "="
+					then
+						for single_opt in $opts
+						do
+							cf=`echo $single_opt | cut -d '=' -f1`
+							co=`echo $single_opt | cut -d '=' -f2`
+							case $cf in
+							"tuid")
+								tuid=$co
+								;;
+							"cuid")
+								cuid=$co
+								;;
+							"tgid")
+								tgid=$co
+								;;
+							"cgid")
+								cgid=$co
+								;;
+							*)
+								echo -n $co > $cf
+								;;
+							esac
+						done
+						chown -R $cuid:$cgid ${MOUNTPOINT[$i]}/$class
+						chown -R $tuid:$tgid ${MOUNTPOINT[$i]}/$class/tasks
+					fi
+				done
 			fi
 		esac
 	done < $file
@@ -116,8 +125,9 @@ parse_conf_file() {
 		then
 			case $name in
 			'mount')
-				MOUNTPOINT=`echo $conf | cut -d ' ' -f1`;
-				MOUNTOPTS=`echo $conf | cut -d ' ' -f2`;
+				maxindex=$(($maxindex+1))
+				MOUNTPOINT[$maxindex]=`echo $conf | cut -d ' ' -f1`;
+				MOUNTOPTS[$maxindex]=`echo $conf | cut -d ' ' -f2`;
 				;;
 			esac
 		fi
@@ -132,19 +142,19 @@ mount_fs() {
 		echo "$PROC_CGROUPS_FILE does not exist, please compile"
 		echo "cgroups into the kernel"
 		exit 1
-	else
-		while read name hierarchy num_cgroups
-		do
-			if  ! echo $name | grep -q ^#
-			then
-				echo $IGNORE_OPTS | grep -wq $name
-				if [[ $? -ne 0 ]]
-				then
-					MOUNT_OPTS=$name","$MOUNT_OPTS
-				fi
-			fi
-		done < $PROC_CGROUPS_FILE
-		MOUNT_OPTS=${MOUNT_OPTS%%","}
+	#else
+		#while read name hierarchy num_cgroups
+		#do
+		#	if  ! echo $name | grep -q ^#
+		#	then
+		#		echo $IGNORE_OPTS | grep -wq $name
+		#		if [[ $? -ne 0 ]]
+		#		then
+		#			MOUNT_OPTS=$name","$MOUNT_OPTS
+		#		fi
+		#	fi
+		#done < $PROC_CGROUPS_FILE
+		#MOUNT_OPTS=${MOUNT_OPTS%%","}
 		#line=`grep -w $MOUNT_OPTS $PROC_CGROUPS_FILE`
 		#if [ $? -ne 0 ]
 		#then
@@ -152,21 +162,28 @@ mount_fs() {
 		#	exit 1
 		#fi
 	fi
-	mkdir -p $MOUNTPOINT
-	mount -t $CGROUP_FS $CGROUP_FS -o $MOUNT_OPTS $MOUNTPOINT
-	#
-	# Give root tasks read/write permission to all, since tasks
-	# tasks will be moved to root frequently
-	#
-	chmod ago+rwx $MOUNTPOINT/tasks
-	chmod ago+rwx $MOUNTPOINT
-	chmod +t      $MOUNTPOINT
+	for i in `seq 1 $maxindex`
+	do
+		mkdir -p ${MOUNTPOINT[$i]}
+		echo "mounting ${MOUNTPOINT[$i]} with ${MOUNTOPTS[$i]}"
+		mount -t $CGROUP_FS $CGROUP_FS -o ${MOUNTOPTS[$i]} ${MOUNTPOINT[$i]}
+		#
+		# Give root tasks read/write permission to all, since tasks
+		# tasks will be moved to root frequently
+		#
+		chmod ago+rwx ${MOUNTPOINT[$i]}/tasks
+		chmod ago+rwx ${MOUNTPOINT[$i]}
+		chmod +t      ${MOUNTPOINT[$i]}
+	done
 	return $?
 }
 
 umount_fs() {
-	umount $MOUNTPOINT
-	rmdir $MOUNTPOINT
+	for i in `seq 1 $maxindex`
+	do
+		umount ${MOUNTPOINT[$i]}
+		rmdir ${MOUNTPOINT[$i]}
+	done
 }
 	
 create_classes() {
@@ -198,28 +215,31 @@ start() {
 }
 
 move_all_to_init_class() {
-	cd $MOUNTPOINT
-	cat /proc/mounts | grep -wq $MOUNTPOINT
-	if [ $? -ne 0 ]
-	then
-		echo "resource control filesystem not mounted"
-		exit 1
-	fi
-
-	for i in `find . -type d`
+	for i in `seq 1 $maxindex`
 	do
-		case $i in
-		'.')
-			;;
-		*)
-			class=${i#./*}
-			echo "Removing class $class"
-			sed -nu p < ./$i/tasks > tasks
-			rmdir $i
-			;;
-		esac
+		cd ${MOUNTPOINT[$i]}
+		cat /proc/mounts | grep -wq ${MOUNTPOINT[$i]}
+		if [ $? -ne 0 ]
+		then
+			echo "resource control filesystem not mounted"
+			exit 1
+		fi
+
+		for i in `find . -type d`
+		do
+			case $i in
+			'.')
+				;;
+			*)
+				class=${i#./*}
+				echo "Removing class $class"
+				sed -nu p < ./$i/tasks > tasks
+				rmdir $i
+				;;
+			esac
+		done
+		cd - > /dev/null
 	done
-	cd - > /dev/null
 }
 
 
@@ -235,22 +255,34 @@ trapped() {
 	true
 }
 
-#
-# main script work done here
-#
-trap "trapped ABRT" ABRT
-trap "trapped QUIT" QUIT
-trap "trapped TERM" TERM
-trap "trapped INT"   INT
+usage() {
+	echo "$0 <start|stop>"
+	exit 1
+}
 
-parse_conf_file
+common() {
+	#
+	# main script work done here
+	#
+	trap "trapped ABRT" ABRT
+	trap "trapped QUIT" QUIT
+	trap "trapped TERM" TERM
+	trap "trapped INT"   INT
+
+	parse_conf_file
+}
 
 case $1 in
 	'start')
+		common
 		start;
 		;;
 	'stop')
+		common
 		stop;
+		;;
+	*)
+		usage
 		;;
 esac
 
