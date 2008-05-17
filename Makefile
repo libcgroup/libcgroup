@@ -13,7 +13,7 @@
 YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
-CFLAGS=-g -O2 -Wextra $(INC) 
+CFLAGS=-g -O2 -Wextra $(INC) $(DEBUG)
 LIBS= -lcg
 LDFLAGS= -L .
 INSTALLPREFIX=

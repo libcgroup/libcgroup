@@ -160,6 +160,11 @@ struct cgroup {
 	gid_t control_gid;
 };
 
+struct cg_mount_table_s {
+	char name[FILENAME_MAX];
+	char path[FILENAME_MAX];
+} cg_mount_table[CG_CONTROLLER_MAX];
+
 int cg_init(void);
 int cg_attach_task(struct cgroup *cgroup);
 int cg_modify_cgroup(struct cgroup *cgroup);

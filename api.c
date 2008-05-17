@@ -39,12 +39,6 @@
  */
 const static char cg_version[] = "0.01";
 
-/*
- * Only one mount point is currently supported. This will be enhanced to
- * support several hierarchies in the future
- */
-static char MOUNT_POINT[FILENAME_MAX];
-
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
@@ -104,6 +98,38 @@ int cg_init()
 	struct mntent *ent, *found_ent = NULL;
 	int found_mnt = 0;
 	int ret = 0;
+	char *mntent_tok;
+	static char *controllers[CG_CONTROLLER_MAX];
+	FILE *proc_cgroup;
+	char subsys_name[FILENAME_MAX];
+	int hierarchy, num_cgroups, enabled;
+	int i=0;
+	char *mntopt;
+	int err;
+
+	proc_cgroup = fopen("/proc/cgroups", "r");
+
+	if (!proc_cgroup)
+		return EIO;
+
+	/*
+	 * The first line of the file has stuff we are not interested in.
+	 * So just read it and discard the information.
+	 *
+	 * XX: fix the size for fgets
+	 */
+	fgets(subsys_name, FILENAME_MAX, proc_cgroup);
+	while (!feof(proc_cgroup)) {
+		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
+				&hierarchy, &num_cgroups, &enabled);
+		if (err < 0)
+			break;
+		controllers[i] = (char *)malloc(strlen(subsys_name));
+		strcpy(controllers[i], subsys_name);
+		i++;
+	}
+	controllers[i] = NULL;
+	fclose(proc_cgroup);
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
@@ -111,34 +137,62 @@ int cg_init()
 	}
 
 	while ((ent = getmntent(proc_mount)) != NULL) {
-		if (!strncmp(ent->mnt_fsname,"cgroup", strlen("cgroup"))) {
-			found_ent = ent;
-			found_mnt++;
-			dbg("Found cgroup option %s, count %d\n",
-				found_ent->mnt_opts, found_mnt);
+		if (!strncmp(ent->mnt_type, "cgroup", strlen("cgroup"))) {
+			for (i = 0; controllers[i] != NULL; i++) {
+				mntopt = hasmntopt(ent, controllers[i]);
+				if (mntopt &&
+					strcmp(mntopt, controllers[i]) == 0) {
+					dbg("matched %s:%s\n", mntopt,
+						controllers[i]);
+					strcpy(cg_mount_table[found_mnt].name,
+						controllers[i]);
+					strcpy(cg_mount_table[found_mnt].path,
+						ent->mnt_dir);
+					dbg("Found cgroup option %s, "
+						" count %d\n",
+						ent->mnt_opts, found_mnt);
+					found_mnt++;
+				}
+			}
 		}
 	}
 
-	/*
-	 * Currently we require that all controllers be bound together
-	 */
-	if (!found_mnt)
-		ret = ECGROUPNOTMOUNTED;
-	else if (found_mnt > 1)
-		ret = ECGROUPMULTIMOUNTED;
-	else {
-		/*
-		 * NOTE: FILENAME_MAX ensures that we don't need to worry
-		 * about crossing MOUNT_POINT size. For the paranoid, yes
-		 * this is a potential security hole - Balbir
-		 * Dhaval - fix these things.
-		 */
-		strcpy(MOUNT_POINT, found_ent->mnt_dir);
-		strcat(MOUNT_POINT, "/");
+	if (!found_mnt) {
+		cg_mount_table[0].name[0] = '\0';
+		return ECGROUPNOTMOUNTED;
 	}
+
+	found_mnt++;
+	cg_mount_table[found_mnt].name[0] = '\0';
+
 
 	fclose(proc_mount);
 	return ret;
+}
+
+static char **get_mounted_controllers(char *mountpoint)
+{
+	char **controllers;
+	int i, j;
+
+	i = 0;
+	j = 0;
+
+	controllers = (char **) malloc(sizeof(char *) * CG_CONTROLLER_MAX);
+
+	for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name != NULL;
+									i++) {
+		if (strcmp(cg_mount_table[i].name, mountpoint) == 0) {
+			controllers[j] = (char *)malloc(sizeof(char) *
+								FILENAME_MAX);
+			strcpy(controllers[j], cg_mount_table[i].name);
+			j++;
+		}
+	}
+	controllers[j] = (char *)malloc(sizeof(char) * FILENAME_MAX);
+	controllers[j][0] = '\0';
+
+	return controllers;
 }
 
 static int cg_test_mounted_fs()
@@ -152,7 +206,7 @@ static int cg_test_mounted_fs()
 	}
 	ent = getmntent(proc_mount);
 
-	while (strcmp(ent->mnt_fsname, "cgroup") !=0) {
+	while (strcmp(ent->mnt_type, "cgroup") !=0) {
 		ent = getmntent(proc_mount);
 		if (ent == NULL)
 			return 0;
@@ -166,12 +220,19 @@ static inline pid_t cg_gettid()
 	return syscall(__NR_gettid);
 }
 
-static char* cg_build_path(char *name, char *path)
+static char* cg_build_path(char *name, char *path, char *type)
 {
-	strcpy(path, MOUNT_POINT);
-	strcat(path, name);
-	strcat(path, "/");
-	return path;
+	int i;
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strcmp(cg_mount_table[i].name, type) == 0) {
+			strcpy(path, cg_mount_table[i].path);
+			strcat(path, "/");
+			strcat(path, name);
+			strcat(path, "/");
+			return path;
+		}
+	}
+	return NULL;
 }
 
 /** cg_attach_task_pid is used to assign tasks to a cgroup.
@@ -186,27 +247,50 @@ int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
 	FILE *tasks;
+	int i;
 
-	if (cgroup == NULL)
-		strcpy(path, MOUNT_POINT);
-	else {
-		cg_build_path(cgroup->name, path);
-	}
+	if(!cgroup)
+	{
+		for(i = 0; i < CG_CONTROLLER_MAX &&
+				cg_mount_table[i].name[0]!='\0'; i++) {
+			if (!cg_build_path(cgroup->name, path, NULL))
+				continue;
+			strcat(path, "/tasks");
 
-	strcat(path, "/tasks");
+			tasks = fopen(path, "w");
+			if (!tasks) {
+				switch (errno) {
+				case EPERM:
+					return ECGROUPNOTOWNER;
+				default:
+					return ECGROUPNOTALLOWED;
+				}
+			}
+			fprintf(tasks, "%d", tid);
+			fclose(tasks);
+		}
+	} else {
+		for( i = 0; i <= CG_CONTROLLER_MAX &&
+				cgroup->controller[i] != NULL ; i++) {
+			if (!cg_build_path(cgroup->name, path,
+					cgroup->controller[i]->name))
+				continue;
 
-	tasks = fopen(path, "w");
-	if (!tasks) {
-		switch (errno) {
-		case EPERM:
-			return ECGROUPNOTOWNER;
-		default:
-			return ECGROUPNOTALLOWED;
+			strcat(path, "/tasks");
+
+			tasks = fopen(path, "w");
+			if (!tasks) {
+				switch (errno) {
+				case EPERM:
+					return ECGROUPNOTOWNER;
+				default:
+					return ECGROUPNOTALLOWED;
+				}
+			}
+			fprintf(tasks, "%d", tid);
+			fclose(tasks);
 		}
 	}
-	fprintf(tasks, "%d", tid);
-	fclose(tasks);
-
 	return 0;
 
 }
@@ -316,11 +400,12 @@ int cg_modify_cgroup(struct cgroup *cgroup)
 	int i;
 	int error;
 
-	cg_build_path(cgroup->name, base);
-
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
 						i++, strcpy(path, base)) {
 		int j;
+		if (!cg_build_path(cgroup->name, base,
+			cgroup->controller[i]->name))
+			continue;
 		for(j = 0; j < CG_NV_MAX && cgroup->controller[i]->values[j];
 						j++, strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
@@ -345,8 +430,8 @@ err:
 int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
 	char *fts_path[2], base[FILENAME_MAX], *path;
-	int i;
-	int error;
+	int i, j, k;
+	int error = 0;
 
 	fts_path[0] = (char *)malloc(FILENAME_MAX);
 	if (!fts_path[0])
@@ -354,40 +439,49 @@ int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	fts_path[1] = NULL;
 	path = fts_path[0];
 
-	cg_build_path(cgroup->name, path);
-	error = cg_create_control_group(path);
-	if (error)
-		goto err;
+	/*
+	 * XX: One important test to be done is to check, if you have multiple
+	 * subsystems mounted at one point, all of them *have* be on the cgroup
+	 * data structure. If not, we fail.
+	 */
+	for (k = 0; k < CG_CONTROLLER_MAX && cgroup->controller[k]; k++) {
+		path[0] = '\0';
 
-	strcpy(base, path);
+		if (!cg_build_path(cgroup->name, path,
+				cgroup->controller[k]->name))
+			continue;
 
-	if (!ignore_ownership)
-		cg_chown_recursive(fts_path, cgroup->control_uid,
-					cgroup->control_gid);
-	if (error)
-		goto err;
+		dbg("path is %s\n", path);
+		error = cg_create_control_group(path);
+		if (error)
+			goto err;
 
-	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
-						i++, strcpy(path, base)) {
-		int j;
-		for(j = 0; j < CG_NV_MAX && cgroup->controller[i]->values[j];
-						j++, strcpy(path, base)) {
-			strcat(path, cgroup->controller[i]->values[j]->name);
+		strcpy(base, path);
+
+		if (!ignore_ownership)
+			error = cg_chown_recursive(fts_path,
+				cgroup->control_uid, cgroup->control_gid);
+
+		if (error)
+			goto err;
+
+		for (j = 0; j < CG_NV_MAX && cgroup->controller[k]->values[j];
+					j++, strcpy(path, base)) {
+			strcat(path, cgroup->controller[k]->values[j]->name);
 			error = cg_set_control_value(path,
-				cgroup->controller[i]->values[j]->value);
-
+				cgroup->controller[k]->values[j]->value);
 			/*
- 			 * Should we undo, what we've done in the loops above?
- 			 */
+			 * Should we undo, what we've done in the loops above?
+			 */
 			if (error)
 				goto err;
 		}
-	}
-
-	if (!ignore_ownership) {
-		strcpy(path, base);
-		strcat(path, "/tasks");
-		chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+ 
+		if (!ignore_ownership) {
+			strcpy(path, base);
+			strcat(path, "/tasks");
+			chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+		}
 	}
 err:
 	free(path);
@@ -401,40 +495,55 @@ err:
  */
 int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
-	FILE *delete_tasks, *base_tasks;
+	FILE *delete_tasks, *base_tasks = NULL;
 	int tids;
 	char path[FILENAME_MAX];
 	int error = ECGROUPNOTALLOWED;
+	int i;
 
-	strcpy(path, MOUNT_POINT);
-	strcat(path,"tasks");
+	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller; i++) {
+		if (!cg_build_path(cgroup->name, path,
+					cgroup->controller[i]->name))
+			continue;
+		strcat(path, "../tasks");
 
-	base_tasks = fopen(path, "w");
-	if (!base_tasks)
-		goto base_open_err;
+		base_tasks = fopen(path, "w");
+		if (!base_tasks)
+			goto base_open_err;
 
-	cg_build_path(cgroup->name, path);
-	strcat(path,"tasks");
+		if (!cg_build_path(cgroup->name, path,
+					cgroup->controller[i]->name))
+			continue;
 
-	delete_tasks = fopen(path, "r");
-	if (!delete_tasks)
-		goto del_open_err;
+		strcat(path, "tasks");
 
-	while (!feof(delete_tasks)) {
-		fscanf(delete_tasks, "%d", &tids);
-		fprintf(base_tasks, "%d", tids);
+		delete_tasks = fopen(path, "r");
+		if (!delete_tasks)
+			goto del_open_err;
+
+		while (!feof(delete_tasks)) {
+			fscanf(delete_tasks, "%d", &tids);
+			fprintf(base_tasks, "%d", tids);
+		}
+
+		if (!cg_build_path(cgroup->name, path,
+					cgroup->controller[i]->name))
+			continue;
+		error = rmdir(path);
+
+		fclose(delete_tasks);
 	}
-
-	cg_build_path(cgroup->name, path);
-	error = rmdir(path);
-
-	fclose(delete_tasks);
 del_open_err:
-	fclose(base_tasks);
+	if (base_tasks)
+		fclose(base_tasks);
 base_open_err:
 	if (ignore_migration) {
-		cg_build_path(cgroup->name, path);
-		error = rmdir(path);
+		for (i = 0; cgroup->controller[i] != NULL; i++) {
+			if (!cg_build_path(cgroup->name, path,
+						cgroup->controller[i]->name))
+				continue;
+			error = rmdir(path);
+		}
 	}
 	return error;
 }
