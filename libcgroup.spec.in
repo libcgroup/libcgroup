@@ -5,7 +5,7 @@ Version: @PACKAGE_VERSION@
 Release:        1%{?dist}
 License: LGPL
 URL: http://libcg.sourceforge.net/%{name}-%{version}.tar.bz2
-Source0: libcgroup.tar.bz2
+Source0: cgroup-@PACKAGE_VERSION@.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: byacc
 BuildRequires: flex
