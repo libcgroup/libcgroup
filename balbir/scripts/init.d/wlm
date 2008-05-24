@@ -1,0 +1,288 @@
+#
+# Start/Stop the workload manager
+#
+# Copyright IBM Corporation. 2008
+#  
+# Authors:     Balbir Singh <balbir@linux.vnet.ibm.com>
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License
+# as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+#
+# TODO: Make this code more robust, add error checking and recovery
+# for invalid configuration or interrupted execution
+#
+# Make the script LSB compliant
+#
+
+CONF_FILE=/etc/wlm.conf
+PROC_CGROUPS_FILE=/proc/cgroups
+CGROUP_FS=cgroup
+IGNORE_OPTS="ns cpuset"
+
+# support multiple mount points
+
+declare -a MOUNTPOINT
+declare -a MOUNTOPTS
+maxindex=0
+
+parse_controller_file() {
+	ctlr=$1
+	file=$2
+	tuid="root"
+	tgid="root"
+	cuid="root"
+	cgid="root"
+
+	pushd $PWD 2>&1 > /dev/null
+	while read name opts
+	do
+		case $name in
+		'mount')
+			;;
+		*)
+			if ! echo $name | grep -q ^#
+			then
+				echo "Creating class $name"
+				class=$name
+				index=1
+				for i in `seq 1 $maxindex`
+				do 
+					echo "mount pt ${MOUNTPOINT[$i]}"
+					mkdir -p ${MOUNTPOINT[$i]}/$class
+					cd ${MOUNTPOINT[$i]}/$class
+
+					if echo $opts | grep -q "="
+					then
+						for single_opt in $opts
+						do
+							cf=`echo $single_opt | cut -d '=' -f1`
+							co=`echo $single_opt | cut -d '=' -f2`
+							case $cf in
+							"tuid")
+								tuid=$co
+								;;
+							"cuid")
+								cuid=$co
+								;;
+							"tgid")
+								tgid=$co
+								;;
+							"cgid")
+								cgid=$co
+								;;
+							*)
+								echo -n $co > $cf
+								;;
+							esac
+						done
+						chown -R $cuid:$cgid ${MOUNTPOINT[$i]}/$class
+						chown -R $tuid:$tgid ${MOUNTPOINT[$i]}/$class/tasks
+					fi
+				done
+			fi
+		esac
+	done < $file
+	popd 2>&1 > /dev/null
+}
+
+parse_controller_opts() {
+	name=$1;
+	file=$2;
+
+	if [ ! -r $PROC_CGROUPS_FILE ]
+	then
+		echo "$PROC_CGROUPS_FILE does not exist, please compile"
+		echo "cgroups into the kernel"
+		exit 1
+	else
+		line=`grep -w $name $PROC_CGROUPS_FILE`
+		if [ $? -ne 0 ]
+		then
+			echo "$name controller not enabled"
+			exit 1
+		fi
+
+		active=`echo $line | awk '{print $2}'`
+		if [[ $active -eq 0 ]]
+		then
+			echo "$name controller not mounted"
+		else
+			parse_controller_file $name $file
+		fi
+	fi
+}
+
+parse_conf_file() {
+	while read name conf
+	do
+		# skip all comments
+		if  ! echo $name | grep -q ^#
+		then
+			case $name in
+			'mount')
+				maxindex=$(($maxindex+1))
+				MOUNTPOINT[$maxindex]=`echo $conf | cut -d ' ' -f1`;
+				MOUNTOPTS[$maxindex]=`echo $conf | cut -d ' ' -f2`;
+				;;
+			esac
+		fi
+	done < $CONF_FILE
+
+	return 0;
+}
+
+mount_fs() {
+	if [ ! -r $PROC_CGROUPS_FILE ]
+	then
+		echo "$PROC_CGROUPS_FILE does not exist, please compile"
+		echo "cgroups into the kernel"
+		exit 1
+	#else
+		#while read name hierarchy num_cgroups
+		#do
+		#	if  ! echo $name | grep -q ^#
+		#	then
+		#		echo $IGNORE_OPTS | grep -wq $name
+		#		if [[ $? -ne 0 ]]
+		#		then
+		#			MOUNT_OPTS=$name","$MOUNT_OPTS
+		#		fi
+		#	fi
+		#done < $PROC_CGROUPS_FILE
+		#MOUNT_OPTS=${MOUNT_OPTS%%","}
+		#line=`grep -w $MOUNT_OPTS $PROC_CGROUPS_FILE`
+		#if [ $? -ne 0 ]
+		#then
+		#	echo "$name controller not enabled"
+		#	exit 1
+		#fi
+	fi
+	for i in `seq 1 $maxindex`
+	do
+		mkdir -p ${MOUNTPOINT[$i]}
+		echo "mounting ${MOUNTPOINT[$i]} with ${MOUNTOPTS[$i]}"
+		mount -t $CGROUP_FS $CGROUP_FS -o ${MOUNTOPTS[$i]} ${MOUNTPOINT[$i]}
+		#
+		# Give root tasks read/write permission to all, since tasks
+		# tasks will be moved to root frequently
+		#
+		chmod ago+rwx ${MOUNTPOINT[$i]}/tasks
+		chmod ago+rwx ${MOUNTPOINT[$i]}
+		chmod +t      ${MOUNTPOINT[$i]}
+	done
+	return $?
+}
+
+umount_fs() {
+	for i in `seq 1 $maxindex`
+	do
+		umount ${MOUNTPOINT[$i]}
+		rmdir ${MOUNTPOINT[$i]}
+	done
+}
+	
+create_classes() {
+	while read name conf
+	do
+		# skip all comments
+		if  ! echo $name | grep -q ^#
+		then
+			case $name in
+			'mount')
+				;;
+			*)
+				parse_controller_opts $name $conf
+			esac
+		fi
+
+	done < $CONF_FILE
+}
+
+start() {
+	echo "Starting wlm service: "
+	mount_fs
+	if [ $? -eq 0 ]
+	then
+		create_classes
+	fi
+	[ $? == 0 ] && touch /var/lock/subsys/wlm
+	return $?
+}
+
+move_all_to_init_class() {
+	for i in `seq 1 $maxindex`
+	do
+		cd ${MOUNTPOINT[$i]}
+		cat /proc/mounts | grep -wq ${MOUNTPOINT[$i]}
+		if [ $? -ne 0 ]
+		then
+			echo "resource control filesystem not mounted"
+			exit 1
+		fi
+
+		for i in `find . -type d`
+		do
+			case $i in
+			'.')
+				;;
+			*)
+				class=${i#./*}
+				echo "Removing class $class"
+				sed -nu p < ./$i/tasks > tasks
+				rmdir $i
+				;;
+			esac
+		done
+		cd - > /dev/null
+	done
+}
+
+
+stop() {
+	move_all_to_init_class
+	umount_fs
+}
+
+trapped() {
+	#
+	# Do nothing
+	#
+	true
+}
+
+usage() {
+	echo "$0 <start|stop>"
+	exit 1
+}
+
+common() {
+	#
+	# main script work done here
+	#
+	trap "trapped ABRT" ABRT
+	trap "trapped QUIT" QUIT
+	trap "trapped TERM" TERM
+	trap "trapped INT"   INT
+
+	parse_conf_file
+}
+
+case $1 in
+	'start')
+		common
+		start;
+		;;
+	'stop')
+		common
+		stop;
+		;;
+	*)
+		usage
+		;;
+esac
+
