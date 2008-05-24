@@ -14,18 +14,18 @@ YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
 LIBS= -lcgroup
-LDFLAGS=
-YACC=byacc
-LEX=flex
-bindir=${exec_prefix}/bin
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
-prefix=/usr
-exec_prefix=${prefix}
-INSTALL=install
-INSTALL_DATA=${INSTALL} -m 644
-PACKAGE_VERSION=0.1b
-CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
+LDFLAGS=@LDFLAGS@
+YACC=@YACC@
+LEX=@LEX@
+bindir=@bindir@
+libdir=@libdir@
+includedir=@includedir@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+PACKAGE_VERSION=@PACKAGE_VERSION@
+CFLAGS=@CFLAGS@ $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
 all: libcgroup.so

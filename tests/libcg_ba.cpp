@@ -11,14 +11,14 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * Basic acceptance test for libcg - Written one late night by Balbir Singh
+ * Basic acceptance test for libcgroup - Written one late night by Balbir Singh
  */
 using namespace std;
 
 #include <string>
 #include <stdexcept>
 #include <iostream>
-#include <libcg.h>
+#include <libcgroup.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <errno.h>
@@ -42,7 +42,7 @@ cg::cg(void)
 {
 	int ret;
 
-	ret = cg_init();
+	ret = cgroup_init();
 	if (ret)
 		throw logic_error("Control Group Initialization failed..."
 				"Please check that cgroups are mounted and\n"
@@ -55,12 +55,12 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 {
 	uid_t tuid, cuid;
 	gid_t tgid, cgid;
+	char *cgroup_name;
 	struct cgroup *ccg;
+	struct cgroup_controller *cpu, *memory, *cpuacct;
 	struct passwd *passwd;
 	struct group *grp;
 	int ret;
-
-	ccg = (struct cgroup *)malloc(sizeof(*ccg));
 
 	passwd = getpwnam(task_uid.c_str());
 	if (!passwd)
@@ -84,38 +84,23 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 
 	dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
 
-	strcpy(ccg->name, name.c_str());
-	ccg->controller[0] = (struct controller *)
-				calloc(1, sizeof(struct controller));
-	strcpy(ccg->controller[0]->name,"cpu");
+	cgroup_name = (char *) malloc(name.length());
+	memset(cgroup_name, '\0', name.length());
+	strncpy(cgroup_name, name.c_str(), name.length());
 
-	ccg->controller[0]->values[0] = (struct control_value *)
-					calloc(1, sizeof(struct control_value));
-	strcpy(ccg->controller[0]->values[0]->name,"cpu.shares");
-	strcpy(ccg->controller[0]->values[0]->value, "100");
+	ccg = cgroup_new_cgroup(cgroup_name, tuid, tgid, cuid, cgid);
+	cpu = cgroup_add_controller(ccg, "cpu");
+	cgroup_add_value_uint64(cpu, "cpu.shares", 2048);
+	memory = cgroup_add_controller(ccg, "memory");
+	cgroup_add_value_uint64(memory, "memory.limit_in_bytes", 102400);
+	cpuacct = cgroup_add_controller(ccg, "cpuacct");
+	cgroup_add_value_uint64(cpuacct, "cpuacct.usage", 0);
 
-	ccg->controller[1] = (struct controller *)
-				calloc(1, sizeof(struct controller));
-	strcpy(ccg->controller[1]->name, "memory");
-	ccg->controller[1]->values[0] = (struct control_value *)
-					calloc(1, sizeof(struct control_value));
-	strcpy(ccg->controller[1]->values[0]->name,"memory.limit_in_bytes");
-	strcpy(ccg->controller[1]->values[0]->value, "102400");
 
-	strcpy(ccg->controller[2]->name, "cpuacct");
-	ccg->controller[2]->values[0] = (struct control_value *)
-					calloc(1, sizeof(struct control_value));
-	strcpy(ccg->controller[2]->values[0]->name,"cpuacct.usage");
-	strcpy(ccg->controller[2]->values[0]->value, "0");
-	ccg->tasks_uid = tuid;
-	ccg->tasks_gid = tgid;
-	ccg->control_uid = cuid;
-	ccg->control_gid = cgid;
-
-	ret = cg_create_cgroup(ccg, 1);
+	ret = cgroup_create_cgroup(ccg, 1);
 	if (ret) {
 		cout << "cg create group failed " << errno << endl;
-		ret = cg_delete_cgroup(ccg, 1);
+		ret = cgroup_delete_cgroup(ccg, 1);
 		if (ret)
 			cout << "cg delete group failed " << errno << endl;
 	}
@@ -132,6 +117,7 @@ int main(int argc, char *argv[])
 		struct cgroup *ccg;
 		ccg = app->makenode("database", "root", "root", "balbir",
 					"balbir");
+		cgroup_free(&ccg);
 		delete app;
 	} catch (exception &e) {
 		cout << e.what() << endl;

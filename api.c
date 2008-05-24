@@ -23,7 +23,8 @@
  */
 
 #include <errno.h>
-#include <libcg.h>
+#include <libcgroup.h>
+#include <libcgroup-internal.h>
 #include <mntent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,10 +35,18 @@
 #include <unistd.h>
 #include <fts.h>
 
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 0.01
+#endif
+
+#define VERSION(ver)	#ver
+
 /*
  * Remember to bump this up for major API changes.
  */
-const static char cg_version[] = "0.01";
+const static char cg_version[] = VERSION(PACKAGE_VERSION);
+
+struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
@@ -85,14 +94,14 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 }
 
 /**
- * cg_init(), initializes the MOUNT_POINT.
+ * cgroup_init(), initializes the MOUNT_POINT.
  * This code is not currently thread safe (hint: getmntent is not thread safe).
  * This API is likely to change in the future to push state back to the caller
  * to achieve thread safety. The code currently supports just one mount point.
  * Complain if the cgroup filesystem controllers are bound to different mount
  * points.
  */
-int cg_init()
+int cgroup_init()
 {
 	FILE *proc_mount;
 	struct mntent *ent, *found_ent = NULL;
@@ -235,7 +244,7 @@ static char* cg_build_path(char *name, char *path, char *type)
 	return NULL;
 }
 
-/** cg_attach_task_pid is used to assign tasks to a cgroup.
+/** cgroup_attach_task_pid is used to assign tasks to a cgroup.
  *  struct cgroup *cgroup: The cgroup to assign the thread to.
  *  pid_t tid: The thread to be assigned to the cgroup.
  *
@@ -243,7 +252,7 @@ static char* cg_build_path(char *name, char *path, char *type)
  *  returns ECGROUPNOTOWNER if the caller does not have access to the cgroup.
  *  returns ECGROUPNOTALLOWED for other causes of failure.
  */
-int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid)
+int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
 	FILE *tasks;
@@ -295,17 +304,17 @@ int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 
 }
 
-/** cg_attach_task is used to attach the current thread to a cgroup.
+/** cgroup_attach_task is used to attach the current thread to a cgroup.
  *  struct cgroup *cgroup: The cgroup to assign the current thread to.
  *
  *  See cg_attach_task_pid for return values.
  */
-int cg_attach_task(struct cgroup *cgroup)
+int cgroup_attach_task(struct cgroup *cgroup)
 {
 	pid_t tid = cg_gettid();
 	int error;
 
-	error = cg_attach_task_pid(cgroup, tid);
+	error = cgroup_attach_task_pid(cgroup, tid);
 
 	return error;
 }
@@ -338,10 +347,6 @@ static int cg_create_control_group(char *path)
  * This is the low level function for putting in a value in a control file.
  * This function takes in the complete path and sets the value in val in that
  * file.
- *
- * TODO:
- * At this point I am not sure what all values the control file can take. So
- * I put in an int arg. But this has to be made much more robust.
  */
 static int cg_set_control_value(char *path, char *val)
 {
@@ -383,7 +388,7 @@ static int cg_set_control_value(char *path, char *val)
 	return 0;
 }
 
-/** cg_modify_cgroup modifies the cgroup control files.
+/** cgroup_modify_cgroup modifies the cgroup control files.
  * struct cgroup *cgroup: The name will be the cgroup to be modified.
  * The values will be the values to be modified, those not mentioned
  * in the structure will not be modified.
@@ -394,7 +399,7 @@ static int cg_set_control_value(char *path, char *val)
  *
  */
 
-int cg_modify_cgroup(struct cgroup *cgroup)
+int cgroup_modify_cgroup(struct cgroup *cgroup)
 {
 	char path[FILENAME_MAX], base[FILENAME_MAX];
 	int i;
@@ -406,8 +411,9 @@ int cg_modify_cgroup(struct cgroup *cgroup)
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		for(j = 0; j < CG_NV_MAX && cgroup->controller[i]->values[j];
-						j++, strcpy(path, base)) {
+		for(j = 0; j < CG_NV_MAX &&
+			cgroup->controller[i]->values[j];
+			j++, strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
 			error = cg_set_control_value(path,
 				cgroup->controller[i]->values[j]->value);
@@ -421,13 +427,13 @@ err:
 
 }
 
-/** create_cgroup creates a new control group.
+/** cgroup_create_cgroup creates a new control group.
  * struct cgroup *cgroup: The control group to be created
  *
  * returns 0 on success. We recommend calling cg_delete_cgroup
  * if this routine fails. That should do the cleanup operation.
  */
-int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
+int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
 	char *fts_path[2], base[FILENAME_MAX], *path;
 	int i, j, k;
@@ -476,24 +482,25 @@ int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			if (error)
 				goto err;
 		}
- 
+
 		if (!ignore_ownership) {
 			strcpy(path, base);
 			strcat(path, "/tasks");
 			chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
 		}
 	}
+
 err:
 	free(path);
 	return error;
 }
 
-/** cg_delete cgroup deletes a control group.
+/** cgroup_delete cgroup deletes a control group.
  *  struct cgroup *cgroup takes the group which is to be deleted.
  *
  *  returns 0 on success.
  */
-int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
+int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
 	FILE *delete_tasks, *base_tasks = NULL;
 	int tids;
