@@ -31,7 +31,6 @@ AC_PROG_MKDIR_P
 if test "$INSTALL" != install; then
 	AC_SUBST(INSTALL, "install")
 fi
-AC_PROG_INSTALL
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lcgroup':

@@ -22,8 +22,8 @@ libdir=@libdir@
 includedir=@includedir@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-INSTALL=@INSTALL@
-INSTALL_DATA=@INSTALL_DATA@
+INSTALL=install
+INSTALL_DATA=install -m 644
 PACKAGE_VERSION=@PACKAGE_VERSION@
 CFLAGS=@CFLAGS@ $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
