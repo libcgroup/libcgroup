@@ -27,10 +27,6 @@ if test "$YACC" != byacc; then
 	AC_SUBST(YACC, "byacc")
 fi
 AC_PROG_LEX
-AC_PROG_MKDIR_P
-if test "$INSTALL" != install; then
-	AC_SUBST(INSTALL, "install")
-fi
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lcgroup':
