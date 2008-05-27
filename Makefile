@@ -20,10 +20,10 @@ LEX=flex
 bindir=${exec_prefix}/bin
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
-prefix=/usr
+prefix=/usr/local
 exec_prefix=${prefix}
 INSTALL=install
-INSTALL_DATA=${INSTALL} -m 644
+INSTALL_DATA=install -m 644
 PACKAGE_VERSION=0.1b
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
