@@ -21,10 +21,6 @@ Group: Development/Libraries
 Requires: libcgroup >= 0.1b
 
 %description devel
-The libcgroup-devel package contains the libraries to run control group
-applications. 
-
-%description devel
 It provides API to create/delete and modify cgroup nodes. It will also in the
 future allow creation of persistent configuration for control groups and
 provide scripts to manage that configuration.
