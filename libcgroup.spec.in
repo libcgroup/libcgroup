@@ -1,5 +1,5 @@
 Name: libcgroup
-Summary: A collection of tools and libraries to control and monitor control groups the associated controllers
+Summary: Tools and libraries to control and monitor control groups
 Group: Development/Libraries
 Version: @PACKAGE_VERSION@
 Release:        1%{?dist}
