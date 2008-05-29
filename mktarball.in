@@ -21,16 +21,16 @@ fi
 
 if [[ $issvn -eq 1 ]]
 then
-	svn export --force http://libcg.svn.sf.net/svnroot/libcg/tags/v$package_version  /tmp/cgroup-$package_version
+	svn export --force http://libcg.svn.sf.net/svnroot/libcg/tags/v$package_version  /tmp/libcgroup-$package_version
 	if [[ $? -ne 0 ]]
 	then
 		echo "Tag v$package_version  missing"
 	fi
 else
-	cp -a . /tmp/cgroup-$package_version
+	cp -a . /tmp/libcgroup-$package_version
 fi
 
 pushd /tmp 2>&1 > /dev/null
-tar jcf $srcd/cgroup-$package_version.tar.bz2  cgroup-$package_version
+tar jcf $srcd/libcgroup-$package_version.tar.bz2  libcgroup-$package_version
 popd 2>&1 > /dev/null
 

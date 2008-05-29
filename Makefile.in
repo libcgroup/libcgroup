@@ -40,7 +40,7 @@ lex.yy.c: lex.l
 	$(LEX) lex.l
 
 libcgroup.so: api.c libcgroup.h
-	$(CXX) $(CFLAGS) -shared -fPIC -o $@ api.c
+	$(CXX) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ api.c
 	ln -sf $@ $@.$(VERSION)
 
 install: libcgroup.so
@@ -56,4 +56,5 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 
 clean:
-	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcgroup.so
+	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcgroup.so \
+	libcgroup.so.$(VERSION)
