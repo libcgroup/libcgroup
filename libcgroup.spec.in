@@ -2,10 +2,10 @@ Name: libcgroup
 Summary: Tools and libraries to control and monitor control groups
 Group: Development/Libraries
 Version: @PACKAGE_VERSION@
-Release:        1%{?dist}
+Release:        2%{?dist}
 License: LGPLv2+
-URL: http://downloads.sourceforge.net/libcg/%{name}-%{version}.tar.bz2
-Source0: libcgroup-@PACKAGE_VERSION@.tar.bz2
+URL: http://libcg.sourceforge.net/
+Source0: http://downloads.sourceforge.net/libcg/%{name}-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: byacc
 BuildRequires: flex
@@ -26,8 +26,7 @@ future allow creation of persistent configuration for control groups and
 provide scripts to manage that configuration.
 
 %prep
-%setup -q 
-
+%setup -q
 
 %build
 %configure
@@ -55,6 +54,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Sat May 31 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-2
+- Fix %makeinstall, Source0 and URL (review comments from Tom)
 * Mon May 26 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-1
 - Add a generatable spec file
 * Tue May 20 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1-1
