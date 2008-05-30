@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat May 31 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-2
-- Fix %makeinstall, Source0 and URL (review comments from Tom)
+- Fix makeinstall, Source0 and URL (review comments from Tom)
 * Mon May 26 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-1
 - Add a generatable spec file
 * Tue May 20 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1-1
