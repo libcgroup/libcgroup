@@ -18,7 +18,7 @@ administrate and monitor control groups and the associated controllers.
 %package devel
 Summary: Development libraries to develop applications that utilize control groups
 Group: Development/Libraries
-Requires: libcgroup >= 0.1b
+Requires: libcgroup >= @PACKAGE_VERSION@
 
 %description devel
 It provides API to create/delete and modify cgroup nodes. It will also in the
@@ -36,7 +36,7 @@ make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%makeinstall
+make DESTDIR=$RPM_BUILD_ROOT install
 
 %clean
 rm -rf $RPM_BUILD_ROOT

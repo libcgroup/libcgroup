@@ -39,8 +39,9 @@ y.tab.c: parse.y lex.yy.c
 lex.yy.c: lex.l
 	$(LEX) lex.l
 
-libcgroup.so: api.c libcgroup.h
-	$(CXX) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ api.c
+libcgroup.so: api.c libcgroup.h wrapper.c
+	$(CXX) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ api.c \
+	wrapper.c
 	ln -sf $@ $@.$(VERSION)
 
 install: libcgroup.so

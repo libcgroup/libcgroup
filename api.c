@@ -104,10 +104,9 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 int cgroup_init()
 {
 	FILE *proc_mount;
-	struct mntent *ent, *found_ent = NULL;
+	struct mntent *ent;
 	int found_mnt = 0;
 	int ret = 0;
-	char *mntent_tok;
 	static char *controllers[CG_CONTROLLER_MAX];
 	FILE *proc_cgroup;
 	char subsys_name[FILENAME_MAX];
@@ -177,31 +176,6 @@ int cgroup_init()
 
 	fclose(proc_mount);
 	return ret;
-}
-
-static char **get_mounted_controllers(char *mountpoint)
-{
-	char **controllers;
-	int i, j;
-
-	i = 0;
-	j = 0;
-
-	controllers = (char **) malloc(sizeof(char *) * CG_CONTROLLER_MAX);
-
-	for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name != NULL;
-									i++) {
-		if (strcmp(cg_mount_table[i].name, mountpoint) == 0) {
-			controllers[j] = (char *)malloc(sizeof(char) *
-								FILENAME_MAX);
-			strcpy(controllers[j], cg_mount_table[i].name);
-			j++;
-		}
-	}
-	controllers[j] = (char *)malloc(sizeof(char) * FILENAME_MAX);
-	controllers[j][0] = '\0';
-
-	return controllers;
 }
 
 static int cg_test_mounted_fs()
@@ -350,7 +324,6 @@ static int cg_create_control_group(char *path)
  */
 static int cg_set_control_value(char *path, char *val)
 {
-	int error;
 	FILE *control_file;
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
@@ -486,7 +459,12 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (!ignore_ownership) {
 			strcpy(path, base);
 			strcat(path, "/tasks");
-			chown(path, cgroup->tasks_uid, cgroup->tasks_gid);
+			error = chown(path, cgroup->tasks_uid,
+							cgroup->tasks_gid);
+			if (!error) {
+				error = ECGFAIL;
+				goto err;
+			}
 		}
 	}
 
