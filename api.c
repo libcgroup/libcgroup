@@ -114,6 +114,7 @@ int cgroup_init()
 	int i=0;
 	char *mntopt;
 	int err;
+	char *buf;
 
 	proc_cgroup = fopen("/proc/cgroups", "r");
 
@@ -126,7 +127,10 @@ int cgroup_init()
 	 *
 	 * XX: fix the size for fgets
 	 */
-	fgets(subsys_name, FILENAME_MAX, proc_cgroup);
+	buf = fgets(subsys_name, FILENAME_MAX, proc_cgroup);
+	if (!buf)
+		return EIO;
+
 	while (!feof(proc_cgroup)) {
 		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
 				&hierarchy, &num_cgroups, &enabled);
@@ -409,7 +413,7 @@ err:
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
 	char *fts_path[2], base[FILENAME_MAX], *path;
-	int i, j, k;
+	int j, k;
 	int error = 0;
 
 	fts_path[0] = (char *)malloc(FILENAME_MAX);
@@ -484,7 +488,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	int tids;
 	char path[FILENAME_MAX];
 	int error = ECGROUPNOTALLOWED;
-	int i;
+	int i, ret;
 
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller; i++) {
 		if (!cg_build_path(cgroup->name, path,
@@ -507,7 +511,11 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 			goto del_open_err;
 
 		while (!feof(delete_tasks)) {
-			fscanf(delete_tasks, "%d", &tids);
+			ret = fscanf(delete_tasks, "%d", &tids);
+			/*
+			 * Don't know how to handle EOF yet, so
+			 * ignore it
+			 */
 			fprintf(base_tasks, "%d", tids);
 		}
 
