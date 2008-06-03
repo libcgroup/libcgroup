@@ -58,7 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Jun 3, 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-3
+* Tue Jun 3 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-3
 - Add post and postun. Also fix Requires for devel to depend on base n-v-r
 * Sat May 31 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-2
 - Fix makeinstall, Source0 and URL (review comments from Tom)
