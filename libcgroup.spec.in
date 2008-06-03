@@ -2,7 +2,7 @@ Name: libcgroup
 Summary: Tools and libraries to control and monitor control groups
 Group: Development/Libraries
 Version: @PACKAGE_VERSION@
-Release:        2%{?dist}
+Release:        3%{?dist}
 License: LGPLv2+
 URL: http://libcg.sourceforge.net/
 Source0: http://downloads.sourceforge.net/libcg/%{name}-%{version}.tar.bz2
@@ -18,7 +18,7 @@ administrate and monitor control groups and the associated controllers.
 %package devel
 Summary: Development libraries to develop applications that utilize control groups
 Group: Development/Libraries
-Requires: libcgroup >= @PACKAGE_VERSION@
+Requires: libcgroup = %{version}-%{release}
 
 %description devel
 It provides API to create/delete and modify cgroup nodes. It will also in the
@@ -40,6 +40,10 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
 %files 
 %defattr(-,root,root,-)
 %{_libdir}/libcgroup-%{version}.so
@@ -54,6 +58,8 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Jun 3, 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-3
+- Add post and postun. Also fix Requires for devel to depend on base n-v-r
 * Sat May 31 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-2
 - Fix makeinstall, Source0 and URL (review comments from Tom)
 * Mon May 26 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-1
