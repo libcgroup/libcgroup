@@ -48,6 +48,9 @@ const static char cg_version[] = VERSION(PACKAGE_VERSION);
 
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
+/* Check if cgroup_init has been called or not. */
+static int cgroup_initialized;
+
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
@@ -91,6 +94,19 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	}
 	fts_close(fts);
 	return ret;
+}
+
+static int cgroup_test_subsys_mounted(const char *name)
+{
+	int i;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, name,
+				sizeof(cg_mount_table[i].name)) == 0) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 /**
@@ -152,6 +168,7 @@ int cgroup_init()
 		if (!strncmp(ent->mnt_type, "cgroup", strlen("cgroup"))) {
 			for (i = 0; controllers[i] != NULL; i++) {
 				mntopt = hasmntopt(ent, controllers[i]);
+				mntopt = strtok(mntopt, ",");
 				if (mntopt &&
 					strcmp(mntopt, controllers[i]) == 0) {
 					dbg("matched %s:%s\n", mntopt,
@@ -177,8 +194,8 @@ int cgroup_init()
 	found_mnt++;
 	cg_mount_table[found_mnt].name[0] = '\0';
 
-
 	fclose(proc_mount);
+	cgroup_initialized = 1;
 	return ret;
 }
 
@@ -214,8 +231,10 @@ static char* cg_build_path(char *name, char *path, char *type)
 		if (strcmp(cg_mount_table[i].name, type) == 0) {
 			strcpy(path, cg_mount_table[i].path);
 			strcat(path, "/");
-			strcat(path, name);
-			strcat(path, "/");
+			if (name) {
+				strcat(path, name);
+				strcat(path, "/");
+			}
 			return path;
 		}
 	}
@@ -236,11 +255,14 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 	FILE *tasks;
 	int i;
 
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITALIZED;
+
 	if(!cgroup)
 	{
 		for(i = 0; i < CG_CONTROLLER_MAX &&
 				cg_mount_table[i].name[0]!='\0'; i++) {
-			if (!cg_build_path(cgroup->name, path, NULL))
+			if (!cg_build_path(NULL, path, cg_mount_table[i].name))
 				continue;
 			strcat(path, "/tasks");
 
@@ -257,7 +279,12 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			fclose(tasks);
 		}
 	} else {
-		for( i = 0; i <= CG_CONTROLLER_MAX &&
+		for (i = 0; i <= CG_CONTROLLER_MAX &&
+				cgroup->controller[i] != NULL; i++) {
+			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+				return ECGROUPSUBSYSNOTMOUNTED;
+		}
+		for (i = 0; i <= CG_CONTROLLER_MAX &&
 				cgroup->controller[i] != NULL ; i++) {
 			if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
@@ -382,6 +409,15 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	int i;
 	int error;
 
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITALIZED;
+
+	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
+									i++) {
+		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+			return ECGROUPSUBSYSNOTMOUNTED;
+	}
+
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
 						i++, strcpy(path, base)) {
 		int j;
@@ -413,8 +449,17 @@ err:
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
 	char *fts_path[2], base[FILENAME_MAX], *path;
-	int j, k;
+	int i, j, k;
 	int error = 0;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITALIZED;
+
+	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
+									i++) {
+		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+			return ECGROUPSUBSYSNOTMOUNTED;
+	}
 
 	fts_path[0] = (char *)malloc(FILENAME_MAX);
 	if (!fts_path[0])
@@ -489,6 +534,15 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	char path[FILENAME_MAX];
 	int error = ECGROUPNOTALLOWED;
 	int i, ret;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITALIZED;
+
+	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
+									i++) {
+		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+			return ECGROUPSUBSYSNOTMOUNTED;
+	}
 
 	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller; i++) {
 		if (!cg_build_path(cgroup->name, path,
