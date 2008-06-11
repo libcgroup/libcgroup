@@ -37,7 +37,6 @@ struct cgroup *cgroup_new_cgroup(const char *name, uid_t tasks_uid,
 	cgroup->control_uid = control_uid;
 	cgroup->control_gid = control_gid;
 	cgroup->index = 0;
-	cgroup->controller[cgroup->index] = NULL;
 
 	return cgroup;
 }
@@ -71,7 +70,6 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 
 	strncpy(controller->name, name, sizeof(controller->name));
 	controller->index = 0;
-	controller->values[controller->index] = NULL;
 
 	cgroup->controller[cgroup->index] = controller;
 	cgroup->index++;

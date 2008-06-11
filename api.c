@@ -279,13 +279,11 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			fclose(tasks);
 		}
 	} else {
-		for (i = 0; i <= CG_CONTROLLER_MAX &&
-				cgroup->controller[i] != NULL; i++) {
+		for (i = 0; i < cgroup->index; i++) {
 			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 				return ECGROUPSUBSYSNOTMOUNTED;
 		}
-		for (i = 0; i <= CG_CONTROLLER_MAX &&
-				cgroup->controller[i] != NULL ; i++) {
+		for (i = 0; i <= cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 				continue;
@@ -412,21 +410,18 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITALIZED;
 
-	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
-									i++) {
+	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller[i];
-						i++, strcpy(path, base)) {
+	for (i = 0; i < cgroup->index; i++, strcpy(path, base)) {
 		int j;
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		for(j = 0; j < CG_NV_MAX &&
-			cgroup->controller[i]->values[j];
-			j++, strcpy(path, base)) {
+		for (j = 0; j < cgroup->controller[i]->index; j++,
+						strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
 			error = cg_set_control_value(path,
 				cgroup->controller[i]->values[j]->value);
@@ -455,8 +450,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITALIZED;
 
-	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
-									i++) {
+	for (i = 0; i < cgroup->index;	i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
@@ -472,7 +466,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	 * subsystems mounted at one point, all of them *have* be on the cgroup
 	 * data structure. If not, we fail.
 	 */
-	for (k = 0; k < CG_CONTROLLER_MAX && cgroup->controller[k]; k++) {
+	for (k = 0; k < cgroup->index; k++) {
 		path[0] = '\0';
 
 		if (!cg_build_path(cgroup->name, path,
@@ -493,8 +487,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		for (j = 0; j < CG_NV_MAX && cgroup->controller[k]->values[j];
-					j++, strcpy(path, base)) {
+		for (j = 0; j < cgroup->controller[k]->index; j++,
+							strcpy(path, base)) {
 			strcat(path, cgroup->controller[k]->values[j]->name);
 			error = cg_set_control_value(path,
 				cgroup->controller[k]->values[j]->value);
@@ -538,13 +532,12 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITALIZED;
 
-	for (i = 0; i <= CG_CONTROLLER_MAX && cgroup->controller[i] != NULL;
-									i++) {
+	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	for (i = 0; i < CG_CONTROLLER_MAX && cgroup->controller; i++) {
+	for (i = 0; i < cgroup->index; i++) {
 		if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 			continue;
@@ -585,7 +578,7 @@ del_open_err:
 		fclose(base_tasks);
 base_open_err:
 	if (ignore_migration) {
-		for (i = 0; cgroup->controller[i] != NULL; i++) {
+		for (i = 0; i < cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,
 						cgroup->controller[i]->name))
 				continue;
