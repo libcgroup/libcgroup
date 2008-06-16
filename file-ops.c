@@ -18,7 +18,7 @@
 #include <errno.h>
 #include <fts.h>
 #include <grp.h>
-#include <libcg.h>
+#include <libcgroup.h>
 #include <limits.h>
 #include <pwd.h>
 #include <search.h>

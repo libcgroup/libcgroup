@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <libcg.h>
+#include <libcgroup.h>
 
 int yylex(void);
 extern int line_no;

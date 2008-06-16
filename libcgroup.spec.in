@@ -1,0 +1,72 @@
+Name: libcgroup
+Summary: Tools and libraries to control and monitor control groups
+Group: Development/Libraries
+Version: @PACKAGE_VERSION@
+Release:        1%{?dist}
+License: LGPLv2+
+URL: http://libcg.sourceforge.net/
+Source0: http://downloads.sourceforge.net/libcg/%{name}-%{version}.tar.bz2
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: byacc
+BuildRequires: flex
+BuildRequires: coreutils
+
+%description
+Control groups infrastructure. The tools and library help manipulate, control,
+administrate and monitor control groups and the associated controllers.
+
+%package devel
+Summary: Development libraries to develop applications that utilize control groups
+Group: Development/Libraries
+Requires: libcgroup = %{version}-%{release}
+
+%description devel
+It provides API to create/delete and modify cgroup nodes. It will also in the
+future allow creation of persistent configuration for control groups and
+provide scripts to manage that configuration.
+
+%prep
+%setup -q
+
+%build
+%configure
+make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files 
+%defattr(-,root,root,-)
+%{_libdir}/libcgroup-%{version}.so
+%{_libdir}/libcgroup.so.*
+%doc COPYING INSTALL
+
+%files devel
+%defattr(-,root,root,-)
+%{_includedir}/libcgroup.h
+%{_libdir}/libcgroup.so
+%doc COPYING INSTALL
+
+
+%changelog
+* Wed Jun 11 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.1c-1
+- Update to latest upstream version
+* Tue Jun 3 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-3
+- Add post and postun. Also fix Requires for devel to depend on base n-v-r
+* Sat May 31 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-2
+- Fix makeinstall, Source0 and URL (review comments from Tom)
+* Mon May 26 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-1
+- Add a generatable spec file
+* Tue May 20 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1-1
+- Get the spec file to work
+* Tue May 20 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.01-1
+- The first version of libcg

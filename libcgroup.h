@@ -22,8 +22,10 @@ __BEGIN_DECLS
 
 #include <grp.h>
 #include <linux/types.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #ifndef _GNU_SOURCE
@@ -99,7 +101,7 @@ enum cg_msg_type {
 	CG_MSG_DONE,
 };
 
-enum cg_errors {
+enum cgroup_errors {
 	ECGROUPNOTCOMPILED=50000,
 	ECGROUPNOTMOUNTED,
 	ECGROUPNOTEXIST,
@@ -108,6 +110,13 @@ enum cg_errors {
 	ECGROUPNOTOWNER,
 	ECGROUPMULTIMOUNTED,/* Controllers bound to different mount points */
 	ECGROUPNOTALLOWED,  /* This is the stock error. Default error. */
+	ECGMAXVALUESEXCEEDED,
+	ECGCONTROLLEREXISTS,
+	ECGVALUEEXISTS,
+	ECGINVAL,
+	ECGCONTROLLERCREATEFAILED,
+	ECGFAIL,
+	ECGROUPNOTINITALIZED,
 };
 
 #define CG_MAX_MSG_SIZE		256
@@ -141,31 +150,31 @@ void cg_unload_current_config(void);
 #define CG_CONTROLLER_MAX 100
 #define CG_VALUE_MAX 100
 /* Functions and structures that can be used by the application*/
-struct control_value {
-	char name[FILENAME_MAX];
-	char value[CG_VALUE_MAX];
-};
+struct cgroup;
+struct cgroup_controller;
 
-struct controller {
-	char name[FILENAME_MAX];
-	struct control_value *values[CG_NV_MAX];
-};
+int cgroup_init(void);
+int cgroup_attach_task(struct cgroup *cgroup);
+int cgroup_modify_cgroup(struct cgroup *cgroup);
+int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
+int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
+int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
 
-struct cgroup {
-	char name[FILENAME_MAX];
-	struct controller *controller[CG_CONTROLLER_MAX];
-	uid_t tasks_uid;
-	gid_t tasks_gid;
-	uid_t control_uid;
-	gid_t control_gid;
-};
+/* The wrappers for filling libcg structures */
 
-int cg_init(void);
-int cg_attach_task(struct cgroup *cgroup);
-int cg_modify_cgroup(struct cgroup *cgroup);
-int cg_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
-int cg_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
-int cg_attach_task_pid(struct cgroup *cgroup, pid_t tid);
+struct cgroup *cgroup_new_cgroup(const char *name, uid_t tasks_uid,
+		gid_t tasks_gid, uid_t control_uid, gid_t control_gid);
+struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
+						const char *name);
+void cgroup_free(struct cgroup **cgroup);
+int cgroup_add_value_string(struct cgroup_controller *controller,
+				const char *name, const char *value);
+int cgroup_add_value_int64(struct cgroup_controller *controller,
+				const char *name, int64_t value);
+int cgroup_add_value_uint64(struct cgroup_controller *controller,
+				const char *name, u_int64_t value);
+int cgroup_add_value_bool(struct cgroup_controller *controller,
+				const char *name, bool value);
 
 __END_DECLS
 

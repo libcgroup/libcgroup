@@ -1,9 +1,10 @@
-CXXFLAGS = -g -O2 -Wall -DDEBUG
-LDFLAGS =
-LIBS = -lcg
+LDFLAGS = -L ..
+LIBS = -lcgroup
+INC = -I ..
+CXXFLAGS = -g -O2 -Wall -DDEBUG $(INC)
 
 libcg_ba: libcg_ba.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 clean:
 	\rm libcg_ba
