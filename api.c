@@ -256,7 +256,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 	int i;
 
 	if (!cgroup_initialized)
-		return ECGROUPNOTINITALIZED;
+		return ECGROUPNOTINITIALIZED;
 
 	if(!cgroup)
 	{
@@ -408,7 +408,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	int error;
 
 	if (!cgroup_initialized)
-		return ECGROUPNOTINITALIZED;
+		return ECGROUPNOTINITIALIZED;
 
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
@@ -448,7 +448,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	int error = 0;
 
 	if (!cgroup_initialized)
-		return ECGROUPNOTINITALIZED;
+		return ECGROUPNOTINITIALIZED;
 
 	for (i = 0; i < cgroup->index;	i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
@@ -530,7 +530,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	int i, ret;
 
 	if (!cgroup_initialized)
-		return ECGROUPNOTINITALIZED;
+		return ECGROUPNOTINITIALIZED;
 
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
