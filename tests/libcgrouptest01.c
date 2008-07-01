@@ -131,6 +131,25 @@ int main(int argc, char *argv[])
 		else
 			printf("Test[0:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
 
+		/*
+		 * Test06: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Exp outcome: error ECGINVAL
+		 */
+		retval = cgroup_create_cgroup(nullcgroup, 1);
+		if (retval)
+			printf("Test[0:%2d]\tPASS: cgroup_create_cgroup() nullcgroup handled\n", ++i);
+		else
+			printf("Test[0:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
+
+		/*
+		 * Test07: delete nullcgroup
+		 */
+		retval = cgroup_delete_cgroup(nullcgroup, 1);
+		if (retval)
+			printf("Test[0:%2d]\tPASS: cgroup_delete_cgroup() nullcgroup handled\n", ++i);
+		else
+			printf("Test[0:%2d]\tFAIL: cgroup_delete_cgroup() Unable to handle nullcgroup\n", ++i);
+
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
 
@@ -270,6 +289,25 @@ int main(int argc, char *argv[])
 										 ++i, retval);
 		} else
 			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+
+		/*
+		 * Test08: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Exp outcome: error ECGINVAL
+		 */
+		retval = cgroup_create_cgroup(nullcgroup, 1);
+		if (retval)
+			printf("Test[1:%2d]\tPASS: cgroup_create_cgroup() nullcgroup handled\n", ++i);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
+
+		/*
+		 * Test09: delete nullcgroup
+		 */
+		retval = cgroup_delete_cgroup(nullcgroup, 1);
+		if (retval)
+			printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() nullcgroup handled\n", ++i);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() Unable to handle nullcgroup\n", ++i);
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
