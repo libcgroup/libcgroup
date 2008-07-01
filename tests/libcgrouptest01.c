@@ -18,7 +18,7 @@
 
 int main(int argc, char *argv[])
 {
-	int fs_mounted;
+	int fs_mounted, retval, i = 0;
 
 	if ((argc < 3) || (atoi(argv[1]) < 0)) {
 		printf("ERROR: Wrong no of parameters recieved from script\n");
@@ -36,20 +36,36 @@ int main(int argc, char *argv[])
 	switch (fs_mounted) {
 
 	case FS_NOT_MOUNTED:
+
 		/*
-		 * Test01: call apis and check return values
-		 * Exp outcome:
+		 * Test01: call cgroup_init() and check return values
+		 * Exp outcome: error ECGROUPNOTMOUNTED
 		 */
-		printf("First set\n");
+
+		retval = cgroup_init();
+		if (retval == ECGROUPNOTMOUNTED)
+			printf("Test[0:%2d]\tPASS: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
+		else
+			printf("Test[0:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
 
 		break;
 
 	case FS_MOUNTED:
+
 		/*
-		 * Test01: call apis and check return values
-		 * Exp outcome:
+		 * Test01: call cgroup_init() and check return values
+		 * Exp outcome:  no error. return value 0
 		 */
-		printf("Second set\n");
+
+		retval = cgroup_init();
+		if (retval == 0)
+			printf("Test[1:%2d]\tPASS: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
 
 		break;
 
@@ -58,9 +74,21 @@ int main(int argc, char *argv[])
 		 * Test01: call apis and check return values
 		 * Exp outcome:
 		 */
-		printf("Third set\n");
 		/*
-		 * Will add testcases once multiple mount patch is in
+		 * Scenario 1: cgroup fs is multi mounted
+		 * Exp outcome: no error. 0 return value
+		 */
+
+		retval = cgroup_init();
+		if (retval == 0)
+			printf("Test[2:%2d]\tPASS: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
+		else
+			printf("Test[2:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
+								 ++i, retval);
+
+		/*
+		 * Will add further testcases in separate patchset
 		 */
 
 		break;
