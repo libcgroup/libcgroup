@@ -18,6 +18,8 @@
 #ifndef __LIBCGROUPTEST_H
 #define __LIBCGROUPTEST_H
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,11 +27,24 @@
 
 #include <libcgroup.h>
 
+int cpu = 0, memory = 0;
+
 enum cgroup_mount_t {
 	FS_NOT_MOUNTED,
 	FS_MOUNTED,
 	FS_MULTI_MOUNTED,
 };
+
+enum controller_t {
+	MEMORY,
+	CPU,
+	/* Add new controllers here */
+};
+
+void get_controllers(char *name, int *exist);
+static int group_exist(char *path_group);
+static int set_controller(int controller, char *controller_name,
+			 char *control_file, char *control_val, char *value);
 
 static inline pid_t cgrouptest_gettid()
 {
