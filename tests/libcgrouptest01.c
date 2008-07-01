@@ -18,13 +18,11 @@
 
 int main(int argc, char *argv[])
 {
-	int fs_mounted, retval, i = 0, pass = 0;
+	int fs_mounted, retval, pass = 0;
 	pid_t curr_tid, tid;
 	struct cgroup *cgroup1, *cgroup2, *nullcgroup = NULL;
-	struct cgroup_controller *controller1, *controller2;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
-			control_val[FILENAME_MAX], path_group[FILENAME_MAX],
-						path_control_file[FILENAME_MAX];
+		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
 	FILE *file;
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
 
@@ -48,6 +46,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Exiting the libcgroup testcases......\n");
 		exit(1);
 	}
+
+	/* Set default control permissions */
+	control_uid = 0;
+	control_gid = 0;
+	tasks_uid = 0;
+	tasks_gid = 0;
 
 	/*
 	 * Testsets: Testcases are broadly devided into 3 categories based on
@@ -90,27 +94,14 @@ int main(int argc, char *argv[])
 		 */
 
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name,
-				 control_file, control_val, "40960000");
+		retval = set_controller(MEMORY, controller_name, control_file);
+		strncpy(val_string, "40960000", sizeof(val_string));
+
 		if (retval)
 			fprintf(stderr, "Setting controller failled\n");
 
-		cgroup1 = cgroup_new_cgroup(group, 0, 0, 0, 0);
-		if (cgroup1) {
-			controller1 = cgroup_add_controller(cgroup1, controller_name);
-			if (controller1) {
-				retval = cgroup_add_value_string(controller1,
-						 control_file, control_val);
-				if (!retval)
-					printf("Test[0:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
-				else
-					printf("Test[0:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
-				}
-			else
-				printf("Test[0:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
-			}
-		else
-			printf("Test[0:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+		cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid group
@@ -239,27 +230,14 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name,
-				 control_file, control_val, "40960000");
+		retval = set_controller(MEMORY, controller_name, control_file);
+		strncpy(val_string, "40960000", sizeof(val_string));
+
 		if (retval)
 			fprintf(stderr, "Setting controller failled\n");
 
-		cgroup1 = cgroup_new_cgroup(group, 0, 0, 0, 0);
-		if (cgroup1) {
-			controller1 = cgroup_add_controller(cgroup1, controller_name);
-			if (controller1) {
-				retval = cgroup_add_value_string(controller1,
-						 control_file, control_val);
-				if (!retval)
-					printf("Test[1:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
-				else
-					printf("Test[1:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
-				}
-			else
-				printf("Test[1:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
-			}
-		else
-			printf("Test[1:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+		cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
 
 		/*
 		 * Test06: Then Call cgroup_create_cgroup() with this valid group
@@ -281,28 +259,14 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name,
-				 control_file, control_val, "81920000");
+		retval = set_controller(MEMORY, controller_name, control_file);
+		strncpy(val_string, "81920000", sizeof(val_string));
+
 		if (retval)
 			fprintf(stderr, "Setting controller failled\n");
 
-
-		cgroup2 = cgroup_new_cgroup(group, 0, 0, 0, 0);
-		if (cgroup2) {
-			controller2 = cgroup_add_controller(cgroup2, controller_name);
-			if (controller2) {
-				retval = cgroup_add_value_string(controller2,
-						 control_file, control_val);
-				if (!retval)
-					printf("Test[1:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
-				else
-					printf("Test[1:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
-				}
-			else
-				printf("Test[1:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
-			}
-		else
-			printf("Test[1:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+		cgroup2 = new_cgroup(group, controller_name,
+						 control_file, STRING);
 
 		/*
 		 * Test07: modify cgroup
@@ -312,8 +276,6 @@ int main(int argc, char *argv[])
 		strncat(path_control_file, "/group1", sizeof("group1"));
 		strncat(path_control_file, "/", sizeof("/"));
 		strncat(path_control_file, control_file, sizeof(control_file));
-
-		strncpy(val_string, "81920000", sizeof(val_string));
 
 		retval = cgroup_modify_cgroup(cgroup2);
 		/* Check if the values are changed */
@@ -421,7 +383,7 @@ static int group_exist(char *path_group)
 }
 
 static int set_controller(int controller, char *controller_name,
-			 char *control_file, char *control_val, char *value)
+							 char *control_file)
 {
 	switch (controller) {
 	case MEMORY:
@@ -430,7 +392,6 @@ static int set_controller(int controller, char *controller_name,
 
 		strncpy(controller_name, "memory", FILENAME_MAX);
 		strncpy(control_file, "memory.limit_in_bytes", FILENAME_MAX);
-		strncpy(control_val, value, FILENAME_MAX);
 		return 0;
 		break;
 
@@ -440,7 +401,6 @@ static int set_controller(int controller, char *controller_name,
 
 		strncpy(controller_name, "cpu", FILENAME_MAX);
 		strncpy(control_file, "cpu.shares", FILENAME_MAX);
-		strncpy(control_val, value, FILENAME_MAX);
 		return 0;
 		break;
 		/* Future controllers can be added here */
@@ -495,4 +455,57 @@ static int group_modified(char *path_control_file, int value_type)
 		break;
 	}
 	return 1;
+}
+
+struct cgroup *new_cgroup(char *group, char *controller_name,
+				 char *control_file, int value_type)
+{
+	int retval;
+	struct cgroup *newcgroup;
+	struct cgroup_controller *newcontroller;
+	newcgroup = cgroup_new_cgroup(group, tasks_uid, tasks_gid,
+						 control_uid, control_gid);
+
+	if (newcgroup) {
+		newcontroller = cgroup_add_controller(newcgroup, controller_name);
+		if (newcontroller) {
+			switch (value_type) {
+
+			case BOOL:
+				retval = cgroup_add_value_bool(newcontroller,
+						 control_file, val_bool);
+				break;
+			case INT64:
+				retval = cgroup_add_value_int64(newcontroller,
+						 control_file, val_int64);
+				break;
+			case UINT64:
+				retval = cgroup_add_value_uint64(newcontroller,
+						 control_file, val_uint64);
+				break;
+			case STRING:
+				retval = cgroup_add_value_string(newcontroller,
+						 control_file, val_string);
+				break;
+			default:
+				printf("ERROR: wrong value in new_cgroup()\n");
+				return NULL;
+				break;
+			}
+
+			if (!retval) {
+				printf("Test[1:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
+			} else {
+				printf("Test[1:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
+				return NULL;
+			}
+		 } else {
+			printf("Test[1:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
+			return NULL;
+		}
+	} else {
+		printf("Test[1:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+		return NULL;
+	}
+	return newcgroup;
 }
