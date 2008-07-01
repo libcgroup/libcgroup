@@ -44,6 +44,9 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 	wrapper.c
 	ln -sf $@ $@.$(VERSION)
 
+test:
+	$(MAKE) -C tests
+
 install: libcgroup.so
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
@@ -59,3 +62,4 @@ uninstall: libcgroup.so
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcgroup.so \
 	libcgroup.so.$(VERSION)
+	$(MAKE) -C tests clean
