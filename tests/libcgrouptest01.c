@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 		 * and invalid pid
 		 * Exp outcome: error
 		 */
-		retval = cgroup_attach_task_pid(nullcgroup, 0);
+		retval = cgroup_attach_task_pid(nullcgroup, -1);
 		if (retval != 0)
 			printf("Test[1:%2d]\tPASS: cgroup_attach_task_pid() ret: %d\n",\
 								 ++i, retval);
