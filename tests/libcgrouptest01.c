@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
 	int fs_mounted, retval, pass = 0;
 	pid_t curr_tid, tid;
-	struct cgroup *cgroup1, *cgroup2, *nullcgroup = NULL;
+	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
 		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
 	FILE *file;
@@ -285,7 +285,68 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
 
 		/*
-		 * Test08: delete cgroup
+		 * Test08: modify cgroup with the same cgroup
+		 * Exp outcome: zero return value
+		 */
+
+		retval = cgroup_modify_cgroup(cgroup1);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+
+		/*
+		 * Test09: modify cgroup with the null cgroup
+		 * Exp outcome: zero return value. root group unchanged.
+		 */
+
+		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
+		strncat(path_control_file, "/", sizeof("/"));
+		strncat(path_control_file, control_file, sizeof(control_file));
+
+		retval = cgroup_modify_cgroup(nullcgroup);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+
+		/*
+		 * Create another valid cgroup structure with diff controller
+		 * to modify the existing group
+		 * Exp outcome: no error. 0 return value
+		 */
+		val_int64 = 2048;
+		strncpy(group, "group1", sizeof(group));
+		retval = set_controller(CPU, controller_name, control_file);
+		if (retval)
+			fprintf(stderr, "Setting controller failled\n");
+
+		cgroup3 = new_cgroup(group, controller_name,
+						 control_file, INT64);
+
+		/*
+		 * Test10: modify existing group with this cgroup
+		 * Exp outcome: zero return value
+		 */
+		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
+		strncat(path_control_file, "/group1", sizeof("group2"));
+		strncat(path_control_file, "/", sizeof("/"));
+		strncat(path_control_file, control_file, sizeof(control_file));
+
+		strncpy(val_string, "2048", sizeof(val_string));
+
+		retval = cgroup_modify_cgroup(cgroup3);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+
+
+		/*
+		 * Test11: delete cgroup
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(cgroup1, 1);
@@ -300,7 +361,7 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
 
 		/*
-		 * Test09: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Test12: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGINVAL
 		 */
 		retval = cgroup_create_cgroup(nullcgroup, 1);
@@ -310,7 +371,7 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
 
 		/*
-		 * Test10: delete nullcgroup
+		 * Test13: delete nullcgroup
 		 */
 		retval = cgroup_delete_cgroup(nullcgroup, 1);
 		if (retval)
