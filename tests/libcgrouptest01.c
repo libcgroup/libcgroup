@@ -20,10 +20,11 @@ int main(int argc, char *argv[])
 {
 	int fs_mounted, retval, i = 0, pass = 0;
 	pid_t curr_tid, tid;
-	struct cgroup *cgroup1, *nullcgroup = NULL;
-	struct cgroup_controller *controller1;
+	struct cgroup *cgroup1, *cgroup2, *nullcgroup = NULL;
+	struct cgroup_controller *controller1, *controller2;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
-			control_val[FILENAME_MAX], path_group[FILENAME_MAX];
+			control_val[FILENAME_MAX], path_group[FILENAME_MAX],
+						path_control_file[FILENAME_MAX];
 	FILE *file;
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
 
@@ -276,7 +277,53 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
 
 		/*
-		 * Test07: delete cgroup
+		 * Create another valid cgroup structure
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "group1", sizeof(group));
+		retval = set_controller(MEMORY, controller_name,
+				 control_file, control_val, "81920000");
+		if (retval)
+			fprintf(stderr, "Setting controller failled\n");
+
+
+		cgroup2 = cgroup_new_cgroup(group, 0, 0, 0, 0);
+		if (cgroup2) {
+			controller2 = cgroup_add_controller(cgroup2, controller_name);
+			if (controller2) {
+				retval = cgroup_add_value_string(controller2,
+						 control_file, control_val);
+				if (!retval)
+					printf("Test[1:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
+				else
+					printf("Test[1:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
+				}
+			else
+				printf("Test[1:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
+			}
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+
+		/*
+		 * Test07: modify cgroup
+		 * Exp outcome: zero return value
+		 */
+		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
+		strncat(path_control_file, "/group1", sizeof("group1"));
+		strncat(path_control_file, "/", sizeof("/"));
+		strncat(path_control_file, control_file, sizeof(control_file));
+
+		strncpy(val_string, "81920000", sizeof(val_string));
+
+		retval = cgroup_modify_cgroup(cgroup2);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+		else
+			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+
+		/*
+		 * Test08: delete cgroup
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(cgroup1, 1);
@@ -291,7 +338,7 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
 
 		/*
-		 * Test08: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Test09: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGINVAL
 		 */
 		retval = cgroup_create_cgroup(nullcgroup, 1);
@@ -301,7 +348,7 @@ int main(int argc, char *argv[])
 			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
 
 		/*
-		 * Test09: delete nullcgroup
+		 * Test10: delete nullcgroup
 		 */
 		retval = cgroup_delete_cgroup(nullcgroup, 1);
 		if (retval)
@@ -402,4 +449,50 @@ static int set_controller(int controller, char *controller_name,
 		return 1;
 		break;
 	}
+}
+
+static int group_modified(char *path_control_file, int value_type)
+{
+	bool bool_val;
+	int64_t int64_val;
+	u_int64_t uint64_val;
+	char string_val[FILENAME_MAX]; /* Doubt: what should be the size ? */
+	FILE *fd;
+
+	fd = fopen(path_control_file, "r");
+	if (!fd) {
+		fprintf(stderr, "Error in opening %s\n", path_control_file);
+		fprintf(stderr, "Skipping modified values check....\n");
+		return 1;
+	}
+
+	switch (value_type) {
+
+	case BOOL:
+		fscanf(fd, "%d", &bool_val);
+		if (bool_val == val_bool)
+			return 0;
+		break;
+	case INT64:
+		fscanf(fd, "%lld", &int64_val);
+		if (int64_val == val_int64)
+			return 0;
+		break;
+	case UINT64:
+		fscanf(fd, "%llu", &uint64_val);
+		if (uint64_val == val_uint64)
+			return 0;
+		break;
+	case STRING:
+		fscanf(fd, "%s", string_val);
+		if (string_val == val_string)
+			return 0;
+		break;
+	default:
+		fprintf(stderr, "Wrong value_type passed in group_modified()\n");
+		fprintf(stderr, "Skipping modified values check....\n");
+		return 0;	/* Can not report test result as failure */
+		break;
+	}
+	return 1;
 }

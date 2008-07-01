@@ -41,10 +41,24 @@ enum controller_t {
 	/* Add new controllers here */
 };
 
+enum cgroup_control_val_t {
+	BOOL,
+	INT64,
+	UINT64,
+	STRING,
+};
+
+int64_t val_int64;
+u_int64_t val_uint64;
+bool val_bool;
+/* Doubt: size of following string. is'nt this wrong ?*/
+char val_string[FILENAME_MAX];	/* string value of control parameter */
+
 void get_controllers(char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
 			 char *control_file, char *control_val, char *value);
+static int group_modified(char *path_control_file, int value_type);
 
 static inline pid_t cgrouptest_gettid()
 {
