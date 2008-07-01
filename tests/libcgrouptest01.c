@@ -149,6 +149,13 @@ int main(int argc, char *argv[])
 
 	case FS_MOUNTED:
 
+		/* Do a sanity check if cgroup fs is mounted */
+		if (check_fsmounted()) {
+			printf("Sanity check fails. cgroup fs not mounted\n");
+			printf("Exiting without running this set of tests\n");
+			exit(1);
+		}
+
 		/*
 		 * Test01: call cgroup_attach_task() with null group
 		 * without calling cgroup_inti(). We can check other apis too.
@@ -569,4 +576,31 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 		return NULL;
 	}
 	return newcgroup;
+}
+
+int check_fsmounted()
+{
+	struct mntent *entry, *tmp_entry;
+	/* Need a better mechanism to decide memory allocation size here */
+	char entry_buffer[FILENAME_MAX * 4];
+	FILE *proc_file;
+
+	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent *));
+	if (!tmp_entry) {
+		perror("Error: failled to mallloc for mntent\n");
+		return 1;
+	}
+
+	proc_file = fopen("/proc/mounts", "r");
+	if (!proc_file) {
+		printf("Error in opening /proc/mounts.\n");
+		return EIO;
+	}
+	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer, FILENAME_MAX*4)) != NULL) {
+		if (!strncmp(entry->mnt_type, "cgroup", strlen("cgroup"))) {
+			printf("sanity check pass.... %s\n", entry->mnt_type);
+			return 0;
+		}
+	}
+	return 1;
 }
