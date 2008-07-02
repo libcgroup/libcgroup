@@ -240,8 +240,16 @@ int main(int argc, char *argv[])
 		retval = set_controller(MEMORY, controller_name, control_file);
 		strncpy(val_string, "40960000", sizeof(val_string));
 
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
+		if (retval) {
+			retval = set_controller(CPU, controller_name,
+								control_file);
+			strncpy(val_string, "2048", sizeof(val_string));
+			if (retval) {
+				fprintf(stderr, "Failed to set any controllers "
+					"Tests dependent on this structure will"
+					" fail\n");
+			}
+		}
 
 		cgroup1 = new_cgroup(group, controller_name,
 						 control_file, STRING);
