@@ -593,7 +593,7 @@ int check_fsmounted()
 	char entry_buffer[FILENAME_MAX * 4];
 	FILE *proc_file;
 
-	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent *));
+	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent));
 	if (!tmp_entry) {
 		perror("Error: failled to mallloc for mntent\n");
 		return 1;
