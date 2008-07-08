@@ -410,6 +410,9 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
+	if (!cgroup)
+		return ECGROUPNOTALLOWED;
+
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
@@ -449,6 +452,9 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
+
+	if (!cgroup)
+		return ECGROUPNOTALLOWED;
 
 	for (i = 0; i < cgroup->index;	i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
@@ -531,6 +537,9 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
+
+	if (!cgroup)
+		return ECGROUPNOTALLOWED;
 
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
