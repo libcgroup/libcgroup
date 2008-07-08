@@ -283,7 +283,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 				return ECGROUPSUBSYSNOTMOUNTED;
 		}
-		for (i = 0; i <= cgroup->index; i++) {
+		for (i = 0; i < cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 				continue;
