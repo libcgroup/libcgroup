@@ -120,7 +120,7 @@ static int cgroup_test_subsys_mounted(const char *name)
 int cgroup_init()
 {
 	FILE *proc_mount;
-	struct mntent *ent;
+	struct mntent *ent, *temp_ent;
 	int found_mnt = 0;
 	int ret = 0;
 	static char *controllers[CG_CONTROLLER_MAX];
@@ -131,6 +131,8 @@ int cgroup_init()
 	char *mntopt;
 	int err;
 	char *buf;
+	char mntent_buffer[4 * FILENAME_MAX];
+	char *strtok_buffer;
 
 	proc_cgroup = fopen("/proc/cgroups", "r");
 
@@ -164,11 +166,15 @@ int cgroup_init()
 		return EIO;
 	}
 
-	while ((ent = getmntent(proc_mount)) != NULL) {
+	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+
+	while ((ent = getmntent_r(proc_mount, temp_ent,
+					mntent_buffer,
+					sizeof(mntent_buffer))) != NULL) {
 		if (!strncmp(ent->mnt_type, "cgroup", strlen("cgroup"))) {
 			for (i = 0; controllers[i] != NULL; i++) {
 				mntopt = hasmntopt(ent, controllers[i]);
-				mntopt = strtok(mntopt, ",");
+				mntopt = strtok_r(mntopt, ",", &strtok_buffer);
 				if (mntopt &&
 					strcmp(mntopt, controllers[i]) == 0) {
 					dbg("matched %s:%s\n", mntopt,
@@ -202,13 +208,17 @@ int cgroup_init()
 static int cg_test_mounted_fs()
 {
 	FILE *proc_mount;
-	struct mntent *ent;
+	struct mntent *ent, *temp_ent;
+	char mntent_buff[4 * FILENAME_MAX];
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
 		return -1;
 	}
-	ent = getmntent(proc_mount);
+
+	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+	ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
+						sizeof(mntent_buff));
 
 	while (strcmp(ent->mnt_type, "cgroup") !=0) {
 		ent = getmntent(proc_mount);
