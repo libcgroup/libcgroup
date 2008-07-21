@@ -382,7 +382,7 @@ static int cg_set_control_value(char *path, char *val)
 			fclose(control_file);
 			return ECGROUPNOTALLOWED;
 		}
-		return errno;
+		return ECGROUPVALUENOTEXIST;
 	}
 
 	fprintf(control_file, "%s", val);
