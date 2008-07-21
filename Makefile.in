@@ -13,7 +13,7 @@
 YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
-LIBS= -lcgroup
+LIBS= -lcgroup -lpthread
 LDFLAGS=@LDFLAGS@
 YACC=@YACC@
 LEX=@LEX@

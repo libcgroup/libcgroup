@@ -1,5 +1,5 @@
 LDFLAGS = -L ..
-LIBS = -lcgroup
+LIBS = -lcgroup -lpthread
 INC = -I ..
 CXXFLAGS = -g -O2 -Wall -DDEBUG $(INC)
 

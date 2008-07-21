@@ -26,6 +26,7 @@
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 #include <mntent.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,7 @@
 const static char cg_version[] = VERSION(PACKAGE_VERSION);
 
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
+static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
@@ -100,22 +102,26 @@ static int cgroup_test_subsys_mounted(const char *name)
 {
 	int i;
 
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
 		if (strncmp(cg_mount_table[i].name, name,
 				sizeof(cg_mount_table[i].name)) == 0) {
+			pthread_rwlock_unlock(&cg_mount_table_lock);
 			return 1;
 		}
 	}
+	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return 0;
 }
 
 /**
  * cgroup_init(), initializes the MOUNT_POINT.
- * This code is not currently thread safe (hint: getmntent is not thread safe).
- * This API is likely to change in the future to push state back to the caller
- * to achieve thread safety. The code currently supports just one mount point.
- * Complain if the cgroup filesystem controllers are bound to different mount
- * points.
+ *
+ * This code is theoretically thread safe now. Its not really tested
+ * so it can blow up. If does for you, please let us know with your
+ * test case and we can really make it thread safe.
+ *
  */
 int cgroup_init()
 {
@@ -134,10 +140,14 @@ int cgroup_init()
 	char mntent_buffer[4 * FILENAME_MAX];
 	char *strtok_buffer;
 
+	pthread_rwlock_wrlock(&cg_mount_table_lock);
+
 	proc_cgroup = fopen("/proc/cgroups", "r");
 
-	if (!proc_cgroup)
-		return EIO;
+	if (!proc_cgroup) {
+		ret = EIO;
+		goto unlock_exit;
+	}
 
 	/*
 	 * The first line of the file has stuff we are not interested in.
@@ -146,8 +156,10 @@ int cgroup_init()
 	 * XX: fix the size for fgets
 	 */
 	buf = fgets(subsys_name, FILENAME_MAX, proc_cgroup);
-	if (!buf)
-		return EIO;
+	if (!buf) {
+		ret = EIO;
+		goto unlock_exit;
+	}
 
 	while (!feof(proc_cgroup)) {
 		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
@@ -163,7 +175,8 @@ int cgroup_init()
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
-		return EIO;
+		ret = EIO;
+		goto unlock_exit;
 	}
 
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
@@ -194,7 +207,8 @@ int cgroup_init()
 
 	if (!found_mnt) {
 		cg_mount_table[0].name[0] = '\0';
-		return ECGROUPNOTMOUNTED;
+		ret = ECGROUPNOTMOUNTED;
+		goto unlock_exit;
 	}
 
 	found_mnt++;
@@ -202,6 +216,9 @@ int cgroup_init()
 
 	fclose(proc_mount);
 	cgroup_initialized = 1;
+
+unlock_exit:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }
 
@@ -234,7 +251,9 @@ static inline pid_t cg_gettid()
 	return syscall(__NR_gettid);
 }
 
-static char* cg_build_path(char *name, char *path, char *type)
+
+/* Call with cg_mount_table_lock taken */
+static char *cg_build_path_locked(char *name, char *path, char *type)
 {
 	int i;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
@@ -251,6 +270,14 @@ static char* cg_build_path(char *name, char *path, char *type)
 	return NULL;
 }
 
+static char *cg_build_path(char *name, char *path, char *type)
+{
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	path = cg_build_path_locked(name, path, type);
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+
+	return path;
+}
 /** cgroup_attach_task_pid is used to assign tasks to a cgroup.
  *  struct cgroup *cgroup: The cgroup to assign the thread to.
  *  pid_t tid: The thread to be assigned to the cgroup.
@@ -270,14 +297,17 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 
 	if(!cgroup)
 	{
+		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for(i = 0; i < CG_CONTROLLER_MAX &&
 				cg_mount_table[i].name[0]!='\0'; i++) {
-			if (!cg_build_path(NULL, path, cg_mount_table[i].name))
+			if (!cg_build_path_locked(NULL, path,
+						cg_mount_table[i].name))
 				continue;
 			strcat(path, "/tasks");
 
 			tasks = fopen(path, "w");
 			if (!tasks) {
+				pthread_rwlock_unlock(&cg_mount_table_lock);
 				switch (errno) {
 				case EPERM:
 					return ECGROUPNOTOWNER;
@@ -288,6 +318,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			fprintf(tasks, "%d", tid);
 			fclose(tasks);
 		}
+		pthread_rwlock_unlock(&cg_mount_table_lock);
 	} else {
 		for (i = 0; i < cgroup->index; i++) {
 			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
