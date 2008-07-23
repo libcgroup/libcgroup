@@ -175,16 +175,21 @@ int cgroup_init()
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
-		ret = EIO;
+		ret = ECGFAIL;
 		goto unlock_exit;
 	}
 
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
 
+	if (!temp_ent) {
+		ret = ECGFAIL;
+		goto unlock_exit;
+	}
+
 	while ((ent = getmntent_r(proc_mount, temp_ent,
 					mntent_buffer,
 					sizeof(mntent_buffer))) != NULL) {
-		if (!strncmp(ent->mnt_type, "cgroup", strlen("cgroup"))) {
+		if (!strcmp(ent->mnt_type, "cgroup")) {
 			for (i = 0; controllers[i] != NULL; i++) {
 				mntopt = hasmntopt(ent, controllers[i]);
 				mntopt = strtok_r(mntopt, ",", &strtok_buffer);
@@ -234,11 +239,20 @@ static int cg_test_mounted_fs()
 	}
 
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+	if (!temp_ent) {
+		/* We just fail at the moment. */
+		return 0;
+	}
+
 	ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
 						sizeof(mntent_buff));
 
+	if (!ent)
+		return 0;
+
 	while (strcmp(ent->mnt_type, "cgroup") !=0) {
-		ent = getmntent(proc_mount);
+		ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
+						sizeof(mntent_buff));
 		if (ent == NULL)
 			return 0;
 	}
