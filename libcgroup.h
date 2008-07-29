@@ -118,6 +118,10 @@ enum cgroup_errors {
 	ECGFAIL,
 	ECGROUPNOTINITIALIZED,
 	ECGROUPVALUENOTEXIST,
+	/* Represents error coming from other libraries like glibc. libcgroup
+	 * users need to check errno upon encoutering ECGOTHER.
+	 */
+	ECGOTHER,
 };
 
 #define CG_MAX_MSG_SIZE		256
