@@ -306,9 +306,10 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 	FILE *tasks;
 	int i;
 
-	if (!cgroup_initialized)
+	if (!cgroup_initialized) {
+		dbg ("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
-
+	}
 	if(!cgroup)
 	{
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
@@ -335,8 +336,11 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 	} else {
 		for (i = 0; i < cgroup->index; i++) {
-			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name)) {
+				dbg("subsystem %s is not mounted\n",
+					cgroup->controller[i]->name);
 				return ECGROUPSUBSYSNOTMOUNTED;
+			}
 		}
 		for (i = 0; i < cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,
@@ -347,6 +351,9 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 
 			tasks = fopen(path, "w");
 			if (!tasks) {
+				dbg("fopen failed for %s:%s", path,
+							strerror(errno));
+
 				switch (errno) {
 				case EPERM:
 					return ECGROUPNOTOWNER;
@@ -469,8 +476,11 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 		return ECGROUPNOTALLOWED;
 
 	for (i = 0; i < cgroup->index; i++) {
-		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name)) {
+			dbg("subsystem %s is not mounted\n",
+				cgroup->controller[i]->name);
 			return ECGROUPSUBSYSNOTMOUNTED;
+		}
 	}
 
 	for (i = 0; i < cgroup->index; i++, strcpy(path, base)) {
