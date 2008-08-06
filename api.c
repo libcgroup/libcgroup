@@ -22,6 +22,7 @@
  * his mistake.
  */
 
+#include <dirent.h>
 #include <errno.h>
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
@@ -660,4 +661,156 @@ base_open_err:
 		}
 	}
 	return error;
+}
+
+/*
+ * This function should really have more checks, but this version
+ * will assume that the callers have taken care of everything.
+ * Including the locking.
+ */
+static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
+{
+	char *value;
+	char path[FILENAME_MAX];
+	FILE *ctrl_file;
+
+	if (!cg_build_path_locked(cgroup, path, subsys))
+		return NULL;
+
+	strcat(path, file);
+	ctrl_file = fopen(path, "r");
+	if (!ctrl_file)
+		return NULL;
+
+	fscanf(ctrl_file, "%as", &value);
+
+	fclose(ctrl_file);
+
+	return value;
+}
+
+/*
+ * Call this function with required locks taken.
+ */
+static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
+			struct cgroup_controller *cgc, int index)
+{
+	char *ctrl_name;
+	char *ctrl_file;
+	char *ctrl_value;
+	char *d_name;
+	char *buffer;
+	int error = 0;
+
+	d_name = strdup(ctrl_dir->d_name);
+
+	ctrl_name = strtok_r(d_name, ".", &buffer);
+
+	if (!ctrl_name) {
+		error = ECGFAIL;
+		goto fill_error;
+	}
+
+	ctrl_file = strtok_r(NULL, ".", &buffer);
+
+	if (!ctrl_file) {
+		error = ECGFAIL;
+		goto fill_error;
+	}
+
+	if (strcmp(ctrl_name, cg_mount_table[index].name) == 0) {
+		ctrl_value = cg_rd_ctrl_file(cg_mount_table[index].name,
+				cgroup->name, d_name);
+		if (!ctrl_value) {
+			error = ECGFAIL;
+			goto fill_error;
+		}
+
+		if (cgroup_add_value_string(cgc, ctrl_dir->d_name,
+				ctrl_value)) {
+			error = ECGFAIL;
+			goto fill_error;
+		}
+	}
+fill_error:
+	free(ctrl_value);
+	free(d_name);
+	return error;
+}
+
+/*
+ * cgroup_get_cgroup returns the cgroup data from the filesystem.
+ * struct cgroup has the name of the group to be populated
+ *
+ * return succesfully filled cgroup data structure on success.
+ */
+struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
+{
+	int i;
+	char path[FILENAME_MAX];
+	DIR *dir;
+	struct dirent *ctrl_dir;
+
+	if (!cgroup_initialized) {
+		/* ECGROUPNOTINITIALIZED */
+		return NULL;
+	}
+
+	if (!cgroup) {
+		/* ECGROUPNOTALLOWED */
+		return NULL;
+	}
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	for (i = 0; i < CG_CONTROLLER_MAX &&
+			cg_mount_table[i].name[0] != '\0'; i++) {
+		/*
+		 * cgc will not leak, since it has to be freed using
+		 * cgroup_free_cgroup
+		 */
+		struct cgroup_controller *cgc;
+		if (!cg_build_path_locked(NULL, path,
+					cg_mount_table[i].name))
+			continue;
+
+		strncat(path, cgroup->name, sizeof(path));
+
+		if (access(path, F_OK))
+			continue;
+
+		if (!cg_build_path_locked(cgroup->name, path,
+					cg_mount_table[i].name)) {
+			/*
+			 * This fails when the cgroup does not exist
+			 * for that controller.
+			 */
+			continue;
+		}
+
+		cgc = cgroup_add_controller(cgroup,
+				cg_mount_table[i].name);
+		if (!cgc)
+			goto unlock_error;
+
+		dir = opendir(path);
+		if (!dir) {
+			/* error = ECGROUPSTRUCTERROR; */
+			goto unlock_error;
+		}
+		while ((ctrl_dir = readdir(dir)) != NULL) {
+			if (cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i)) {
+				closedir(dir);
+				goto unlock_error;
+			}
+
+		}
+		closedir(dir);
+	}
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return cgroup;
+
+unlock_error:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	cgroup = NULL;
+	return NULL;
 }

@@ -164,6 +164,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup);
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
 int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
+struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup);
 
 /* The wrappers for filling libcg structures */
 
