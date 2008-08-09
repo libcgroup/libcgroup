@@ -112,8 +112,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 		return ECGMAXVALUESEXCEEDED;
 
 	for (i = 0; i < controller->index && i < CG_VALUE_MAX; i++) {
-		if (strncmp(controller->values[controller->index]->name, name,
-		sizeof(controller->values[controller->index]->name)) == 0)
+		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
 
@@ -142,8 +141,7 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 		return ECGMAXVALUESEXCEEDED;
 
 	for (i = 0; i < controller->index && i < CG_VALUE_MAX; i++) {
-		if (strncmp(controller->values[controller->index]->name, name,
-		   sizeof(controller->values[controller->index]->name)) == 0)
+		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
 
@@ -178,8 +176,7 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 		return ECGMAXVALUESEXCEEDED;
 
 	for (i = 0; i < controller->index && i < CG_VALUE_MAX; i++) {
-		if (strncmp(controller->values[controller->index]->name, name,
-		   sizeof(controller->values[controller->index]->name)) == 0)
+		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
 
@@ -212,8 +209,7 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 		return ECGMAXVALUESEXCEEDED;
 
 	for (i = 0; i < controller->index && i < CG_VALUE_MAX; i++) {
-		if (strncmp(controller->values[controller->index]->name, name,
-		  sizeof(controller->values[controller->index]->name)) == 0)
+		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
 
