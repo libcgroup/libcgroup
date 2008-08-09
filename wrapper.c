@@ -148,7 +148,7 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 	strncpy(cntl_value->name, name,
 			sizeof(cntl_value->name));
 	ret = snprintf(cntl_value->value,
-	  sizeof(cntl_value->value), "%lld", value);
+	  sizeof(cntl_value->value), "%ld", value);
 
 	if (ret >= sizeof(cntl_value->value))
 		return ECGINVAL;
@@ -181,7 +181,8 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 	}
 
 	strncpy(cntl_value->name, name,	sizeof(cntl_value->name));
-	ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "%llu", value);
+	ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "%lu",
+									value);
 
 	if (ret >= sizeof(cntl_value->value))
 		return ECGINVAL;
