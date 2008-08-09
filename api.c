@@ -193,9 +193,13 @@ int cgroup_init()
 		if (!strcmp(ent->mnt_type, "cgroup")) {
 			for (i = 0; controllers[i] != NULL; i++) {
 				mntopt = hasmntopt(ent, controllers[i]);
+
+				if (!mntopt)
+					continue;
+
 				mntopt = strtok_r(mntopt, ",", &strtok_buffer);
-				if (mntopt &&
-					strcmp(mntopt, controllers[i]) == 0) {
+
+				if (strcmp(mntopt, controllers[i]) == 0) {
 					dbg("matched %s:%s\n", mntopt,
 						controllers[i]);
 					strcpy(cg_mount_table[found_mnt].name,
