@@ -703,10 +703,36 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	char *ctrl_file;
 	char *ctrl_value;
 	char *d_name;
+	char path[FILENAME_MAX+1];
 	char *buffer;
 	int error = 0;
+	struct stat stat_buffer;
 
 	d_name = strdup(ctrl_dir->d_name);
+
+	if (!strcmp(d_name, ".") || !strcmp(d_name, "..")) {
+		error = ECGINVAL;
+		goto fill_error;
+	}
+
+
+	/*
+	 * This part really needs to be optimized out. Probably use
+	 * some sort of a flag, but this is fine for now.
+	 */
+
+	cg_build_path_locked(cgroup->name, path, cg_mount_table[index].name);
+	strcat(path, d_name);
+
+	error = stat(path, &stat_buffer);
+
+	if (!error) {
+		error = ECGFAIL;
+		goto fill_error;
+	}
+
+	cgroup->control_uid = stat_buffer.st_uid;
+	cgroup->control_gid = stat_buffer.st_gid;
 
 	ctrl_name = strtok_r(d_name, ".", &buffer);
 
@@ -718,13 +744,13 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	ctrl_file = strtok_r(NULL, ".", &buffer);
 
 	if (!ctrl_file) {
-		error = ECGFAIL;
+		error = ECGINVAL;
 		goto fill_error;
 	}
 
 	if (strcmp(ctrl_name, cg_mount_table[index].name) == 0) {
 		ctrl_value = cg_rd_ctrl_file(cg_mount_table[index].name,
-				cgroup->name, d_name);
+				cgroup->name, ctrl_dir->d_name);
 		if (!ctrl_value) {
 			error = ECGFAIL;
 			goto fill_error;
@@ -754,6 +780,8 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 	char path[FILENAME_MAX];
 	DIR *dir;
 	struct dirent *ctrl_dir;
+	char *control_path;
+	int error;
 
 	if (!cgroup_initialized) {
 		/* ECGROUPNOTINITIALIZED */
@@ -773,6 +801,8 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		 * cgroup_free_cgroup
 		 */
 		struct cgroup_controller *cgc;
+		struct stat stat_buffer;
+
 		if (!cg_build_path_locked(NULL, path,
 					cg_mount_table[i].name))
 			continue;
@@ -791,6 +821,27 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 			continue;
 		}
 
+		/*
+		 * Get the uid and gid information
+		 */
+
+		control_path = strdup(path);
+
+		if (!control_path)
+			goto unlock_error;
+
+		strcat(control_path, "tasks");
+
+		if (stat(control_path, &stat_buffer)) {
+			free(control_path);
+			goto unlock_error;
+		}
+
+		cgroup->tasks_uid = stat_buffer.st_uid;
+		cgroup->tasks_gid = stat_buffer.st_gid;
+
+		free(control_path);
+
 		cgc = cgroup_add_controller(cgroup,
 				cg_mount_table[i].name);
 		if (!cgc)
@@ -802,7 +853,8 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 			goto unlock_error;
 		}
 		while ((ctrl_dir = readdir(dir)) != NULL) {
-			if (cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i)) {
+			error = cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i);
+			if (error == ECGFAIL) {
 				closedir(dir);
 				goto unlock_error;
 			}
