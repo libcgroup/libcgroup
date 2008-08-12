@@ -122,6 +122,8 @@ enum cgroup_errors {
 	 * users need to check errno upon encoutering ECGOTHER.
 	 */
 	ECGOTHER,
+	ECGROUPNOTEQUAL,
+	ECGCONTROLLERNOTEQUAL,
 };
 
 #define CG_MAX_MSG_SIZE		256
@@ -181,6 +183,9 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 				const char *name, u_int64_t value);
 int cgroup_add_value_bool(struct cgroup_controller *controller,
 				const char *name, bool value);
+int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
+int cgroup_compare_controllers(struct cgroup_controller *cgca,
+					struct cgroup_controller *cgcb);
 
 __END_DECLS
 

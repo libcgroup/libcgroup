@@ -229,3 +229,65 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 
 	return 0;
 }
+
+int cgroup_compare_controllers(struct cgroup_controller *cgca,
+					struct cgroup_controller *cgcb)
+{
+	int i;
+
+	if (!cgca || !cgcb)
+		return ECGINVAL;
+
+	if (strcmp(cgca->name, cgcb->name))
+		return ECGCONTROLLERNOTEQUAL;
+
+	if (cgca->index != cgcb->index)
+		return ECGCONTROLLERNOTEQUAL;
+
+	for (i = 0; i < cgca->index; i++) {
+		struct control_value *cva = cgca->values[i];
+		struct control_value *cvb = cgcb->values[i];
+
+		if (strcmp(cva->name, cvb->name))
+			return ECGCONTROLLERNOTEQUAL;
+
+		if (strcmp(cva->value, cvb->value))
+			return ECGCONTROLLERNOTEQUAL;
+	}
+	return 0;
+}
+
+int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b)
+{
+	int i;
+
+	if (!cgroup_a || !cgroup_b)
+		return ECGINVAL;
+
+	if (strcmp(cgroup_a->name, cgroup_b->name))
+		return ECGROUPNOTEQUAL;
+
+	if (cgroup_a->tasks_uid != cgroup_b->tasks_uid)
+		return ECGROUPNOTEQUAL;
+
+	if (cgroup_a->tasks_gid != cgroup_b->tasks_gid)
+		return ECGROUPNOTEQUAL;
+
+	if (cgroup_a->control_uid != cgroup_b->control_uid)
+		return ECGROUPNOTEQUAL;
+
+	if (cgroup_a->control_gid != cgroup_b->control_gid)
+		return ECGROUPNOTEQUAL;
+
+	if (cgroup_a->index != cgroup_b->index)
+		return ECGROUPNOTEQUAL;
+
+	for (i = 0; i < cgroup_a->index; i++) {
+		struct cgroup_controller *cgca = cgroup_a->controller[i];
+		struct cgroup_controller *cgcb = cgroup_b->controller[i];
+
+		if (cgroup_compare_controllers(cgca, cgcb))
+			return ECGCONTROLLERNOTEQUAL;
+	}
+	return 0;
+}
