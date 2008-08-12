@@ -17,6 +17,7 @@
 
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -312,4 +313,197 @@ int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
 	*control_gid = cgroup->control_uid;
 
 	return 0;
+}
+
+struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
+							const char *name)
+{
+	int i;
+	struct cgroup_controller *cgc;
+
+	for (i = 0; i < cgroup->index; i++) {
+		cgc = cgroup->controller[i];
+
+		if (!strcmp(cgc->name, name))
+			return cgc;
+	}
+
+	return NULL;
+}
+
+int cgroup_get_value_string(struct cgroup_controller *controller,
+					const char *name, char **value)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+			*value = strdup(val->value);
+
+			if (!*value)
+				return ECGOTHER;
+
+			return 0;
+		}
+	}
+
+	return ECGROUPVALUENOTEXIST;
+
+}
+
+int cgroup_set_value_string(struct cgroup_controller *controller,
+					const char *name, const char *value)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+		if (!strcmp(val->name, name)) {
+			strncpy(val->value, value, CG_VALUE_MAX);
+			return 0;
+		}
+	}
+
+	return cgroup_add_value_string(controller, name, value);
+}
+
+int cgroup_get_value_int64(struct cgroup_controller *controller,
+					const char *name, int64_t *value)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+
+			if (sscanf(val->value, "%ld", value) != 1)
+				return ECGINVAL;
+
+			return 0;
+		}
+	}
+
+	return ECGROUPVALUENOTEXIST;
+}
+
+int cgroup_set_value_int64(struct cgroup_controller *controller,
+					const char *name, int64_t value)
+{
+	int i;
+	unsigned ret;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+			ret = snprintf(val->value,
+				sizeof(val->value), "%lu", value);
+
+			if (ret >= sizeof(val->value) || ret < 0)
+				return ECGINVAL;
+
+			return 0;
+		}
+	}
+
+	return cgroup_add_value_int64(controller, name, value);
+}
+
+int cgroup_get_value_uint64(struct cgroup_controller *controller,
+					const char *name, u_int64_t *value)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+		if (!strcmp(val->name, name)) {
+
+			if (sscanf(val->value, "%lu", value) != 1)
+				return ECGINVAL;
+
+			return 0;
+		}
+	}
+
+	return ECGROUPVALUENOTEXIST;
+}
+
+int cgroup_set_value_uint64(struct cgroup_controller *controller,
+					const char *name, u_int64_t value)
+{
+	int i;
+	unsigned ret;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+			ret = snprintf(val->value,
+				sizeof(val->value), "%lu", value);
+
+			if (ret >= sizeof(val->value) || ret < 0)
+				return ECGINVAL;
+
+			return 0;
+		}
+	}
+
+	return cgroup_add_value_uint64(controller, name, value);
+}
+
+int cgroup_get_value_bool(struct cgroup_controller *controller,
+						const char *name, bool *value)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+			int cgc_val;
+
+			if (sscanf(val->value, "%d", &cgc_val) != 1)
+				return ECGINVAL;
+
+			if (cgc_val)
+				*value = true;
+			else
+				*value = false;
+
+			return 0;
+		}
+	}
+	return ECGROUPVALUENOTEXIST;
+}
+
+int cgroup_set_value_bool(struct cgroup_controller *controller,
+						const char *name, bool value)
+{
+	int i;
+	unsigned ret;
+
+	for (i = 0; i < controller->index; i++) {
+		struct control_value *val = controller->values[i];
+
+		if (!strcmp(val->name, name)) {
+			if (value) {
+				ret = snprintf(val->value,
+						sizeof(val->value), "1");
+			} else {
+				ret = snprintf(val->value,
+						sizeof(val->value), "0");
+			}
+
+			if (ret >= sizeof(val->value) || ret < 0)
+				return ECGINVAL;
+
+			return 0;
+
+		}
+	}
+
+	return cgroup_add_value_bool(controller, name, value);
 }

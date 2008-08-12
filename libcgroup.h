@@ -189,6 +189,22 @@ int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
 					uid_t control_uid, gid_t control_gid);
 int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
 		gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid);
+int cgroup_get_value_string(struct cgroup_controller *controller,
+					const char *name, char **value);
+int cgroup_set_value_string(struct cgroup_controller *controller,
+					const char *name, const char *value);
+int cgroup_get_value_int64(struct cgroup_controller *controller,
+					const char *name, int64_t *value);
+int cgroup_set_value_int64(struct cgroup_controller *controller,
+					const char *name, int64_t value);
+int cgroup_get_value_uint64(struct cgroup_controller *controller,
+					const char *name, u_int64_t *value);
+int cgroup_set_value_uint64(struct cgroup_controller *controller,
+					const char *name, u_int64_t value);
+int cgroup_get_value_bool(struct cgroup_controller *controller,
+						const char *name, bool *value);
+int cgroup_set_value_bool(struct cgroup_controller *controller,
+						const char *name, bool value);
 
 __END_DECLS
 
