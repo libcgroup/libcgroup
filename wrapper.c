@@ -22,8 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 
-struct cgroup *cgroup_new_cgroup(const char *name, uid_t tasks_uid,
-		gid_t tasks_gid, uid_t control_uid, gid_t control_gid)
+struct cgroup *cgroup_new_cgroup(const char *name)
 {
 	struct cgroup *cgroup = (struct cgroup *)
 					malloc(sizeof(struct cgroup));
@@ -32,11 +31,6 @@ struct cgroup *cgroup_new_cgroup(const char *name, uid_t tasks_uid,
 		return NULL;
 
 	strncpy(cgroup->name, name, sizeof(cgroup->name));
-	cgroup->tasks_uid = tasks_uid;
-	cgroup->tasks_gid = tasks_gid;
-	cgroup->control_uid = control_uid;
-	cgroup->control_gid = control_gid;
-	cgroup->index = 0;
 
 	return cgroup;
 }
@@ -289,5 +283,33 @@ int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b)
 		if (cgroup_compare_controllers(cgca, cgcb))
 			return ECGCONTROLLERNOTEQUAL;
 	}
+	return 0;
+}
+
+int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
+					uid_t control_uid, gid_t control_gid)
+{
+	if (!cgroup)
+		return ECGINVAL;
+
+	cgroup->tasks_uid = tasks_uid;
+	cgroup->tasks_gid = tasks_gid;
+	cgroup->control_uid = control_uid;
+	cgroup->control_gid = control_gid;
+
+	return 0;
+}
+
+int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
+		gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid)
+{
+	if (!cgroup)
+		return ECGINVAL;
+
+	*tasks_uid = cgroup->tasks_uid;
+	*tasks_gid = cgroup->tasks_gid;
+	*control_uid = cgroup->control_uid;
+	*control_gid = cgroup->control_uid;
+
 	return 0;
 }

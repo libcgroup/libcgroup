@@ -170,8 +170,7 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup);
 
 /* The wrappers for filling libcg structures */
 
-struct cgroup *cgroup_new_cgroup(const char *name, uid_t tasks_uid,
-		gid_t tasks_gid, uid_t control_uid, gid_t control_gid);
+struct cgroup *cgroup_new_cgroup(const char *name);
 struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 						const char *name);
 void cgroup_free(struct cgroup **cgroup);
@@ -186,6 +185,10 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
 int cgroup_compare_controllers(struct cgroup_controller *cgca,
 					struct cgroup_controller *cgcb);
+int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
+					uid_t control_uid, gid_t control_gid);
+int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
+		gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid);
 
 __END_DECLS
 
