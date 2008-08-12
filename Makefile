@@ -13,7 +13,7 @@
 YACC_DEBUG=-t
 DEBUG=-DDEBUG
 INC=-I.
-LIBS= -lcgroup
+LIBS= -lcgroup -lpthread
 LDFLAGS=
 YACC=byacc
 LEX=flex
@@ -24,7 +24,7 @@ prefix=/usr/local
 exec_prefix=${prefix}
 INSTALL=install
 INSTALL_DATA=install -m 644
-PACKAGE_VERSION=0.1c
+PACKAGE_VERSION=0.2
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
@@ -44,6 +44,9 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 	wrapper.c
 	ln -sf $@ $@.$(VERSION)
 
+test:
+	$(MAKE) -C tests
+
 install: libcgroup.so
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
@@ -59,3 +62,4 @@ uninstall: libcgroup.so
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcgroup.so \
 	libcgroup.so.$(VERSION)
+	$(MAKE) -C tests clean
