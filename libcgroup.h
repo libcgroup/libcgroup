@@ -168,6 +168,10 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
 struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup);
 
+/* Changes the cgroup of calling application based on rule file */
+int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
+int cgroup_change_cgroup_path(char *path, pid_t pid, char *controllers[]);
+
 /* The wrappers for filling libcg structures */
 
 struct cgroup *cgroup_new_cgroup(const char *name);

@@ -33,9 +33,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <fts.h>
+#include <ctype.h>
+#include <pwd.h>
 
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION 0.01
@@ -895,4 +898,344 @@ unlock_error:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	cgroup = NULL;
 	return NULL;
+}
+
+/** cg_prepare_cgroup
+ * Process the selected rule. Prepare the cgroup structure which can be
+ * used to add the task to destination cgroup.
+ *
+ *
+ *  returns 0 on success.
+ */
+static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
+					const char *dest,
+					char *controllers[])
+{
+	int ret = 0, i;
+	char *controller;
+	struct cgroup_controller *cptr;
+
+	/* Fill in cgroup details.  */
+	dbg("Will move pid %d to cgroup '%s'\n", pid, dest);
+
+	strcpy(cgroup->name, dest);
+
+	/* Scan all the controllers */
+	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
+		if (!controllers[i])
+			return 0;
+		controller = controllers[i];
+
+		/* If first string is "*" that means all the mounted
+		 * controllers. */
+		if (strcmp(controller, "*") == 0) {
+			pthread_rwlock_rdlock(&cg_mount_table_lock);
+			for (i = 0; i < CG_CONTROLLER_MAX &&
+				cg_mount_table[i].name[0] != '\0'; i++) {
+				dbg("Adding controller %s\n",
+					cg_mount_table[i].name);
+				cptr = cgroup_add_controller(cgroup,
+						cg_mount_table[i].name);
+				if (!cptr) {
+					dbg("Adding controller '%s' failed\n",
+						cg_mount_table[i].name);
+					pthread_rwlock_unlock(&cg_mount_table_lock);
+					return ECGROUPNOTALLOWED;
+				}
+			}
+			pthread_rwlock_unlock(&cg_mount_table_lock);
+			return ret;
+		}
+
+		/* it is individual controller names and not "*" */
+		dbg("Adding controller %s\n", controller);
+		cptr = cgroup_add_controller(cgroup, controller);
+		if (!cptr) {
+			dbg("Adding controller '%s' failed\n", controller);
+			return ECGROUPNOTALLOWED;
+		}
+	}
+
+	return ret;
+}
+
+/**
+ * This function takes a string which has got list of controllers separated
+ * by commas and it converts it to an array of string pointer where each
+ * string contains name of one controller.
+ *
+ * returns 0 on success.
+ */
+static int cg_prepare_controller_array(char *cstr, char *controllers[])
+{
+	int j = 0;
+	char *temp, *saveptr = NULL;
+
+	do {
+		if (j == 0)
+			temp = strtok_r(cstr, ",", &saveptr);
+		else
+			temp = strtok_r(NULL, ",", &saveptr);
+
+		if (temp) {
+			controllers[j] = (char *) malloc(strlen(temp) + 1);
+			if (!controllers[j])
+				return ECGOTHER;
+			else
+				strcpy(controllers[j], temp);
+		}
+		j++;
+	} while (temp);
+	return 0;
+}
+
+
+static void cg_free_controller_array(char *controllers[])
+{
+	int j = 0;
+
+	/* Free up temporary controllers array */
+	for (j = 0; j < CG_CONTROLLER_MAX; j++) {
+		if (!controllers[j])
+			break;
+		free(controllers[j]);
+		controllers[j] = 0;
+	}
+}
+
+/** cg_parse_rules_config_file
+ * parses the config file and determines the rule application based on
+ * uid and gid.
+ *
+ *  returns 0 on success.
+ */
+static int cg_parse_rules_config_file(struct cgroup_rules_data *cgrldp,
+						struct cgroup *cgroups[])
+{
+	FILE *fp;
+	char buf[FILENAME_MAX];
+	char user[FILENAME_MAX];
+	char dest[PATH_MAX];
+	char buf_ctrl[FILENAME_MAX];
+	char *controllers[CG_CONTROLLER_MAX];
+	struct cgroup *cgroup;
+	int cgindex = 0, match_uid = 0, match_gid = 0, i, ret = 0;
+
+	memset(controllers, 0, CG_CONTROLLER_MAX);
+	memset(buf_ctrl, 0, FILENAME_MAX);
+
+	fp = fopen(CGRULES_CONF_FILE, "r");
+	if (fp == NULL) {
+		dbg("Open of file %s failed: %s", CGRULES_CONF_FILE,
+			strerror(errno));
+		return ECGOTHER;
+	}
+
+	/* In case of multi line rule, we need to prepare multiple
+	 * cgroups structure. That's why caller has passed an array
+	 * of cgroup pointers. Keep a index of current empty cgroup
+	 * structure which can be passed to cg_prepare_cgroup.
+	 */
+	cgindex = 0;
+
+	/* Parse file */
+	while (fgets(buf, FILENAME_MAX, fp) != NULL) {
+		char *tptr, *line;
+		struct group *group;
+
+		line = buf;
+		/* skip the leading white space */
+		while (*line && isspace(*line))
+			line++;
+
+		/* Rip off the comments */
+		tptr = strchr(line, '#');
+		if (tptr)
+			*tptr = '\0';
+
+		/* Rip off the newline char */
+		tptr = strchr(line, '\n');
+		if (tptr)
+			*tptr = '\0';
+
+		/* Anything left ? */
+		if (!strlen(line))
+			continue;
+
+		user[0] = dest[0] = buf_ctrl[0] = '\0';
+
+		i = sscanf(line, "%s%s%s", user, buf_ctrl, dest);
+		dbg("scanned line[%d]: user[%s], controllers[%s],"
+			" dest[%s]\n", i, user, buf_ctrl, dest);
+
+		/* If we encounter a rule which does not begin with %,
+		 * and either match_uid or match_gid is set, that means
+		 * we have processed one rule and if that rule was muti
+		 * line then it has ended. Return back. Remember, we execute
+		 * only first matching rule (either single line or multiline)
+		 */
+		if ((match_uid || match_gid) && strcmp(user, "%")) {
+			match_uid = 0;
+			match_gid = 0;
+			fclose(fp);
+			return 0;
+		}
+
+		if (i == 3) {
+			/* a complete line */
+			if (((strcmp(cgrldp->pw->pw_name, user) == 0) ||
+				(strcmp(user, "*") == 0)) ||
+				(match_uid && !strcmp(user, "%"))) {
+				match_uid = 1;
+
+				cgroup = (struct cgroup *)
+					calloc(1, sizeof(struct cgroup));
+				if (!cgroup) {
+					ret = ECGOTHER;
+					goto out;
+				}
+				cgroups[cgindex] = cgroup;
+				cgindex++;
+
+				ret = cg_prepare_controller_array(buf_ctrl,
+						controllers);
+				if (ret)
+					goto out;
+				ret = cg_prepare_cgroup(cgroup, cgrldp->pid,
+							dest, controllers);
+				if (ret)
+					goto out;
+
+				cg_free_controller_array(controllers);
+			} else if (user[0] == '@' ||
+					(match_gid && !strcmp(user, "%"))) {
+				errno = 0;
+				group = getgrgid(cgrldp->gid);
+				if (!group) {
+					dbg("getgrgid() failed for gid %d\n",
+						cgrldp->pw->pw_gid);
+					ret = ECGOTHER;
+					goto out;
+				}
+				if ((strcmp(group->gr_name, user+1) == 0)
+					|| (strcmp(user, "*") == 0) ||
+					(match_gid && !strcmp(user, "%"))) {
+					match_gid = 1;
+
+					cgroup = (struct cgroup *)
+						calloc(1, sizeof(struct cgroup));
+					if (!cgroup) {
+						ret = ECGOTHER;
+						goto out;
+					}
+					cgroups[cgindex] = cgroup;
+					cgindex++;
+					ret = cg_prepare_controller_array(buf_ctrl, controllers);
+					if (ret)
+						goto out;
+					ret = cg_prepare_cgroup(cgroup,
+							cgrldp->pid,
+							dest, controllers);
+					if (ret)
+						goto out;
+					cg_free_controller_array(controllers);
+				}
+			}
+		} else {
+			dbg("invalid line '%s' - skipped", line);
+		}
+	}
+	/* If we are here, then none of the rule matched for the task */
+	dbg("No rules matched for task with pid %d\n", cgrldp->pid);
+	fclose(fp);
+	return 0;
+out:
+	fclose(fp);
+	cg_free_controller_array(controllers);
+	/* Free the cgroups allocated so far */
+	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++)
+		cgroup_free(&cgroups[i]);
+	return ret;
+}
+
+/** cgroup_change_cgroup_uid_gid changes the cgroup of a program based on
+ * rules in the config file. Rules are search based on uid and gid
+ * and the pid is placed into destination group (if permissions are
+ * there).
+ *
+ *  returns 0 on success.
+ */
+int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)
+{
+	int ret = 0, i;
+	struct passwd *pw;
+	struct cgroup_rules_data cgrld, *cgrldp = &cgrld;
+	struct cgroup *cgroups[CG_CONTROLLER_MAX];
+
+	if (!cgroup_initialized) {
+		dbg("libcgroup is not initialized\n");
+		return ECGROUPNOTINITIALIZED;
+	}
+	memset(cgrldp, 0, sizeof(struct cgroup_rules_data));
+	memset(cgroups, 0, CG_CONTROLLER_MAX);
+
+	pw = getpwuid(uid);
+	if (!pw) {
+		dbg("Could not retrieve the credentials of user"
+			"with uid %d\n", uid);
+		return ECGOTHER;
+	}
+	cgrldp->pw = pw;
+	cgrldp->pid = pid;
+	cgrldp->gid = gid;
+
+	/* Parse config file */
+	ret = cg_parse_rules_config_file(cgrldp, cgroups);
+	if (ret) {
+		dbg("Parsing of %s failed\n", CGRULES_CONF_FILE);
+		return ret;
+	}
+
+	/* Add task to cgroups */
+	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++) {
+		ret = cgroup_attach_task_pid(cgroups[i], cgrldp->pid);
+		if (ret) {
+			dbg("cgroup_attach_task_pid failed:%d\n", ret);
+			goto out;
+		}
+	}
+out:
+	/* Free the cgroups */
+	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++)
+		cgroup_free(&cgroups[i]);
+	return ret;
+}
+
+/** cgroup_change_cgroup_path changes the cgroup of a program based on
+ * the path provided by user. In this case user already knows in which
+ * cgroup the task should go and no rules file have to be parsed.
+ *
+ *  returns 0 on success.
+ */
+int cgroup_change_cgroup_path(char *dest, pid_t pid, char *controllers[])
+{
+	int ret;
+	struct cgroup cgroup;
+
+	if (!cgroup_initialized) {
+		dbg("libcgroup is not initialized\n");
+		return ECGROUPNOTINITIALIZED;
+	}
+	memset(&cgroup, 0, sizeof(struct cgroup));
+
+	ret = cg_prepare_cgroup(&cgroup, pid, dest, controllers);
+	if (ret)
+		return ret;
+	/* Add task to cgroup */
+	ret = cgroup_attach_task_pid(&cgroup, pid);
+	if (ret) {
+		dbg("cgroup_attach_task_pid failed:%d\n", ret);
+		return ret;
+	}
+	return 0;
 }

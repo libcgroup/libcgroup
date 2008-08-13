@@ -19,6 +19,9 @@
 __BEGIN_DECLS
 
 #include <libcgroup.h>
+#include <limits.h>
+
+#define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 
 struct control_value {
 	char name[FILENAME_MAX];
@@ -45,6 +48,15 @@ struct cgroup {
 struct cg_mount_table_s {
 	char name[FILENAME_MAX];
 	char path[FILENAME_MAX];
+};
+
+struct cgroup_rules_data {
+	pid_t	pid; /* pid of the process which needs to change group */
+
+	/* Details of user under consideration for destination cgroup */
+	struct passwd	*pw;
+	/* Gid of the process */
+	gid_t	gid;
 };
 
 __END_DECLS
