@@ -29,11 +29,14 @@ PACKAGE_VERSION=@PACKAGE_VERSION@
 CFLAGS=@CFLAGS@ $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
-all: libcgroup.so cgconfigparser
+all: libcgroup.so cgconfigparser cgexec
 
 cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
 	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c \
 	$(LDFLAGS) $(LIBS)
+
+cgexec: libcgroup.so cgexec.c libcgroup.h
+	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	$(YACC) -v -d parse.y
@@ -46,12 +49,13 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 	wrapper.c
 	ln -sf $@ $@.$(VERSION)
 
-install: libcgroup.so
+install: libcgroup.so cgexec
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
 	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
+	$(INSTALL) cgexec $(DESTDIR)$(bindir)/cgexec
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
@@ -59,7 +63,8 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	rm -f $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	rm -f $(DESTDIR)$(sbindir)/cgconfigparser
+	rm -f $(DESTDIR)$(bindir)/cgexec
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so \
-	libcgroup.so.$(VERSION) cgconfigparser config.log config.status
+	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec
