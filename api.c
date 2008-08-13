@@ -309,7 +309,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
 	FILE *tasks;
-	int i;
+	int i, ret = 0;
 
 	if (!cgroup_initialized) {
 		dbg ("libcgroup is not initialized\n");
@@ -335,7 +335,21 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 					return ECGROUPNOTALLOWED;
 				}
 			}
-			fprintf(tasks, "%d", tid);
+			ret = fprintf(tasks, "%d", tid);
+			if (ret < 0) {
+				dbg("Error writing tid %d to %s:%s\n",
+						tid, path, strerror(errno));
+				fclose(tasks);
+				return ECGOTHER;
+			}
+
+			ret = fflush(tasks);
+			if (ret) {
+				dbg("Error writing tid  %d to %s:%s\n",
+						tid, path, strerror(errno));
+				fclose(tasks);
+				return ECGOTHER;
+			}
 			fclose(tasks);
 		}
 		pthread_rwlock_unlock(&cg_mount_table_lock);
@@ -366,12 +380,24 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 					return ECGROUPNOTALLOWED;
 				}
 			}
-			fprintf(tasks, "%d", tid);
+			ret = fprintf(tasks, "%d", tid);
+			if (ret < 0) {
+				dbg("Error writing tid %d to %s:%s\n",
+						tid, path, strerror(errno));
+				fclose(tasks);
+				return ECGOTHER;
+			}
+			ret = fflush(tasks);
+			if (ret) {
+				dbg("Error writing tid  %d to %s:%s\n",
+						tid, path, strerror(errno));
+				fclose(tasks);
+				return ECGOTHER;
+			}
 			fclose(tasks);
 		}
 	}
 	return 0;
-
 }
 
 /** cgroup_attach_task is used to attach the current thread to a cgroup.
