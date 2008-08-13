@@ -539,10 +539,17 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 	int retval;
 	struct cgroup *newcgroup;
 	struct cgroup_controller *newcontroller;
-	newcgroup = cgroup_new_cgroup(group, tasks_uid, tasks_gid,
-						 control_uid, control_gid);
+	newcgroup = cgroup_new_cgroup(group);
 
 	if (newcgroup) {
+		retval = cgroup_set_uid_gid(newcgroup, tasks_uid, tasks_gid,
+						control_uid, control_gid);
+
+		if (retval) {
+			printf("Test[1:%2d]\tFAIL: cgroup_set_uid_gid()\n",
+								++i);
+		}
+
 		newcontroller = cgroup_add_controller(newcgroup, controller_name);
 		if (newcontroller) {
 			switch (value_type) {
