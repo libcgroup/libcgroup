@@ -29,7 +29,7 @@ PACKAGE_VERSION=@PACKAGE_VERSION@
 CFLAGS=@CFLAGS@ $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
-all: libcgroup.so cgconfigparser cgexec
+all: libcgroup.so cgconfigparser cgexec cgclassify
 
 cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
 	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c \
@@ -37,6 +37,9 @@ cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
 
 cgexec: libcgroup.so cgexec.c libcgroup.h
 	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
+
+cgclassify: cgclassify.c
+	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	$(YACC) -v -d parse.y
@@ -49,13 +52,14 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 	wrapper.c
 	ln -sf $@ $@.$(VERSION)
 
-install: libcgroup.so cgexec
+install: libcgroup.so cgexec cgclassify
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
 	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
 	$(INSTALL) cgexec $(DESTDIR)$(bindir)/cgexec
+	$(INSTALL) cgclassify $(DESTDIR)$(bindir)/cgclassify
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
@@ -64,7 +68,8 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	rm -f $(DESTDIR)$(sbindir)/cgconfigparser
 	rm -f $(DESTDIR)$(bindir)/cgexec
+	rm -f $(DESTDIR)$(bindir)/cgclassify
 
 clean:
-	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so \
+	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify\
 	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec
