@@ -60,10 +60,10 @@ int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 /*
  * TODO: Need to decide a better place to put this function.
  */
-int cg_chown_recursive(const char *path, uid_t owner, gid_t group)
+int cg_chown_recursive(char *path[], uid_t owner, gid_t group)
 {
 	int ret = 1;
-	FTS *fts = fts_open((char **)&path, FTS_PHYSICAL | FTS_NOCHDIR |
+	FTS *fts = fts_open((char **)path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
 		FTSENT *ent;
@@ -96,10 +96,10 @@ char *cg_build_group_path(struct cg_group *cg_group,
 	return group_path;
 }
 
-int cg_make_directory(struct cg_group *cg_group, const char *group_path)
+int cg_make_directory(struct cg_group *cg_group, char *group_path[])
 {
 	int ret;
-	ret = mkdir(group_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	ret = mkdir(group_path[0], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	if (ret < 0)
 		return 0;
 	/*
@@ -130,8 +130,8 @@ int cg_mount_controllers(void)
 		 * Check if path needs to be created before mounting
 		 */
 		if (errno == ENOENT) {
-			ret = mkdir(curr->mount_point, S_IRWXU |
-						S_IRWXG | S_IROTH | S_IXOTH);
+			ret = mkdir(curr->mount_point, S_IRWXU | S_IRWXG |
+					S_IRWXO | S_ISVTX);
 			if (ret < 0)
 				return 0;
 		} else if (!S_ISDIR(buf.st_mode)) {

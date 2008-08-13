@@ -4,7 +4,7 @@ management system. The script consists of two major components
 Configuration files
 -------------------
 
-The main configuraiton file /etc/wlm.conf. This file has a format
+The main configuraiton file /etc/cgconfig.conf. This file has a format
 
 mount <mountpoint>	<list of controllers>
 <controller>		<controller configuration file>
@@ -15,11 +15,11 @@ A sample configuration file is included below
 # controller    file
 #
 mount   /container      cpu
-cpu     /etc/wlm/cpu.conf
+cpu     /etc/cgconfig/cpu.conf
 
 NOTE: Any line beginning with '#' is ignored as comments. The sample
 configuration above, mounts the cpu controller at mount point /container.
-It then parses /etc/wlm/cpu.conf as the configuration file for the
+It then parses /etc/cgconfig/cpu.conf as the configuration file for the
 cpu controller.
 
 The controller configuration file is of the format
@@ -53,7 +53,7 @@ Intialization script
 --------------------
 
 The initialization script is installed in /etc/init.d, it is called
-"wlm". Depending on the run-level, it is installed in the appropriate
+"cgconfig". Depending on the run-level, it is installed in the appropriate
 /etc/rc.d/rc<N>.d. The script comes with two options
 
 a. start
@@ -73,4 +73,4 @@ Assumptions
 
 1. The kernel is compiled in with the correct options to support
     cgroups and the CPU controller.
-2. This version has been tested with 2.6.24-rc1 only.
+2. This version has been tested with 2.6.25 only.

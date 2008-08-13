@@ -56,6 +56,9 @@ struct cg_group *current_group;
 
 const char *cg_controller_names[] = {
 	"cpu",
+	"cpuacct",
+	"memory",
+	"cpuset",
 	NULL,
 };
 
@@ -138,13 +141,16 @@ struct mount_table *cg_find_mount_info(const char *controller_name)
 	char *str;
 
 	while (curr) {
+		dbg("options %s mntpt %s next %p\n", curr->options,
+			curr->mount_point, curr->next);
+		dbg("passed controller name %s\n", controller_name);
 		str = curr->options;
 		if (!str)
 			return NULL;
 
 		str = strtok(curr->options, ",");
 		do {
-			if (!strncmp(str, controller_name, strlen(str)))
+			if (!strcmp(str, controller_name))
 				return curr;
 			str = strtok(NULL, ",");
 		} while(str);
@@ -163,9 +169,8 @@ int cg_cpu_controller_settings(struct cg_group *cg_group,
 	if (!shares_file)
 		return 0;
 
-	strncpy(shares_file, group_path, strlen(group_path));
-	shares_file = strncat(shares_file, "/cpu.shares",
-					strlen("/cpu.shares"));
+	strcpy(shares_file, group_path);
+	shares_file = strcat(shares_file, "/cpu.shares");
 	dbg("shares file is %s\n", shares_file);
 	if (cg_group->cpu_config.shares) {
 		FILE *fd = fopen(shares_file, "rw+");
@@ -199,9 +204,10 @@ int cg_create_group(struct cg_group *cg_group)
 {
 	int i, ret;
 	struct mount_table *mount_info;
-	char *group_path, *tasks_file, *shares_file;
+	char *group_path[2], *tasks_file, *shares_file;
 
 	dbg("found group %s\n", cg_group->name);
+	group_path[1] = NULL;
 
 	for (i = 0; cg_controller_names[i]; i++) {
 
@@ -209,11 +215,11 @@ int cg_create_group(struct cg_group *cg_group)
 		 * Find the mount point related information
 		 */
 		mount_info = cg_find_mount_info(cg_controller_names[i]);
+		if (!mount_info)
+			continue;
+
 		dbg("mount_info for controller %s:%s\n",
 			mount_info->mount_point, cg_controller_names[i]);
-		if (!mount_info)
-			return 0;
-
 		/*
 		 * TODO: Namespace support is most likely going to be
 		 * plugged in here
@@ -222,10 +228,9 @@ int cg_create_group(struct cg_group *cg_group)
 		/*
 		 * Find the path to the group directory
 		 */
-		group_path = cg_build_group_path(cg_group, mount_info);
-		if (!group_path)
+		group_path[0] = cg_build_group_path(cg_group, mount_info);
+		if (!group_path[0])
 			goto cleanup_group;
-
 		/*
 		 * Create the specified directory. Errors are ignored.
 		 * If the directory already exists, we are most likely
@@ -239,10 +244,10 @@ int cg_create_group(struct cg_group *cg_group)
 		 * Find the tasks file, should probably be encapsulated
 		 * like we encapsulate cg_build_group_path
 		 */
-		tasks_file = malloc(strlen(group_path) + strlen("/tasks") + 1);
+		tasks_file = malloc(strlen(group_path[0]) + strlen("/tasks") + 1);
 		if (!tasks_file)
 			goto cleanup_dir;
-		strncpy(tasks_file, group_path, strlen(group_path));
+		strcpy(tasks_file, group_path[0]);
 		tasks_file = strncat(tasks_file, "/tasks", strlen("/tasks"));
 		dbg("tasks file is %s\n", tasks_file);
 
@@ -258,15 +263,15 @@ int cg_create_group(struct cg_group *cg_group)
 		 * Controller specific work, errors are not fatal.
 		 */
 		cg_controller_handle_option(cg_group, cg_controller_names[i],
-						group_path);
+						group_path[0]);
 		free(tasks_file);
-		free(group_path);
+		free(group_path[0]);
 	}
 	return 1;
 cleanup_perm:
-	rmdir(group_path);
+	rmdir(group_path[0]);
 cleanup_dir:
-	free(group_path);
+	free(group_path[0]);
 cleanup_group:
 	return 0;
 }
@@ -650,9 +655,11 @@ int cg_load_config(const char *pathname)
 	fclose(yyin);
 	return 1;
 err_grp:
+	dbg("Creating groups failed\n");
 	cg_destroy_groups();
 	cg_cleanup_group_list();
 err_mnt:
+	dbg("Mounting controllers failed\n");
 	cg_unmount_controllers();
 	cg_cleanup_mount_table();
 	fclose(yyin);
@@ -700,5 +707,4 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cg_destroy_group_and_mount_info();
 }

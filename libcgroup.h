@@ -145,7 +145,7 @@ int cg_group_task_perm(char *perm_type, char *value);
 int cg_parse_controller_options(char *controller, char *name_value);
 int cg_insert_group(const char *group_name);
 int chown_recursive(const char* path, uid_t owner, gid_t group);
-int cg_make_directory(struct cg_group *cg_group, const char *group_path);
+int cg_make_directory(struct cg_group *cg_group, char *group_path[]);
 char *cg_build_group_path(struct cg_group *cg_group,
 					struct mount_table *mount_info);
 int cg_mount_controllers(void);
