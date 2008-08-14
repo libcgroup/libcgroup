@@ -691,8 +691,13 @@ base_open_err:
 						cgroup->controller[i]->name))
 				continue;
 			error = rmdir(path);
+			if (error < 0 && errno == ENOENT)
+				error = 0;
 		}
 	}
+	if (error)
+		return ECGOTHER;
+
 	return error;
 }
 
