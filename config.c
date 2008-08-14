@@ -196,7 +196,7 @@ int cg_controller_handle_option(struct cg_group *cg_group,
 	if (!strncmp(cg_controller_name, "cpu", strlen("cpu"))) {
 		ret = cg_cpu_controller_settings(cg_group, group_path);
 	} else
-		assert(0);
+		printf("config for %s pending\n", cg_controller_name);
 	return ret;
 }
 
