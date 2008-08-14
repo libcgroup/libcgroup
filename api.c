@@ -334,6 +334,8 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 				switch (errno) {
 				case EPERM:
 					return ECGROUPNOTOWNER;
+				case ENOENT:
+					return ECGROUPNOTEXIST;
 				default:
 					return ECGROUPNOTALLOWED;
 				}
@@ -379,6 +381,8 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 				switch (errno) {
 				case EPERM:
 					return ECGROUPNOTOWNER;
+				case ENOENT:
+					return ECGROUPNOTEXIST;
 				default:
 					return ECGROUPNOTALLOWED;
 				}
