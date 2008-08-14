@@ -21,19 +21,25 @@ bindir=${exec_prefix}/bin
 sbindir=${exec_prefix}/sbin
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
-prefix=/usr
+prefix=/usr/local
 exec_prefix=${prefix}
 INSTALL=install
 INSTALL_DATA=install -m 644
-PACKAGE_VERSION=0.2
+PACKAGE_VERSION=0.3
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
-all: libcgroup.so cgconfigparser
+all: libcgroup.so cgconfigparser cgexec cgclassify
 
 cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
 	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c \
 	$(LDFLAGS) $(LIBS)
+
+cgexec: libcgroup.so cgexec.c libcgroup.h
+	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
+
+cgclassify: cgclassify.c
+	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
 	$(YACC) -v -d parse.y
@@ -49,12 +55,14 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 test:
 	$(MAKE) -C tests
 
-install: libcgroup.so
+install: libcgroup.so cgexec cgclassify
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
 	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
+	$(INSTALL) cgexec $(DESTDIR)$(bindir)/cgexec
+	$(INSTALL) cgclassify $(DESTDIR)$(bindir)/cgclassify
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
@@ -62,8 +70,9 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	rm -f $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	rm -f $(DESTDIR)$(sbindir)/cgconfigparser
+	rm -f $(DESTDIR)$(bindir)/cgexec
+	rm -f $(DESTDIR)$(bindir)/cgclassify
 
 clean:
-	\rm -f y.tab.c y.tab.h lex.yy.c y.output cgconfig libcgroup.so \
-	libcgroup.so.$(VERSION) cgconfigparser config.log config.status
-	$(MAKE) -C tests clean
+	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify\
+	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec
