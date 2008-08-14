@@ -766,7 +766,7 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 
 	error = stat(path, &stat_buffer);
 
-	if (!error) {
+	if (error) {
 		error = ECGFAIL;
 		goto fill_error;
 	}
