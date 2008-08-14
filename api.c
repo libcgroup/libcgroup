@@ -517,15 +517,15 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 		}
 	}
 
-	for (i = 0, strcpy(path, base); i < cgroup->index;
-					i++, strcpy(path, base)) {
+	strcpy(path, base);
+	for (i = 0; i < cgroup->index; i++, strcpy(path, base)) {
 		int j;
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		for (j = 0, strcpy(path, base);
-			j < cgroup->controller[i]->index;
-			j++, strcpy(path, base)) {
+		strcpy(path, base);
+		for (j = 0; j < cgroup->controller[i]->index;
+					j++, strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
 			error = cg_set_control_value(path,
 				cgroup->controller[i]->values[j]->value);
