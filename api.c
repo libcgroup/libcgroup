@@ -795,11 +795,10 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 		if (cgroup_add_value_string(cgc, ctrl_dir->d_name,
 				ctrl_value)) {
 			error = ECGFAIL;
-			goto fill_error;
 		}
+		free(ctrl_value);
 	}
 fill_error:
-	free(ctrl_value);
 	free(d_name);
 	return error;
 }
@@ -861,7 +860,8 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		 * Get the uid and gid information
 		 */
 
-		control_path = strdup(path);
+		control_path = malloc(strlen(path)+strlen("tasks") + 1);
+		strcpy(control_path, path);
 
 		if (!control_path)
 			goto unlock_error;
