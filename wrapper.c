@@ -25,8 +25,7 @@
 
 struct cgroup *cgroup_new_cgroup(const char *name)
 {
-	struct cgroup *cgroup = (struct cgroup *)
-					malloc(sizeof(struct cgroup));
+	struct cgroup *cgroup = calloc(1, sizeof(struct cgroup));
 
 	if (!cgroup)
 		return NULL;
@@ -57,8 +56,7 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 			return NULL;
 	}
 
-	controller = (struct cgroup_controller *)
-				malloc(sizeof(struct cgroup_controller));
+	controller = calloc(1, sizeof(struct cgroup_controller));
 
 	if (!controller)
 		return NULL;
@@ -97,11 +95,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 					const char *name, const char *value)
 {
 	int i;
-	struct control_value *cntl_value = (struct control_value *)
-					malloc(sizeof(struct control_value));
-
-	if (!cntl_value)
-		return ECGCONTROLLERCREATEFAILED;
+	struct control_value *cntl_value;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -111,6 +105,10 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 			return ECGVALUEEXISTS;
 	}
 
+	cntl_value = calloc(1, sizeof(struct control_value));
+
+	if (!cntl_value)
+		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 	strncpy(cntl_value->value, value, sizeof(cntl_value->value));
@@ -125,12 +123,7 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
-	struct control_value *cntl_value = (struct control_value *)
-					malloc(sizeof(struct control_value));
-
-	if (!cntl_value)
-		return ECGCONTROLLERCREATEFAILED;
-
+	struct control_value *cntl_value;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -139,6 +132,11 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
+
+	cntl_value = calloc(1, sizeof(struct control_value));
+
+	if (!cntl_value)
+		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name,
 			sizeof(cntl_value->name));
@@ -160,12 +158,7 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
-	struct control_value *cntl_value = (struct control_value *)
-					malloc(sizeof(struct control_value));
-
-	if (!cntl_value)
-		return ECGCONTROLLERCREATEFAILED;
-
+	struct control_value *cntl_value;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -174,6 +167,11 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
+
+	cntl_value = calloc(1, sizeof(struct control_value));
+
+	if (!cntl_value)
+		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name,	sizeof(cntl_value->name));
 	ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "%lu",
@@ -194,12 +192,7 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
-	struct control_value *cntl_value = (struct control_value *)
-					malloc(sizeof(struct control_value));
-
-	if (!cntl_value)
-		return ECGCONTROLLERCREATEFAILED;
-
+	struct control_value *cntl_value;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -208,6 +201,11 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
+
+	cntl_value = calloc(1, sizeof(struct control_value));
+
+	if (!cntl_value)
+		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 
