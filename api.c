@@ -891,6 +891,10 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		}
 		closedir(dir);
 	}
+	/* Check if the group really exists or not */
+	if (!cgroup->index)
+		goto unlock_error;
+
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return cgroup;
 
