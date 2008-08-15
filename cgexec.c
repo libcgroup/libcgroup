@@ -28,8 +28,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define CG_HIER_MAX	CG_CONTROLLER_MAX
-#define CG_CONT_NAMELEN_MAX	128
 
 struct cgroup_data {
 	char path[FILENAME_MAX];
@@ -84,14 +82,12 @@ int parse_cgroup_data(struct cgroup_data *cdptr[], char *optarg)
 			temp = strtok(NULL, ",");
 
 		if (temp) {
-			cdptr[i]->controllers[j] =
-					(char *) malloc(strlen(temp) + 1);
+			cdptr[i]->controllers[j] = strdup(temp);
 			if (!cdptr[i]->controllers[j]) {
 				free(cdptr[i]);
 				fprintf(stderr, "%s\n", strerror(errno));
 				return -1;
-			} else
-				strcpy(cdptr[i]->controllers[j], temp);
+			}
 		}
 		j++;
 	} while (temp);
