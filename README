@@ -50,7 +50,7 @@ cgroups.
 
 - Use pam_cgroup PAM plugin which will make sure users are placed in right
   cgroup at login time and any tasks launch after login, will continue to run
-  in user's cgroup. (PAM module is still on TODO list)
+  in user's cgroup.
 
 - Use command line tool "cgexec" to launch the task in right cgroup.
 
@@ -113,14 +113,15 @@ Section 3:
 To use a pam plugin which will automatically place the task in right
 cgroup upon login.
 
-- Download pam source tree and apply the patch for pam_cgroup module.
 - Build pam_cgroup.so
-	./configure; make
+	make pam_cgroup.so
 - Copy pam_cgroup.so to /lib/security/
 - Edit /etc/pam.d/su to make use of pam_cgroup.so session module upon
   execution of su.
 
-example:  Add following line to the end.
+example:
+	Add following line at the end of /etc/pam.d/su file
+
 session                optional        pam_cgroup.so
 
 - Now launch a shell for a user "xyz" using su and the resulting shell
@@ -128,6 +129,21 @@ session                optional        pam_cgroup.so
   by cgrules.conf
 
   ex. "su test1"
+
+Try similar things with other services like sshd.
+
+Note: pam_cgroup.so moves the service providing process in the right cgroup
+      and not the process which will be launched later. Due to parent child
+      relationship, yet to be forked/execed process will launch in right
+      group.
+
+Ex. Lets say user root does "su test1". In this case process "su" is the
+    one providing service (launching a shell) for user "test1". pam_cgroup.so
+    will move process "su" to the user "test1"'s cgroup (Decided by the uid
+    and gid of "test1"). Now once su forks/execs a shell for user test1,
+    final shell is effectively running in the cgroup it should have been
+    running based on /etc/cgrules.conf for user test1.
+
 
 Section 4:
 ----------
