@@ -521,7 +521,7 @@ static int group_modified(char *path_control_file, int value_type)
 		break;
 	case STRING:
 		fscanf(fd, "%s", string_val);
-		if (string_val == val_string)
+		if (!strncmp(string_val, val_string, strlen(string_val)))
 			return 0;
 		break;
 	default:
