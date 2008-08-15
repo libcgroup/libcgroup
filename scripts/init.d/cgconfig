@@ -1,0 +1,163 @@
+#
+# Start/Stop the workload manager
+#
+# Copyright IBM Corporation. 2008
+#
+# Authors:     Balbir Singh <balbir@linux.vnet.ibm.com>
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License
+# as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+
+#### BEGIN INIT INFO
+# Provides:             cgconfig
+# Required-Start:       $local_fs $syslog $time
+# Required-Stop:        $local_fs $syslog
+# Should-Start:
+# Should-Stop:
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    start and stop the WLM configuration
+# Description:          This script allows us to create a default configuration
+#### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:.
+MOUNTS_FILE=/proc/mounts
+PROC_CGROUPS_FILE=/proc/cgroups
+CGROUP_FS=cgroup
+CONFIG_FILE=/etc/cgconfig.conf
+
+# support multiple mount points
+declare -a MOUNTPOINT
+declare -a MOUNTOPTS
+maxindex=0
+
+#
+# Source LSB routines
+#
+. /lib/lsb/init-functions
+
+parse_mounts() {
+    while read name mountpt fs opts other
+    do
+        if echo $name | grep -q $CGROUP_FS
+        then
+            maxindex=$(($maxindex+1))
+            MOUNTPOINT[$maxindex]=$mountpt
+            MOUNTOPTS[$maxindex]=$opts
+        fi
+    done < $MOUNTS_FILE
+
+    return 0;
+}
+
+umount_fs() {
+        for i in `seq 1 $maxindex`
+        do
+                umount ${MOUNTPOINT[$i]}
+                rmdir ${MOUNTPOINT[$i]}
+        done
+}
+
+start() {
+	if [ -f /var/lock/cgconfig ]
+        then
+            log_warning_msg "lock file already exists"
+            return
+        fi
+
+        if [ $? -eq 0 ]
+        then
+                log_progress_msg "Starting cgconfig service: "
+                cgconfigparser -l $CONFIG_FILE
+        fi
+        [ $? == 0 ] && touch /var/lock/cgconfig
+        return $?
+}
+
+move_all_to_init_class() {
+    for i in `seq 1 $maxindex`
+    do
+        cd ${MOUNTPOINT[$i]}
+        cat /proc/mounts | grep -wq ${MOUNTPOINT[$i]}
+        if [ $? -ne 0 ]
+        then
+            log_failure_msg "resource control filesystem not mounted"
+            exit 1
+        fi
+
+        for i in `find . -type d`
+        do
+            case $i in
+            '.')
+                ;;
+            *)
+                class=${i#./*}
+                log_progress_msg "Removing class $class"
+                sed -nu p < ./$i/tasks > tasks
+                rmdir $i
+                ;;
+            esac
+        done
+        cd - > /dev/null
+    done
+}
+
+
+stop() {
+    move_all_to_init_class
+    umount_fs
+    rm -f /var/lock/cgconfig
+}
+
+trapped() {
+    #
+    # Do nothing
+    #
+    true
+}
+
+usage() {
+    echo "$0 <start|stop>"
+    exit 1
+}
+
+common() {
+    #
+    # main script work done here
+    #
+    trap "trapped ABRT" ABRT
+    trap "trapped QUIT" QUIT
+    trap "trapped TERM" TERM
+    trap "trapped INT"   INT
+
+    parse_mounts
+}
+
+case $1 in
+    'stop')
+        common
+        stop;
+        ;;
+    'start')
+        common
+        start;
+        ;;
+    'restart')
+        common
+	stop
+        start
+        ;;
+    'reload')
+        common
+	stop
+        start
+        ;;
+    *)
+        usage
+        ;;
+esac
