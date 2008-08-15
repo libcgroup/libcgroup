@@ -993,11 +993,9 @@ static int cg_prepare_controller_array(char *cstr, char *controllers[])
 			temp = strtok_r(NULL, ",", &saveptr);
 
 		if (temp) {
-			controllers[j] = (char *) malloc(strlen(temp) + 1);
+			controllers[j] = strdup(temp);
 			if (!controllers[j])
 				return ECGOTHER;
-			else
-				strcpy(controllers[j], temp);
 		}
 		j++;
 	} while (temp);
@@ -1096,15 +1094,14 @@ static int cg_parse_rules_config_file(struct cgroup_rules_data *cgrldp,
 			return 0;
 		}
 
-		if (i == 3) {
+		if (i == CGRULES_MAX_FIELDS_PER_LINE) {
 			/* a complete line */
 			if (((strcmp(cgrldp->pw->pw_name, user) == 0) ||
 				(strcmp(user, "*") == 0)) ||
 				(match_uid && !strcmp(user, "%"))) {
 				match_uid = 1;
 
-				cgroup = (struct cgroup *)
-					calloc(1, sizeof(struct cgroup));
+				cgroup = calloc(1, sizeof(struct cgroup));
 				if (!cgroup) {
 					ret = ECGOTHER;
 					goto out;
@@ -1137,8 +1134,8 @@ static int cg_parse_rules_config_file(struct cgroup_rules_data *cgrldp,
 					(match_gid && !strcmp(user, "%"))) {
 					match_gid = 1;
 
-					cgroup = (struct cgroup *)
-						calloc(1, sizeof(struct cgroup));
+					cgroup = calloc(1,
+							sizeof(struct cgroup));
 					if (!cgroup) {
 						ret = ECGOTHER;
 						goto out;
@@ -1185,14 +1182,14 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)
 	int ret = 0, i;
 	struct passwd *pw;
 	struct cgroup_rules_data cgrld, *cgrldp = &cgrld;
-	struct cgroup *cgroups[CG_CONTROLLER_MAX];
+	struct cgroup *cgroups[CG_HIER_MAX];
 
 	if (!cgroup_initialized) {
 		dbg("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
 	memset(cgrldp, 0, sizeof(struct cgroup_rules_data));
-	memset(cgroups, 0, CG_CONTROLLER_MAX);
+	memset(cgroups, 0, CG_HIER_MAX);
 
 	pw = getpwuid(uid);
 	if (!pw) {
@@ -1212,7 +1209,7 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)
 	}
 
 	/* Add task to cgroups */
-	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++) {
+	for (i = 0; (i < CG_HIER_MAX) && cgroups[i]; i++) {
 		ret = cgroup_attach_task_pid(cgroups[i], cgrldp->pid);
 		if (ret) {
 			dbg("cgroup_attach_task_pid failed:%d\n", ret);
@@ -1221,7 +1218,7 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)
 	}
 out:
 	/* Free the cgroups */
-	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++)
+	for (i = 0; (i < CG_HIER_MAX) && cgroups[i]; i++)
 		cgroup_free(&cgroups[i]);
 	return ret;
 }

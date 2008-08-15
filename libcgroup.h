@@ -156,6 +156,11 @@ void cg_unload_current_config(void);
 #define CG_NV_MAX 100
 #define CG_CONTROLLER_MAX 100
 #define CG_VALUE_MAX 100
+/* Max number of mounted hierarchies. Event if one controller is mounted per
+ * hier, it can not exceed CG_CONTROLLER_MAX
+ */
+#define CG_HIER_MAX  CG_CONTROLLER_MAX
+
 /* Functions and structures that can be used by the application*/
 struct cgroup;
 struct cgroup_controller;

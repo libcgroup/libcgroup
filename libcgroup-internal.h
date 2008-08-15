@@ -22,6 +22,7 @@ __BEGIN_DECLS
 #include <limits.h>
 
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
+#define CGRULES_MAX_FIELDS_PER_LINE		3
 
 struct control_value {
 	char name[FILENAME_MAX];
