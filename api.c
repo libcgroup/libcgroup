@@ -39,6 +39,7 @@
 #include <fts.h>
 #include <ctype.h>
 #include <pwd.h>
+#include <libgen.h>
 
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION 0.01
@@ -366,6 +367,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 				return ECGROUPSUBSYSNOTMOUNTED;
 			}
 		}
+
 		for (i = 0; i < cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
@@ -436,6 +438,12 @@ static int cg_create_control_group(char *path)
 	error = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	if (error) {
 		switch(errno) {
+		case EEXIST:
+			/*
+			 * If the directory already exists, it really should
+			 * not be an error
+			 */
+			return 0;
 		case EPERM:
 			return ECGROUPNOTOWNER;
 		default:
@@ -457,7 +465,7 @@ static int cg_set_control_value(char *path, char *val)
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
 
-	control_file = fopen(path, "a");
+	control_file = fopen(path, "r+");
 
 	if (!control_file) {
 		if (errno == EPERM) {
@@ -529,7 +537,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 			continue;
 		strcpy(path, base);
 		for (j = 0; j < cgroup->controller[i]->index;
-					j++, strcpy(path, base)) {
+				j++, strcpy(path, base)) {
 			strcat(path, cgroup->controller[i]->values[j]->name);
 			error = cg_set_control_value(path,
 				cgroup->controller[i]->values[j]->value);
@@ -541,6 +549,80 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 err:
 	return error;
 
+}
+
+/**
+ * @dst: Destination controller
+ * @src: Source controller from which values will be copied to dst
+ *
+ * Create a duplicate copy of values under the specified controller
+ */
+int cgroup_copy_controller_values(struct cgroup_controller *dst,
+					struct cgroup_controller *src)
+{
+	int i, ret = 0;
+
+	if (!dst || !src)
+		return ECGFAIL;
+
+	strncpy(dst->name, src->name, FILENAME_MAX);
+	for (i = 0; i < src->index; i++, dst->index++) {
+		struct control_value *src_val = src->values[i];
+		struct control_value *dst_val;
+
+		dst->values[i] = calloc(1, sizeof(struct control_value));
+		if (!dst->values[i]) {
+			ret = ECGFAIL;
+			goto err;
+		}
+
+		dst_val = dst->values[i];
+		strncpy(dst_val->value, src_val->value, CG_VALUE_MAX);
+		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+	}
+err:
+	return ret;
+}
+
+/**
+ * @dst: Destination control group
+ * @src: Source from which values will be copied to dst
+ *
+ * Create a duplicate copy of src in dst. This will be useful for those who
+ * that intend to create new instances based on an existing control group
+ */
+int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src)
+{
+	int ret = 0, i;
+
+	if (!dst || !src)
+		return ECGROUPNOTEXIST;
+
+	/*
+	 * Should we just use the restrict keyword instead?
+	 */
+	if (dst == src)
+		return ECGFAIL;
+
+	cgroup_free_controllers(dst);
+
+	for (i = 0; i < src->index; i++, dst->index++) {
+		struct cgroup_controller *src_ctlr = src->controller[i];
+		struct cgroup_controller *dst_ctlr;
+
+		dst->controller[i] = calloc(1, sizeof(struct cgroup_controller));
+		if (!dst->controller[i]) {
+			ret = ECGFAIL;
+			goto err;
+		}
+
+		dst_ctlr = dst->controller[i];
+		ret = cgroup_copy_controller_values(dst_ctlr, src_ctlr);
+		if (ret)
+			goto err;
+	}
+err:
+	return ret;
 }
 
 /** cgroup_create_cgroup creates a new control group.
@@ -584,7 +666,6 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup->controller[k]->name))
 			continue;
 
-		dbg("path is %s\n", path);
 		error = cg_create_control_group(path);
 		if (error)
 			goto err;
@@ -605,9 +686,12 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup->controller[k]->values[j]->value);
 			/*
 			 * Should we undo, what we've done in the loops above?
+			 * An error should not be treated as fatal, since we have
+			 * several read-only files and several files that
+			 * are only conditionally created in the child.
 			 */
 			if (error)
-				goto err;
+				continue;
 		}
 
 		if (!ignore_ownership) {
@@ -625,6 +709,53 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 err:
 	free(path);
 	return error;
+}
+
+/**
+ * @cgroup: cgroup data structure to be filled with parent values and then
+ *          passed down for creation
+ * @ignore_ownership: Ignore doing a chown on the newly created cgroup
+ */
+int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)
+{
+	char *parent;
+	struct cgroup *parent_cgroup;
+	int ret = ECGFAIL;
+	char *dir_name, *orig_dir_name;
+
+	dir_name = strdup(cgroup->name);
+	if (!dir_name)
+		return ECGFAIL;
+
+	orig_dir_name = dir_name;
+	dir_name = dirname(dir_name);
+
+	/*
+	 * Ugly: but we expect cgroup_get_cgroup() to do the right thing
+	 */
+	if (asprintf(&parent, "%s", dir_name) < 0) {
+		free(orig_dir_name);
+		return ret;
+	}
+	parent_cgroup = cgroup_new_cgroup(parent);
+	if (!parent_cgroup)
+		goto err_nomem;
+
+	if (cgroup_get_cgroup(parent_cgroup) == NULL)
+		goto err_parent;
+
+	ret = cgroup_copy_cgroup(cgroup, parent_cgroup);
+	if (ret)
+		goto err_parent;
+
+	ret = cgroup_create_cgroup(cgroup, ignore_ownership);
+
+err_parent:
+	cgroup_free(&parent_cgroup);
+err_nomem:
+	free(parent);
+	free(orig_dir_name);
+	return ret;
 }
 
 /** cgroup_delete cgroup deletes a control group.
@@ -726,6 +857,10 @@ static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
 	if (!ctrl_file)
 		return NULL;
 
+	value = malloc(CG_VALUE_MAX);
+	if (!value)
+		return NULL;
+
 	fscanf(ctrl_file, "%as", &value);
 
 	fclose(ctrl_file);
@@ -741,7 +876,7 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 {
 	char *ctrl_name;
 	char *ctrl_file;
-	char *ctrl_value;
+	char *ctrl_value = NULL;
 	char *d_name;
 	char path[FILENAME_MAX+1];
 	char *buffer;
@@ -799,10 +934,12 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 		if (cgroup_add_value_string(cgc, ctrl_dir->d_name,
 				ctrl_value)) {
 			error = ECGFAIL;
+			goto fill_error;
 		}
-		free(ctrl_value);
 	}
 fill_error:
+	if (ctrl_value)
+		free(ctrl_value);
 	free(d_name);
 	return error;
 }
@@ -864,7 +1001,7 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		 * Get the uid and gid information
 		 */
 
-		control_path = malloc(strlen(path)+strlen("tasks") + 1);
+		control_path = malloc(strlen(path) + strlen("tasks") + 1);
 		strcpy(control_path, path);
 
 		if (!control_path)
@@ -892,16 +1029,23 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 			/* error = ECGROUPSTRUCTERROR; */
 			goto unlock_error;
 		}
+
 		while ((ctrl_dir = readdir(dir)) != NULL) {
+			/*
+			 * Skip over non regular files
+			 */
+			if (ctrl_dir->d_type != DT_REG)
+				continue;
+
 			error = cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i);
 			if (error == ECGFAIL) {
 				closedir(dir);
 				goto unlock_error;
 			}
-
 		}
 		closedir(dir);
 	}
+
 	/* Check if the group really exists or not */
 	if (!cgroup->index)
 		goto unlock_error;
@@ -1134,8 +1278,8 @@ static int cg_parse_rules_config_file(struct cgroup_rules_data *cgrldp,
 					(match_gid && !strcmp(user, "%"))) {
 					match_gid = 1;
 
-					cgroup = calloc(1,
-							sizeof(struct cgroup));
+					cgroup = (struct cgroup *)
+						calloc(1, sizeof(struct cgroup));
 					if (!cgroup) {
 						ret = ECGOTHER;
 						goto out;

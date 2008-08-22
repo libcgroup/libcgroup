@@ -172,6 +172,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
 int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
 struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup);
+int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership);
+int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
 
 /* Changes the cgroup of calling application based on rule file */
 int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
@@ -183,6 +185,7 @@ struct cgroup *cgroup_new_cgroup(const char *name);
 struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 						const char *name);
 void cgroup_free(struct cgroup **cgroup);
+void cgroup_free_controllers(struct cgroup *cgroup);
 int cgroup_add_value_string(struct cgroup_controller *controller,
 				const char *name, const char *value);
 int cgroup_add_value_int64(struct cgroup_controller *controller,

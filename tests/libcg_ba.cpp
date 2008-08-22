@@ -36,6 +36,7 @@ public:
 	struct cgroup *makenode(const string &name, const string &task_uid,
 			const string &task_gid, const string &control_uid,
 			const string &control_gid);
+	struct cgroup *makenodefromparent(const string &name);
 };
 
 cg::cg(void)
@@ -57,7 +58,7 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 	gid_t tgid, cgid;
 	char *cgroup_name;
 	struct cgroup *ccg;
-	struct cgroup_controller *cpu, *memory, *cpuacct;
+	struct cgroup_controller *cpu, *cpuacct;
 	struct passwd *passwd;
 	struct group *grp;
 	int ret;
@@ -88,16 +89,36 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 	memset(cgroup_name, '\0', name.length());
 	strncpy(cgroup_name, name.c_str(), name.length());
 
-	ccg = cgroup_new_cgroup(cgroup_name, tuid, tgid, cuid, cgid);
+	ccg = cgroup_new_cgroup(cgroup_name);
+	cgroup_set_uid_gid(ccg, tuid, tgid, cuid, cgid);
 	cpu = cgroup_add_controller(ccg, "cpu");
 	cgroup_add_value_uint64(cpu, "cpu.shares", 2048);
-	memory = cgroup_add_controller(ccg, "memory");
-	cgroup_add_value_uint64(memory, "memory.limit_in_bytes", 102400);
 	cpuacct = cgroup_add_controller(ccg, "cpuacct");
 	cgroup_add_value_uint64(cpuacct, "cpuacct.usage", 0);
 
 
 	ret = cgroup_create_cgroup(ccg, 1);
+	if (ret) {
+		cout << "cg create group failed " << errno << endl;
+		ret = cgroup_delete_cgroup(ccg, 1);
+		if (ret)
+			cout << "cg delete group failed " << errno << endl;
+	}
+	return ccg;
+}
+
+struct cgroup *cg::makenodefromparent(const string &name)
+{
+	char *cgroup_name;
+	struct cgroup *ccg;
+	int ret;
+
+	cgroup_name = (char *) malloc(name.length());
+	memset(cgroup_name, '\0', name.length());
+	strcpy(cgroup_name, name.c_str());
+
+	ccg = cgroup_new_cgroup(cgroup_name);
+	ret = cgroup_create_cgroup_from_parent(ccg, 1);
 	if (ret) {
 		cout << "cg create group failed " << errno << endl;
 		ret = cgroup_delete_cgroup(ccg, 1);
@@ -114,10 +135,12 @@ int main(int argc, char *argv[])
 {
 	try {
 		cg *app = new cg();
-		struct cgroup *ccg;
+		struct cgroup *ccg, *ccg_child;
 		ccg = app->makenode("database", "root", "root", "balbir",
 					"balbir");
+		ccg_child = app->makenodefromparent("mysql");
 		cgroup_free(&ccg);
+		cgroup_free(&ccg_child);
 		delete app;
 	} catch (exception &e) {
 		cout << e.what() << endl;
