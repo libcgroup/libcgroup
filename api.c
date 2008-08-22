@@ -712,31 +712,83 @@ err:
 }
 
 /**
+ * Find the parent of the specified directory. It returns the parent (the
+ * parent is usually name/.. unless name is a mount point.
+ */
+char *cgroup_find_parent(char *name)
+{
+	char child[FILENAME_MAX], *parent;
+	struct stat stat_child, stat_parent;
+	char *type;
+	char *dir;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	type = cg_mount_table[0].name;
+	if (!cg_build_path_locked(name, child, type)) {
+		pthread_rwlock_unlock(&cg_mount_table_lock);
+		return NULL;
+	}
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+
+	dbg("path is %s\n", child);
+	dir = dirname(child);
+	dbg("directory name is %s\n", dir);
+
+	if (asprintf(&parent, "%s/..", dir) < 0)
+		return NULL;
+
+	dbg("parent's name is %s\n", parent);
+
+	if (stat(dir, &stat_child) < 0)
+		goto free_parent;
+
+	if (stat(parent, &stat_parent) < 0)
+		goto free_parent;
+
+	/*
+	 * Is the specified "name" a mount point?
+	 */
+	if (stat_parent.st_dev != stat_child.st_dev) {
+		dbg("parent is a mount point\n");
+		strcpy(parent, ".");
+	} else {
+		dir = strdup(name);
+		if (!dir)
+			goto free_parent;
+		dir = dirname(dir);
+		if (strcmp(dir, ".") == 0)
+			strcpy(parent, "..");
+		else
+			strcpy(parent, dir);
+	}
+
+	return parent;
+
+free_parent:
+	free(parent);
+	return NULL;
+}
+
+/**
  * @cgroup: cgroup data structure to be filled with parent values and then
  *          passed down for creation
  * @ignore_ownership: Ignore doing a chown on the newly created cgroup
  */
-int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)
+int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
+					int ignore_ownership)
 {
 	char *parent;
 	struct cgroup *parent_cgroup;
 	int ret = ECGFAIL;
-	char *dir_name, *orig_dir_name;
 
-	dir_name = strdup(cgroup->name);
-	if (!dir_name)
-		return ECGFAIL;
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
 
-	orig_dir_name = dir_name;
-	dir_name = dirname(dir_name);
-
-	/*
-	 * Ugly: but we expect cgroup_get_cgroup() to do the right thing
-	 */
-	if (asprintf(&parent, "%s", dir_name) < 0) {
-		free(orig_dir_name);
+	parent = cgroup_find_parent(cgroup->name);
+	if (!parent)
 		return ret;
-	}
+
+	dbg("parent is %s\n", parent);
 	parent_cgroup = cgroup_new_cgroup(parent);
 	if (!parent_cgroup)
 		goto err_nomem;
@@ -744,17 +796,19 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership
 	if (cgroup_get_cgroup(parent_cgroup) == NULL)
 		goto err_parent;
 
+	dbg("got parent group for %s\n", parent_cgroup->name);
 	ret = cgroup_copy_cgroup(cgroup, parent_cgroup);
 	if (ret)
 		goto err_parent;
 
+	dbg("copied parent group %s to %s\n", parent_cgroup->name,
+							cgroup->name);
 	ret = cgroup_create_cgroup(cgroup, ignore_ownership);
 
 err_parent:
 	cgroup_free(&parent_cgroup);
 err_nomem:
 	free(parent);
-	free(orig_dir_name);
 	return ret;
 }
 
@@ -861,7 +915,11 @@ static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
 	if (!value)
 		return NULL;
 
-	fscanf(ctrl_file, "%as", &value);
+	/*
+	 * using %as crashes when we try to read from files like
+	 * memory.stat
+	 */
+	fscanf(ctrl_file, "%s", value);
 
 	fclose(ctrl_file);
 

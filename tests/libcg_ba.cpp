@@ -86,8 +86,7 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 	dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
 
 	cgroup_name = (char *) malloc(name.length());
-	memset(cgroup_name, '\0', name.length());
-	strncpy(cgroup_name, name.c_str(), name.length());
+	strncpy(cgroup_name, name.c_str(), name.length() + 1);
 
 	ccg = cgroup_new_cgroup(cgroup_name);
 	cgroup_set_uid_gid(ccg, tuid, tgid, cuid, cgid);
@@ -135,12 +134,14 @@ int main(int argc, char *argv[])
 {
 	try {
 		cg *app = new cg();
-		struct cgroup *ccg, *ccg_child;
+		struct cgroup *ccg, *ccg_child1, *ccg_child2;
 		ccg = app->makenode("database", "root", "root", "balbir",
 					"balbir");
-		ccg_child = app->makenodefromparent("mysql");
+		ccg_child1 = app->makenodefromparent("mysql");
+		ccg_child2 = app->makenodefromparent("mysql/db1");
 		cgroup_free(&ccg);
-		cgroup_free(&ccg_child);
+		cgroup_free(&ccg_child1);
+		cgroup_free(&ccg_child2);
 		delete app;
 	} catch (exception &e) {
 		cout << e.what() << endl;
