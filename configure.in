@@ -13,7 +13,7 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 AC_PREREQ(2.61)
-AC_INIT([control groups library and utilities], 0.3,
+AC_INIT([control groups library and utilities], 0.31,
 	[http://sourceforge.net/tracker/?group_id=218421&atid=1043649])
 AC_CONFIG_SRCDIR([wrapper.c])
 AC_CONFIG_HEADER([config.h])

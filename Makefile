@@ -25,7 +25,7 @@ prefix=/usr/local
 exec_prefix=${prefix}
 INSTALL=install
 INSTALL_DATA=install -m 644
-PACKAGE_VERSION=0.3
+PACKAGE_VERSION=0.31
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
@@ -55,6 +55,10 @@ libcgroup.so: api.c libcgroup.h wrapper.c
 test:
 	$(MAKE) -C tests
 
+pam_cgroup.so: pam_cgroup.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wall -o $@ pam_cgroup.c $(LDFLAGS) \
+	$(LIBS) -lpam
+
 install: libcgroup.so cgexec cgclassify
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
@@ -75,4 +79,5 @@ uninstall: libcgroup.so
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify\
-	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec
+	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec \
+	pam_cgroup.so
