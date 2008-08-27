@@ -78,6 +78,6 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(bindir)/cgclassify
 
 clean:
-	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify\
+	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify \
 	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec \
 	pam_cgroup.so
