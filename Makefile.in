@@ -38,7 +38,7 @@ cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
 cgexec: libcgroup.so cgexec.c libcgroup.h
 	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
 
-cgclassify: cgclassify.c
+cgclassify: libcgroup.so cgclassify.c
 	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c $(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
@@ -59,14 +59,14 @@ pam_cgroup.so: pam_cgroup.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wall -o $@ pam_cgroup.c $(LDFLAGS) \
 	$(LIBS) -lpam
 
-install: libcgroup.so cgexec cgclassify
+install: libcgroup.so cgexec cgclassify cgconfigparser
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
 	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
-	$(INSTALL) cgexec $(DESTDIR)$(bindir)/cgexec
-	$(INSTALL) cgclassify $(DESTDIR)$(bindir)/cgclassify
+	$(INSTALL) -D cgexec $(DESTDIR)$(bindir)/cgexec
+	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
