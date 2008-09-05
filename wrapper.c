@@ -41,6 +41,9 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 	int i;
 	struct cgroup_controller *controller;
 
+	if (!cgroup)
+		return NULL;
+
 	/*
 	 * Still not sure how to handle the failure here.
 	 */
@@ -101,6 +104,9 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 	int i;
 	struct control_value *cntl_value;
 
+	if (!controller)
+		return ECGINVAL;
+
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
 
@@ -128,6 +134,9 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 	int i;
 	unsigned ret;
 	struct control_value *cntl_value;
+
+	if (!controller)
+		return ECGINVAL;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -164,6 +173,9 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 	unsigned ret;
 	struct control_value *cntl_value;
 
+	if (!controller)
+		return ECGINVAL;
+
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
 
@@ -197,6 +209,9 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 	int i;
 	unsigned ret;
 	struct control_value *cntl_value;
+
+	if (!controller)
+		return ECGINVAL;
 
 	if (controller->index >= CG_VALUE_MAX)
 		return ECGMAXVALUESEXCEEDED;
@@ -323,6 +338,9 @@ struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
 	int i;
 	struct cgroup_controller *cgc;
 
+	if (!cgroup)
+		return NULL;
+
 	for (i = 0; i < cgroup->index; i++) {
 		cgc = cgroup->controller[i];
 
@@ -337,6 +355,9 @@ int cgroup_get_value_string(struct cgroup_controller *controller,
 					const char *name, char **value)
 {
 	int i;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
@@ -360,6 +381,9 @@ int cgroup_set_value_string(struct cgroup_controller *controller,
 {
 	int i;
 
+	if (!controller)
+		return ECGINVAL;
+
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
 		if (!strcmp(val->name, name)) {
@@ -375,6 +399,9 @@ int cgroup_get_value_int64(struct cgroup_controller *controller,
 					const char *name, int64_t *value)
 {
 	int i;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
@@ -396,6 +423,9 @@ int cgroup_set_value_int64(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
@@ -419,6 +449,9 @@ int cgroup_get_value_uint64(struct cgroup_controller *controller,
 {
 	int i;
 
+	if (!controller)
+		return ECGINVAL;
+
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
 		if (!strcmp(val->name, name)) {
@@ -438,6 +471,9 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
@@ -460,6 +496,9 @@ int cgroup_get_value_bool(struct cgroup_controller *controller,
 						const char *name, bool *value)
 {
 	int i;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
@@ -486,6 +525,9 @@ int cgroup_set_value_bool(struct cgroup_controller *controller,
 {
 	int i;
 	unsigned ret;
+
+	if (!controller)
+		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
 		struct control_value *val = controller->values[i];
