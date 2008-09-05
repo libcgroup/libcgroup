@@ -145,7 +145,7 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 	strncpy(cntl_value->name, name,
 			sizeof(cntl_value->name));
 	ret = snprintf(cntl_value->value,
-	  sizeof(cntl_value->value), "%ld", value);
+	  sizeof(cntl_value->value), "%" PRId64, value);
 
 	if (ret >= sizeof(cntl_value->value))
 		return ECGINVAL;
@@ -178,8 +178,8 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name,	sizeof(cntl_value->name));
-	ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "%lu",
-									value);
+	ret = snprintf(cntl_value->value, sizeof(cntl_value->value),
+						"%" PRIu64, value);
 
 	if (ret >= sizeof(cntl_value->value))
 		return ECGINVAL;
@@ -381,7 +381,7 @@ int cgroup_get_value_int64(struct cgroup_controller *controller,
 
 		if (!strcmp(val->name, name)) {
 
-			if (sscanf(val->value, "%ld", value) != 1)
+			if (sscanf(val->value, "%" SCNd64, value) != 1)
 				return ECGINVAL;
 
 			return 0;
@@ -402,7 +402,7 @@ int cgroup_set_value_int64(struct cgroup_controller *controller,
 
 		if (!strcmp(val->name, name)) {
 			ret = snprintf(val->value,
-				sizeof(val->value), "%lu", value);
+				sizeof(val->value), "%" PRId64, value);
 
 			if (ret >= sizeof(val->value) || ret < 0)
 				return ECGINVAL;
@@ -423,7 +423,7 @@ int cgroup_get_value_uint64(struct cgroup_controller *controller,
 		struct control_value *val = controller->values[i];
 		if (!strcmp(val->name, name)) {
 
-			if (sscanf(val->value, "%lu", value) != 1)
+			if (sscanf(val->value, "%" SCNu64, value) != 1)
 				return ECGINVAL;
 
 			return 0;
@@ -444,7 +444,7 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller,
 
 		if (!strcmp(val->name, name)) {
 			ret = snprintf(val->value,
-				sizeof(val->value), "%lu", value);
+				sizeof(val->value), "%" PRIu64, value);
 
 			if (ret >= sizeof(val->value) || ret < 0)
 				return ECGINVAL;
