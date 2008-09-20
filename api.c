@@ -293,7 +293,7 @@ static char *cg_build_path_locked(char *name, char *path, char *type)
 	return NULL;
 }
 
-static char *cg_build_path(char *name, char *path, char *type)
+char *cg_build_path(char *name, char *path, char *type)
 {
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	path = cg_build_path_locked(name, path, type);
@@ -1041,12 +1041,14 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		 */
 		struct cgroup_controller *cgc;
 		struct stat stat_buffer;
+		int path_len;
 
 		if (!cg_build_path_locked(NULL, path,
 					cg_mount_table[i].name))
 			continue;
 
-		strncat(path, cgroup->name, sizeof(path));
+		path_len = strlen(path);
+		strncat(path, cgroup->name, FILENAME_MAX - path_len - 1);
 
 		if (access(path, F_OK))
 			continue;
