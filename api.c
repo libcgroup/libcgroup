@@ -902,6 +902,7 @@ static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
 	char *value;
 	char path[FILENAME_MAX];
 	FILE *ctrl_file;
+	int ret;
 
 	if (!cg_build_path_locked(cgroup, path, subsys))
 		return NULL;
@@ -919,7 +920,11 @@ static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
 	 * using %as crashes when we try to read from files like
 	 * memory.stat
 	 */
-	fscanf(ctrl_file, "%s", value);
+	ret = fscanf(ctrl_file, "%s", value);
+	if (ret == 0 || ret == EOF) {
+		free(value);
+		value = NULL;
+	}
 
 	fclose(ctrl_file);
 
