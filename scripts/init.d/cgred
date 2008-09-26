@@ -1,0 +1,129 @@
+#!/bin/bash
+#
+# Start/Stop the CGroups Rules Engine Daemon
+#
+# Copyright Red Hat Inc. 2008
+#
+# Authors:	Steve Olivieri <sjo@redhat.com>
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License
+# as published by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# cgred		GGroups Rules Engine Daemon
+# chkconfig:	2345 80 20
+# description:	This is a daemon for automatically classifying processes \
+#		into cgroups based on UID/GID.
+#
+# processname: cgrulesengd
+# pidfile: /var/run/cgred.pid
+#
+### BEGIN INIT INFO
+# Provides:		cgrulesengd
+# Required-Start:	$local_fs $syslog $wlm
+# Required-Stop:	$local_fs $syslog
+# Should-Start:		
+# Should-Stop:		
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	start and stop the cgroups rules engine daemon
+# Description:		CGroup Rules Engine is a tool for automatically using \
+#			cgroups to classify processes
+### END INIT INFO
+
+prefix=/usr
+exec_prefix=/usr
+bindir=/bin
+
+CGRED_BIN=${bindir}/cgrulesengd
+
+# Sanity checks
+[ -x $CGRED_BIN ] || exit 1
+[ -x /lib/libcgroup.so ] || exit 1
+
+# Source function library & LSB routines
+. /etc/rc.d/init.d/functions
+. /lib/lsb/init-functions
+
+# Read in configuration options.
+if [ -f "/etc/cgred.d/cgred.conf" ] ; then
+	. /etc/cgred.d/cgred.conf
+	OPTIONS="--config $CONFIG_FILE --log $LOG_FILE $NODAEMON $NOLOG"
+else
+	OPTIONS=""
+fi
+
+# For convenience
+processname=cgrulesengd
+servicename=cgred
+pidfile=/var/run/cgred.pid
+
+RETVAL=0
+
+start()
+{
+	echo $"Starting CGroup Rules Engine Daemon..."
+	if [ -f "/var/lock/subsys/$servicename" ] ; then
+		echo "$servicename is already running with PID `cat ${pidfile}`"
+		return 1
+	fi
+	daemon --check $servicename --pidfile $pidfile $processname $OPTIONS
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/$servicename
+	echo "`pidof $processname`" > $pidfile
+}
+
+stop()
+{
+	echo -n $"Stopping CGroup Rules Engine Daemon..."
+	killproc -p $pidfile $processname -12
+	RETVAL=$?
+	echo
+	if [ $RETVAL -eq 0 ] ; then
+		rm -f /var/lock/subsys/$servicename
+		rm -f $pidfile
+	fi
+}
+
+# See how we are called
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status -p $pidfile $processname
+		RETVAL=$?
+		;;
+	restart)
+		stop
+		start
+		;;
+	condrestart)
+		if [ -f /var/lock/subsys/$servicename ] ; then
+			stop
+			start
+		fi
+		;;
+	flash)
+		if [ -f /var/lock/subsys/$servicename ] ; then
+			echo $"Reloading rules configuration..."
+			kill -s 12 `cat ${pidfile}`
+			RETVAL=$?
+			echo
+		else
+			echo $"$servicename is not running."
+		fi
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|status|restart|condrestart|flash}"
+		;;
+esac
+
+exit $RETVAL

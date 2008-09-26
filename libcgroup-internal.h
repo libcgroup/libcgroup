@@ -60,6 +60,24 @@ struct cgroup_rules_data {
 	gid_t	gid;
 };
 
+/* A rule that maps UID/GID to a cgroup */
+struct cgroup_rule {
+	uid_t uid;
+	gid_t gid;
+	char name[LOGIN_NAME_MAX];
+	char destination[FILENAME_MAX];
+	char *controllers[MAX_MNT_ELEMENTS];
+	struct cgroup_rule *next;
+};
+
+/* Container for a list of rules */
+struct cgroup_rule_list {
+	struct cgroup_rule *head;
+	struct cgroup_rule *tail;
+	int len;
+};
+
+
 __END_DECLS
 
 #endif

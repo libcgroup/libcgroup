@@ -58,6 +58,18 @@ static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
 
+/* Check if the rules cache has been loaded or not. */
+static bool cgroup_rules_loaded;
+
+/* List of configuration rules */
+static struct cgroup_rule_list rl;
+
+/* Temporary list of configuration rules (for non-cache apps) */
+static struct cgroup_rule_list trl;
+
+/* Lock for the list of rules (rl) */
+static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
+
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
@@ -118,6 +130,359 @@ static int cgroup_test_subsys_mounted(const char *name)
 	}
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return 0;
+}
+
+/**
+ * Free a single cgroup_rule struct.
+ * 	@param r The rule to free from memory
+ */
+static void cgroup_free_rule(struct cgroup_rule *r)
+{
+	/* Loop variable */
+	int i = 0;
+
+	/* Make sure our rule is not NULL, first. */
+	if (!r) {
+		dbg("Warning: Attempted to free NULL rule.\n");
+		return;
+	}
+
+	/* We must free any used controller strings, too. */
+	for(i = 0; i < MAX_MNT_ELEMENTS; i++) {
+		if (r->controllers[i])
+			free(r->controllers[i]);
+	}
+
+	free(r);
+}
+
+/**
+ * Free a list of cgroup_rule structs.  If rl is the main list of rules,
+ * the lock must be taken for writing before calling this function!
+ * 	@param rl Pointer to the list of rules to free from memory
+ */
+static void cgroup_free_rule_list(struct cgroup_rule_list *rl)
+{
+	/* Temporary pointer */
+	struct cgroup_rule *tmp = NULL;
+
+	/* Make sure we're not freeing NULL memory! */
+	if (!(rl->head)) {
+		dbg("Warning: Attempted to free NULL list.\n");
+		return;
+	}
+
+	while (rl->head) {
+		tmp = rl->head;
+		rl->head = tmp->next;
+		cgroup_free_rule(tmp);
+	}
+
+	/* Don't leave wild pointers around! */
+	rl->head = NULL;
+	rl->tail = NULL;
+}
+
+/**
+ * Parse the configuration file that maps UID/GIDs to cgroups.  If ever the
+ * configuration file is modified, applications should call this function to
+ * load the new configuration rules.  The function caller is responsible for
+ * calling free() on each rule in the list.
+ *
+ * The cache parameter alters the behavior of this function.  If true, this
+ * function will read the entire configuration file and store the results in
+ * rl (global rules list).  If false, this function will only parse until it
+ * finds a rule matching the given UID or GID.  It will store this rule in rl,
+ * as well as any children rules (rules that begin with a %) that it has.
+ *
+ * This function is NOT thread safe!
+ * 	@param cache True to cache rules, else false
+ * 	@param muid If cache is false, the UID to match against
+ * 	@param mgid If cache is false, the GID to match against
+ * 	@return 0 on success, -1 if no cache and match found, > 0 on error.
+ * TODO: Make this function thread safe!
+ */
+static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
+{
+	/* File descriptor for the configuration file */
+	FILE *fp = NULL;
+
+	/* Buffer to store the line we're working on */
+	char *buff = NULL;
+
+	/* Iterator for the line we're working on */
+	char *itr = NULL;
+
+	/* Pointer to the list that we're using */
+	struct cgroup_rule_list *lst = NULL;
+
+	/* Rule to add to the list */
+	struct cgroup_rule *newrule = NULL;
+
+	/* Structure to get GID from group name */
+	struct group *grp = NULL;
+
+	/* Structure to get UID from user name */
+	struct passwd *pwd = NULL;
+
+	/* Temporary storage for a configuration rule */
+	char user[LOGIN_NAME_MAX] = { '\0' };
+	char controllers[CG_CONTROLLER_MAX] = { '\0' };
+	char destination[FILENAME_MAX] = { '\0' };
+	uid_t uid = CGRULE_INVALID;
+	gid_t gid = CGRULE_INVALID;
+
+	/* The current line number */
+	unsigned int linenum = 0;
+
+	/* Did we skip the previous line? */
+	bool skipped = false;
+
+	/* Have we found a matching rule (non-cache mode)? */
+	bool matched = false;
+
+	/* Return codes */
+	int ret = 0;
+
+	/* Temporary buffer for strtok() */
+	char *stok_buff = NULL;
+
+	/* Loop variable. */
+	int i = 0;
+
+	/* Open the configuration file. */
+	pthread_rwlock_wrlock(&rl_lock);
+	fp = fopen(CGRULES_CONF_FILE, "r");
+	if (!fp) {
+		dbg("Failed to open configuration file %s with"
+				" error: %s\n", CGRULES_CONF_FILE,
+				strerror(errno));
+		ret = errno;
+		goto finish;
+	}
+
+	buff = calloc(CGROUP_RULE_MAXLINE, sizeof(char));
+	if (!buff) {
+		dbg("Out of memory?  Error: %s\n", strerror(errno));
+		ret = errno;
+		goto close_unlock;
+	}
+
+	/* Determine which list we're using. */
+	if (cache)
+		lst = &rl;
+	else
+		lst = &trl;
+
+	/* If our list already exists, clean it. */
+	if (lst->head)
+		cgroup_free_rule_list(lst);
+
+	/* Now, parse the configuration file one line at a time. */
+	dbg("Parsing configuration file.\n");
+	while ((itr = fgets(buff, CGROUP_RULE_MAXLINE, fp)) != NULL) {
+		linenum++;
+
+		/* We ignore anything after a # sign as comments. */
+		if ((itr = strchr(buff, '#')))
+			*itr = '\0';
+
+		/* We also need to remove the newline character. */
+		if ((itr = strchr(buff, '\n')))
+			*itr = '\0';
+
+		/* Now, skip any leading tabs and spaces. */
+		itr = buff;
+		while (itr && isblank(*itr))
+			itr++;
+
+		/* If there's nothing left, we can ignore this line. */
+		if (!strlen(itr))
+			continue;
+
+		/*
+		 * If we skipped the last rule and this rule is a continuation
+		 * of it (begins with %), then we should skip this rule too.
+		 */
+		if (skipped && *itr == '%') {
+			dbg("Warning: Skipped child of invalid rule,"
+					" line %d.\n", linenum);
+			memset(buff, '\0', CGROUP_RULE_MAXLINE);
+			continue;
+		}
+
+		/*
+		 * If there is something left, it should be a rule.  Otherwise,
+		 * there's an error in the configuration file.
+		 */
+		skipped = false;
+		memset(user, '\0', LOGIN_NAME_MAX);
+		memset(controllers, '\0', CG_CONTROLLER_MAX);
+		memset(destination, '\0', FILENAME_MAX);
+		i = sscanf(itr, "%s%s%s", user, controllers, destination);
+		if (i != 3) {
+			dbg("Failed to parse configuration file on"
+					" line %d.\n", linenum);
+			goto parsefail;
+		}
+
+		/*
+		 * Next, check the user/group.  If it's a % sign, then we
+		 * are continuing another rule and UID/GID should not be
+		 * reset.  If it's a @, we're dealing with a GID rule.  If
+		 * it's a *, then we do not need to do a lookup because the
+		 * rule always applies (it's a wildcard).  If we're using
+		 * non-cache mode and we've found a matching rule, we only
+		 * continue to parse if we're looking at a child rule.
+		 */
+		if ((!cache) && matched && (strncmp(user, "%", 1) != 0)) {
+			/* If we make it here, we finished (non-cache). */
+			dbg("Parsing of configuration file complete.\n\n");
+			ret = -1;
+			goto cleanup;
+		}
+		if (strncmp(user, "@", 1) == 0) {
+			/* New GID rule. */
+			itr = &(user[1]);
+			if ((grp = getgrnam(itr))) {
+				uid = CGRULE_INVALID;
+				gid = grp->gr_gid;
+			} else {
+				dbg("Warning: Entry for %s not"
+						"found.  Skipping rule on line"
+						" %d.\n", itr, linenum);
+				memset(buff, '\0', CGROUP_RULE_MAXLINE);
+				skipped = true;
+				continue;
+			}
+		} else if (strncmp(user, "*", 1) == 0) {
+			/* Special wildcard rule. */
+			uid = CGRULE_WILD;
+			gid = CGRULE_WILD;
+		} else if (*itr != '%') {
+			/* New UID rule. */
+			if ((pwd = getpwnam(user))) {
+				uid = pwd->pw_uid;
+				gid = CGRULE_INVALID;
+			} else {
+				dbg("Warning: Entry for %s not"
+						"found.  Skipping rule on line"
+						" %d.\n", user, linenum);
+				memset(buff, '\0', CGROUP_RULE_MAXLINE);
+				skipped = true;
+				continue;
+			}
+		} /* Else, we're continuing another rule (UID/GID are okay). */
+
+		/*
+		 * If we are not caching rules, then we need to check for a
+		 * match before doing anything else.  We consider four cases:
+		 * The UID matches, the GID matches, the UID is a member of the
+		 * GID, or we're looking at the wildcard rule, which always
+		 * matches.  If none of these are true, we simply continue to
+		 * the next line in the file.
+		 */
+		if (grp && muid != CGRULE_INVALID) {
+			pwd = getpwuid(muid);
+			for (i = 0; grp->gr_mem[i]; i++) {
+				if (!(strcmp(pwd->pw_name, grp->gr_mem[i])))
+					matched = true;
+			}
+		}
+
+		if (uid == muid || gid == mgid || uid == CGRULE_WILD) {
+			matched = true;
+		}
+
+		if (!cache && !matched)
+			continue;
+
+		/*
+		 * Now, we're either caching rules or we found a match.  Either
+		 * way, copy everything into a new rule and push it into the
+		 * list.
+		 */
+		newrule = calloc(1, sizeof(struct cgroup_rule));
+		if (!newrule) {
+			dbg("Out of memory?  Error: %s\n", strerror(errno));
+			ret = errno;
+			goto cleanup;
+		}
+
+		newrule->uid = uid;
+		newrule->gid = gid;
+		strncpy(newrule->name, user, strlen(user));
+		strncpy(newrule->destination, destination, strlen(destination));
+		newrule->next = NULL;
+
+		/* Parse the controller list, and add that to newrule too. */
+		stok_buff = strtok(controllers, ",");
+		if (!stok_buff) {
+			dbg("Failed to parse controllers on line"
+					" %d\n", linenum);
+			goto destroyrule;
+		}
+
+		i = 0;
+		do {
+			if (i >= MAX_MNT_ELEMENTS) {
+				dbg("Too many controllers listed"
+					" on line %d\n", linenum);
+				goto destroyrule;
+			}
+
+			newrule->controllers[i] = strndup(stok_buff,
+							strlen(stok_buff) + 1);
+			if (!(newrule->controllers[i])) {
+				dbg("Out of memory?  Error was: %s\n",
+					strerror(errno));
+				goto destroyrule;
+			}
+			i++;
+		} while ((stok_buff = strtok(NULL, ",")));
+
+		/* Now, push the rule. */
+		if (lst->head == NULL) {
+			lst->head = newrule;
+			lst->tail = newrule;
+		} else {
+			lst->tail->next = newrule;
+			lst->tail = newrule;
+		}
+
+                dbg("Added rule %s (UID: %d, GID: %d) -> %s for controllers:",
+                        lst->tail->name, lst->tail->uid, lst->tail->gid,
+			lst->tail->destination);
+                for (i = 0; lst->tail->controllers[i]; i++) {
+			dbg(" %s", lst->tail->controllers[i]);
+		}
+		dbg("\n");
+
+		/* Finally, clear the buffer. */
+		memset(buff, '\0', CGROUP_RULE_MAXLINE);
+		grp = NULL;
+		pwd = NULL;
+	}
+
+	/* If we make it here, there were no errors. */
+	dbg("Parsing of configuration file complete.\n\n");
+	ret = (matched && !cache) ? -1 : 0;
+	goto cleanup;
+
+destroyrule:
+	cgroup_free_rule(newrule);
+
+parsefail:
+	ret = ECGROUPPARSEFAIL;
+
+cleanup:
+	free(buff);
+
+close_unlock:
+	fclose(fp);
+	pthread_rwlock_unlock(&rl_lock);
+finish:
+	return ret;
 }
 
 /**
@@ -293,7 +658,7 @@ static char *cg_build_path_locked(char *name, char *path, char *type)
 	return NULL;
 }
 
-char *cg_build_path(char *name, char *path, char *type)
+static char *cg_build_path(char *name, char *path, char *type)
 {
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	path = cg_build_path_locked(name, path, type);
@@ -301,6 +666,7 @@ char *cg_build_path(char *name, char *path, char *type)
 
 	return path;
 }
+
 /** cgroup_attach_task_pid is used to assign tasks to a cgroup.
  *  struct cgroup *cgroup: The cgroup to assign the thread to.
  *  pid_t tid: The thread to be assigned to the cgroup.
@@ -771,7 +1137,7 @@ free_parent:
 
 /**
  * @cgroup: cgroup data structure to be filled with parent values and then
- *          passed down for creation
+ *	  passed down for creation
  * @ignore_ownership: Ignore doing a chown on the newly created cgroup
  */
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
@@ -1225,216 +1591,197 @@ static void cg_free_controller_array(char *controllers[])
 	}
 }
 
-/** cg_parse_rules_config_file
- * parses the config file and determines the rule application based on
- * uid and gid.
+/**
+ * Finds the first rule in the cached list that matches the given UID or GID,
+ * and returns a pointer to that rule.  This function uses rl_lock.
  *
- *  returns 0 on success.
+ * This function may NOT be thread safe.
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@return Pointer to the first matching rule, or NULL if no match
+ * TODO: Determine thread-safeness and fix if not safe.
  */
-static int cg_parse_rules_config_file(struct cgroup_rules_data *cgrldp,
-						struct cgroup *cgroups[])
+static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(const uid_t uid,
+				const gid_t gid)
 {
-	FILE *fp;
-	char buf[FILENAME_MAX];
-	char user[FILENAME_MAX];
-	char dest[PATH_MAX];
-	char buf_ctrl[FILENAME_MAX];
-	char *controllers[CG_CONTROLLER_MAX];
-	struct cgroup *cgroup;
-	int cgindex = 0, match_uid = 0, match_gid = 0, i, ret = 0;
+	/* Return value */
+	struct cgroup_rule *ret = rl.head;
 
-	memset(controllers, 0, CG_CONTROLLER_MAX);
-	memset(buf_ctrl, 0, FILENAME_MAX);
+	/* Temporary user data */
+	struct passwd *usr = NULL;
 
-	fp = fopen(CGRULES_CONF_FILE, "r");
-	if (fp == NULL) {
-		dbg("Open of file %s failed: %s", CGRULES_CONF_FILE,
-			strerror(errno));
-		return ECGOTHER;
-	}
+	/* Temporary group data */
+	struct group *grp = NULL;
 
-	/* In case of multi line rule, we need to prepare multiple
-	 * cgroups structure. That's why caller has passed an array
-	 * of cgroup pointers. Keep a index of current empty cgroup
-	 * structure which can be passed to cg_prepare_cgroup.
-	 */
-	cgindex = 0;
+	/* Temporary string pointer */
+	char *sp = NULL;
 
-	/* Parse file */
-	while (fgets(buf, FILENAME_MAX, fp) != NULL) {
-		char *tptr, *line;
-		struct group *group;
+	/* Loop variable */
+	int i = 0;
 
-		line = buf;
-		/* skip the leading white space */
-		while (*line && isspace(*line))
-			line++;
-
-		/* Rip off the comments */
-		tptr = strchr(line, '#');
-		if (tptr)
-			*tptr = '\0';
-
-		/* Rip off the newline char */
-		tptr = strchr(line, '\n');
-		if (tptr)
-			*tptr = '\0';
-
-		/* Anything left ? */
-		if (!strlen(line))
-			continue;
-
-		user[0] = dest[0] = buf_ctrl[0] = '\0';
-
-		i = sscanf(line, "%s%s%s", user, buf_ctrl, dest);
-		dbg("scanned line[%d]: user[%s], controllers[%s],"
-			" dest[%s]\n", i, user, buf_ctrl, dest);
-
-		/* If we encounter a rule which does not begin with %,
-		 * and either match_uid or match_gid is set, that means
-		 * we have processed one rule and if that rule was muti
-		 * line then it has ended. Return back. Remember, we execute
-		 * only first matching rule (either single line or multiline)
-		 */
-		if ((match_uid || match_gid) && strcmp(user, "%")) {
-			match_uid = 0;
-			match_gid = 0;
-			fclose(fp);
-			return 0;
+	pthread_rwlock_wrlock(&rl_lock);
+	while (ret) {
+		/* The wildcard rule always matches. */
+		if ((ret->uid == CGRULE_WILD) && (ret->gid == CGRULE_WILD)) {
+			goto finished;
 		}
 
-		if (i == CGRULES_MAX_FIELDS_PER_LINE) {
-			/* a complete line */
-			if (((strcmp(cgrldp->pw->pw_name, user) == 0) ||
-				(strcmp(user, "*") == 0)) ||
-				(match_uid && !strcmp(user, "%"))) {
-				match_uid = 1;
+		/* This is the simple case of the UID matching. */
+		if (ret->uid == uid) {
+			goto finished;
+		}
 
-				cgroup = calloc(1, sizeof(struct cgroup));
-				if (!cgroup) {
-					ret = ECGOTHER;
-					goto out;
-				}
-				cgroups[cgindex] = cgroup;
-				cgindex++;
+		/* This is the simple case of the GID matching. */
+		if (ret->gid == gid) {
+			goto finished;
+		}
 
-				ret = cg_prepare_controller_array(buf_ctrl,
-						controllers);
-				if (ret)
-					goto out;
-				ret = cg_prepare_cgroup(cgroup, cgrldp->pid,
-							dest, controllers);
-				if (ret)
-					goto out;
-
-				cg_free_controller_array(controllers);
-			} else if (user[0] == '@' ||
-					(match_gid && !strcmp(user, "%"))) {
-				errno = 0;
-				group = getgrgid(cgrldp->gid);
-				if (!group) {
-					dbg("getgrgid() failed for gid %d\n",
-						cgrldp->pw->pw_gid);
-					ret = ECGOTHER;
-					goto out;
-				}
-				if ((strcmp(group->gr_name, user+1) == 0)
-					|| (strcmp(user, "*") == 0) ||
-					(match_gid && !strcmp(user, "%"))) {
-					match_gid = 1;
-
-					cgroup = (struct cgroup *)
-						calloc(1, sizeof(struct cgroup));
-					if (!cgroup) {
-						ret = ECGOTHER;
-						goto out;
-					}
-					cgroups[cgindex] = cgroup;
-					cgindex++;
-					ret = cg_prepare_controller_array(buf_ctrl, controllers);
-					if (ret)
-						goto out;
-					ret = cg_prepare_cgroup(cgroup,
-							cgrldp->pid,
-							dest, controllers);
-					if (ret)
-						goto out;
-					cg_free_controller_array(controllers);
-				}
+		/* If this is a group rule, the UID might be a member. */
+		if (ret->name[0] == '@') {
+			/* Get the group data. */
+			sp = &(ret->name[1]);
+			grp = getgrnam(sp);
+			if (!grp) {
+				continue;
 			}
-		} else {
-			dbg("invalid line '%s' - skipped", line);
+
+			/* Get the data for UID. */
+			usr = getpwuid(uid);
+			if (!usr) {
+				continue;
+			}
+
+			/* If UID is a member of group, we matched. */
+			for (i = 0; grp->gr_mem[i]; i++) {
+				if (!(strcmp(usr->pw_name, grp->gr_mem[i])))
+					goto finished;
+			}
 		}
+
+		/* If we haven't matched, try the next rule. */
+		ret = ret->next;
 	}
-	/* If we are here, then none of the rule matched for the task */
-	dbg("No rules matched for task with pid %d\n", cgrldp->pid);
-	fclose(fp);
-	return 0;
-out:
-	fclose(fp);
-	cg_free_controller_array(controllers);
-	/* Free the cgroups allocated so far */
-	for (i = 0; (i < CG_CONTROLLER_MAX) && cgroups[i]; i++)
-		cgroup_free(&cgroups[i]);
+
+	/* If we get here, no rules matched. */
+	ret = NULL;
+
+finished:
+	pthread_rwlock_unlock(&rl_lock);
 	return ret;
 }
 
-/** cgroup_change_cgroup_uid_gid changes the cgroup of a program based on
- * rules in the config file. Rules are search based on uid and gid
- * and the pid is placed into destination group (if permissions are
- * there).
+/**
+ * Changes the cgroup of a program based on the rules in the config file.  If a
+ * rule exists for the given UID or GID, then the given PID is placed into the
+ * correct group.  By default, this function parses the configuration file each
+ * time it is called.
+ * 
+ * The flags can alter the behavior of this function:
+ * 	CGFLAG_USECACHE: Use cached rules instead of parsing the config file
  *
- *  returns 0 on success.
+ * This function may NOT be thread safe. 
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@param pid The PID of the process to move
+ * 	@param flags Bit flags to change the behavior, as defined above
+ * 	@return 0 on success, > 0 on error
+ * TODO: Determine thread-safeness and fix of not safe.
+ */
+int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
+				const pid_t pid, const int flags)
+{
+	/* Temporary pointer to a rule */
+	struct cgroup_rule *tmp = NULL;
+
+	/* Return codes */
+	int ret = 0;
+
+	/* We need to check this before doing anything else! */
+	if (!cgroup_initialized) {
+		dbg("libcgroup is not initialized\n");
+		ret = ECGROUPNOTINITIALIZED;
+		goto finished;
+	}
+
+	/* 
+	 * If the user did not ask for cached rules, we must parse the
+	 * configuration to find a matching rule (if one exists).  Else, we'll
+	 * find the first match in the cached list (rl).
+	 */
+	if (!(flags & CGFLAG_USECACHE)) {
+		dbg("Not using cached rules for PID %d.\n", pid);
+		ret = cgroup_parse_rules(false, uid, gid);
+
+		/* The configuration file has an error!  We must exit now. */
+		if (ret != -1 && ret != 0) {
+			dbg("Failed to parse the configuration rules.\n");
+			goto finished;
+		}
+
+		/* We did not find a matching rule, so we're done. */
+		if (ret == 0) {
+			dbg("No rule found to match PID: %d, UID: %d, "
+				"GID: %d\n", pid, uid, gid);
+			goto finished;
+		}
+
+		/* Otherwise, we did match a rule and it's in trl. */
+		tmp = trl.head;
+	} else {
+		/* Find the first matching rule in the cached list. */
+		tmp = cgroup_find_matching_rule_uid_gid(uid, gid);
+		if (!tmp) {
+			dbg("No rule found to match PID: %d, UID: %d, "
+				"GID: %d\n", pid, uid, gid);
+			ret = 0;
+			goto finished;
+		}
+	}
+	dbg("Found matching rule %s for PID: %d, UID: %d, GID: %d\n",
+			tmp->name, pid, uid, gid);
+
+	/* If we are here, then we found a matching rule, so execute it. */
+	do {
+		dbg("Executing rule %s for PID %d... ", tmp->name, pid);
+		ret = cgroup_change_cgroup_path(tmp->destination,
+				pid, tmp->controllers);
+		if (ret) {
+			dbg("FAILED! (Error Code: %d)\n", ret);
+			goto finished;
+		}
+		dbg("OK!\n");
+
+		/* Now, check for multi-line rules.  As long as the "next"
+		 * rule starts with '%', it's actually part of the rule that
+		 * we just executed.
+		 */
+		tmp = tmp->next;
+	} while (tmp && (tmp->name[0] == '%'));
+
+finished:
+	return ret;
+}
+
+/**
+ * Provides backwards-compatibility with older versions of the API.  This
+ * function is deprecated, and cgroup_change_cgroup_uid_gid_flags() should be
+ * used instead.  In fact, this function simply calls the newer one with flags
+ * set to 0 (none).
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@param pid The PID of the process to move
+ * 	@return 0 on success, > 0 on error
+ * 
  */
 int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)
 {
-	int ret = 0, i;
-	struct passwd *pw;
-	struct cgroup_rules_data cgrld, *cgrldp = &cgrld;
-	struct cgroup *cgroups[CG_HIER_MAX];
-
-	if (!cgroup_initialized) {
-		dbg("libcgroup is not initialized\n");
-		return ECGROUPNOTINITIALIZED;
-	}
-	memset(cgrldp, 0, sizeof(struct cgroup_rules_data));
-	memset(cgroups, 0, CG_HIER_MAX);
-
-	pw = getpwuid(uid);
-	if (!pw) {
-		dbg("Could not retrieve the credentials of user"
-			"with uid %d\n", uid);
-		return ECGOTHER;
-	}
-	cgrldp->pw = pw;
-	cgrldp->pid = pid;
-	cgrldp->gid = gid;
-
-	/* Parse config file */
-	ret = cg_parse_rules_config_file(cgrldp, cgroups);
-	if (ret) {
-		dbg("Parsing of %s failed\n", CGRULES_CONF_FILE);
-		return ret;
-	}
-
-	/* Add task to cgroups */
-	for (i = 0; (i < CG_HIER_MAX) && cgroups[i]; i++) {
-		ret = cgroup_attach_task_pid(cgroups[i], cgrldp->pid);
-		if (ret) {
-			dbg("cgroup_attach_task_pid failed:%d\n", ret);
-			goto out;
-		}
-	}
-out:
-	/* Free the cgroups */
-	for (i = 0; (i < CG_HIER_MAX) && cgroups[i]; i++)
-		cgroup_free(&cgroups[i]);
-	return ret;
+	return cgroup_change_cgroup_uid_gid_flags(uid, gid, pid, 0);
 }
 
-/** cgroup_change_cgroup_path changes the cgroup of a program based on
- * the path provided by user. In this case user already knows in which
- * cgroup the task should go and no rules file have to be parsed.
+/**
+ * Changes the cgroup of a program based on the path provided.  In this case,
+ * the user must already know into which cgroup the task should be placed and
+ * no rules will be parsed.
  *
  *  returns 0 on success.
  */
@@ -1459,4 +1806,105 @@ int cgroup_change_cgroup_path(char *dest, pid_t pid, char *controllers[])
 		return ret;
 	}
 	return 0;
+}
+
+/**
+ * Print the cached rules table.  This function should be called only after
+ * first calling cgroup_parse_config(), but it will work with an empty rule
+ * list.
+ * 	@param fp The file stream to print to
+ */
+void cgroup_print_rules_config(FILE *fp)
+{
+	/* Iterator */
+	struct cgroup_rule *itr;
+
+	/* Loop variable */
+	int i = 0;
+
+	pthread_rwlock_rdlock(&rl_lock);
+
+	if (!(rl.head)) {
+		fprintf(fp, "The rules table is empty.\n\n");
+		pthread_rwlock_unlock(&rl_lock);
+		return;
+	}
+
+	itr = rl.head;
+	while (itr) {
+		fprintf(fp, "Rule: %s\n", itr->name);
+
+		if (itr->uid == CGRULE_WILD)
+			fprintf(fp, "  UID: any\n");
+		else if (itr->uid == CGRULE_INVALID)
+			fprintf(fp, "  UID: N/A\n");
+		else
+			fprintf(fp, "  UID: %d\n", itr->uid);
+
+		if (itr->gid == CGRULE_WILD)
+			fprintf(fp, "  GID: any\n");
+		else if (itr->gid == CGRULE_INVALID)
+			fprintf(fp, "  GID: N/A\n");
+		else
+			fprintf(fp, "  GID: %d\n", itr->gid);
+
+		fprintf(fp, "  DEST: %s\n", itr->destination);
+
+		fprintf(fp, "  CONTROLLERS:\n");
+		for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
+			if (itr->controllers[i]) {
+				fprintf(fp, "    %s\n", itr->controllers[i]);
+			}
+		}
+		fprintf(fp, "\n");
+		itr = itr->next;
+	}
+	pthread_rwlock_unlock(&rl_lock);
+}
+
+/**
+ * Reloads the rules list, using the given configuration file.  This function
+ * is probably NOT thread safe (calls cgroup_parse_rules()).
+ * 	@return 0 on success, > 0 on failure
+ */
+int cgroup_reload_cached_rules()
+{
+	/* Return codes */
+	int ret = 0;
+
+	dbg("Reloading cached rules from %s.\n", CGRULES_CONF_FILE);
+	if ((ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID))) {
+		dbg("Error parsing configuration file \"%s\": %d.\n",
+			CGRULES_CONF_FILE, ret);
+		ret = ECGROUPPARSEFAIL;
+		goto finished;
+	}
+		
+	#ifdef DEBUG
+		cgroup_print_rules_config(stdout);
+	#endif
+
+finished:
+	return ret;
+}
+
+/**
+ * Initializes the rules cache.
+ * 	@return 0 on success, > 0 on error
+ */
+int cgroup_init_rules_cache()
+{
+	/* Return codes */
+	int ret = 0;
+
+	/* Attempt to read the configuration file and cache the rules. */
+	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID);
+	if (ret) {
+		dbg("Could not initialize rule cache, error was: %d\n", ret);
+		cgroup_rules_loaded = false;
+	} else {
+		cgroup_rules_loaded = true;
+	}
+
+	return ret;
 }

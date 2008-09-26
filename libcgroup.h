@@ -27,6 +27,8 @@ __BEGIN_DECLS
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <limits.h>
+#include <linux/cn_proc.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -94,6 +96,19 @@ struct list_of_names {
 	struct list_of_names *next;
 };
 
+/* Maximum length of a line in the daemon config file */
+#define CGROUP_RULE_MAXLINE (FILENAME_MAX + LOGIN_NAME_MAX + \
+	CG_CONTROLLER_MAX + 3)
+
+/* Definitions for the uid and gid members of a cgroup_rules */
+#define CGRULE_INVALID (-1)
+#define CGRULE_WILD (-2)
+
+/* Flags for cgroup_change_cgroup_uid_gid() */
+enum cgflags {
+	CGFLAG_USECACHE = 0x01,
+};
+
 enum cg_msg_type {
 	CG_MSG_LOAD_FILE,
 	CG_MSG_UNLOAD_FILE,
@@ -124,6 +139,8 @@ enum cgroup_errors {
 	ECGOTHER,
 	ECGROUPNOTEQUAL,
 	ECGCONTROLLERNOTEQUAL,
+	ECGROUPPARSEFAIL, /* Failed to parse rules configuration file. */
+	ECGROUPNORULES, /* Rules list does not exist. */
 };
 
 #define CG_MAX_MSG_SIZE		256
@@ -175,9 +192,69 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup);
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership);
 int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
 
-/* Changes the cgroup of calling application based on rule file */
+/**
+ * Changes the cgroup of a program based on the rules in the config file.  If a
+ * rule exists for the given UID or GID, then the given PID is placed into the
+ * correct group.  By default, this function parses the configuration file each
+ * time it is called.
+ * 
+ * The flags can alter the behavior of this function:
+ *      CGFLAG_USECACHE: Use cached rules instead of parsing the config file
+ * 
+ * This function may NOT be thread safe.
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@param pid The PID of the process to move
+ * 	@param flags Bit flags to change the behavior, as defined above
+ * 	@return 0 on success, > 0 on error
+ * TODO: Determine thread-safeness and fix if not safe.
+ */
+int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
+				const pid_t pid, const int flags);
+
+/**
+ * Provides backwards-compatibility with older versions of the API.  This
+ * function is deprecated, and cgroup_change_cgroup_uid_gid_flags() should be
+ * used instead.  In fact, this function simply calls the newer one with flags
+ * set to 0 (none).
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@param pid The PID of the process to move
+ * 	@return 0 on success, > 0 on error
+ * 
+ */
 int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
+
+/**
+ * Changes the cgroup of a program based on the path provided.  In this case,
+ * the user must already know into which cgroup the task should be placed and
+ * no rules will be parsed.
+ *
+ *  returns 0 on success.
+ */
 int cgroup_change_cgroup_path(char *path, pid_t pid, char *controllers[]);
+
+/**
+ * Print the cached rules table.  This function should be called only after
+ * first calling cgroup_parse_config(), but it will work with an empty rule
+ * list.
+ * 	@param fp The file stream to print to
+ */
+void cgroup_print_rules_config(FILE *fp);
+
+/**
+ * Reloads the rules list, using the given configuration file.  This function
+ * is probably NOT thread safe (calls cgroup_parse_rules_config()).
+ * 	@return 0 on success, > 0 on failure
+ */
+int cgroup_reload_cached_rules(void);
+
+/**
+ * Initializes the rules cache.
+ * 	@return 0 on success, > 0 on failure
+ */
+int cgroup_init_rules_cache(void);
+
 
 /* The wrappers for filling libcg structures */
 
