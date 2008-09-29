@@ -1215,7 +1215,7 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 	if (!parent_cgroup)
 		goto err_nomem;
 
-	if (cgroup_get_cgroup(parent_cgroup) == NULL)
+	if (cgroup_get_cgroup(parent_cgroup))
 		goto err_parent;
 
 	dbg("got parent group for %s\n", parent_cgroup->name);
@@ -1430,12 +1430,12 @@ fill_error:
 }
 
 /*
- * cgroup_get_cgroup returns the cgroup data from the filesystem.
+ * cgroup_get_cgroup reads the cgroup data from the filesystem.
  * struct cgroup has the name of the group to be populated
  *
- * return succesfully filled cgroup data structure on success.
+ * return 0 on success.
  */
-struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
+int cgroup_get_cgroup(struct cgroup *cgroup)
 {
 	int i;
 	char path[FILENAME_MAX];
@@ -1446,12 +1446,12 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 
 	if (!cgroup_initialized) {
 		/* ECGROUPNOTINITIALIZED */
-		return NULL;
+		return ECGROUPNOTINITIALIZED;
 	}
 
 	if (!cgroup) {
 		/* ECGROUPNOTALLOWED */
-		return NULL;
+		return ECGROUPNOTALLOWED;
 	}
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
@@ -1489,15 +1489,19 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 		 */
 
 		control_path = malloc(strlen(path) + strlen("tasks") + 1);
-		strcpy(control_path, path);
 
-		if (!control_path)
+		if (!control_path) {
+			error = ECGOTHER;
 			goto unlock_error;
+		}
+
+		strcpy(control_path, path);
 
 		strcat(control_path, "tasks");
 
 		if (stat(control_path, &stat_buffer)) {
 			free(control_path);
+			error = ECGOTHER;
 			goto unlock_error;
 		}
 
@@ -1508,12 +1512,14 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 
 		cgc = cgroup_add_controller(cgroup,
 				cg_mount_table[i].name);
-		if (!cgc)
+		if (!cgc) {
+			error = ECGINVAL;
 			goto unlock_error;
+		}
 
 		dir = opendir(path);
 		if (!dir) {
-			/* error = ECGROUPSTRUCTERROR; */
+			error = ECGOTHER;
 			goto unlock_error;
 		}
 
@@ -1534,16 +1540,22 @@ struct cgroup *cgroup_get_cgroup(struct cgroup *cgroup)
 	}
 
 	/* Check if the group really exists or not */
-	if (!cgroup->index)
+	if (!cgroup->index) {
+		error = ECGROUPNOTEXIST;
 		goto unlock_error;
+	}
 
 	pthread_rwlock_unlock(&cg_mount_table_lock);
-	return cgroup;
+	return 0;
 
 unlock_error:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
+	/*
+	 * XX: Need to figure out how to cleanup? Cleanup just the stuff
+	 * we added, or the whole structure.
+	 */
 	cgroup = NULL;
-	return NULL;
+	return error;
 }
 
 /** cg_prepare_cgroup
