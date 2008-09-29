@@ -1908,3 +1908,89 @@ int cgroup_init_rules_cache()
 
 	return ret;
 }
+
+/**
+ * cgroup_get_current_controller_path
+ * @pid: pid of the current process for which the path is to be determined
+ * @controller: name of the controller for which to determine current path
+ * @current_path: a pointer that is filled with the value of the current
+ * 		path as seen in /proc/<pid>/cgroup
+ */
+int cgroup_get_current_controller_path(pid_t pid, const char *controller,
+					char **current_path)
+{
+	char *path;
+	int ret;
+	FILE *pid_cgroup_fd;
+
+	if (!controller)
+		return ECGOTHER;
+
+	if (!cgroup_initialized) {
+		dbg("libcgroup is not initialized\n");
+		return ECGROUPNOTINITIALIZED;
+	}
+
+	ret = asprintf(&path, "/proc/%d/cgroup", pid);
+	if (ret <= 0) {
+		dbg("cannot allocate memory (/proc/pid/cgroup) ret %d\n", ret);
+		return ret;
+	}
+
+	ret = ECGROUPNOTEXIST;
+	pid_cgroup_fd = fopen(path, "r");
+	if (!pid_cgroup_fd)
+		goto cleanup_path;
+
+	/*
+	 * Why do we grab the cg_mount_table_lock?, the reason is that
+	 * the cgroup of a pid can change via the cgroup_attach_task_pid()
+	 * call. To make sure, we return consitent and safe results,
+	 * we acquire the lock upfront. We can optimize by acquiring
+	 * and releasing the lock in the while loop, but that
+	 * will be more expensive.
+	 */
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	while (!feof(pid_cgroup_fd)) {
+		char controllers[FILENAME_MAX];
+		char cgroup_path[FILENAME_MAX];
+		int num;
+		char *savedptr;
+		char *token;
+
+		ret = fscanf(pid_cgroup_fd, "%d:%[^:]:%s\n", &num, controllers,
+				cgroup_path);
+		/*
+		 * Magic numbers like "3" seem to be integrating into
+		 * my daily life, I need some magic to help make them
+		 * disappear :)
+		 */
+		if (ret != 3 || ret == EOF) {
+			dbg("read failed for pid_cgroup_fd ret %d\n", ret);
+			ret = ECGOTHER;
+			goto done;
+		}
+
+		token = strtok_r(controllers, ",", &savedptr);
+		do {
+			if (strncmp(controller, token, strlen(controller) + 1)
+								== 0) {
+				*current_path = strdup(cgroup_path);
+				if (!*current_path) {
+					ret = ECGOTHER;
+					goto done;
+				}
+				ret = 0;
+				goto done;
+			}
+			token = strtok_r(NULL, ",", &savedptr);
+		} while (token);
+	}
+
+done:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	fclose(pid_cgroup_fd);
+cleanup_path:
+	free(path);
+	return ret;
+}

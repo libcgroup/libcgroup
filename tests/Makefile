@@ -6,7 +6,8 @@ CFLAGS = -g -O2 -Wall -DDEBUG
 
 TARGET= libcgrouptest01 \
 	libcg_ba \
-	setuid
+	setuid \
+	pathtest
 
 all:	$(TARGET)
 
@@ -17,6 +18,9 @@ libcg_ba: libcg_ba.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 setuid: setuid.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
+
+pathtest: pathtest.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 clean:

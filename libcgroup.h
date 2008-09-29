@@ -255,6 +255,12 @@ int cgroup_reload_cached_rules(void);
  */
 int cgroup_init_rules_cache(void);
 
+/**
+ * Get the current cgroup path where the task specified by pid_t pid
+ * has been classified
+ */
+int cgroup_get_current_controller_path(pid_t pid, const char *controller,
+					char **current_path);
 
 /* The wrappers for filling libcg structures */
 
