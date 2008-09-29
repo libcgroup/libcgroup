@@ -24,6 +24,8 @@ __BEGIN_DECLS
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
 
+#define CGROUP_BUFFER_LEN (5 * FILENAME_MAX)
+
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_VALUE_MAX];
@@ -49,6 +51,7 @@ struct cgroup {
 struct cg_mount_table_s {
 	char name[FILENAME_MAX];
 	char path[FILENAME_MAX];
+	int index;
 };
 
 struct cgroup_rules_data {
@@ -78,6 +81,18 @@ struct cgroup_rule_list {
 };
 
 
+/* Internal API */
+char *cg_build_path(char *name, char *path, char *type);
+
+/*
+ * config related API
+ */
+int cgroup_config_insert_cgroup(char *cg_name);
+int cgroup_config_parse_controller_options(char *controller, char *name_value);
+int cgroup_config_group_task_perm(char *perm_type, char *value);
+int cgroup_config_group_admin_perm(char *perm_type, char *value);
+int cgroup_config_insert_into_mount_table(char *name, char *mount_point);
+void cgroup_config_cleanup_mount_table(void);
 __END_DECLS
 
 #endif

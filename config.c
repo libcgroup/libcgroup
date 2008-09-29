@@ -20,6 +20,9 @@
  *
  * Code initiated and designed by Balbir Singh. All faults are most likely
  * his mistake.
+ *
+ * Cleanup and changes to use the "official" structures and functions made
+ * by Dhaval Giani. All faults will still be Balbir's mistake :)
  */
 
 #include <assert.h>
@@ -27,8 +30,10 @@
 #include <errno.h>
 #include <grp.h>
 #include <libcgroup.h>
+#include <libcgroup-internal.h>
 #include <limits.h>
 #include <pwd.h>
+#include <pthread.h>
 #include <search.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,672 +44,417 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#define MAX_CGROUPS 1024
+
 extern FILE *yyin;
 extern int yyparse(void);
-extern int yydebug;
-extern int line_no;
-extern int verbose;
-
-struct hsearch_data group_hash;
-struct list_of_names *group_list;
-struct mount_table *mount_table;
-
-const char library_ver[] = "0.01";
-const char cg_filesystem[] = "cgroup";
-
-struct cg_group *current_group;
-
-const char *cg_controller_names[] = {
-	"cpu",
-	"cpuacct",
-	"memory",
-	"cpuset",
-	NULL,
-};
 
 /*
- * File traversal routines require the maximum number of open file
- * descriptors to be specified
- */
-const int cg_max_openfd = 20;
-
-/*
- * Insert the group into the list of group names we maintain. This helps
- * us cleanup nicely
- */
-int cg_insert_into_group_list(const char *name)
-{
-	struct list_of_names *tmp, *curr;
-
-	tmp = malloc(sizeof(*tmp));
-	if (!tmp)
-		return 0;
-	tmp->next = NULL;
-	tmp->name = (char *)name;
-
-	if (!group_list) {
-		group_list = tmp;
-		return 1;
-	}
-	curr = group_list;
-	while (curr->next)
-		curr = curr->next;
-
-	curr->next = tmp;
-	return 1;
-}
-
-/*
- * Cleanup the group list. We walk the group list and free the entries in the
- * hash tables and controller specific entries.
- */
-int cg_cleanup_group_list(void)
-{
-	struct list_of_names *curr = group_list, *tmp;
-	ENTRY item, *found_item;
-	int ret;
-	struct cg_group *cg_group;
-
-	while (curr) {
-		tmp = curr;
-		curr = curr->next;
-		item.key = tmp->name;
-		ret = hsearch_r(item, FIND, &found_item, &group_hash);
-		if (!ret) {
-			printf("Most likely a bug in the code\n");
-			continue;
-		}
-		/*
-		 * Free the name and it's value
-		 */
-		free(tmp->name);
-		cg_group = (struct cg_group *)found_item->data;
-		/*
-		 * Controller specific cleanup
-		 */
-		if (cg_group->cpu_config.shares)
-			free(cg_group->cpu_config.shares);
-
-		free(found_item->data);
-	}
-
-	return 1;
-}
-
-/*
- * Find and walk the mount_table structures to find the specified controller
- * name. This routine is *NOT* thread safe.
- */
-struct mount_table *cg_find_mount_info(const char *controller_name)
-{
-	struct mount_table *curr = mount_table;
-	char *str;
-
-	while (curr) {
-		dbg("options %s mntpt %s next %p\n", curr->options,
-			curr->mount_point, curr->next);
-		dbg("passed controller name %s\n", controller_name);
-		str = curr->options;
-		if (!str)
-			return NULL;
-
-		str = strtok(curr->options, ",");
-		do {
-			if (!strcmp(str, controller_name))
-				return curr;
-			str = strtok(NULL, ",");
-		} while(str);
-		curr = curr->next;
-	}
-	return NULL;
-}
-
-int cg_cpu_controller_settings(struct cg_group *cg_group,
-				const char *group_path)
-{
-	int ret = 1;
-	char *shares_file;
-
-	shares_file = malloc(strlen(group_path) + strlen("/cpu.shares") + 1);
-	if (!shares_file)
-		return 0;
-
-	strcpy(shares_file, group_path);
-	shares_file = strcat(shares_file, "/cpu.shares");
-	dbg("shares file is %s\n", shares_file);
-	if (cg_group->cpu_config.shares) {
-		FILE *fd = fopen(shares_file, "rw+");
-		if (!fd)
-			goto cleanup_shares;
-		/*
-		 * Assume that one write will do it for us
-		 */
-		fwrite(cg_group->cpu_config.shares,
-			strlen(cg_group->cpu_config.shares), 1, fd);
-		fclose(fd);
-	}
-cleanup_shares:
-	free(shares_file);
-	return ret;
-}
-
-int cg_controller_handle_option(struct cg_group *cg_group,
-				const char *cg_controller_name,
-				const char *group_path)
-{
-	int ret = 0;
-	if (!strncmp(cg_controller_name, "cpu", strlen("cpu"))) {
-		ret = cg_cpu_controller_settings(cg_group, group_path);
-	} else
-		printf("config for %s pending\n", cg_controller_name);
-	return ret;
-}
-
-int cg_create_group(struct cg_group *cg_group)
-{
-	int i, ret;
-	struct mount_table *mount_info;
-	char *group_path[2], *tasks_file, *shares_file;
-
-	dbg("found group %s\n", cg_group->name);
-	group_path[1] = NULL;
-
-	for (i = 0; cg_controller_names[i]; i++) {
-
-		/*
-		 * Find the mount point related information
-		 */
-		mount_info = cg_find_mount_info(cg_controller_names[i]);
-		if (!mount_info)
-			continue;
-
-		dbg("mount_info for controller %s:%s\n",
-			mount_info->mount_point, cg_controller_names[i]);
-		/*
-		 * TODO: Namespace support is most likely going to be
-		 * plugged in here
-		 */
-
-		/*
-		 * Find the path to the group directory
-		 */
-		group_path[0] = cg_build_group_path(cg_group, mount_info);
-		if (!group_path[0])
-			goto cleanup_group;
-		/*
-		 * Create the specified directory. Errors are ignored.
-		 * If the directory already exists, we are most likely
-		 * OK
-		 */
-		ret = cg_make_directory(cg_group, group_path);
-		if (!ret && (errno != EEXIST))
-			goto cleanup_dir;
-
-		/*
-		 * Find the tasks file, should probably be encapsulated
-		 * like we encapsulate cg_build_group_path
-		 */
-		tasks_file = malloc(strlen(group_path[0]) + strlen("/tasks") + 1);
-		if (!tasks_file)
-			goto cleanup_dir;
-		strcpy(tasks_file, group_path[0]);
-		tasks_file = strncat(tasks_file, "/tasks", strlen("/tasks"));
-		dbg("tasks file is %s\n", tasks_file);
-
-		/*
-		 * Assign task file ownership
-		 */
-		ret = chown(tasks_file, cg_group->tasks_uid,
-				cg_group->tasks_gid);
-		if (ret < 0)
-			goto cleanup_perm;
-
-		/*
-		 * Controller specific work, errors are not fatal.
-		 */
-		cg_controller_handle_option(cg_group, cg_controller_names[i],
-						group_path[0]);
-		free(tasks_file);
-		free(group_path[0]);
-	}
-	return 1;
-cleanup_perm:
-	rmdir(group_path[0]);
-cleanup_dir:
-	free(group_path[0]);
-cleanup_group:
-	return 0;
-}
-
-/*
- * Go ahead and create the groups in the filesystem. This routine will need
- * to be revisited everytime new controllers are added.
- */
-int cg_create_groups(void)
-{
-	struct list_of_names *curr = group_list, *tmp;
-	ENTRY item, *found_item;
-	struct cg_group *cg_group;
-	int ret = 1;
-
-	while (curr) {
-		tmp = curr;
-		curr = curr->next;
-		item.key = tmp->name;
-		ret = hsearch_r(item, FIND, &found_item, &group_hash);
-		if (!ret)
-			return 0;
-		cg_group = (struct cg_group *)found_item->data;
-		ret = cg_create_group(cg_group);
-		if (!ret)
-			break;
-	}
-
-	return ret;
-}
-
-/*
- * Go ahead and create the groups in the filesystem. This routine will need
- * to be revisited everytime new controllers are added.
- */
-int cg_destroy_groups(void)
-{
-	struct list_of_names *curr = group_list, *tmp;
-	ENTRY item, *found_item;
-	struct cg_group *cg_group;
-	int ret;
-	struct mount_table *mount_info;
-	char *group_path;
-
-	while (curr) {
-		tmp = curr;
-		curr = curr->next;
-		item.key = tmp->name;
-		ret = hsearch_r(item, FIND, &found_item, &group_hash);
-		if (!ret)
-			return 0;
-		cg_group = (struct cg_group *)found_item->data;
-		mount_info = cg_find_mount_info("cpu");
-		dbg("mount_info for cpu %s\n", mount_info->mount_point);
-		if (!mount_info)
-			return 0;
-		group_path = malloc(strlen(mount_info->mount_point) +
-				strlen(cg_group->name) + 2);
-		if (!group_path)
-			return 0;
-		strncpy(group_path, mount_info->mount_point,
-					strlen(mount_info->mount_point) + 1);
-		dbg("group_path is %s\n", group_path);
-		strncat(group_path, "/", strlen("/"));
-		strncat(group_path, cg_group->name, strlen(cg_group->name));
-		dbg("group_path is %s\n", group_path);
-		/*
-		 * We might strategically add migrate tasks here, so that
-		 * rmdir is successful. TODO: Later
-		 */
-		ret = rmdir(group_path);
-		if (ret < 0)
-			goto err;
-	}
-
-	return 1;
-err:
-	free(group_path);
-	return 0;
-}
-/*
- * The cg_get_current_group routine is used by the parser to figure out
- * the current group that is being built and fill it in with the information
- * as it parses through the configuration file
- */
-struct cg_group *cg_get_current_group(void)
-{
-	if (!current_group)
-		current_group = calloc(1, sizeof(*current_group));
-
-	return current_group;
-}
-
-/*
- * This routine should be invoked when the current group being parsed is
- * completely parsed
- */
-void cg_put_current_group(void)
-{
-	/*
-	 * NOTE: we do not free the group, the group is installed into the
-	 * hash table, the cleanup routine will do the freeing of the group
-	 */
-	current_group = NULL;
-}
-
-int cg_insert_group(const char *group_name)
-{
-	struct cg_group *cg_group = cg_get_current_group();
-	ENTRY item, *found_item;
-	int ret;
-
-	if (!cg_group)
-		return 0;
-	/*
-	 * Dont' copy the name over, just point to it
-	 */
-	cg_group->name = (char *)group_name;
-	item.key = (char *)group_name;
-	item.data = cg_group;
-	dbg("Inserting %s into hash table\n", group_name);
-	ret = hsearch_r(item, ENTER, &found_item, &group_hash);
-	if (!ret) {
-		if (found_item)
-			errno = EEXIST;
-		errno = ENOMEM;
-		goto err;
-	}
-	ret = cg_insert_into_group_list(group_name);
-	if (!ret)
-		goto err;
-	dbg("Inserted %s into hash and list\n", group_name);
-	cg_put_current_group();
-	return 1;
-err:
-	cg_cleanup_group_list();
-	return 0;
-}
-
-/*
- * Because of the way parsing works (bottom-up, shift-reduce), we don't
- * know the name of the controller yet. Compilers build an AST and use
- * a symbol table to deal with this problem. This code does simple things
- * like concatinating strings and passing them upwards. This routine is
- * *NOT* thread safe.
+ * The basic global data structures.
  *
- * This code will need modification everytime new controller support is
- * added.
+ * config_mount_table -> Where what controller is mounted
+ * table_index -> Where in the table are we.
+ * config_table_lock -> Serializing access to config_mount_table.
+ * cgroup_table -> Which cgroups have to be created.
+ * cgroup_table_index -> Where in the cgroup_table we are.
  */
-int cg_parse_controller_options(char *controller, char *name_value)
+static struct cg_mount_table_s config_mount_table[CG_CONTROLLER_MAX];
+static int config_table_index;
+static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
+static struct cgroup config_cgroup_table[MAX_CGROUPS];
+int cgroup_table_index;
+
+/*
+ * Needed for the type while mounting cgroupfs.
+ */
+static const char cgroup_filesystem[] = "cgroup";
+
+/*
+ * NOTE: All these functions return 1 on success
+ * and not 0 as is the library convention
+ */
+
+/*
+ * This call just sets the name of the cgroup. It will
+ * always be called in the end, because the parser will
+ * work bottom up.
+ */
+int cgroup_config_insert_cgroup(char *cg_name)
 {
-	struct cg_group *cg_group = cg_get_current_group();
+	struct cgroup *config_cgroup =
+			&config_cgroup_table[cgroup_table_index];
+
+	strncpy(config_cgroup->name, cg_name, FILENAME_MAX);
+	/*
+	 * Since this will be the last part to be parsed.
+	 */
+	cgroup_table_index++;
+	free(cg_name);
+	return 1;
+}
+
+/*
+ * This function sets the various controller's control
+ * files. It will always append values for cgroup_table_index
+ * entry in the cgroup_table. The index is incremented in
+ * cgroup_config_insert_cgroup
+ */
+int cgroup_config_parse_controller_options(char *controller, char *name_value)
+{
+	char *buffer;
 	char *name, *value;
+	struct cgroup_controller *cgc;
+	int error;
+	struct cgroup *config_cgroup =
+		&config_cgroup_table[cgroup_table_index];
 
-	if (!cg_group)
-		return 0;
+	cgc = cgroup_add_controller(config_cgroup, controller);
 
-	if (!strncmp(controller, "cpu", strlen("cpu"))) {
-		name = strtok(name_value, " ");
-		value = strtok(NULL, " ");
-		if (!strncmp(name, "cpu.shares", strlen("cpu.shares")))
-			cg_group->cpu_config.shares = strdup(value);
-		else {
-			free(controller);
-			free(name_value);
-			return 0;
-		}
-		dbg("cpu name %s value %s\n", name, value);
-	} else {
-		return 0;
-	}
+	if (!cgc)
+		goto parse_error;
+
+	/*
+	 * Did we just specify the controller to create the correct
+	 * set of directories, without setting any values?
+	 */
+	if (!name_value)
+		goto done;
+
+	name = strtok_r(name_value, " ", &buffer);
+
+	if (!name)
+		goto parse_error;
+
+	value = strtok_r(NULL, " ", &buffer);
+
+	if (!value)
+		goto parse_error;
+
+
+	error = cgroup_add_value_string(cgc, name, value);
+
+	if (error)
+		goto parse_error;
+
+done:
 	free(controller);
 	free(name_value);
 	return 1;
-}
 
-/*
- * Convert the uid/gid field and supplied value to appropriate task
- * permissions. This routine is *NOT* thread safe.
- */
-int cg_group_task_perm(char *perm_type, char *value)
-{
-	struct cg_group *cg_group = cg_get_current_group();
-	struct passwd *pw;
-	struct group *group;
-	long val = atoi(value);
-	if (!strncmp(perm_type, "uid", strlen("uid"))) {
-		if (!val) {	/* We got the identifier as a name */
-			pw = getpwnam(value);
-			if (!pw) {
-				free(perm_type);
-				free(value);
-				return 0;
-			} else {
-				cg_group->tasks_uid = pw->pw_uid;
-			}
-		} else {
-			cg_group->tasks_uid = val;
-		}
-		dbg("TASKS %s: %d\n", perm_type, cg_group->tasks_uid);
-	}
-	if (!strncmp(perm_type, "gid", strlen("gid"))) {
-		if (!val) {	/* We got the identifier as a name */
-			group = getgrnam(value);
-			if (!group) {
-				free(perm_type);
-				free(value);
-				return 0;
-			} else {
-				cg_group->tasks_gid = group->gr_gid;
-			}
-		} else {
-			cg_group->tasks_gid = val;
-		}
-		dbg("TASKS %s: %d\n", perm_type, cg_group->tasks_gid);
-	}
-	free(perm_type);
-	free(value);
-	return 1;
-}
-
-int cg_group_admin_perm(char *perm_type, char *value)
-{
-	struct cg_group *cg_group = cg_get_current_group();
-	struct passwd *pw;
-	struct group *group;
-	long val = atoi(value);
-	if (!strncmp(perm_type, "uid", strlen("uid"))) {
-		if (!val) {	/* We got the identifier as a name */
-			pw = getpwnam(value);
-			if (!pw) {
-				free(perm_type);
-				free(value);
-				return 0;
-			} else {
-				cg_group->admin_uid = pw->pw_uid;
-			}
-		} else {
-			cg_group->admin_uid = val;
-		}
-		dbg("ADMIN %s: %d\n", perm_type, cg_group->admin_uid);
-	}
-	if (!strncmp(perm_type, "gid", strlen("gid"))) {
-		if (!val) {	/* We got the identifier as a name */
-			group = getgrnam(value);
-			if (!group) {
-				free(perm_type);
-				free(value);
-				return 0;
-			} else {
-				cg_group->admin_gid = group->gr_gid;
-			}
-		} else {
-			cg_group->admin_gid = val;
-		}
-		dbg("ADMIN %s: %d\n", perm_type,
-							cg_group->admin_gid);
-	}
-	free(perm_type);
-	free(value);
-	return 1;
-}
-
-/*
- * We maintain a hash table. The group hash table maintains the parameters for
- * each group, including the parameters for each controller
- *
- * TODO: Make the initialization a run time configuration parameter
- */
-int cg_init_group_and_mount_info(void)
-{
-	int ret;
-
-	group_list = NULL;
-	mount_table = NULL;
-	current_group = NULL;
-
-	ret = hcreate_r(MAX_GROUP_ELEMENTS, &group_hash);
-	if (!ret)
-		return 0;
-	return 1;
-}
-
-/*
- * This routine should be called only once all elements of the hash table have
- * been freed. Otherwise, we'll end up with a memory leak.
- */
-void cg_destroy_group_and_mount_info(void)
-{
-	hdestroy_r(&group_hash);
-	group_list = NULL;
-	mount_table = NULL;
-	current_group = NULL;
-}
-
-/*
- * Insert a name, mount_point pair into the mount_table data structure
- * TODO: Validate names and mount points
- */
-int cg_insert_into_mount_table(const char *name, const char *mount_point)
-{
-	struct mount_table *tmp, *prev = mount_table;
-
-	while (prev && prev->next != NULL &&
-		(strncmp(mount_point, prev->mount_point, strlen(mount_point))))
-		prev = prev->next;
-
-	if (prev &&
-		!(strncmp(mount_point, prev->mount_point, strlen(mount_point)))) {
-		prev->options = realloc(prev->options, strlen(prev->options)
-							+ strlen(name) + 2);
-		if (!prev->options)
-			return 0;
-		strncat(prev->options, ",", strlen(","));
-		strncat(prev->options, name, strlen(name));
-		dbg("options %s: mount_point %s\n", prev->options,
-							prev->mount_point);
-		return 1;
-	}
-
-	tmp = malloc(sizeof(*tmp));
-	if (!tmp)
-		return 0;
-
-	tmp->next = NULL;
-	tmp->mount_point = (char *)mount_point;
-	tmp->options = (char *)name;
-	dbg("options %s: mount_point %s\n", tmp->options, tmp->mount_point);
-
-	if (!prev) {
-		mount_table = tmp;
-		return 1;
-	} else {
-		prev->next = tmp;
-	}
-
-	return 1;
-}
-
-void cg_cleanup_mount_table(void)
-{
-	struct mount_table *curr = mount_table, *tmp;
-
-	while (curr) {
-		tmp = curr;
-		curr = curr->next;
-		tmp->next = NULL;
-
-		/*
-		 * Some of this data might have been allocated by the lexer
-		 * while parsing tokens
-		 */
-		free(tmp->mount_point);
-		free(tmp->options);
-
-		free(tmp);
-	}
-}
-
-int cg_load_config(const char *pathname)
-{
-	yyin = fopen(pathname, "rw");
-	if (!yyin) {
-		dbg("Failed to open file %s\n", pathname);
-		return 0;
-	}
-
-	if (!cg_init_group_and_mount_info())
-		return 0;
-
-	if (yyparse() != 0) {
-		dbg("Failed to parse file %s\n", pathname);
-		return 0;
-	}
-
-	if (!cg_mount_controllers())
-		goto err_mnt;
-	if (!cg_create_groups())
-		goto err_grp;
-
-	fclose(yyin);
-	return 1;
-err_grp:
-	dbg("Creating groups failed\n");
-	cg_destroy_groups();
-	cg_cleanup_group_list();
-err_mnt:
-	dbg("Mounting controllers failed\n");
-	cg_unmount_controllers();
-	cg_cleanup_mount_table();
-	fclose(yyin);
+parse_error:
+	free(controller);
+	free(name_value);
+	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_table_index--;
 	return 0;
 }
 
-void cg_unload_current_config(void)
+/*
+ * Sets the tasks file's uid and gid
+ */
+int cgroup_config_group_task_perm(char *perm_type, char *value)
 {
-	cg_destroy_groups();
-	cg_cleanup_group_list();
-	cg_unmount_controllers();
-	cg_cleanup_mount_table();
-	cg_destroy_group_and_mount_info();
-}
+	struct passwd *pw, *pw_buffer;
+	struct group *group, *group_buffer;
+	int error;
+	long val = atoi(value);
+	char buffer[CGROUP_BUFFER_LEN];
+	struct cgroup *config_cgroup =
+			&config_cgroup_table[cgroup_table_index];
 
-int main(int argc, char *argv[])
-{
-	int c;
-	char filename[PATH_MAX];
-	int ret;
+	if (!strcmp(perm_type, "uid")) {
+		if (!val) {
+			pw = (struct passwd *) malloc(sizeof(struct passwd));
 
-	if (argc < 2) {
-		fprintf(stderr, "usage is %s <option> <config file>\n",
-			argv[0]);
-		exit(2);
+			if (!pw)
+				goto group_task_error;
+
+			error = getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN,
+								&pw_buffer);
+			if (pw_buffer == NULL) {
+				free(pw);
+				goto group_task_error;
+			}
+
+			val = pw->pw_uid;
+			free(pw);
+		}
+		config_cgroup->tasks_uid = val;
 	}
 
-	while ((c = getopt(argc, argv, "l:ur:")) > 0) {
-		switch (c) {
-		case 'u':
-			cg_unload_current_config();
-			break;
-		case 'r':
-			cg_unload_current_config();
-			/* FALLTHROUGH */
-		case 'l':
-			strncpy(filename, optarg, PATH_MAX);
-			ret = cg_load_config(filename);
-			if (!ret)
-				exit(3);
-			break;
-		default:
-			fprintf(stderr, "Invalid command line option\n");
-			break;
+	if (!strcmp(perm_type, "gid")) {
+		if (!val) {
+			group = (struct group *) malloc(sizeof(struct group));
+
+			if (!group)
+				goto group_task_error;
+
+			error = getgrnam_r(value, group, buffer,
+					CGROUP_BUFFER_LEN, &group_buffer);
+
+			if (group_buffer == NULL) {
+				free(group);
+				goto group_task_error;
+			}
+
+			val = group->gr_gid;
+			free(group);
+		}
+		config_cgroup->tasks_gid = val;
+	}
+
+	return 1;
+
+group_task_error:
+	free(perm_type);
+	free(value);
+	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_table_index--;
+	return 0;
+}
+
+/*
+ * Set the control file's uid/gid
+ */
+int cgroup_config_group_admin_perm(char *perm_type, char *value)
+{
+	struct passwd *pw, *pw_buffer;
+	struct group *group, *group_buffer;
+	int error;
+	struct cgroup *config_cgroup =
+				&config_cgroup_table[cgroup_table_index];
+	long val = atoi(value);
+	char buffer[CGROUP_BUFFER_LEN];
+
+	if (!strcmp(perm_type, "uid")) {
+		if (!val) {
+			pw = (struct passwd *) malloc(sizeof(struct passwd));
+
+			if (!pw)
+				goto admin_error;
+
+			error = getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN,
+								&pw_buffer);
+			if (error) {
+				free(pw);
+				goto admin_error;
+			}
+
+			val = pw->pw_uid;
+			free(pw);
+		}
+		config_cgroup->control_uid = val;
+	}
+
+	if (!strcmp(perm_type, "gid")) {
+		if (!val) {
+			group = (struct group *) malloc(sizeof(struct group));
+
+			if (!group)
+				goto admin_error;
+
+			error = getgrnam_r(value, group, buffer,
+					CGROUP_BUFFER_LEN, &group_buffer);
+
+			if (error) {
+				free(group);
+				goto admin_error;
+			}
+
+			val = group->gr_gid;
+			free(group);
+		}
+		config_cgroup->control_gid = val;
+	}
+
+	return 1;
+
+admin_error:
+	free(perm_type);
+	free(value);
+	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_table_index--;
+	return 0;
+}
+
+/*
+ * The moment we have found the controller's information
+ * insert it into the config_mount_table.
+ */
+int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
+{
+	int i;
+
+	if (config_table_index >= CG_CONTROLLER_MAX)
+		return 0;
+
+	pthread_rwlock_wrlock(&config_table_lock);
+
+	/*
+	 * Merge controller names with the same mount point
+	 */
+	for (i = 0; i < config_table_index; i++) {
+		if (strcmp(config_mount_table[i].path, mount_point) == 0) {
+			char *cname = config_mount_table[i].name;
+			strncat(cname, ",", FILENAME_MAX - strlen(cname) - 1);
+			strncat(cname, name,
+					FILENAME_MAX - strlen(cname) - 1);
+			goto done;
 		}
 	}
 
+	strcpy(config_mount_table[config_table_index].name, name);
+	strcpy(config_mount_table[config_table_index].path, mount_point);
+	config_table_index++;
+done:
+	pthread_rwlock_unlock(&config_table_lock);
+	free(name);
+	free(mount_point);
+	return 1;
+}
+
+/*
+ * Cleanup all the data from the config_mount_table
+ */
+void cgroup_config_cleanup_mount_table(void)
+{
+	memset(&config_mount_table, 0,
+			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
+}
+
+/*
+ * Start mounting the mount table.
+ */
+int cgroup_config_mount_fs()
+{
+	int ret;
+	struct stat buff;
+	int i;
+
+	for (i = 0; i < config_table_index; i++) {
+		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
+
+		ret = stat(curr->path, &buff);
+
+		if (ret < 0 && errno != ENOENT)
+			return ECGOTHER;
+
+		if (errno == ENOENT) {
+			ret = mkdir(curr->path,
+					S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+			if (ret < 0)
+				return ECGOTHER;
+		} else if (!S_ISDIR(buff.st_mode)) {
+			errno = ENOTDIR;
+			return ECGOTHER;
+		}
+
+		ret = mount(cgroup_filesystem, curr->path, cgroup_filesystem,
+								0, curr->name);
+
+		if (ret < 0)
+			return ECGMOUNTFAIL;
+	}
+	return 0;
+}
+
+/*
+ * Actually create the groups once the parsing has been finished.
+ */
+int cgroup_config_create_groups()
+{
+	int error = 0;
+	int i;
+
+	for (i = 0; i < cgroup_table_index; i++) {
+		struct cgroup *cgroup = &config_cgroup_table[i];
+		error = cgroup_create_cgroup(cgroup, 0);
+		dbg("creating group %s, error %d\n", cgroup->name, error);
+		if (error)
+			return error;
+	}
+	return error;
+}
+
+/*
+ * Destroy the cgroups
+ */
+int cgroup_config_destroy_groups(void)
+{
+	int error = 0;
+	int i;
+
+	for (i = 0; i < cgroup_table_index; i++) {
+		struct cgroup *cgroup = &config_cgroup_table[i];
+		error = cgroup_delete_cgroup(cgroup, 0);
+		if (error)
+			return error;
+	}
+	return error;
+}
+
+/*
+ * Unmount the controllers
+ */
+int cgroup_config_unmount_controllers(void)
+{
+	int i;
+	int error;
+
+	for (i = 0; i < config_table_index; i++) {
+		/*
+		 * We ignore failures and ensure that all mounted
+		 * containers are unmounted
+		 */
+		error = umount(config_mount_table[i].path);
+		if (error < 0)
+			dbg("Unmount failed\n");
+		error = rmdir(config_mount_table[i].path);
+		if (error < 0)
+			dbg("rmdir failed\n");
+	}
+
+	return 0;
+}
+
+/*
+ * The main function which does all the setup of the data structures
+ * and finally creates the cgroups
+ */
+int cgroup_config_load_config(const char *pathname)
+{
+	int error;
+	yyin = fopen(pathname, "r");
+
+	if (!yyin) {
+		dbg("Failed to open file %s\n", pathname);
+		return ECGOTHER;
+	}
+
+	if (yyparse() != 0) {
+		dbg("Failed to parse file %s\n", pathname);
+		return ECGROUPPARSEFAIL;
+	}
+
+	error = cgroup_config_mount_fs();
+	if (error)
+		goto err_mnt;
+
+	error = cgroup_init();
+	if (error)
+		goto err_mnt;
+
+	error = cgroup_config_create_groups();
+	dbg("creating all cgroups now, error=%d\n", error);
+	if (error)
+		goto err_grp;
+
+	fclose(yyin);
+	return 0;
+err_grp:
+	cgroup_config_destroy_groups();
+err_mnt:
+	cgroup_config_unmount_controllers();
+	fclose(yyin);
+	return error;
 }

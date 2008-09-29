@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libcgroup.h>
+#include <libcgroup-internal.h>
 
 int yylex(void);
 extern int line_no;
@@ -67,7 +68,7 @@ group   :       GROUP ID '{' group_conf '}'
 	{
 		$$ = $4;
 		if ($$)
-			cg_insert_group($2);
+			cgroup_config_insert_cgroup($2);
 		else {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -80,7 +81,7 @@ group   :       GROUP ID '{' group_conf '}'
 group_conf
         :       ID '{' namevalue_conf '}'
 	{
-		$$ = cg_parse_controller_options($1, $3);
+		$$ = cgroup_config_parse_controller_options($1, $3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -90,7 +91,7 @@ group_conf
 	}
         |       group_conf ID '{' namevalue_conf '}' 
 	{
-		$$ = cg_parse_controller_options($2, $4);
+		$$ = cgroup_config_parse_controller_options($2, $4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -125,12 +126,16 @@ namevalue_conf
 		$$ = strncat($2, $4, strlen($4));
 		free($4);
 	}
+	|
+	{
+		$$ = NULL;
+	}
         ;
 
 task_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = cg_group_task_perm($1, $3);
+		$$ = cgroup_config_group_task_perm($1, $3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -140,7 +145,7 @@ task_namevalue_conf
 	}
         |       task_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && cg_group_task_perm($2, $4);
+		$$ = $1 && cgroup_config_group_task_perm($2, $4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -153,7 +158,7 @@ task_namevalue_conf
 admin_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = cg_group_admin_perm($1, $3);
+		$$ = cgroup_config_group_admin_perm($1, $3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -163,7 +168,7 @@ admin_namevalue_conf
 	}
         |       admin_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && cg_group_admin_perm($2, $4);
+		$$ = $1 && cgroup_config_group_admin_perm($2, $4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -223,8 +228,8 @@ task_conf:	TASK '{' task_namevalue_conf '}'
 mountvalue_conf
         :       ID '=' ID ';'
 	{
-		if (!cg_insert_into_mount_table($1, $3)) {
-			cg_cleanup_mount_table();
+		if (!cgroup_config_insert_into_mount_table($1, $3)) {
+			cgroup_config_cleanup_mount_table();
 			$$ = 0;
 			return $$;
 		}
@@ -232,8 +237,8 @@ mountvalue_conf
 	}
         |       mountvalue_conf ID '=' ID ';'
 	{
-		if (!cg_insert_into_mount_table($2, $4)) {
-			cg_cleanup_mount_table();
+		if (!cgroup_config_insert_into_mount_table($2, $4)) {
+			cgroup_config_cleanup_mount_table();
 			$$ = 0;
 			return $$;
 		}

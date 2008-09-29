@@ -658,7 +658,7 @@ static char *cg_build_path_locked(char *name, char *path, char *type)
 	return NULL;
 }
 
-static char *cg_build_path(char *name, char *path, char *type)
+char *cg_build_path(char *name, char *path, char *type)
 {
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	path = cg_build_path_locked(name, path, type);
@@ -790,6 +790,76 @@ int cgroup_attach_task(struct cgroup *cgroup)
 	return error;
 }
 
+/**
+ * cg_mkdir_p, emulate the mkdir -p command (recursively creating paths)
+ * @path: path to create
+ */
+static int cg_mkdir_p(const char *path)
+{
+	char *real_path, *wd;
+	int i = 0, j = 0;
+	char pos, *str;
+	int ret = 0;
+	char cwd[FILENAME_MAX], *buf;
+
+	buf = getcwd(cwd, FILENAME_MAX);
+	if (!buf)
+		return ECGOTHER;
+
+	real_path = strdup(path);
+	if (!real_path)
+		return ECGOTHER;
+
+	do {
+		while (real_path[j] != '\0' && real_path[j] != '/')
+			j++;
+		while (real_path[j] != '\0' && real_path[j] == '/')
+			j++;
+		if (i == j)
+			continue;
+		pos = real_path[j];
+		real_path[j] = '\0';		/* Temporarily overwrite "/" */
+		str = &real_path[i];
+		ret = mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		wd = strdup(str);
+		if (!wd) {
+			ret = ECGOTHER;
+			break;
+		}
+		real_path[j] = pos;
+		if (ret) {
+			switch (errno) {
+			case EEXIST:
+				ret = 0;	/* Not fatal really */
+				break;
+			case EPERM:
+				ret = ECGROUPNOTOWNER;
+				free(wd);
+				goto done;
+			default:
+				ret = ECGROUPNOTALLOWED;
+				free(wd);
+				goto done;
+			}
+		}
+		i = j;
+		ret = chdir(wd);
+		if (ret) {
+			printf("could not chdir to child directory (%s)\n", wd);
+			break;
+		}
+		free(wd);
+	} while (real_path[i]);
+
+	ret = chdir(buf);
+	if (ret)
+		printf("could not go back to old directory (%s)\n", cwd);
+
+done:
+	free(real_path);
+	return ret;
+}
+
 /*
  * create_control_group()
  * This is the basic function used to create the control group. This function
@@ -801,21 +871,7 @@ static int cg_create_control_group(char *path)
 	int error;
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
-	error = mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	if (error) {
-		switch(errno) {
-		case EEXIST:
-			/*
-			 * If the directory already exists, it really should
-			 * not be an error
-			 */
-			return 0;
-		case EPERM:
-			return ECGROUPNOTOWNER;
-		default:
-			return ECGROUPNOTALLOWED;
-		}
-	}
+	error = cg_mkdir_p(path);
 	return error;
 }
 
@@ -1065,7 +1121,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			strcat(path, "/tasks");
 			error = chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
-			if (!error) {
+			if (error) {
 				error = ECGFAIL;
 				goto err;
 			}

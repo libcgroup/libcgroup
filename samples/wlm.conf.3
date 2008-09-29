@@ -32,6 +32,7 @@ group ca1 {
 	memory {
 		memory.limit_in_bytes = 200M;
 	}
+
 }
 
 group default {
@@ -53,13 +54,15 @@ group default {
 	memory {
 		memory.limit_in_bytes = 200M;
 	}
+
+	cpuacct {}
 }
 
 mount {
-	cpu = /container;
-	memory = /memory;
+	cpu = /cgroup/cpu;
+	memory = /cgroup/mem;
 }
 
 mount {
-	cpu_acct = /acct;
+	cpuacct = /cgroup/cpu;
 }

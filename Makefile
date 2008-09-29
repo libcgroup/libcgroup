@@ -31,9 +31,8 @@ VERSION=1
 
 all: libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd
 
-cgconfigparser: libcgroup.so config.c y.tab.c lex.yy.c libcgroup.h file-ops.c
-	$(CC) $(CFLAGS) -o $@ y.tab.c lex.yy.c config.c file-ops.c \
-		$(LDFLAGS) $(LIBS)
+cgconfigparser: libcgroup.so cgconfig.c libcgroup.h
+	$(CC) $(CFLAGS) -Wall -o $@ cgconfig.c $(LDFLAGS) $(LIBS)
 
 cgexec: libcgroup.so cgexec.c libcgroup.h
 	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
@@ -51,9 +50,9 @@ y.tab.c: parse.y lex.yy.c
 lex.yy.c: lex.l
 	$(LEX) lex.l
 
-libcgroup.so: api.c libcgroup.h wrapper.c
+libcgroup.so: api.c libcgroup.h wrapper.c config.c lex.yy.c y.tab.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ api.c \
-		wrapper.c
+	wrapper.c lex.yy.c y.tab.c config.c
 	ln -sf $@ $@.$(VERSION)
 
 test:
