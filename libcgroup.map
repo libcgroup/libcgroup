@@ -1,0 +1,42 @@
+CGROUP_0.32 {
+global:
+	cgroup_init;
+	cgroup_attach_task;
+	cgroup_modify_cgroup;
+	cgroup_create_cgroup;
+	cgroup_delete_cgroup;
+	cgroup_attach_task_pid;
+	cgroup_get_cgroup;
+	cgroup_create_cgroup_from_parent;
+	cgroup_copy_cgroup;
+	cgroup_change_cgroup_uid_gid;
+	cgroup_change_cgroup_path;
+	cgroup_new_cgroup;
+	cgroup_add_controller;
+	cgroup_free;
+	cgroup_free_controllers;
+	cgroup_add_value_string;
+	cgroup_add_value_int64;
+	cgroup_add_value_uint64;
+	cgroup_add_value_bool;
+	cgroup_compare_cgroup;
+	cgroup_compare_controllers;
+	cgroup_set_uid_gid;
+	cgroup_get_uid_gid;
+	cgroup_get_value_string;
+	cgroup_set_value_string;
+	cgroup_get_value_int64;
+	cgroup_set_value_int64;
+	cgroup_get_value_uint64;
+	cgroup_set_value_uint64;
+	cgroup_get_value_bool;
+	cgroup_set_value_bool;
+	cgroup_change_cgroup_uid_gid_flags;
+	cgroup_print_rules_config;
+	cgroup_reload_cached_rules;
+	cgroup_init_rules_cache;
+	cgroup_get_current_controller_path;
+	cgroup_config_load_config;
+local:
+	*;
+};

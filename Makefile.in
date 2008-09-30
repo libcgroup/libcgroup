@@ -32,7 +32,7 @@ VERSION=1
 all: libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd
 
 cgconfigparser: libcgroup.so cgconfig.c libcgroup.h
-	$(CC) $(CFLAGS) -Wall -o $@ cgconfig.c $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) $(INC) -Wall -o $@ cgconfig.c $(LDFLAGS) $(LIBS)
 
 cgexec: libcgroup.so cgexec.c libcgroup.h
 	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c $(LDFLAGS) $(LIBS)
@@ -51,8 +51,9 @@ lex.yy.c: lex.l
 	$(LEX) lex.l
 
 libcgroup.so: api.c libcgroup.h wrapper.c config.c lex.yy.c y.tab.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ api.c \
-	wrapper.c lex.yy.c y.tab.c config.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,--soname,$@.$(VERSION) -o $@ \
+	-Wl,--version-script,libcgroup.map,--allow-shlib-undefined \
+	api.c wrapper.c lex.yy.c y.tab.c config.c
 	ln -sf $@ $@.$(VERSION)
 
 test:
