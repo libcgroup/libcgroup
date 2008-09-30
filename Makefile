@@ -25,7 +25,7 @@ prefix=/usr/local
 exec_prefix=${prefix}
 INSTALL=install
 INSTALL_DATA=install -m 644
-PACKAGE_VERSION=0.31
+PACKAGE_VERSION=0.32
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
