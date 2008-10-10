@@ -68,7 +68,7 @@ install: libcgroup.so cgexec cgclassify cgconfigparser
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
-	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
+	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)/cgconfigparser
 	$(INSTALL) -D cgexec $(DESTDIR)$(bindir)/cgexec
 	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 	$(INSTALL) -D cgrulesengd $(DESTDIR)$(bindir)/cgrulesengd
