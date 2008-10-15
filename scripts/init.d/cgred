@@ -23,7 +23,7 @@
 #
 ### BEGIN INIT INFO
 # Provides:		cgrulesengd
-# Required-Start:	$local_fs $syslog $wlm
+# Required-Start:	$local_fs $syslog $cgconfig
 # Required-Stop:	$local_fs $syslog
 # Should-Start:		
 # Should-Stop:		

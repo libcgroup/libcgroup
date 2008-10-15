@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Start/Stop the workload manager
 #
@@ -12,8 +13,13 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
+# cgconfig Control Groups Configuration Startup
+# chkconfig: 2345 80 20
+# description: This script runs the cgconfigparser utility to parse and setup
+#              the control group filesystem. It uses /etc/cgconfig.conf
+#              and parses the configuration specified in there.
 
-#### BEGIN INIT INFO
+### BEGIN INIT INFO
 # Provides:             cgconfig
 # Required-Start:       $local_fs $syslog $time
 # Required-Stop:        $local_fs $syslog
@@ -23,7 +29,7 @@
 # Default-Stop:         0 1 6
 # Short-Description:    start and stop the WLM configuration
 # Description:          This script allows us to create a default configuration
-#### END INIT INFO
+### END INIT INFO
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin:.
 MOUNTS_FILE=/proc/mounts
@@ -35,6 +41,7 @@ CONFIG_FILE=/etc/cgconfig.conf
 declare -a MOUNTPOINT
 declare -a MOUNTOPTS
 maxindex=0
+servicename=cgconfig
 
 #
 # Source LSB routines
@@ -64,7 +71,7 @@ umount_fs() {
 }
 
 start() {
-	if [ -f /var/lock/cgconfig ]
+	if [ -f /var/lock/subsys/$servicename ]
         then
             log_warning_msg "lock file already exists"
             return
@@ -72,10 +79,10 @@ start() {
 
         if [ $? -eq 0 ]
         then
-                log_progress_msg "Starting cgconfig service: "
+                #log_progress_msg "Starting cgconfig service: "
                 cgconfigparser -l $CONFIG_FILE
         fi
-        [ $? == 0 ] && touch /var/lock/cgconfig
+        [ $? == 0 ] && touch /var/lock/subsys/$servicename
         return $?
 }
 
@@ -97,7 +104,7 @@ move_all_to_init_class() {
                 ;;
             *)
                 class=${i#./*}
-                log_progress_msg "Removing class $class"
+                #log_progress_msg "Removing class $class"
                 sed -nu p < ./$i/tasks > tasks
                 rmdir $i
                 ;;
@@ -111,7 +118,7 @@ move_all_to_init_class() {
 stop() {
     move_all_to_init_class
     umount_fs
-    rm -f /var/lock/cgconfig
+    rm -f /var/lock/subsys/$servicename
 }
 
 trapped() {
@@ -122,7 +129,7 @@ trapped() {
 }
 
 usage() {
-    echo "$0 <start|stop>"
+    echo "$0 <start|stop|restart|condrestart|status>"
     exit 1
 }
 
@@ -157,6 +164,19 @@ case $1 in
 	stop
         start
         ;;
+    'condrestart')
+        if [ -f /var/lock/subsys/$servicename ] ; then
+            stop
+            start
+        fi
+        ;;
+    'status')
+        if [ -f /var/lock/subsys/$servicename ] ; then
+            echo "Running"
+        else
+            echo "Stopped"
+        fi
+	;;
     *)
         usage
         ;;

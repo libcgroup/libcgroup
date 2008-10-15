@@ -203,6 +203,8 @@ int cgroup_config_group_task_perm(char *perm_type, char *value)
 		config_cgroup->tasks_gid = val;
 	}
 
+	free(perm_type);
+	free(value);
 	return 1;
 
 group_task_error:
@@ -267,6 +269,8 @@ int cgroup_config_group_admin_perm(char *perm_type, char *value)
 		config_cgroup->control_gid = val;
 	}
 
+	free(perm_type);
+	free(value);
 	return 1;
 
 admin_error:

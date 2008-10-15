@@ -21,7 +21,7 @@ bindir=${exec_prefix}/bin
 sbindir=${exec_prefix}/sbin
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
-prefix=/usr/local
+prefix=/usr
 exec_prefix=${prefix}
 INSTALL=install
 INSTALL_DATA=install -m 644
@@ -29,7 +29,9 @@ PACKAGE_VERSION=0.32
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
-all: libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd
+TARGETS = libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd
+
+all: $(TARGETS)
 
 cgconfigparser: libcgroup.so cgconfig.c libcgroup.h
 	$(CC) $(CFLAGS) $(INC) -Wall -o $@ cgconfig.c $(LDFLAGS) $(LIBS)
@@ -63,12 +65,12 @@ pam_cgroup.so: pam_cgroup.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wall -o $@ pam_cgroup.c $(LDFLAGS) \
 	$(LIBS) -lpam
 
-install: libcgroup.so cgexec cgclassify cgconfigparser
+install: $(TARGETS)
 	$(INSTALL_DATA) -D libcgroup.h $(DESTDIR)$(includedir)/libcgroup.h
 	$(INSTALL) -D libcgroup.so $(DESTDIR)$(libdir)/libcgroup-$(PACKAGE_VERSION).so
 	ln -sf libcgroup-$(PACKAGE_VERSION).so $(DESTDIR)$(libdir)/libcgroup.so.$(VERSION)
 	ln -sf libcgroup.so.$(VERSION) $(DESTDIR)$(libdir)/libcgroup.so
-	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)
+	$(INSTALL) -D cgconfigparser $(DESTDIR)$(sbindir)/cgconfigparser
 	$(INSTALL) -D cgexec $(DESTDIR)$(bindir)/cgexec
 	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 	$(INSTALL) -D cgrulesengd $(DESTDIR)$(bindir)/cgrulesengd
@@ -85,5 +87,4 @@ uninstall: libcgroup.so
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify \
-	libcgroup.so.$(VERSION) cgconfigparser config.log config.status cgexec \
-	pam_cgroup.so cgrulesengd
+	libcgroup.so.$(VERSION) $(TARGETS)

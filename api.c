@@ -536,7 +536,7 @@ int cgroup_init()
 				&hierarchy, &num_cgroups, &enabled);
 		if (err < 0)
 			break;
-		controllers[i] = (char *)malloc(strlen(subsys_name));
+		controllers[i] = (char *)malloc(strlen(subsys_name) + 1);
 		strcpy(controllers[i], subsys_name);
 		i++;
 	}
@@ -584,6 +584,8 @@ int cgroup_init()
 		}
 	}
 
+	free(temp_ent);
+
 	if (!found_mnt) {
 		cg_mount_table[0].name[0] = '\0';
 		ret = ECGROUPNOTMOUNTED;
@@ -606,6 +608,7 @@ static int cg_test_mounted_fs()
 	FILE *proc_mount;
 	struct mntent *ent, *temp_ent;
 	char mntent_buff[4 * FILENAME_MAX];
+	int ret = 1;
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
@@ -627,11 +630,15 @@ static int cg_test_mounted_fs()
 	while (strcmp(ent->mnt_type, "cgroup") !=0) {
 		ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
 						sizeof(mntent_buff));
-		if (ent == NULL)
-			return 0;
+		if (ent == NULL) {
+			ret = 0;
+			goto done;
+		}
 	}
+done:
 	fclose(proc_mount);
-	return 1;
+	free(temp_ent);
+	return ret;
 }
 
 static inline pid_t cg_gettid()
@@ -1058,6 +1065,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	char *fts_path[2], base[FILENAME_MAX], *path;
 	int i, j, k;
 	int error = 0;
+	int retval = 0;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1108,12 +1116,17 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup->controller[k]->values[j]->value);
 			/*
 			 * Should we undo, what we've done in the loops above?
-			 * An error should not be treated as fatal, since we have
-			 * several read-only files and several files that
+			 * An error should not be treated as fatal, since we
+			 * have several read-only files and several files that
 			 * are only conditionally created in the child.
+			 *
+			 * A middle ground would be to track that there
+			 * was an error and return that value.
 			 */
-			if (error)
+			if (error) {
+				retval = error;
 				continue;
+			}
 		}
 
 		if (!ignore_ownership) {
@@ -1130,6 +1143,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 
 err:
 	free(path);
+	if (retval && !error)
+		error = retval;
 	return error;
 }
 
@@ -1266,38 +1281,38 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 
 		base_tasks = fopen(path, "w");
 		if (!base_tasks)
-			goto base_open_err;
+			goto open_err;
 
 		if (!cg_build_path(cgroup->name, path,
-					cgroup->controller[i]->name))
+					cgroup->controller[i]->name)) {
+			fclose(base_tasks);
 			continue;
+		}
 
 		strcat(path, "tasks");
 
 		delete_tasks = fopen(path, "r");
-		if (!delete_tasks)
-			goto del_open_err;
+		if (!delete_tasks) {
+			fclose(base_tasks);
+			goto open_err;
+		}
 
 		while (!feof(delete_tasks)) {
 			ret = fscanf(delete_tasks, "%d", &tids);
-			/*
-			 * Don't know how to handle EOF yet, so
-			 * ignore it
-			 */
+			if (ret == EOF || ret < 1)
+				break;
 			fprintf(base_tasks, "%d", tids);
 		}
+
+		fclose(delete_tasks);
+		fclose(base_tasks);
 
 		if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 			continue;
 		error = rmdir(path);
-
-		fclose(delete_tasks);
 	}
-del_open_err:
-	if (base_tasks)
-		fclose(base_tasks);
-base_open_err:
+open_err:
 	if (ignore_migration) {
 		for (i = 0; i < cgroup->index; i++) {
 			if (!cg_build_path(cgroup->name, path,

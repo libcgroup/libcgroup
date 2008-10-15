@@ -10,6 +10,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: coreutils
+Requires(post): chkconfig, /sbin/service
 
 %description
 Control groups infrastructure. The tools and library help manipulate, control,
@@ -36,11 +37,27 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
+mkdir -p $RPM_BUILD_ROOT/%{_initrddir}
+cp scripts/init.d/cgconfig $RPM_BUILD_ROOT/%{_initrddir}/cgconfig
+cp scripts/init.d/cgred $RPM_BUILD_ROOT/%{_initrddir}/cgred
+
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post -p /sbin/ldconfig
+%post 
+/sbin/ldconfig
+#
+# Do this later if required
+#
+#/sbin/chkconfig --add cgred
+#/sbin/chkconfig --add cgconfig
+
+%preun
+/sbin/service cgred stop > /dev/null 2>&1 || :
+/sbin/service cgconfig stop > /dev/null 2>&1 || :
+/sbin/chkconfig --del cgconfig
+/sbin/chkconfig --del cgred
 
 %postun -p /sbin/ldconfig
 
@@ -48,16 +65,29 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{_libdir}/libcgroup-%{version}.so
 %{_libdir}/libcgroup.so.*
-%doc COPYING INSTALL
+%{_bindir}/cgexec
+%{_bindir}/cgclassify
+%{_sbindir}/cgconfigparser
+%{_bindir}/cgrulesengd
+%attr(0755,root,root) %{_initrddir}/cgconfig
+%attr(0755,root,root) %{_initrddir}/cgred
+
+%doc COPYING INSTALL README_daemon
 
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/libcgroup.h
 %{_libdir}/libcgroup.so
-%doc COPYING INSTALL
+%doc COPYING INSTALL 
 
 
 %changelog
+* Fri Oct 10 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.32-1
+- Update to latest upstream
+* Thu Sep 11 2008 Dhaval Giani <dhaval@linux-vnet.ibm.com> 0.31-1
+- Update to latest upstream
+* Sat Aug 2 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.1c-3
+- Change release to fix broken upgrade path
 * Wed Jun 11 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.1c-1
 - Update to latest upstream version
 * Tue Jun 3 2008 Balbir Singh <balbir@linux.vnet.ibm.com> 0.1b-3
