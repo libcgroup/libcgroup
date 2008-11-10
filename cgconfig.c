@@ -48,11 +48,13 @@ int main(int argc, char *argv[])
 				printf("return code = %d\n", ret);
 				exit(3);
 			}
-			break;
+			return 0;
 		default:
 			fprintf(stderr, "Invalid command line option\n");
 			break;
 		}
 	}
+	fprintf(stderr, "usage is %s <option> <config file>\n",
+		argv[0]);
 	return 0;
 }
