@@ -76,6 +76,10 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 void cgroup_free_controllers(struct cgroup *cgroup)
 {
 	int i, j;
+
+	if (!cgroup)
+		return;
+
 	for (i = 0; i < cgroup->index; i++) {
 		for (j = 0; j < cgroup->controller[i]->index; j++)
 			free(cgroup->controller[i]->values[j]);
