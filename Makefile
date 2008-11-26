@@ -29,7 +29,7 @@ PACKAGE_VERSION=0.32
 CFLAGS=-g -O2 $(INC) -DPACKAGE_VERSION=$(PACKAGE_VERSION)
 VERSION=1
 
-TARGETS = libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd
+TARGETS = libcgroup.so cgconfigparser cgexec cgclassify cgrulesengd pam_cgroup.so
 
 all: $(TARGETS)
 
