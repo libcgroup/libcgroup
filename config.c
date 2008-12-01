@@ -237,7 +237,7 @@ int cgroup_config_group_admin_perm(char *perm_type, char *value)
 
 			error = getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN,
 								&pw_buffer);
-			if (error) {
+			if (pw_buffer == NULL) {
 				free(pw);
 				goto admin_error;
 			}
@@ -258,7 +258,7 @@ int cgroup_config_group_admin_perm(char *perm_type, char *value)
 			error = getgrnam_r(value, group, buffer,
 					CGROUP_BUFFER_LEN, &group_buffer);
 
-			if (error) {
+			if (group_buffer == NULL) {
 				free(group);
 				goto admin_error;
 			}
