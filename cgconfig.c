@@ -23,21 +23,38 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
+
+
+static void usage(char *progname)
+{
+	printf("Usage: %s [OPTION] [FILE]\n", basename(progname));
+	printf("Parse and load the specified cgroups configuration file\n");
+	printf("\n");
+	printf("  -h, --help		Display this help\n");
+	printf("  -l, --load=FILE	Parse and load the cgroups configuration file\n");
+	exit(2);
+}
 
 int main(int argc, char *argv[])
 {
 	int c;
 	char filename[PATH_MAX];
 	int ret;
+	static struct option options[] = {
+		{"help", 0, 0, 'h'},
+		{"load", 1, 0, 'l'},
+		{0, 0, 0, 0}
+	};
 
-	if (argc < 2) {
-		fprintf(stderr, "usage is %s <option> <config file>\n",
-			argv[0]);
-		exit(2);
-	}
+	if (argc < 2)
+		usage(argv[0]); /* usage() exits */
 
-	while ((c = getopt(argc, argv, "l:")) > 0) {
+	while ((c = getopt_long(argc, argv, "hl:", options, NULL)) > 0) {
 		switch (c) {
+		case 'h':
+			usage(argv[0]);
+			break;
 		case 'l':
 			strncpy(filename, optarg, PATH_MAX);
 			ret = cgroup_config_load_config(filename);
@@ -50,11 +67,9 @@ int main(int argc, char *argv[])
 			}
 			return 0;
 		default:
-			fprintf(stderr, "Invalid command line option\n");
+			usage(argv[0]);
 			break;
 		}
 	}
-	fprintf(stderr, "usage is %s <option> <config file>\n",
-		argv[0]);
 	return 0;
 }
