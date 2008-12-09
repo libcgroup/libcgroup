@@ -40,3 +40,8 @@ global:
 local:
 	*;
 };
+
+CGROUP_0.32.1 {
+global:
+	cgroup_strerror;
+} CGROUP_0.32;

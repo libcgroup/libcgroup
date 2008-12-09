@@ -61,8 +61,7 @@ int main(int argc, char *argv[])
 			if (ret) {
 				printf("Loading configuration file %s "
 					"failed, error: %s\n", filename,
-					strerror(errno));
-				printf("return code = %d\n", ret);
+					cgroup_strerror(ret));
 				exit(3);
 			}
 			return 0;

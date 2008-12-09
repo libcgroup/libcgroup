@@ -40,6 +40,7 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <libgen.h>
+#include <assert.h>
 
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION 0.01
@@ -69,6 +70,31 @@ static struct cgroup_rule_list trl;
 
 /* Lock for the list of rules (rl) */
 static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
+
+char *cgroup_strerror_codes[] = {
+	"Cgroup is not compiled in",
+	"Cgroup is not mounted",
+	"Cgroup does not exist",
+	"Cgroup has not been created",
+	"Cgroup one of the needed subsystems is not mounted",
+	"Cgroup, request came in from non owner",
+	"Cgroup controllers controllers are bound to different mount points",
+	"Cgroup, operation not allowed",
+	"Cgroup value set exceeds maximum",
+	"Cgroup controller already exists",
+	"Cgroup value already exists",
+	"Cgroup invalid operation",
+	"Cgroup, creation of controller failed",
+	"Cgroup operation failed",
+	"Cgroup not initialized",
+	"Cgroup trying to set value for control that does not exist",
+	"Cgroup generic error, see errno",
+	"Cgroup values are not equal",
+	"Cgroup controllers are different",
+	"Cgroup parsing failed",
+	"Cgroup, rules file does not exist",
+	"Cgroup mounting failed",
+};
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
@@ -2076,4 +2102,10 @@ done:
 cleanup_path:
 	free(path);
 	return ret;
+}
+
+char *cgroup_strerror(int code)
+{
+	assert((code >= ECGROUPNOTCOMPILED) && (code < ECGSENTINEL));
+	return cgroup_strerror_codes[code % ECGROUPNOTCOMPILED];
 }

@@ -94,6 +94,7 @@ enum cgroup_errors {
 	ECGROUPPARSEFAIL, /* Failed to parse rules configuration file. */
 	ECGROUPNORULES, /* Rules list does not exist. */
 	ECGMOUNTFAIL,
+	ECGSENTINEL,	/* Please insert further error codes above this */
 };
 
 #define CG_NV_MAX 100
@@ -187,6 +188,12 @@ int cgroup_init_rules_cache(void);
  */
 int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 					char **current_path);
+/**
+ * Return error corresponding to @code in human readable format.
+ * @code: error code for which the corresponding error string is to be
+ * returned
+ */
+char *cgroup_strerror(int code);
 
 /* The wrappers for filling libcg structures */
 
