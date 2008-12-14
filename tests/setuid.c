@@ -43,6 +43,11 @@ int main(int argc, char *argv[])
 	/* Return codes */
 	int ret;
 
+	if (argc < 2) {
+		printf("Usage: %s <uid_value> \n", argv[0]);
+		goto finished;
+	}
+
 	pwd = getpwnam(argv[1]);
 	uid = pwd->pw_uid;
 	fprintf(stdout, "Setting UID to %s (%d).\n", pwd->pw_name, uid);
