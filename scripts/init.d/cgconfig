@@ -82,6 +82,56 @@ start() {
                 #log_progress_msg "Starting cgconfig service: "
                 cgconfigparser -l $CONFIG_FILE
         fi
+
+        declare defaultcgroup
+
+        if [ -f /etc/cgrules.conf ]
+        then
+            read user ctrl defaultcgroup <<< \
+                `grep -m1 ^\* /etc/cgrules.conf`
+            if [[ -n $defaultcgroup && $defaultcgroup = "*" ]]
+            then
+                log_warning_msg "/etc/cgrules.conf incorrect"
+                log_warning_msg "Overriding it"
+                defaultcgroup=
+            fi
+        fi
+
+        if [ -z $defaultcgroup ]
+        then
+            defaultcgroup=sysdefault/
+        fi
+        #
+        # Create a default class for tasks to return back to
+        #
+        parse_mounts
+        for i in `seq 1 $maxindex`
+        do
+            #
+            # Ignore if directory already exists
+            #
+            mkdir ${MOUNTPOINT[$i]}/$defaultcgroup 2> /dev/null
+            chmod a+rw ${MOUNTPOINT[$i]}/$defaultcgroup/tasks
+            #
+            # special rule for cpusets
+            #
+            echo ${MOUNTOPTS[$i]} | grep -q -w cpuset
+            if [ $? -eq 0 ]
+            then
+                cat ${MOUNTPOINT[$i]}/cpuset.cpus > \
+                    ${MOUNTPOINT[$i]}/$defaultcgroup/cpuset.cpus
+                cat ${MOUNTPOINT[$i]}/cpuset.mems > \
+                    ${MOUNTPOINT[$i]}/$defaultcgroup/cpuset.mems
+            fi
+            #
+            # classify everything to default cgroup
+            #
+            for j in `ps --no-headers -eL o tid`
+            do
+                echo $j > ${MOUNTPOINT[$i]}/$defaultcgroup/tasks 2>/dev/null
+            done
+        done
+	
         [ $? == 0 ] && touch /var/lock/subsys/$servicename
         return $?
 }
