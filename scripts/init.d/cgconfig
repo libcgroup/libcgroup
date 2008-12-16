@@ -147,7 +147,7 @@ move_all_to_init_class() {
             exit 1
         fi
 
-        for i in `find . -type d`
+        for i in `find . -depth -type d`
         do
             case $i in
             '.')
