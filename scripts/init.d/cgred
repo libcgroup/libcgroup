@@ -38,11 +38,10 @@ prefix=/usr
 exec_prefix=/usr
 bindir=/bin
 
-CGRED_BIN=${bindir}/cgrulesengd
+CGRED_BIN=${exec_prefix}/${bindir}/cgrulesengd
 
 # Sanity checks
 [ -x $CGRED_BIN ] || exit 1
-[ -x /lib/libcgroup.so ] || exit 1
 
 # Source function library & LSB routines
 . /etc/rc.d/init.d/functions
@@ -51,7 +50,7 @@ CGRED_BIN=${bindir}/cgrulesengd
 # Read in configuration options.
 if [ -f "/etc/cgred.d/cgred.conf" ] ; then
 	. /etc/cgred.d/cgred.conf
-	OPTIONS="--config $CONFIG_FILE --log $LOG_FILE $NODAEMON $NOLOG"
+	OPTIONS="--log $LOG_FILE $NODAEMON $NOLOG"
 else
 	OPTIONS=""
 fi
@@ -80,7 +79,7 @@ start()
 stop()
 {
 	echo -n $"Stopping CGroup Rules Engine Daemon..."
-	killproc -p $pidfile $processname -12
+	killproc -p $pidfile $processname -TERM
 	RETVAL=$?
 	echo
 	if [ $RETVAL -eq 0 ] ; then
