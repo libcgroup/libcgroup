@@ -334,8 +334,17 @@ int main(int argc, char *argv[])
 		retval = set_controller(MEMORY, controller_name, control_file);
 		strncpy(val_string, "81920000", sizeof(val_string));
 
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
+		if (retval) {
+			fprintf(stderr, "Failed to set first controller. "
+					"Trying with second controller\n");
+			retval = set_controller(CPU, controller_name,
+								control_file);
+			strncpy(val_string, "4096", sizeof(val_string));
+			if (retval)
+				fprintf(stderr, "Failed to set any controllers "
+					"Tests dependent on this structure will"
+					" fail\n");
+		}
 
 		cgroup2 = new_cgroup(group, controller_name,
 						 control_file, STRING);
@@ -379,7 +388,8 @@ int main(int argc, char *argv[])
 		strncpy(group, "group1", sizeof(group));
 		retval = set_controller(CPU, controller_name, control_file);
 		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
+			fprintf(stderr, "Setting controller failled. "
+				"Tests dependent on this struct may fail\n");
 
 		cgroup3 = new_cgroup(group, controller_name,
 						 control_file, INT64);
@@ -392,7 +402,6 @@ int main(int argc, char *argv[])
 						"different controller\n", SIZE);
 		build_path(path_control_file, mountpoint,
 						 "group1", control_file);
-		strncpy(val_string, "2048", sizeof(val_string));
 
 		retval = cgroup_modify_cgroup(cgroup3);
 		/* Check if the values are changed */
