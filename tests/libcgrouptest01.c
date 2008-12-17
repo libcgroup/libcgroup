@@ -436,8 +436,9 @@ int main(int argc, char *argv[])
 
 		/* Do a sanity check if cgroup fs is multi mounted */
 		if (check_fsmounted(1)) {
-			printf("Sanity check fails. cgroup fs not multi mounted\n");
-			printf("Exiting without running this set of tests\n");
+			printf("Sanity check fails. cgroup fs is not multi "
+				"mounted. Exiting without running this set "
+					"of testcases\n");
 			exit(1);
 		}
 
@@ -453,31 +454,41 @@ int main(int argc, char *argv[])
 
 		retval = cgroup_init();
 		if (retval == 0)
-			printf("Test[2:%2d]\tPASS: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, PASS, "init()\t", retval, extra);
 		else
-			printf("Test[2:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, FAIL, "init()\t",  retval, extra);
 
 		/*
-		 * Test02: Call cgroup_attach_task() with null group and check if
-		 * return values are correct. If yes check if task exists in
+		 * Test02: Call cgroup_attach_task() with null group and check
+		 * if return values are correct. If yes check if task exists in
 		 * root group tasks file for each controller
 		 * TODO: This test needs some modification in script
 		 * Exp outcome: current task should be attached to root groups
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval == 0) {
 			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
 			strcat(tasksfile, "/tasks");
+
 			strncpy(tasksfile2, mountpoint2, sizeof(mountpoint));
 			strcat(tasksfile2, "/tasks");
-			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
-				return -1;
+
+			if (check_task(tasksfile) && check_task(tasksfile2)) {
+				strncpy(extra, " Task found in grps\n", SIZE);
+				message(++i, PASS, "attach_task()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " Task not found in grps\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
 		} else {
-			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-						 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -494,7 +505,7 @@ int main(int argc, char *argv[])
 						 control_file, STRING);
 
 		/*
-		 * Test04: Then Call cgroup_create_cgroup() with this valid group
+		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
@@ -502,13 +513,21 @@ int main(int argc, char *argv[])
 			/* Check if the group exists in the dir tree */
 			strncpy(path_group, mountpoint, sizeof(path_group));
 			strncat(path_group, "/cpugroup1", sizeof(path_group));
-			if (group_exist(path_group) == 0)
-				printf("Test[2:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[2:%2d]\tFAIL: group not found in fs\n", ++i);
-		} else
-			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			if (group_exist(path_group) == 0) {
+				strncpy(extra, " grp found in fs\n", SIZE);
+				message(++i, PASS, "create_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " grp not found in fs\n", SIZE);
+				message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
+			}
+
+		} else {
+			message(++i, FAIL, "create_cgroup()", retval, extra);
+		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -525,7 +544,7 @@ int main(int argc, char *argv[])
 						 control_file, STRING);
 
 		/*
-		 * Test04: Then Call cgroup_create_cgroup() with this valid group
+		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_create_cgroup(mem_cgroup1, 1);
@@ -533,27 +552,32 @@ int main(int argc, char *argv[])
 			/* Check if the group exists in the dir tree */
 			strncpy(path_group, mountpoint2, sizeof(path_group));
 			strncat(path_group, "/memgroup1", sizeof(path_group));
-			if (group_exist(path_group) == 0)
-				printf("Test[2:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() group not found in fs\n", ++i);
-		} else
-			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			if (group_exist(path_group) == 0) {
+				strncpy(extra, " grp found in fs\n", SIZE);
+				message(++i, PASS, "create_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " grp not found in fs\n", SIZE);
+				message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
+			}
+		} else {
+			message(++i, FAIL, "create_cgroup()", retval, extra);
+		}
 
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test05: Call cgroup_create_cgroup() with the same group
 		 * Exp outcome: non zero return value
 		 */
+		strncpy(extra, " Second call with same arg\n", SIZE);
 		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
 		/* BUG: The error should be ECGROUPALREADYEXISTS */
 		if (retval == ECGROUPNOTALLOWED)
-			printf("Test[2:%2d]\tPASS: cgroup_create_cgroup().Second Call. retval=%d\n",
-									 ++i, retval);
+			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
-			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup(): Second call. retval=%d\n", ++i, retval);
-
+			message(++i, FAIL, "create_cgroup()", retval, extra);
 
 		/*
 		 * Test06: Call cgroup_attach_task() with a group with cpu
@@ -573,12 +597,21 @@ int main(int argc, char *argv[])
 			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
 			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
 
-			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
-				return -1;
+			if (check_task(tasksfile) && check_task(tasksfile2)) {
+				strncpy(extra, " Task found in grps\n", SIZE);
+				message(++i, PASS, "attach_task()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " Task not found in grps\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
 		} else {
-			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-						 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with memory
@@ -598,12 +631,21 @@ int main(int argc, char *argv[])
 			strncat(tasksfile2, "/memgroup1", sizeof(tasksfile2));
 			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
 
-			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
-				return -1;
+			if (check_task(tasksfile) && check_task(tasksfile2)) {
+				strncpy(extra, " Task found in grps\n", SIZE);
+				message(++i, PASS, "attach_task()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " Task not found in grps\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
 		} else {
-			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-						 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -617,14 +659,14 @@ int main(int argc, char *argv[])
 		 * Test08: Try to attach a task to this non existing group.
 		 * Group does not exist in fs so should return ECGROUPNOTEXIST
 		 */
+		strncpy(extra, " Try attach to non existing group\n", SIZE);
 		retval = cgroup_attach_task(mem_cgroup2);
-		if (retval == ECGROUPNOTEXIST) {
-			printf("Test[1:%2d]\tPASS: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
-		} else {
-			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-						 ++i, retval);
-		}
+		if (retval == ECGROUPNOTEXIST)
+			message(++i, PASS, "attach_task()", retval, extra);
+		else
+			message(++i, FAIL, "attach_task()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test09: delete cgroups
@@ -635,14 +677,23 @@ int main(int argc, char *argv[])
 			/* Check if the group is deleted from the dir tree */
 			strncpy(path_group, mountpoint, sizeof(path_group));
 			strncat(path_group, "/cpugroup1", sizeof(path_group));
-			if (group_exist(path_group) == -1)
-				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+
+			if (group_exist(path_group) == -1) {
+				strncpy(extra, " group deleted from fs\n",
+									 SIZE);
+				message(++i, PASS, "delete_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " group still found in fs\n",
+									 SIZE);
+				message(++i, FAIL, "delete_cgroup()",
+								 retval, extra);
+			}
+
 		} else {
-			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
 		}
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test09: delete other cgroups too
@@ -653,17 +704,28 @@ int main(int argc, char *argv[])
 			/* Check if the group is deleted from the dir tree */
 			strncpy(path_group, mountpoint, sizeof(path_group));
 			strncat(path_group, "/memgroup1", sizeof(path_group));
-			if (group_exist(path_group) == -1)
-				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+
+			if (group_exist(path_group) == -1) {
+				strncpy(extra, " group deleted from fs\n",
+									 SIZE);
+				message(++i, PASS, "delete_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " group still found in fs\n",
+									 SIZE);
+				message(++i, FAIL, "delete_cgroup()",
+								 retval, extra);
+			}
+
 		} else {
-			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
 		}
+		strncpy(extra, "\n", SIZE);
+
 
 		/*
-		 * Test10: Create a valid cgroup structure which has multiple controllers
+		 * Test10: Create a valid cgroup structure
+		 * which has multiple controllers
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "commongroup", sizeof(group));
@@ -679,33 +741,48 @@ int main(int argc, char *argv[])
 		/* Add one more controller to the cgroup */
 		strncpy(controller_name, "memory", sizeof(controller_name));
 		if (!cgroup_add_controller(common_cgroup, controller_name))
-			printf("Test[2:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
+			message(++i, FAIL, "add_controller()", retval, extra);
 
 		/*
-		 * Test11: Then Call cgroup_create_cgroup() with this valid group
+		 * Test11: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_create_cgroup(common_cgroup, 1);
 		if (!retval) {
 			/* Check if the group exists under both controllers */
-			strncpy(path1_common_group, mountpoint, sizeof(path1_common_group));
-			strncat(path1_common_group, "/commongroup", sizeof(path1_common_group));
+			strncpy(path1_common_group, mountpoint,
+						 sizeof(path1_common_group));
+			strncat(path1_common_group, "/commongroup",
+						 sizeof(path1_common_group));
 			if (group_exist(path1_common_group) == 0) {
 
-				strncpy(path2_common_group, mountpoint, sizeof(path2_common_group));
-				strncat(path2_common_group, "/commongroup", sizeof(path2_common_group));
+				strncpy(path2_common_group, mountpoint,
+						 sizeof(path2_common_group));
+				strncat(path2_common_group, "/commongroup",
+						 sizeof(path2_common_group));
 
-				if (group_exist(path2_common_group) == 0)
-					printf("Test[2:%2d]\tPASS: group found under both controllers\n", ++i);
-				else
-					printf("Test[2:%2d]\tFAIL: group not found under 2nd controller\n", ++i);
-
+				if (group_exist(path2_common_group) == 0) {
+					strncpy(extra, " group found under"
+						" both controllers\n", SIZE);
+					message(++i, PASS, "create_cgroup()",
+								 retval, extra);
+				} else {
+					strncpy(extra, " group not found "
+						"under 2nd controller\n", SIZE);
+					message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
+				}
 			} else {
-				printf("Test[2:%2d]\tFAIL: group not found in fs\n", ++i);
+				strncpy(extra, " group not found under any "
+							"controller\n", SIZE);
+				message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
 			}
 		} else {
-			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "create_cgroup()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test12: delete this common cgroup
@@ -715,18 +792,28 @@ int main(int argc, char *argv[])
 		if (!retval) {
 			/* Check if the group is deleted from both dir tree */
 			if (group_exist(path1_common_group) == -1) {
-
-				if (group_exist(path2_common_group) == -1)
-					printf("Test[1:%2d]\tPASS: group deleted globally\n", ++i);
-				else
-					printf("Test[1:%2d]\tPASS: group not deleted globally\n", ++i);
-
+				if (group_exist(path2_common_group) == -1) {
+					strncpy(extra, " group "
+						"deleted globally\n", SIZE);
+					message(++i, PASS, "create_cgroup()",
+								 retval, extra);
+				} else {
+					strncpy(extra, " group not "
+						"deleted globally\n", SIZE);
+					message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
+				}
 			} else {
-				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+				strncpy(extra, " group still found in fs\n",
+									 SIZE);
+				message(++i, FAIL, "create_cgroup()", retval,
+									 extra);
 			}
 		} else {
-			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "create_cgroup()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/* Free the cgroup structures */
 		cgroup_free(&nullcgroup);
@@ -838,7 +925,8 @@ static int group_modified(char *path_control_file, int value_type)
 			return 0;
 		break;
 	default:
-		fprintf(stderr, "Wrong value_type passed in group_modified()\n");
+		fprintf(stderr, "Wrong value_type passed "
+						"in group_modified()\n");
 		fprintf(stderr, "Skipping modified values check....\n");
 		return 0;	/* Can not report test result as failure */
 		break;
@@ -932,16 +1020,19 @@ int check_fsmounted(int multimnt)
 		printf("Error in opening /proc/mounts.\n");
 		return EIO;
 	}
-	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer, FILENAME_MAX*4)) != NULL) {
+	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer,
+						 FILENAME_MAX*4)) != NULL) {
 		if (!strncmp(entry->mnt_type, "cgroup", strlen("cgroup"))) {
 			count++;
 			if (multimnt) {
 				if (count >= 2) {
-					printf("sanity check pass.... %s\n", entry->mnt_type);
+					printf("sanity check pass. %s\n",
+							 entry->mnt_type);
 					return 0;
 				}
 			} else {
-				printf("sanity check pass.... %s\n", entry->mnt_type);
+				printf("sanity check pass. %s\n",
+							 entry->mnt_type);
 				return 0;
 			}
 		}
