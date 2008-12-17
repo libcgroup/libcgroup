@@ -472,7 +472,7 @@ int main(int argc, char *argv[])
 			strcat(tasksfile, "/tasks");
 			strncpy(tasksfile2, mountpoint2, sizeof(mountpoint));
 			strcat(tasksfile2, "/tasks");
-			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
 				return -1;
 		} else {
 			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
@@ -573,7 +573,7 @@ int main(int argc, char *argv[])
 			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
 			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
 
-			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
 				return -1;
 		} else {
 			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
 			strncat(tasksfile2, "/memgroup1", sizeof(tasksfile2));
 			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
 
-			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+			if (check_task(tasksfile) || (i-- && check_task(tasksfile2)))
 				return -1;
 		} else {
 			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
