@@ -223,14 +223,14 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(group, "group1", sizeof(group));
 		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "40960000", sizeof(val_string));
+		strncpy(val_string, "250000", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Failed to set first controller. "
 					"Trying with second controller\n");
 			retval = set_controller(ctl2, controller_name,
 								control_file);
-			strncpy(val_string, "2048000", sizeof(val_string));
+			strncpy(val_string, "250000", sizeof(val_string));
 			if (retval)
 				fprintf(stderr, "Failed to set any controllers "
 					"Tests dependent on this structure will"
@@ -285,7 +285,6 @@ int main(int argc, char *argv[])
 
 		build_path(path_control_file, mountpoint,
 						 "group1", control_file);
-
 		retval = cgroup_modify_cgroup(cgroup1);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
@@ -301,14 +300,14 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(group, "group1", sizeof(group));
 		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "81920000", sizeof(val_string));
+		strncpy(val_string, "260000", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Failed to set first controller. "
 					"Trying with second controller\n");
 			retval = set_controller(ctl2, controller_name,
 								control_file);
-			strncpy(val_string, "4096000", sizeof(val_string));
+			strncpy(val_string, "260000", sizeof(val_string));
 			if (retval)
 				fprintf(stderr, "Failed to set any controllers "
 					"Tests dependent on this structure will"
@@ -353,7 +352,7 @@ int main(int argc, char *argv[])
 		 * to modify the existing group
 		 * Exp outcome: no error. 0 return value
 		 */
-		val_int64 = 2048000;
+		val_int64 = 20480000;
 		strncpy(group, "group1", sizeof(group));
 		retval = set_controller(ctl2, controller_name, control_file);
 		if (retval)
@@ -479,7 +478,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "ctl1_group1", sizeof(group));
-		strncpy(val_string, "4096000", sizeof(val_string));
+		strncpy(val_string, "250000", sizeof(val_string));
 		retval = set_controller(ctl1, controller_name, control_file);
 		/*
 		 * Since diff ctl will be mounted at different point, so exit
@@ -617,7 +616,7 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(group, "ctl1_group1", sizeof(group));
 		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "7000000", sizeof(val_string));
+		strncpy(val_string, "250000", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Setting controller failled "
@@ -649,7 +648,7 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(group, "ctl2_group1", sizeof(group));
 		retval = set_controller(ctl2, controller_name, control_file);
-		strncpy(val_string, "7000000", sizeof(val_string));
+		strncpy(val_string, "70000000", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Setting controller failled "
@@ -734,7 +733,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "commongroup", sizeof(group));
-		strncpy(val_string, "4096000", sizeof(val_string));
+		strncpy(val_string, "250000", sizeof(val_string));
 		retval = set_controller(ctl1, controller_name, control_file);
 
 		if (retval) {
@@ -807,7 +806,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "commongroup", sizeof(group));
-		strncpy(val_string, "7000000", sizeof(val_string));
+		strncpy(val_string, "260000", sizeof(val_string));
 		retval = set_controller(ctl1, controller_name, control_file);
 
 		if (retval) {
