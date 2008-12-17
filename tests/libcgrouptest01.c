@@ -838,9 +838,12 @@ int main(int argc, char *argv[])
 		retval = cgroup_modify_cgroup(mod_common_cgroup);
 		/* Check if the values are changed */
 		if (!retval) {
+			set_controller(ctl1, controller_name, control_file);
 			build_path(path_control_file, mountpoint,
 						 "commongroup", control_file);
 			if (!group_modified(path_control_file, STRING)) {
+				set_controller(ctl2, controller_name,
+								 control_file);
 				build_path(path_control_file, mountpoint2,
 						 "commongroup", control_file);
 				if (!group_modified(path_control_file, STRING)) {
