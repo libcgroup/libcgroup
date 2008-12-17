@@ -214,9 +214,9 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task_pid(nullcgroup, -1);
 		if (retval != 0)
-			message(++i, PASS, "attach_task_pid()", retval, extra);
+			message(4, PASS, "attach_task_pid()", retval, extra);
 		else
-			message(++i, FAIL, "attach_task_pid()", retval, extra);
+			message(4, FAIL, "attach_task_pid()", retval, extra);
 
 		/*
 		 * Test05: Create a valid cgroup structure
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl1_cgroup1, "ctl1_group1",
-						 NULL, FS_MULTI_MOUNTED, 20, 6);
+						 NULL, FS_MULTI_MOUNTED, 20, 8);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with ctl2
@@ -592,7 +592,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl2_cgroup1, "ctl1_group1",
-				 "ctl2_group1", FS_MULTI_MOUNTED, 20, 7);
+				 "ctl2_group1", FS_MULTI_MOUNTED, 20, 9);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTEXIST, ctl2_cgroup2,
-					 NULL, NULL, FS_MULTI_MOUNTED, 2, 8);
+					 NULL, NULL, FS_MULTI_MOUNTED, 2, 11);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -799,7 +799,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, common_cgroup, "commongroup",
-				 "commongroup", FS_MULTI_MOUNTED, 1, 12);
+				 "commongroup", FS_MULTI_MOUNTED, 1, 20);
 
 		/*
 		 * Test13: Create a valid cgroup structure to modify the
