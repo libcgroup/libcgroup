@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 {
 	int fs_mounted, retval;
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
+	struct cgroup_controller *sec_controller;
 	/* In case of multimount for readability we use the controller name
 	 * before the cgroup structure name */
 	struct cgroup *ctl1_cgroup1, *ctl2_cgroup1, *ctl2_cgroup2;
@@ -825,14 +826,24 @@ int main(int argc, char *argv[])
 				" Exiting without running further testcases\n");
 			exit(1);
 		}
-		if (!cgroup_add_controller(mod_common_cgroup, controller_name))
+
+		sec_controller = cgroup_add_controller(mod_common_cgroup,
+							 controller_name);
+		if (!sec_controller) {
 			message(++i, FAIL, "add_controller()", retval, extra);
+			printf("The cgroup_modify_cgroup() test will fail\n");
+		}
+
+		strncpy(val_string, "7000000", sizeof(val_string));
+		retval = cgroup_add_value_string(sec_controller,
+						 control_file, val_string);
+		if (retval)
+			printf("The cgroup_modify_cgroup() test will fail\n");
 
 		/*
 		 * Test14: modify existing cgroup with this new cgroup
 		 * Exp outcome: zero return value and control value modified
 		 */
-
 		strncpy(extra, " Called with commongroup. ", SIZE);
 		retval = cgroup_modify_cgroup(mod_common_cgroup);
 		/* Check if the values are changed */
@@ -840,11 +851,14 @@ int main(int argc, char *argv[])
 			set_controller(ctl1, controller_name, control_file);
 			build_path(path_control_file, mountpoint,
 						 "commongroup", control_file);
+			strncpy(val_string, "260000", sizeof(val_string));
 			if (!group_modified(path_control_file, STRING)) {
 				set_controller(ctl2, controller_name,
 								 control_file);
 				build_path(path_control_file, mountpoint2,
 						 "commongroup", control_file);
+				strncpy(val_string, "7000000",
+							 sizeof(val_string));
 				if (!group_modified(path_control_file, STRING)) {
 					strncat(extra, " group modified under"
 						" both controllers\n", SIZE);
