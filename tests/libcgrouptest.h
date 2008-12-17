@@ -30,7 +30,7 @@
 #include <libcgroup.h>
 
 #define SIZE 100	/* Max size of a message to be printed */
-#define NUM_MSGS 10	/* Number of such messsages */
+#define NUM_MSGS 20	/* Number of such messsages */
 #define PASS 1		/* test passed */
 #define FAIL 0		/* test failed */
 

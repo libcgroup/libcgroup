@@ -1361,6 +1361,9 @@ void set_info_msgs()
 		case 15:
 			strncpy(info[k], " Group not deleted globaly\n", SIZE);
 			break;
+		case 19:
+			strncpy(info[k], " \n", SIZE);
+			break;
 		/* Add more messages here and change NUM_MSGS */
 		default:
 			break;
