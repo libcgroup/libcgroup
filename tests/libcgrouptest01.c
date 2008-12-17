@@ -243,6 +243,8 @@ int main(int argc, char *argv[])
 		strncpy(val_string, "40960000", sizeof(val_string));
 
 		if (retval) {
+			fprintf(stderr, "Failed to set memory controller. "
+						"Trying with cpu controller\n");
 			retval = set_controller(CPU, controller_name,
 								control_file);
 			strncpy(val_string, "2048", sizeof(val_string));
@@ -269,12 +271,16 @@ int main(int argc, char *argv[])
 				message(++i, PASS, "create_cgroup()",
 								 retval, extra);
 			} else {
-				strncpy(extra, " grp not found in fs\n", SIZE);
+				strncpy(extra, " grp not found in fs. "
+						"tests dependent on this"
+						" grp will fail\n", SIZE);
 				message(++i, FAIL, "create_cgroup()",
 								 retval, extra);
 			}
 
 		} else {
+			strncpy(extra, " Tests dependent on this grp "
+							"will fail\n", SIZE);
 			message(++i, FAIL, "create_cgroup()", retval, extra);
 		}
 		strncpy(extra, "\n", SIZE);
@@ -324,17 +330,14 @@ int main(int argc, char *argv[])
 
 		/*
 		 * Test09: modify cgroup with the null cgroup
-		 * Exp outcome: zero return value. root group unchanged.
+		 * Exp outcome: zero return value.
 		 */
 
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/", sizeof("/"));
-		strncat(path_control_file, control_file, sizeof(control_file));
 
 		retval = cgroup_modify_cgroup(nullcgroup);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
+		/* No need to check if the values are changed */
+		if (retval == ECGINVAL)
 			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
@@ -359,6 +362,9 @@ int main(int argc, char *argv[])
 		 * Test10: modify existing group with this cgroup
 		 * Exp outcome: zero return value
 		 */
+		strncpy(extra, " Called with a cgroup argument with "
+						"different controller\n", SIZE);
+
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
 		strncat(path_control_file, "/group1", sizeof("/group2"));
 		strncat(path_control_file, "/", sizeof("/"));
@@ -372,6 +378,8 @@ int main(int argc, char *argv[])
 			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test11: delete cgroup
