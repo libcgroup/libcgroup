@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
 
 	/* The path to the common group under different controllers */
 	char path1_common_group[FILENAME_MAX], path2_common_group[FILENAME_MAX];
-	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
+	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX];
+	char group[FILENAME_MAX];
 
 	/* Hardcode second mountpoint for now. Will update soon */
 	char mountpoint2[FILENAME_MAX] = "/dev/cgroup_controllers-2";
@@ -79,24 +80,22 @@ int main(int argc, char *argv[])
 
 		retval = cgroup_init();
 		if (retval == ECGROUPNOTMOUNTED)
-			printf("Test[0:%2d]\tPASS: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, PASS, "init()\t", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, FAIL, "init()",  retval, extra);
 
 		/*
 		 * Test02: call cgroup_attach_task() with null group
 		 * Exp outcome: error non zero return value
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval != 0)
-			printf("Test[0:%2d]\tPASS: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
+			message(++i, PASS, "attach_task()", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 
+		strncpy(extra, "\n", SIZE);
 		/*
 		 * Test03: Create a valid cgroup and check all return values
 		 * Exp outcome: no error. 0 return value
@@ -113,14 +112,14 @@ int main(int argc, char *argv[])
 						 control_file, STRING);
 
 		/*
-		 * Test04: Then Call cgroup_create_cgroup() with this valid group
+		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: non zero return value
 		 */
 		retval = cgroup_create_cgroup(cgroup1, 1);
 		if (retval)
-			printf("Test[0:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "create_cgroup()", retval, extra);
 
 		/*
 		 * Test05: delete cgroup
@@ -128,28 +127,34 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_delete_cgroup(cgroup1, 1);
 		if (retval)
-			printf("Test[0:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "delete_cgroup()", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
 
 		/*
 		 * Test06: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGINVAL
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_create_cgroup(nullcgroup, 1);
 		if (retval)
-			printf("Test[0:%2d]\tPASS: cgroup_create_cgroup() nullcgroup handled\n", ++i);
+			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
+			message(++i, FAIL, "create_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test07: delete nullcgroup
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_delete_cgroup(nullcgroup, 1);
 		if (retval)
-			printf("Test[0:%2d]\tPASS: cgroup_delete_cgroup() nullcgroup handled\n", ++i);
+			message(++i, PASS, "delete_cgroup()", retval, extra);
 		else
-			printf("Test[0:%2d]\tFAIL: cgroup_delete_cgroup() Unable to handle nullcgroup\n", ++i);
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
@@ -814,6 +819,7 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 				 char *control_file, int value_type)
 {
 	int retval;
+	char wr[SIZE]; /* Na,es of wrapper apis */
 	struct cgroup *newcgroup;
 	struct cgroup_controller *newcontroller;
 	newcgroup = cgroup_new_cgroup(group);
@@ -834,18 +840,22 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 			case BOOL:
 				retval = cgroup_add_value_bool(newcontroller,
 						 control_file, val_bool);
+				snprintf(wr, sizeof(wr), "add_value_bool()");
 				break;
 			case INT64:
 				retval = cgroup_add_value_int64(newcontroller,
 						 control_file, val_int64);
+				snprintf(wr, sizeof(wr), "add_value_int64()");
 				break;
 			case UINT64:
 				retval = cgroup_add_value_uint64(newcontroller,
 						 control_file, val_uint64);
+				snprintf(wr, sizeof(wr), "add_value_uint64()");
 				break;
 			case STRING:
 				retval = cgroup_add_value_string(newcontroller,
 						 control_file, val_string);
+				snprintf(wr, sizeof(wr), "add_value_string()");
 				break;
 			default:
 				printf("ERROR: wrong value in new_cgroup()\n");
@@ -854,17 +864,19 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 			}
 
 			if (!retval) {
-				printf("Test[1:%2d]\tPASS: cgroup_new_cgroup() success\n", ++i);
+				message(++i, PASS, "new_cgroup()",
+								 retval, extra);
 			} else {
-				printf("Test[1:%2d]\tFAIL: cgroup_add_value_string()\n", ++i);
+				message(++i, FAIL, wr, retval, extra);
 				return NULL;
 			}
 		 } else {
-			printf("Test[1:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
+			/* Since these wrappers do not return an int so -1 */
+			message(++i, FAIL, "add_controller", -1, extra);
 			return NULL;
 		}
 	} else {
-		printf("Test[1:%2d]\tFAIL: cgroup_new_cgroup() fails\n", ++i);
+		message(++i, FAIL, "new_cgroup", -1, extra);
 		return NULL;
 	}
 	return newcgroup;
@@ -932,4 +944,19 @@ static int check_task(char *tasksfile)
 		printf("Test[2:%2d]\tFAIL: Task not found in %s\n", ++i, tasksfile);
 
 	return 0;
+}
+
+static inline void message(int num, int pass, char *api,
+					 int retval, char *extra)
+{
+	char res[10];
+	char buf[2*SIZE];
+	if (pass)
+		strncpy(res, "PASS :", 10);
+	else
+		strncpy(res, "FAIL :", 10);
+
+	/* Populate message buffer for the api */
+	snprintf(buf, sizeof(buf), "cgroup_%s\t\t Ret Value = ", api);
+	fprintf(stdout, "TEST%2d:%s %s%d\t%s", num, res, buf, retval, extra);
 }

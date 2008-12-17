@@ -29,6 +29,10 @@
 
 #include <libcgroup.h>
 
+#define SIZE 100	/* Max size of a message to be printed */
+#define PASS 1		/* test passed */
+#define FAIL 0		/* test failed */
+
 int cpu = 0, memory = 0;
 
 enum cgroup_mount_t {
@@ -61,6 +65,9 @@ uid_t tasks_uid;
 gid_t tasks_gid;
 static int i;
 
+/* No extra message unless specified */
+char extra[SIZE] = "\n";
+
 void get_controllers(char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
@@ -70,6 +77,8 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 				 char *control_file, int value_type);
 int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
+/* function to print messages in better format */
+static inline void message(int num, int pass, char *api, int ret, char *extra);
 
 static inline pid_t cgrouptest_gettid()
 {
