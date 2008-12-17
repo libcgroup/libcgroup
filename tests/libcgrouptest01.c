@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	char group[FILENAME_MAX];
 
 	/* Get controllers name from script */
-	int ctl1, ctl2;
+	int ctl1 = CPU, ctl2 = MEMORY;
 
 	if ((argc < 2) || (argc > 6) || (atoi(argv[1]) < 0)) {
 		printf("ERROR: Wrong no of parameters recieved from script\n");
@@ -954,7 +954,8 @@ void test_cgroup_init(int retcode, int i)
 }
 
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
-			 char *group1, char *group2, int fs_info, int k, int i)
+				 const char *group1, const char *group2,
+				 int fs_info, int k, int i)
 {
 	int retval;
 	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
@@ -995,11 +996,11 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 								 info[5]);
 		}
 	} else {
-		message(i, FAIL, "attach_task()", retval, "\n");
+		message(i, FAIL, "attach_task()", retval, (char *)"\n");
 	}
 }
 
-void get_controllers(char *name, int *exist)
+void get_controllers(const char *name, int *exist)
 {
 	int hierarchy, num_cgroups, enabled;
 	FILE *fd;
@@ -1151,6 +1152,7 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 	char wr[SIZE]; /* Names of wrapper apis */
 	struct cgroup *newcgroup;
 	struct cgroup_controller *newcontroller;
+
 	newcgroup = cgroup_new_cgroup(group);
 
 	if (newcgroup) {
@@ -1158,11 +1160,12 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 						control_uid, control_gid);
 
 		if (retval) {
-			printf("Test[1:%2d]\tFAIL: cgroup_set_uid_gid()\n",
-								++i);
+			snprintf(wr, SIZE, "set_uid_gid()");
+			message(i++, FAIL, wr, retval, extra);
 		}
 
-		newcontroller = cgroup_add_controller(newcgroup, controller_name);
+		newcontroller = cgroup_add_controller(newcgroup,
+							 controller_name);
 		if (newcontroller) {
 			retval =  add_control_value(newcontroller,
 						 control_file, wr, value_type);
@@ -1250,7 +1253,7 @@ static int check_task(char *tasksfile)
 	return pass;
 }
 
-static inline void message(int num, int pass, char *api,
+static inline void message(int num, int pass, const char *api,
 					 int retval, char *extra)
 {
 	char res[10];
@@ -1267,7 +1270,7 @@ static inline void message(int num, int pass, char *api,
 
 /* builds the path to target file/group */
 static inline void build_path(char *target, char *mountpoint,
-						 char *group, char *file)
+				const char *group, const char *file)
 {
 	strncpy(target, mountpoint, FILENAME_MAX);
 

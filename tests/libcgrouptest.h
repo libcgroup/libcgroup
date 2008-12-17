@@ -79,10 +79,11 @@ char extra[SIZE] = "\n";
 /* Functions to test each API */
 void test_cgroup_init(int retcode, int i);
 void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
-			char *group1, char *group2, int fs_info, int k, int i);
+				const char *group1, const char *group2,
+				int fs_info, int k, int i);
 /* API test functions end here */
 
-void get_controllers(char *name, int *exist);
+void get_controllers(const char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
 						 char *control_file);
@@ -94,9 +95,10 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
 /* function to print messages in better format */
-static inline void message(int num, int pass, char *api, int ret, char *extra);
+static inline void message(int num, int pass, const char *api,
+						 int ret, char *extra);
 static inline void build_path(char *target, char *mountpoint,
-						 char *group, char *file);
+				 const char *group, const char *file);
 
 /* Allocate memory and populate info messages */
 void set_info_msgs();
