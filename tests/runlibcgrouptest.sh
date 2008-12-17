@@ -63,14 +63,14 @@ umount_fs ()
 {
 	while check_mount_fs
 	do
-		PROC_ENTRY=`cat /proc/mounts|grep cgroup|tr -s [:space:]|cut -d" " -f2`;
+		PROC_ENTRY=`cat /proc/mounts|grep cgroup|\
+					tr -s [:space:]|cut -d" " -f2`;
 		# Get first mountpoint in case of multiple mounts
 		PROC_ENTRY=`echo $PROC_ENTRY|cut -d" " -f1`;
 		if [ ! -z "$PROC_ENTRY" ]
 		then
 			TARGET=$PROC_ENTRY;
-			# Need to take care if there are tasks running in any group ??
-			# Also need to care if cpu and memory are mounted at different places
+			# Need to take care of running tasks in any group ??
 			rmdir $TARGET/* 2> /dev/null ;
 			umount $TARGET;
 			rmdir  $TARGET;
@@ -168,10 +168,10 @@ mount_fs ()
 			fi;
 		fi;
 
-		mount -t cgroup -o $CONTROLLERS cgroup $NEWTARGET; # 2> /dev/null?
+		mount -t cgroup -o $CONTROLLERS cgroup $NEWTARGET;
 		if [ $? -ne 0 ]
 		then
-			echo "ERROR: Could not mount cgroup filesystem on $NEWTARGET."
+			echo "ERROR: in mounting cgroup fs on $NEWTARGET."
 			echo "Exiting test";
 			umount_fs;
 			exit -1;
