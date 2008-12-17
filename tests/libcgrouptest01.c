@@ -18,13 +18,15 @@
 
 int main(int argc, char *argv[])
 {
-	int fs_mounted, retval, pass = 0;
-	pid_t curr_tid, tid;
+	int fs_mounted, retval;
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
 		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
-	FILE *file;
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
+
+	/* Hardcode second mountpoint for now. Will update soon */
+	char mountpoint2[FILENAME_MAX] = "/dev/cgroup_controllers-2";
+	char tasksfile2[FILENAME_MAX];
 
 	if ((argc < 3) || (atoi(argv[1]) < 0)) {
 		printf("ERROR: Wrong no of parameters recieved from script\n");
@@ -194,26 +196,8 @@ int main(int argc, char *argv[])
 		if (retval == 0) {
 			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
 			strcat(tasksfile, "/tasks");
-			file = fopen(tasksfile, "r");
-			if (!file) {
-				printf("ERROR: in opening %s\n", tasksfile);
+			if (check_task(tasksfile))
 				return -1;
-			}
-
-			curr_tid = cgrouptest_gettid();
-			while (!feof(file)) {
-				fscanf(file, "%u", &tid);
-				if (tid == curr_tid) {
-					pass = 1;
-					break;
-				}
-			}
-			if (pass)
-				printf("Test[1:%2d]\tPASS: Task found in %s\n",\
-							 ++i, tasksfile);
-			else
-				printf("Test[1:%2d]\tFAIL: Task not found in %s\n",\
-								 ++i, tasksfile);
 		} else {
 			printf("Test[1:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
 								 ++i, retval);
@@ -404,6 +388,7 @@ int main(int argc, char *argv[])
 		 * Test01: call apis and check return values
 		 * Exp outcome:
 		 */
+
 		/*
 		 * Scenario 1: cgroup fs is multi mounted
 		 * Exp outcome: no error. 0 return value
@@ -418,9 +403,24 @@ int main(int argc, char *argv[])
 								 ++i, retval);
 
 		/*
-		 * Will add further testcases in separate patchset
+		 * Test02: Call cgroup_attach_task() with null group and check if
+		 * return values are correct. If yes check if task exists in
+		 * root group tasks file for each controller
+		 * TODO: This test needs some modification in script
+		 * Exp outcome: current task should be attached to root groups
 		 */
-
+		retval = cgroup_attach_task(nullcgroup);
+		if (retval == 0) {
+			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
+			strcat(tasksfile, "/tasks");
+			strncpy(tasksfile2, mountpoint2, sizeof(mountpoint));
+			strcat(tasksfile2, "/tasks");
+			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+				return -1;
+		} else {
+			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
+						 ++i, retval);
+		}
 		break;
 
 	default:
@@ -618,4 +618,32 @@ int check_fsmounted()
 		}
 	}
 	return 1;
+}
+
+static int check_task(char *tasksfile)
+{
+	FILE *file;
+	pid_t curr_tid, tid;
+	int pass = 0;
+
+	file = fopen(tasksfile, "r");
+	if (!file) {
+		printf("ERROR: in opening %s\n", tasksfile);
+		return -1;
+	}
+
+	curr_tid = cgrouptest_gettid();
+	while (!feof(file)) {
+		fscanf(file, "%u", &tid);
+		if (tid == curr_tid) {
+			pass = 1;
+			break;
+		}
+	}
+	if (pass)
+		printf("Test[2:%2d]\tPASS: Task found in %s\n", ++i, tasksfile);
+	else
+		printf("Test[2:%2d]\tFAIL: Task not found in %s\n", ++i, tasksfile);
+
+	return 0;
 }
