@@ -930,7 +930,73 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test13: delete this common cgroup
+		 * Test13: Create a valid cgroup structure to modify the
+		 * commongroup which is under multiple controllers
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "commongroup", sizeof(group));
+		strncpy(val_string, "7000000", sizeof(val_string));
+		retval = set_controller(ctl1, controller_name, control_file);
+
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
+
+		mod_common_cgroup = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/* Add one more controller to the cgroup */
+		retval = set_controller(ctl2, controller_name, control_file);
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
+		if (!cgroup_add_controller(mod_common_cgroup, controller_name))
+			message(++i, FAIL, "add_controller()", retval, extra);
+
+		/*
+		 * Test14: modify existing cgroup with this new cgroup
+		 * Exp outcome: zero return value and control value modified
+		 */
+
+		strncpy(extra, " Called with commongroup. ", SIZE);
+		retval = cgroup_modify_cgroup(mod_common_cgroup);
+		/* Check if the values are changed */
+		if (!retval) {
+			build_path(path_control_file, mountpoint,
+						 "commongroup", control_file);
+			if (!group_modified(path_control_file, STRING)) {
+				build_path(path_control_file, mountpoint2,
+						 "commongroup", control_file);
+				if (!group_modified(path_control_file, STRING)) {
+					strncat(extra, " group modified under"
+						" both controllers\n", SIZE);
+					message(++i, PASS, "modify_cgroup()",
+								 retval, extra);
+				} else {
+					strncat(extra, " group not modified "
+						"under 2nd controller\n", SIZE);
+					message(++i, FAIL, "modify_cgroup()",
+								 retval, extra);
+				}
+			} else {
+				strncat(extra, " group not modified under any "
+							"controller\n", SIZE);
+				message(++i, FAIL, "modify_cgroup()",
+								 retval, extra);
+			}
+		} else {
+			strncat(extra, "\n", sizeof("\n"));
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+		}
+
+		strncpy(extra, "\n", SIZE);
+
+		/*
+		 * Test15: delete this common cgroup
 		 * Exp outcome: zero return value
 		 */
 		strncpy(extra, " Called with commongroup. ", SIZE);
