@@ -749,7 +749,39 @@ int main(int argc, char *argv[])
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
 
 		/*
-		 * Test10: delete cgroups
+		 * Create another valid cgroup structure with same group name
+		 * to modify the existing group ctl2_group1
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "ctl2_group1", sizeof(group));
+		retval = set_controller(ctl2, controller_name, control_file);
+		strncpy(val_string, "7000000", sizeof(val_string));
+
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
+
+		mod_ctl2_cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/*
+		 * Test10: modify existing cgroup with this new cgroup
+		 * Exp outcome: zero return value and control value modified
+		 */
+		build_path(path_control_file, mountpoint2,
+						 "ctl2_group1", control_file);
+
+		retval = cgroup_modify_cgroup(mod_ctl2_cgroup1);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			message(++i, PASS, "modify_cgroup()", retval, extra);
+		else
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
+		/*
+		 * Test11: delete cgroups
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(ctl1_cgroup1, 1);
