@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
 
 		retval = cgroup_modify_cgroup(cgroup3);
 		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
+		if (!retval && !group_modified(path_control_file, INT64))
 			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
