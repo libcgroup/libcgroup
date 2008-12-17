@@ -286,7 +286,34 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test07: modify cgroup with the same cgroup
+		 * Test07: Call cgroup_attach_task() with valid cgroup and check
+		 * if return values are correct. If yes check if task exists in
+		 * that group's tasks file
+		 * Exp outcome: current task should be attached to that group
+		 */
+		retval = cgroup_attach_task(cgroup1);
+		if (retval == 0) {
+			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
+			strncat(tasksfile, "/group1", sizeof("/group1"));
+			strncat(tasksfile, "/tasks", sizeof("/tasks"));
+			if (check_task(tasksfile)) {
+				strncpy(extra, " Task found in grp\n", SIZE);
+				message(++i, PASS, "attach_task()", retval,
+									 extra);
+			} else {
+				strncpy(extra, " Task not found in grp\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
+		} else {
+			message(++i, FAIL, "attach_task()", retval, extra);
+		}
+
+		strncpy(extra, "\n", SIZE);
+
+		/*
+		 * Test08: modify cgroup with the same cgroup
 		 * Exp outcome: zero return value. No change.
 		 */
 		strncpy(extra, " Called with same cgroup argument\n", SIZE);
@@ -320,7 +347,7 @@ int main(int argc, char *argv[])
 						 control_file, STRING);
 
 		/*
-		 * Test08: modify cgroup with this new cgroup
+		 * Test10: modify cgroup with this new cgroup
 		 * Exp outcome: zero return value
 		 */
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
@@ -336,7 +363,7 @@ int main(int argc, char *argv[])
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
 
 		/*
-		 * Test09: modify cgroup with the null cgroup
+		 * Test11: modify cgroup with the null cgroup
 		 * Exp outcome: zero return value.
 		 */
 
@@ -366,7 +393,7 @@ int main(int argc, char *argv[])
 						 control_file, INT64);
 
 		/*
-		 * Test10: modify existing group with this cgroup
+		 * Test13: modify existing group with this cgroup
 		 * Exp outcome: zero return value
 		 */
 		strncpy(extra, " Called with a cgroup argument with "
@@ -389,7 +416,7 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test11: delete cgroup
+		 * Test14: delete cgroup
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(cgroup1, 1);
@@ -416,7 +443,7 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test12: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Test15: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGINVAL
 		 */
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
@@ -429,7 +456,7 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test13: delete nullcgroup
+		 * Test16: delete nullcgroup
 		 */
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_delete_cgroup(nullcgroup, 1);
