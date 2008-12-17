@@ -141,11 +141,11 @@ int main(int argc, char *argv[])
 
 		/*
 		 * Test06: Check if cgroup_create_cgroup() handles a NULL cgroup
-		 * Exp outcome: error ECGINVAL
+		 * Exp outcome: error ECGROUPNOTALLOWED
 		 */
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_create_cgroup(nullcgroup, 1);
-		if (retval)
+		if (retval == ECGROUPNOTINITIALIZED)
 			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "create_cgroup()", retval, extra);
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 
 		retval = cgroup_modify_cgroup(nullcgroup);
 		/* No need to check if the values are changed */
-		if (retval == ECGINVAL)
+		if (retval == ECGROUPNOTALLOWED)
 			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
@@ -408,11 +408,11 @@ int main(int argc, char *argv[])
 
 		/*
 		 * Test15: Check if cgroup_create_cgroup() handles a NULL cgroup
-		 * Exp outcome: error ECGINVAL
+		 * Exp outcome: error ECGROUPNOTALLOWED
 		 */
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_create_cgroup(nullcgroup, 1);
-		if (retval)
+		if (retval == ECGROUPNOTALLOWED)
 			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "create_cgroup()", retval, extra);
