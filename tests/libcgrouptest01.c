@@ -30,12 +30,10 @@ int main(int argc, char *argv[])
 
 	/* The path to the common group under different controllers */
 	char path1_common_group[FILENAME_MAX], path2_common_group[FILENAME_MAX];
-	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX];
 	char group[FILENAME_MAX];
 
 	/* Get controllers name from script */
 	int ctl1, ctl2;
-	char mountpoint2[FILENAME_MAX], tasksfile2[FILENAME_MAX];
 
 	if ((argc < 2) || (argc > 6) || (atoi(argv[1]) < 0)) {
 		printf("ERROR: Wrong no of parameters recieved from script\n");
@@ -101,14 +99,10 @@ int main(int argc, char *argv[])
 		 * Test02: call cgroup_attach_task() with null group
 		 * Exp outcome: error non zero return value
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_attach_task(nullcgroup);
-		if (retval != 0)
-			message(++i, PASS, "attach_task()", retval, extra);
-		else
-			message(++i, FAIL, "attach_task()", retval, extra);
 
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
+					 NULL, NULL, FS_NOT_MOUNTED, 0, 2);
+
 		/*
 		 * Test03: Create a valid cgroup and check all return values
 		 * Exp outcome: no error. 0 return value
@@ -188,17 +182,12 @@ int main(int argc, char *argv[])
 
 		/*
 		 * Test01: call cgroup_attach_task() with null group
-		 * without calling cgroup_inti(). We can check other apis too.
+		 * without calling cgroup_init(). We can check other apis too.
 		 * Exp outcome: error ECGROUPNOTINITIALIZED
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_attach_task(nullcgroup);
-		if (retval == ECGROUPNOTINITIALIZED)
-			message(++i, PASS, "attach_task()", retval, extra);
-		else
-			message(++i, FAIL, "attach_task()", retval, extra);
 
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
+						 NULL, NULL, FS_MOUNTED, 0, 1);
 
 		/*
 		 * Test02: call cgroup_init() and check return values
@@ -214,26 +203,9 @@ int main(int argc, char *argv[])
 		 * TODO: This test needs some modification in script
 		 * Exp outcome: current task should be attached to root group
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_attach_task(nullcgroup);
-		if (retval == 0) {
-			build_path(tasksfile, mountpoint, NULL, "tasks");
-			if (check_task(tasksfile)) {
-				strncpy(extra, " Task found in grp\n", SIZE);
-				message(++i, PASS, "attach_task()", retval,
-									 extra);
-			} else {
-				strncpy(extra, " Task not found in grp\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
 
-		strncpy(extra, "\n", SIZE);
-
+		test_cgroup_attach_task(0, nullcgroup,
+						 NULL, NULL, FS_MOUNTED, 0, 3);
 		/*
 		 * Test04: Call cgroup_attach_task_pid() with null group
 		 * and invalid pid
@@ -301,24 +273,9 @@ int main(int argc, char *argv[])
 		 * that group's tasks file
 		 * Exp outcome: current task should be attached to that group
 		 */
-		retval = cgroup_attach_task(cgroup1);
-		if (retval == 0) {
-			build_path(tasksfile, mountpoint, "group1", "tasks");
-			if (check_task(tasksfile)) {
-				strncpy(extra, " Task found in grp\n", SIZE);
-				message(++i, PASS, "attach_task()", retval,
-									 extra);
-			} else {
-				strncpy(extra, " Task not found in grp\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
 
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(0, cgroup1, "group1", NULL,
+							 FS_MOUNTED, 20, 7);
 
 		/*
 		 * Test08: modify cgroup with the same cgroup
@@ -513,27 +470,9 @@ int main(int argc, char *argv[])
 		 * TODO: This test needs some modification in script
 		 * Exp outcome: current task should be attached to root groups
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_attach_task(nullcgroup);
-		if (retval == 0) {
-			build_path(tasksfile, mountpoint, NULL, "tasks");
-			build_path(tasksfile2, mountpoint2, NULL, "tasks");
 
-			if (check_task(tasksfile) && check_task(tasksfile2)) {
-				strncpy(extra, " Task found in grps\n", SIZE);
-				message(++i, PASS, "attach_task()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " Task not found in grps\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(0, nullcgroup,
+					 NULL, NULL, FS_MULTI_MOUNTED, 0, 2);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -641,27 +580,9 @@ int main(int argc, char *argv[])
 		 * hierarchy and in the root group under other controllers
 		 * hierarchy.
 		 */
-		retval = cgroup_attach_task(ctl1_cgroup1);
-		if (retval == 0) {
-			build_path(tasksfile, mountpoint,
-						 "ctl1_group1", "tasks");
-			build_path(tasksfile2, mountpoint2, NULL, "tasks");
 
-			if (check_task(tasksfile) && check_task(tasksfile2)) {
-				strncpy(extra, " Task found in grps\n", SIZE);
-				message(++i, PASS, "attach_task()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " Task not found in grps\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(0, ctl1_cgroup1, "ctl1_group1",
+						 NULL, FS_MULTI_MOUNTED, 20, 6);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with ctl2
@@ -669,29 +590,9 @@ int main(int argc, char *argv[])
 		 * check if task exists in the groups under both controller's
 		 * hierarchy.
 		 */
-		retval = cgroup_attach_task(ctl2_cgroup1);
-		if (retval == 0) {
-			/*Task already attached to ctl1 in previous call*/
-			build_path(tasksfile, mountpoint,
-						 "ctl1_group1", "tasks");
-			build_path(tasksfile2, mountpoint2,
-						 "ctl2_group1", "tasks");
 
-			if (check_task(tasksfile) && check_task(tasksfile2)) {
-				strncpy(extra, " Task found in grps\n", SIZE);
-				message(++i, PASS, "attach_task()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " Task not found in grps\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(0, ctl2_cgroup1, "ctl1_group1",
+				 "ctl2_group1", FS_MULTI_MOUNTED, 20, 7);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -705,15 +606,9 @@ int main(int argc, char *argv[])
 		 * Test08: Try to attach a task to this non existing group.
 		 * Group does not exist in fs so should return ECGROUPNOTEXIST
 		 */
-		strncpy(extra, " Try attach to non existing group\n", SIZE);
-		retval = cgroup_attach_task(ctl2_cgroup2);
-		if (retval == ECGROUPNOTEXIST)
-			message(++i, PASS, "attach_task()", retval, extra);
-		else
-			message(++i, FAIL, "attach_task()", retval, extra);
 
-		strncpy(extra, "\n", SIZE);
-
+		test_cgroup_attach_task(ECGROUPNOTEXIST, ctl2_cgroup2,
+					 NULL, NULL, FS_MULTI_MOUNTED, 2, 8);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -902,31 +797,9 @@ int main(int argc, char *argv[])
 		 * and check if return values are correct. If yes check if
 		 * task exists in the group under both controller's hierarchy
 		 */
-		strncpy(extra, " Called with commongroup. ", SIZE);
-		retval = cgroup_attach_task(common_cgroup);
-		if (retval == 0) {
-			/*Task already attached to ctl1 in previous call*/
-			build_path(tasksfile, mountpoint,
-						 "commongroup", "tasks");
-			build_path(tasksfile2, mountpoint2,
-						 "commongroup", "tasks");
 
-			if (check_task(tasksfile) && check_task(tasksfile2)) {
-				strncat(extra, " Task found in grps\n", SIZE);
-				message(++i, PASS, "attach_task()",
-								 retval, extra);
-			} else {
-				strncat(extra, " Task not found in grps\n",
-									 SIZE);
-				message(++i, FAIL, "attach_task()", retval,
-									 extra);
-			}
-		} else {
-			strncat(extra, "\n", sizeof("\n"));
-			message(++i, FAIL, "attach_task()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_attach_task(0, common_cgroup, "commongroup",
+				 "commongroup", FS_MULTI_MOUNTED, 1, 12);
 
 		/*
 		 * Test13: Create a valid cgroup structure to modify the
@@ -1062,6 +935,52 @@ void test_cgroup_init(int retcode, int i)
 		message(i, PASS, "init()\t", retval, extra);
 	else
 		message(i, FAIL, "init()",  retval, extra);
+}
+
+void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
+			 char *group1, char *group2, int fs_info, int k, int i)
+{
+	int retval;
+	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
+	/* Check, In case some error is expected due to a negative scenario */
+	if (retcode) {
+		retval = cgroup_attach_task(cgrp);
+		if (retval == retcode)
+			message(i, PASS, "attach_task()", retval, info[k]);
+		else
+			message(i, FAIL, "attach_task()", retval, info[k]);
+
+		return;
+	}
+
+	/* Now there is no error and it is a genuine call */
+	retval = cgroup_attach_task(cgrp);
+	if (retval == 0) { /* API returned success, so perform check */
+		build_path(tasksfile, mountpoint,
+					 group1, "tasks");
+
+		if (check_task(tasksfile)) {
+			if (fs_info == 2) { /* multiple mounts */
+				build_path(tasksfile2, mountpoint2,
+							 group2, "tasks");
+				if (check_task(tasksfile2)) {
+					message(i, PASS, "attach_task()",
+							 retval, info[4]);
+				} else {
+					message(i, FAIL, "attach_task()",
+							 retval, info[6]);
+				}
+			} else { /* single mount */
+				message(i, PASS, "attach_task()",
+							 retval, info[4]);
+			}
+		} else {
+			message(i, FAIL, "attach_task()", retval,
+								 info[5]);
+		}
+	} else {
+		message(i, FAIL, "attach_task()", retval, "\n");
+	}
 }
 
 void get_controllers(char *name, int *exist)

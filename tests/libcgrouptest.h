@@ -70,11 +70,16 @@ uid_t tasks_uid;
 gid_t tasks_gid;
 static int i;
 
+/* The mountpoints as received from script */
+char mountpoint[FILENAME_MAX], mountpoint2[FILENAME_MAX];
+
 /* No extra message unless specified */
 char extra[SIZE] = "\n";
 
 /* Functions to test each API */
 void test_cgroup_init(int retcode, int i);
+void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
+			char *group1, char *group2, int fs_info, int k, int i);
 /* API test functions end here */
 
 void get_controllers(char *name, int *exist);
