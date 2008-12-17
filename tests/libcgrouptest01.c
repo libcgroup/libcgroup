@@ -833,7 +833,38 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test12: delete this common cgroup
+		 * Test12: Call cgroup_attach_task() with this common group
+		 * and check if return values are correct. If yes check if
+		 * task exists in the group under both controller's hierarchy
+		 */
+		strncpy(extra, " Called with commongroup. ", SIZE);
+		retval = cgroup_attach_task(common_cgroup);
+		if (retval == 0) {
+			/*Task already attached to ctl1 in previous call*/
+			build_path(tasksfile, mountpoint,
+						 "commongroup", "tasks");
+			build_path(tasksfile2, mountpoint2,
+						 "commongroup", "tasks");
+
+			if (check_task(tasksfile) && check_task(tasksfile2)) {
+				strncat(extra, " Task found in grps\n", SIZE);
+				message(++i, PASS, "attach_task()",
+								 retval, extra);
+			} else {
+				strncat(extra, " Task not found in grps\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
+		} else {
+			strncat(extra, "\n", sizeof("\n"));
+			message(++i, FAIL, "attach_task()", retval, extra);
+		}
+
+		strncpy(extra, "\n", SIZE);
+
+		/*
+		 * Test13: delete this common cgroup
 		 * Exp outcome: zero return value
 		 */
 		strncpy(extra, " Called with commongroup. ", SIZE);
