@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	/* In case of multimount for readability we use the controller name
 	 * before the cgroup structure name */
-	struct cgroup *cpu_cgroup1, *mem_cgroup1, *mem_cgroup2, *common_cgroup;
-	struct cgroup_controller *newcontroller;
+	struct cgroup *ctl1_cgroup1, *ctl2_cgroup1, *ctl2_cgroup2;
+	struct cgroup *common_cgroup;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 	char path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
 
@@ -32,27 +32,40 @@ int main(int argc, char *argv[])
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX];
 	char group[FILENAME_MAX];
 
-	/* Hardcode second mountpoint for now. Will update soon */
-	char mountpoint2[FILENAME_MAX] = "/dev/cgroup_controllers-2";
-	char tasksfile2[FILENAME_MAX];
+	/* Get controllers name from script */
+	int ctl1, ctl2;
+	char mountpoint2[FILENAME_MAX], tasksfile2[FILENAME_MAX];
 
-	if ((argc < 3) || (atoi(argv[1]) < 0)) {
+	if ((argc < 2) || (argc > 6) || (atoi(argv[1]) < 0)) {
 		printf("ERROR: Wrong no of parameters recieved from script\n");
 		printf("Exiting the libcgroup testset\n");
 		exit(1);
 	}
 	fs_mounted = atoi(argv[1]);
-	strcpy(mountpoint, argv[2]);
 	dbg("C:DBG: fs_mounted as recieved from script=%d\n", fs_mounted);
-	dbg("C:DBG: mountpoint as recieved from script=%s\n", mountpoint);
+	/* All possible controller will be element of an enum */
+	if (fs_mounted) {
+		ctl1 = atoi(argv[2]);
+		ctl2 = atoi(argv[3]);
+		strncpy(mountpoint, argv[4], sizeof(mountpoint));
+		dbg("C:DBG: mountpoint1 as recieved from script=%s\n",
+								 mountpoint);
+		if (fs_mounted == 2) {
+			strncpy(mountpoint2, argv[5], sizeof(mountpoint2));
+			dbg("C:DBG: mountpoint2 as recieved from script=%s\n",
+								 mountpoint2);
+		}
+
+	}
 
 	/*
-	 * get the list of supported controllers
+	 * check if one of the supported controllers is cpu or memory
 	 */
 	get_controllers("cpu", &cpu);
 	get_controllers("memory", &memory);
 	if (cpu == 0 && memory == 0) {
-		fprintf(stderr, "controllers are not enabled in kernel\n");
+		fprintf(stderr, "none of cpu and memory controllers"
+						" is enabled in kernel\n");
 		fprintf(stderr, "Exiting the libcgroup testcases......\n");
 		exit(1);
 	}
@@ -102,7 +115,7 @@ int main(int argc, char *argv[])
 		 */
 
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name, control_file);
+		retval = set_controller(ctl1, controller_name, control_file);
 		strncpy(val_string, "40960000", sizeof(val_string));
 
 		if (retval)
@@ -238,15 +251,15 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name, control_file);
+		retval = set_controller(ctl1, controller_name, control_file);
 		strncpy(val_string, "40960000", sizeof(val_string));
 
 		if (retval) {
-			fprintf(stderr, "Failed to set memory controller. "
-						"Trying with cpu controller\n");
-			retval = set_controller(CPU, controller_name,
+			fprintf(stderr, "Failed to set first controller. "
+					"Trying with second controller\n");
+			retval = set_controller(ctl2, controller_name,
 								control_file);
-			strncpy(val_string, "2048", sizeof(val_string));
+			strncpy(val_string, "2048000", sizeof(val_string));
 			if (retval)
 				fprintf(stderr, "Failed to set any controllers "
 					"Tests dependent on this structure will"
@@ -331,15 +344,15 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name, control_file);
+		retval = set_controller(ctl1, controller_name, control_file);
 		strncpy(val_string, "81920000", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Failed to set first controller. "
 					"Trying with second controller\n");
-			retval = set_controller(CPU, controller_name,
+			retval = set_controller(ctl2, controller_name,
 								control_file);
-			strncpy(val_string, "4096", sizeof(val_string));
+			strncpy(val_string, "4096000", sizeof(val_string));
 			if (retval)
 				fprintf(stderr, "Failed to set any controllers "
 					"Tests dependent on this structure will"
@@ -384,9 +397,9 @@ int main(int argc, char *argv[])
 		 * to modify the existing group
 		 * Exp outcome: no error. 0 return value
 		 */
-		val_int64 = 2048;
+		val_int64 = 2048000;
 		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(CPU, controller_name, control_file);
+		retval = set_controller(ctl2, controller_name, control_file);
 		if (retval)
 			fprintf(stderr, "Setting controller failled. "
 				"Tests dependent on this struct may fail\n");
@@ -528,24 +541,30 @@ int main(int argc, char *argv[])
 		 * Test03: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "cpugroup1", sizeof(group));
-		strncpy(val_string, "4096", sizeof(val_string));
-		retval = set_controller(CPU, controller_name, control_file);
+		strncpy(group, "ctl1_group1", sizeof(group));
+		strncpy(val_string, "4096000", sizeof(val_string));
+		retval = set_controller(ctl1, controller_name, control_file);
+		/*
+		 * Since diff ctl will be mounted at different point, so exit
+		 * if setting a controller fails
+		 */
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
 
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
-
-		cpu_cgroup1 = new_cgroup(group, controller_name,
+		ctl1_cgroup1 = new_cgroup(group, controller_name,
 						 control_file, STRING);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
+		retval = cgroup_create_cgroup(ctl1_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
-			build_path(path_group, mountpoint, "cpugroup1", NULL);
+			build_path(path_group, mountpoint, "ctl1_group1", NULL);
 			if (group_exist(path_group) == 0) {
 				strncpy(extra, " grp found in fs\n", SIZE);
 				message(++i, PASS, "create_cgroup()",
@@ -566,24 +585,28 @@ int main(int argc, char *argv[])
 		 * Test03: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "memgroup1", sizeof(group));
-		retval = set_controller(MEMORY, controller_name, control_file);
+		strncpy(group, "ctl2_group1", sizeof(group));
+		retval = set_controller(ctl2, controller_name, control_file);
 		strncpy(val_string, "52428800", sizeof(val_string));
 
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
 
-		mem_cgroup1 = new_cgroup(group, controller_name,
+		ctl2_cgroup1 = new_cgroup(group, controller_name,
 						 control_file, STRING);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(mem_cgroup1, 1);
+		retval = cgroup_create_cgroup(ctl2_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
-			build_path(path_group, mountpoint2, "memgroup1", NULL);
+			build_path(path_group, mountpoint2,
+							 "ctl2_group1", NULL);
 			if (group_exist(path_group) == 0) {
 				strncpy(extra, " grp found in fs\n", SIZE);
 				message(++i, PASS, "create_cgroup()",
@@ -604,7 +627,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: non zero return value
 		 */
 		strncpy(extra, " Second call with same arg\n", SIZE);
-		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
+		retval = cgroup_create_cgroup(ctl1_cgroup1, 1);
 		/* BUG: The error should be ECGROUPALREADYEXISTS */
 		if (retval == ECGROUPNOTALLOWED)
 			message(++i, PASS, "create_cgroup()", retval, extra);
@@ -612,17 +635,16 @@ int main(int argc, char *argv[])
 			message(++i, FAIL, "create_cgroup()", retval, extra);
 
 		/*
-		 * Test06: Call cgroup_attach_task() with a group with cpu
+		 * Test06: Call cgroup_attach_task() with a group with ctl1
 		 * controller and check if return values are correct. If yes
-		 * check if task exists in that group under only cpu controller
+		 * check if task exists in that group under only ctl1 controller
 		 * hierarchy and in the root group under other controllers
 		 * hierarchy.
-		 * TODO: This test needs some modification in script
-		 * Shall we hardcode mountpoints for each controller ?
 		 */
-		retval = cgroup_attach_task(cpu_cgroup1);
+		retval = cgroup_attach_task(ctl1_cgroup1);
 		if (retval == 0) {
-			build_path(tasksfile, mountpoint, "cpugroup1", "tasks");
+			build_path(tasksfile, mountpoint,
+						 "ctl1_group1", "tasks");
 			build_path(tasksfile2, mountpoint2, NULL, "tasks");
 
 			if (check_task(tasksfile) && check_task(tasksfile2)) {
@@ -642,19 +664,18 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test07: Call cgroup_attach_task() with a group with memory
+		 * Test07: Call cgroup_attach_task() with a group with ctl2
 		 * controller and check if return values are correct. If yes
-		 * check if task exists in the groups under both cpu controller
-		 * hierarchy and other controllers hierarchy.
-		 * TODO: This test needs some modification in script
-		 * Shall we hardcode mountpoints for each controller ?
+		 * check if task exists in the groups under both controller's
+		 * hierarchy.
 		 */
-		retval = cgroup_attach_task(mem_cgroup1);
+		retval = cgroup_attach_task(ctl2_cgroup1);
 		if (retval == 0) {
-			/*Task already attached to cpugroup1 in previous call*/
-			build_path(tasksfile, mountpoint, "cpugroup1", "tasks");
+			/*Task already attached to ctl1 in previous call*/
+			build_path(tasksfile, mountpoint,
+						 "ctl1_group1", "tasks");
 			build_path(tasksfile2, mountpoint2,
-							 "memgroup1", "tasks");
+						 "ctl2_group1", "tasks");
 
 			if (check_task(tasksfile) && check_task(tasksfile2)) {
 				strncpy(extra, " Task found in grps\n", SIZE);
@@ -676,8 +697,8 @@ int main(int argc, char *argv[])
 		 * Test: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "memgroup2", sizeof(group));
-		mem_cgroup2 = new_cgroup(group, controller_name,
+		strncpy(group, "ctl2_group2", sizeof(group));
+		ctl2_cgroup2 = new_cgroup(group, controller_name,
 						 control_file, STRING);
 
 		/*
@@ -685,7 +706,7 @@ int main(int argc, char *argv[])
 		 * Group does not exist in fs so should return ECGROUPNOTEXIST
 		 */
 		strncpy(extra, " Try attach to non existing group\n", SIZE);
-		retval = cgroup_attach_task(mem_cgroup2);
+		retval = cgroup_attach_task(ctl2_cgroup2);
 		if (retval == ECGROUPNOTEXIST)
 			message(++i, PASS, "attach_task()", retval, extra);
 		else
@@ -697,10 +718,10 @@ int main(int argc, char *argv[])
 		 * Test09: delete cgroups
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_delete_cgroup(cpu_cgroup1, 1);
+		retval = cgroup_delete_cgroup(ctl1_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
-			build_path(path_group, mountpoint, "cpugroup1", NULL);
+			build_path(path_group, mountpoint, "ctl1_group1", NULL);
 
 			if (group_exist(path_group) == -1) {
 				strncpy(extra, " group deleted from fs\n",
@@ -723,10 +744,11 @@ int main(int argc, char *argv[])
 		 * Test09: delete other cgroups too
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_delete_cgroup(mem_cgroup1, 1);
+		retval = cgroup_delete_cgroup(ctl2_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
-			build_path(path_group, mountpoint2, "memgroup1", NULL);
+			build_path(path_group, mountpoint2,
+							 "ctl2_group1", NULL);
 
 			if (group_exist(path_group) == -1) {
 				strncpy(extra, " group deleted from fs\n",
@@ -752,17 +774,25 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "commongroup", sizeof(group));
-		strncpy(val_string, "4096", sizeof(val_string));
-		retval = set_controller(CPU, controller_name, control_file);
+		strncpy(val_string, "4096000", sizeof(val_string));
+		retval = set_controller(ctl1, controller_name, control_file);
 
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
 
 		common_cgroup = new_cgroup(group, controller_name,
 						 control_file, STRING);
 
 		/* Add one more controller to the cgroup */
-		strncpy(controller_name, "memory", sizeof(controller_name));
+		retval = set_controller(ctl2, controller_name, control_file);
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
 		if (!cgroup_add_controller(common_cgroup, controller_name))
 			message(++i, FAIL, "add_controller()", retval, extra);
 
@@ -839,9 +869,9 @@ int main(int argc, char *argv[])
 
 		/* Free the cgroup structures */
 		cgroup_free(&nullcgroup);
-		cgroup_free(&cpu_cgroup1);
-		cgroup_free(&mem_cgroup1);
-		cgroup_free(&mem_cgroup2);
+		cgroup_free(&ctl1_cgroup1);
+		cgroup_free(&ctl2_cgroup1);
+		cgroup_free(&ctl2_cgroup2);
 
 		break;
 
@@ -899,6 +929,13 @@ static int set_controller(int controller, char *controller_name,
 
 		strncpy(controller_name, "cpu", FILENAME_MAX);
 		strncpy(control_file, "cpu.shares", FILENAME_MAX);
+		return 0;
+		break;
+
+	case CPUSET:
+		strncpy(controller_name, "cpuset", FILENAME_MAX);
+		/* What is the exact control file?? */
+		strncpy(control_file, "cpuset.mem_exclusive", FILENAME_MAX);
 		return 0;
 		break;
 		/* Future controllers can be added here */

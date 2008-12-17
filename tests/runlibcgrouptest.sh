@@ -29,6 +29,7 @@ CPU="";
 MEMORY="";
 
 declare -a allcontrollers;
+declare -a targets;
 
 debug()
 {
@@ -161,10 +162,10 @@ no_controllers()
 	# no point in running the testcases. At least one of them should be
 	# supported.(or should I run testcases with controllers such as
 	#  ns, devices etc? Thoughts???)
-	if [ $NUM_CTLRS -lt 1 ]
+	if [ $NUM_CTLRS -lt 2 ]
 	then
-		echo "Kernel has no controllers enabled";
-		echo "Recompile your kernel with at least one controller"
+		echo "Kernel needs to have 2 controllers enabled";
+		echo "Recompile your kernel with at least 2 controllers"
 		echo "Exiting the tests.....";
 		exit 1;
 	fi;
@@ -238,6 +239,7 @@ mount_fs ()
 			umount_fs;
 			exit -1;
 		fi;
+		target[$CUR_MOUNT]=$NEWTARGET;
 		CUR_MOUNT=`expr $CUR_MOUNT + 1`;
 		FS_MOUNTED=`expr $FS_MOUNTED + 1`;
 
@@ -260,21 +262,42 @@ mount_fs ()
 
 }
 
-get_mountpoint()
+get_ctl_num()
 {
-	# need to handle how to pass multiple mount points to C file
-	# It will depend on the requirements if any
-	MOUNTPOINT=`cat /proc/mounts|grep -w cgroup|tr -s [:space:]| \
-							cut -d" " -f2`;
-	debug "mountpoint is $MOUNTPOINT"
+	ctl1=$1;
+	ctl2=$2;
+	if [ -z $ctl1 ] || [ -z $ctl2 ]; then
+		echo "Null controller passed to function get_ctl_num"
+		echo "Exiting the testcases....."
+	fi
+
+	# Add any new controller developed here
+	declare -a ctl_list;
+	# Following list has to be in sync with enums in header
+	ctl_list[0]="memory";
+	ctl_list[1]="cpu";
+	ctl_list[2]="cpuset";
+
+	local i=0;
+	while [ ! -z ${ctl_list[$i]} ]; do
+		if [ "${ctl_list[$i]}" == "$ctl1" ]; then
+			ctl1=$i;
+		fi;
+
+		if [ "${ctl_list[$i]}" == "$ctl2" ]; then
+			ctl2=$i;
+		fi;
+	i=`expr $i + 1`;
+	done;
 }
+
 runtest()
 {
 	MOUNT_INFO=$1;
 	TEST_EXEC=$2;
 	if [ -f $TEST_EXEC ]
 	then
-		./$TEST_EXEC $MOUNT_INFO $MOUNTPOINT;
+		./$TEST_EXEC $MOUNT_INFO $ctl1 $ctl2 ${target[1]} ${target[2]};
 		if [ $? -ne 0 ]
 		then
 			echo Error in running ./$TEST_EXEC
@@ -341,7 +364,7 @@ runtest()
 		mount_fs $NUM_MOUNT;
 	fi;
 	debug "FS_MOUNTED = $FS_MOUNTED"
-	get_mountpoint;
+	get_ctl_num $CTLR1 $CTLR2;
 	runtest $FS_MOUNTED $FILE
 
 	wait $PID;
@@ -371,7 +394,7 @@ runtest()
 		mount_fs $NUM_MOUNT;
 	fi;
 	debug "FS_MOUNTED = $FS_MOUNTED"
-	get_mountpoint;
+	get_ctl_num $CTLR1 $CTLR2;
 	runtest $FS_MOUNTED $FILE
 
 	wait $PID;

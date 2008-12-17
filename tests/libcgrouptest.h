@@ -44,6 +44,7 @@ enum cgroup_mount_t {
 enum controller_t {
 	MEMORY,
 	CPU,
+	CPUSET,
 	/* Add new controllers here */
 };
 
