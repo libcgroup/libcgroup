@@ -387,6 +387,8 @@ int main(int argc, char *argv[])
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
+		cgroup_free(&cgroup2);
+		cgroup_free(&cgroup3);
 
 		break;
 
@@ -575,6 +577,48 @@ int main(int argc, char *argv[])
 			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
 						 ++i, retval);
 		}
+
+		/*
+		 * Test09: delete cgroups
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_delete_cgroup(cpu_cgroup1, 1);
+		if (!retval) {
+			/* Check if the group is deleted from the dir tree */
+			strncpy(path_group, mountpoint, sizeof(path_group));
+			strncat(path_group, "/cpugroup1", sizeof(path_group));
+			if (group_exist(path_group) == -1)
+				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
+										 ++i, retval);
+			else
+				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+		} else {
+			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+		}
+
+		/*
+		 * Test09: delete other cgroups too
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_delete_cgroup(mem_cgroup1, 1);
+		if (!retval) {
+			/* Check if the group is deleted from the dir tree */
+			strncpy(path_group, mountpoint, sizeof(path_group));
+			strncat(path_group, "/memgroup1", sizeof(path_group));
+			if (group_exist(path_group) == -1)
+				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
+										 ++i, retval);
+			else
+				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+		} else {
+			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+		}
+
+		/* Free the cgroup structures */
+		cgroup_free(&nullcgroup);
+		cgroup_free(&cpu_cgroup1);
+		cgroup_free(&mem_cgroup1);
+		cgroup_free(&mem_cgroup2);
 
 		break;
 
