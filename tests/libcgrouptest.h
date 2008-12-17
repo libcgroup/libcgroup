@@ -30,6 +30,7 @@
 #include <libcgroup.h>
 
 #define SIZE 100	/* Max size of a message to be printed */
+#define NUM_MSGS 10	/* Number of such messsages */
 #define PASS 1		/* test passed */
 #define FAIL 0		/* test failed */
 
@@ -54,6 +55,9 @@ enum cgroup_control_val_t {
 	UINT64,
 	STRING,
 };
+
+/* Create a matrix of possible info messages */
+char **info;
 
 int64_t val_int64;
 u_int64_t val_uint64;
@@ -82,6 +86,11 @@ static int check_task(char *tasksfile);
 static inline void message(int num, int pass, char *api, int ret, char *extra);
 static inline void build_path(char *target, char *mountpoint,
 						 char *group, char *file);
+
+/* Allocate memory and populate info messages */
+void set_info_msgs();
+/* Free the allocated memory for info messages */
+void free_info_msgs();
 
 static inline pid_t cgrouptest_gettid()
 {

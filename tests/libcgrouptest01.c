@@ -77,6 +77,9 @@ int main(int argc, char *argv[])
 	tasks_uid = 0;
 	tasks_gid = 0;
 
+	/* Initialize the message buffer with info messages */
+	set_info_msgs();
+
 	/*
 	 * Testsets: Testcases are broadly devided into 3 categories based on
 	 * filesystem(fs) mount scenario. fs not mounted, fs mounted, fs multi
@@ -172,6 +175,9 @@ int main(int argc, char *argv[])
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
+
+		/* Free the allocated memory for info messages */
+		free_info_msgs();
 
 		break;
 
@@ -480,6 +486,9 @@ int main(int argc, char *argv[])
 		cgroup_free(&cgroup1);
 		cgroup_free(&cgroup2);
 		cgroup_free(&cgroup3);
+
+		/* Free the allocated memory for info messages */
+		free_info_msgs();
 
 		break;
 
@@ -1040,6 +1049,9 @@ int main(int argc, char *argv[])
 		cgroup_free(&ctl2_cgroup1);
 		cgroup_free(&ctl2_cgroup2);
 
+		/* Free the allocated memory for info messages */
+		free_info_msgs();
+
 		break;
 
 	default:
@@ -1323,4 +1335,99 @@ static inline void build_path(char *target, char *mountpoint,
 		strncat(target, "/", sizeof("/"));
 		strncat(target, file, FILENAME_MAX);
 	}
+}
+
+/* Initialize the info matrix with possible info messages */
+void set_info_msgs()
+{
+	info = (char **) malloc(NUM_MSGS * sizeof(char *));
+	if (!info) {
+		printf("Could not allocate memory for msg buffer. Check if"
+		" system has sufficient memory. Exiting the testcases...\n");
+		free_info_msgs();
+		exit(1);
+	}
+	for (int k = 0; k < NUM_MSGS; ++k) {
+		info[k] = (char *) malloc(SIZE * sizeof(char));
+		if (!info[k]) {
+			printf("Failed to allocate memory for msg %d. Check "
+			"your system memory. Exiting the testcases...\n", k);
+			free_info_msgs();
+			exit(1);
+		}
+
+	/* Is initialization this way ok or just n seqential lines?? */
+		switch (k) {
+		case 0:
+			strncpy(info[k], " Par: nullcgroup\n", SIZE);
+			break;
+		case 1:
+			strncpy(info[k], " Par: commoncgroup\n", SIZE);
+			break;
+		case 2:
+			strncpy(info[k], " Par: not created group\n", SIZE);
+			break;
+		case 3:
+			strncpy(info[k], " Par: same cgroup\n", SIZE);
+			break;
+		case 4:
+			strncpy(info[k], " Task found in group/s\n", SIZE);
+			break;
+		case 5:
+			strncpy(info[k], " Task not found in group/s\n", SIZE);
+			break;
+		case 6:
+			strncpy(info[k], " Task not found in all"
+							" groups\n", SIZE);
+			break;
+		case 7:
+			strncpy(info[k], " group found under both"
+						" controllers\n", SIZE);
+			break;
+		case 8:
+			strncpy(info[k], " group not found under"
+						" second controller\n", SIZE);
+			break;
+		case 9:
+			strncpy(info[k], " group not found under"
+						" any controller\n", SIZE);
+			break;
+		case 10:
+			strncpy(info[k], " group modified under"
+						" both controllers\n", SIZE);
+			break;
+		case 11:
+			strncpy(info[k], " group not modified under"
+						" second controller\n", SIZE);
+			break;
+		case 12:
+			strncpy(info[k], " group not modified under"
+						" any controller\n", SIZE);
+			break;
+		case 13:
+			strncpy(info[k], " Group deleted from fs\n", SIZE);
+			break;
+		case 14:
+			strncpy(info[k], " Group not deleted from fs\n", SIZE);
+			break;
+		case 15:
+			strncpy(info[k], " Group not deleted globaly\n", SIZE);
+			break;
+		/* Add more messages here and change NUM_MSGS */
+		default:
+			break;
+		}
+	}
+}
+
+/* Free the allocated memory for buffers */
+void free_info_msgs()
+{
+	for (int k = 0; k < NUM_MSGS; ++k) {
+		if (info[k])
+			free(info[k]);
+	}
+
+	if (info)
+		free(info);
 }
