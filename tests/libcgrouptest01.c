@@ -20,6 +20,9 @@ int main(int argc, char *argv[])
 {
 	int fs_mounted, retval;
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
+	/* In case of multimount for readability we use the controller name
+	 * before the cgroup structure name */
+	struct cgroup *cpu_cgroup1, *mem_cgroup1;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
 		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
@@ -250,6 +253,8 @@ int main(int argc, char *argv[])
 			if (group_exist(path_group) == 0)
 				printf("Test[1:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
 										 ++i, retval);
+			else
+				printf("Test[1:%2d]\tFAIL: group not found in fs\n", ++i);
 		} else
 			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
 
@@ -356,6 +361,8 @@ int main(int argc, char *argv[])
 			if (group_exist(path_group) == -1)
 				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
 										 ++i, retval);
+			else
+				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
 		} else
 			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
 
@@ -421,6 +428,82 @@ int main(int argc, char *argv[])
 			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
 						 ++i, retval);
 		}
+
+		/*
+		 * Test03: Create a valid cgroup structure
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "cpugroup1", sizeof(group));
+		strncpy(val_string, "4096", sizeof(val_string));
+		retval = set_controller(CPU, controller_name, control_file);
+
+		if (retval)
+			fprintf(stderr, "Setting controller failled\n");
+
+		cpu_cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/*
+		 * Test04: Then Call cgroup_create_cgroup() with this valid group
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
+		if (!retval) {
+			/* Check if the group exists in the dir tree */
+			strncpy(path_group, mountpoint, sizeof(path_group));
+			strncat(path_group, "/cpugroup1", sizeof(path_group));
+			if (group_exist(path_group) == 0)
+				printf("Test[2:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
+										 ++i, retval);
+			else
+				printf("Test[2:%2d]\tFAIL: group not found in fs\n", ++i);
+		} else
+			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+
+		/*
+		 * Test03: Create a valid cgroup structure
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "memgroup1", sizeof(group));
+		retval = set_controller(MEMORY, controller_name, control_file);
+		strncpy(val_string, "52428800", sizeof(val_string));
+
+		if (retval)
+			fprintf(stderr, "Setting controller failled\n");
+
+		mem_cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/*
+		 * Test04: Then Call cgroup_create_cgroup() with this valid group
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_create_cgroup(mem_cgroup1, 1);
+		if (!retval) {
+			/* Check if the group exists in the dir tree */
+			strncpy(path_group, mountpoint2, sizeof(path_group));
+			strncat(path_group, "/memgroup1", sizeof(path_group));
+			if (group_exist(path_group) == 0)
+				printf("Test[2:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
+										 ++i, retval);
+			else
+				printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() group not found in fs\n", ++i);
+		} else
+			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+
+
+		/*
+		 * Test05: Call cgroup_create_cgroup() with the same group
+		 * Exp outcome: non zero return value
+		 */
+		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
+		/* BUG: The error should be ECGROUPALREADYEXISTS */
+		if (retval == ECGROUPNOTALLOWED)
+			printf("Test[2:%2d]\tPASS: cgroup_create_cgroup().Second Call. retval=%d\n",
+									 ++i, retval);
+		else
+			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup(): Second call. retval=%d\n", ++i, retval);
+
 		break;
 
 	default:
