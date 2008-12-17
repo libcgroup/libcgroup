@@ -79,6 +79,8 @@ int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
 /* function to print messages in better format */
 static inline void message(int num, int pass, char *api, int ret, char *extra);
+static inline void build_path(char *target, char *mountpoint,
+						 char *group, char *file);
 
 static inline pid_t cgrouptest_gettid()
 {

@@ -205,8 +205,7 @@ int main(int argc, char *argv[])
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval == 0) {
-			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
-			strcat(tasksfile, "/tasks");
+			build_path(tasksfile, mountpoint, NULL, "tasks");
 			if (check_task(tasksfile)) {
 				strncpy(extra, " Task found in grp\n", SIZE);
 				message(++i, PASS, "attach_task()", retval,
@@ -264,8 +263,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_create_cgroup(cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
-			strncpy(path_group, mountpoint, sizeof(mountpoint));
-			strncat(path_group, "/group1", sizeof("/group1"));
+			build_path(path_group, mountpoint, "group1", NULL);
 			if (group_exist(path_group) == 0) {
 				strncpy(extra, " grp found in fs\n", SIZE);
 				message(++i, PASS, "create_cgroup()",
@@ -293,9 +291,7 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task(cgroup1);
 		if (retval == 0) {
-			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
-			strncat(tasksfile, "/group1", sizeof("/group1"));
-			strncat(tasksfile, "/tasks", sizeof("/tasks"));
+			build_path(tasksfile, mountpoint, "group1", "tasks");
 			if (check_task(tasksfile)) {
 				strncpy(extra, " Task found in grp\n", SIZE);
 				message(++i, PASS, "attach_task()", retval,
@@ -318,10 +314,8 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(extra, " Called with same cgroup argument\n", SIZE);
 
-		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/group1", sizeof("/group1"));
-		strncat(path_control_file, "/", sizeof("/"));
-		strncat(path_control_file, control_file, sizeof(control_file));
+		build_path(path_control_file, mountpoint,
+						 "group1", control_file);
 
 		retval = cgroup_modify_cgroup(cgroup1);
 		/* Check if the values are changed */
@@ -350,10 +344,8 @@ int main(int argc, char *argv[])
 		 * Test10: modify cgroup with this new cgroup
 		 * Exp outcome: zero return value
 		 */
-		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/group1", sizeof("/group1"));
-		strncat(path_control_file, "/", sizeof("/"));
-		strncat(path_control_file, control_file, sizeof(control_file));
+		build_path(path_control_file, mountpoint,
+						 "group1", control_file);
 
 		retval = cgroup_modify_cgroup(cgroup2);
 		/* Check if the values are changed */
@@ -398,12 +390,8 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(extra, " Called with a cgroup argument with "
 						"different controller\n", SIZE);
-
-		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/group1", sizeof("/group2"));
-		strncat(path_control_file, "/", sizeof("/"));
-		strncat(path_control_file, control_file, sizeof(control_file));
-
+		build_path(path_control_file, mountpoint,
+						 "group1", control_file);
 		strncpy(val_string, "2048", sizeof(val_string));
 
 		retval = cgroup_modify_cgroup(cgroup3);
@@ -422,9 +410,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_delete_cgroup(cgroup1, 1);
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
-			strncpy(path_group, mountpoint, sizeof(mountpoint));
-			strncat(path_group, "/group1", sizeof("/group1"));
-
+			build_path(path_group, mountpoint, "group1", NULL);
 			if (group_exist(path_group) == -1) {
 				strncpy(extra, " group deleted from fs\n",
 									 SIZE);
@@ -510,11 +496,8 @@ int main(int argc, char *argv[])
 		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval == 0) {
-			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
-			strcat(tasksfile, "/tasks");
-
-			strncpy(tasksfile2, mountpoint2, sizeof(mountpoint));
-			strcat(tasksfile2, "/tasks");
+			build_path(tasksfile, mountpoint, NULL, "tasks");
+			build_path(tasksfile2, mountpoint2, NULL, "tasks");
 
 			if (check_task(tasksfile) && check_task(tasksfile2)) {
 				strncpy(extra, " Task found in grps\n", SIZE);
@@ -553,8 +536,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_create_cgroup(cpu_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
-			strncpy(path_group, mountpoint, sizeof(path_group));
-			strncat(path_group, "/cpugroup1", sizeof(path_group));
+			build_path(path_group, mountpoint, "cpugroup1", NULL);
 			if (group_exist(path_group) == 0) {
 				strncpy(extra, " grp found in fs\n", SIZE);
 				message(++i, PASS, "create_cgroup()",
@@ -592,8 +574,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_create_cgroup(mem_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
-			strncpy(path_group, mountpoint2, sizeof(path_group));
-			strncat(path_group, "/memgroup1", sizeof(path_group));
+			build_path(path_group, mountpoint2, "memgroup1", NULL);
 			if (group_exist(path_group) == 0) {
 				strncpy(extra, " grp found in fs\n", SIZE);
 				message(++i, PASS, "create_cgroup()",
@@ -632,12 +613,8 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task(cpu_cgroup1);
 		if (retval == 0) {
-			strncpy(tasksfile, mountpoint, sizeof(tasksfile));
-			strncat(tasksfile, "/cpugroup1", sizeof(tasksfile));
-			strncat(tasksfile, "/tasks", sizeof(tasksfile));
-
-			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
-			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
+			build_path(tasksfile, mountpoint, "cpugroup1", "tasks");
+			build_path(tasksfile2, mountpoint2, NULL, "tasks");
 
 			if (check_task(tasksfile) && check_task(tasksfile2)) {
 				strncpy(extra, " Task found in grps\n", SIZE);
@@ -665,13 +642,10 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task(mem_cgroup1);
 		if (retval == 0) {
-			strncpy(tasksfile, mountpoint, sizeof(tasksfile));
-			strncat(tasksfile, "/cpugroup1", sizeof(tasksfile));
-			strncat(tasksfile, "/tasks", sizeof(tasksfile));
-
-			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
-			strncat(tasksfile2, "/memgroup1", sizeof(tasksfile2));
-			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
+			/*Task already attached to cpugroup1 in previous call*/
+			build_path(tasksfile, mountpoint, "cpugroup1", "tasks");
+			build_path(tasksfile2, mountpoint2,
+							 "memgroup1", "tasks");
 
 			if (check_task(tasksfile) && check_task(tasksfile2)) {
 				strncpy(extra, " Task found in grps\n", SIZE);
@@ -717,8 +691,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_delete_cgroup(cpu_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
-			strncpy(path_group, mountpoint, sizeof(path_group));
-			strncat(path_group, "/cpugroup1", sizeof(path_group));
+			build_path(path_group, mountpoint, "cpugroup1", NULL);
 
 			if (group_exist(path_group) == -1) {
 				strncpy(extra, " group deleted from fs\n",
@@ -744,8 +717,7 @@ int main(int argc, char *argv[])
 		retval = cgroup_delete_cgroup(mem_cgroup1, 1);
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
-			strncpy(path_group, mountpoint, sizeof(path_group));
-			strncat(path_group, "/memgroup1", sizeof(path_group));
+			build_path(path_group, mountpoint2, "memgroup1", NULL);
 
 			if (group_exist(path_group) == -1) {
 				strncpy(extra, " group deleted from fs\n",
@@ -792,16 +764,11 @@ int main(int argc, char *argv[])
 		retval = cgroup_create_cgroup(common_cgroup, 1);
 		if (!retval) {
 			/* Check if the group exists under both controllers */
-			strncpy(path1_common_group, mountpoint,
-						 sizeof(path1_common_group));
-			strncat(path1_common_group, "/commongroup",
-						 sizeof(path1_common_group));
+			build_path(path1_common_group, mountpoint,
+							 "commongroup", NULL);
 			if (group_exist(path1_common_group) == 0) {
-
-				strncpy(path2_common_group, mountpoint,
-						 sizeof(path2_common_group));
-				strncat(path2_common_group, "/commongroup",
-						 sizeof(path2_common_group));
+				build_path(path2_common_group, mountpoint2,
+							 "commongroup", NULL);
 
 				if (group_exist(path2_common_group) == 0) {
 					strncpy(extra, " group found under"
@@ -833,7 +800,11 @@ int main(int argc, char *argv[])
 		retval = cgroup_delete_cgroup(common_cgroup, 1);
 		if (!retval) {
 			/* Check if the group is deleted from both dir tree */
+			build_path(path1_common_group, mountpoint,
+							 "commongroup", NULL);
 			if (group_exist(path1_common_group) == -1) {
+				build_path(path2_common_group, mountpoint2,
+							 "commongroup", NULL);
 				if (group_exist(path2_common_group) == -1) {
 					strncpy(extra, " group "
 						"deleted globally\n", SIZE);
@@ -1120,4 +1091,21 @@ static inline void message(int num, int pass, char *api,
 	/* Populate message buffer for the api */
 	snprintf(buf, sizeof(buf), "cgroup_%s\t\t Ret Value = ", api);
 	fprintf(stdout, "TEST%2d:%s %s%d\t%s", num, res, buf, retval, extra);
+}
+
+/* builds the path to target file/group */
+static inline void build_path(char *target, char *mountpoint,
+						 char *group, char *file)
+{
+	strncpy(target, mountpoint, FILENAME_MAX);
+
+	if (group) {
+		strncat(target, "/", sizeof("/"));
+		strncat(target, group, FILENAME_MAX);
+	}
+
+	if (file) {
+		strncat(target, "/", sizeof("/"));
+		strncat(target, file, FILENAME_MAX);
+	}
 }
