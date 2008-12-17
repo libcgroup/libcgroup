@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	/* In case of multimount for readability we use the controller name
 	 * before the cgroup structure name */
-	struct cgroup *cpu_cgroup1, *mem_cgroup1;
+	struct cgroup *cpu_cgroup1, *mem_cgroup1, *mem_cgroup2;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
 		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
@@ -503,6 +503,78 @@ int main(int argc, char *argv[])
 									 ++i, retval);
 		else
 			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup(): Second call. retval=%d\n", ++i, retval);
+
+
+		/*
+		 * Test06: Call cgroup_attach_task() with a group with cpu
+		 * controller and check if return values are correct. If yes
+		 * check if task exists in that group under only cpu controller
+		 * hierarchy and in the root group under other controllers
+		 * hierarchy.
+		 * TODO: This test needs some modification in script
+		 * Shall we hardcode mountpoints for each controller ?
+		 */
+		retval = cgroup_attach_task(cpu_cgroup1);
+		if (retval == 0) {
+			strncpy(tasksfile, mountpoint, sizeof(tasksfile));
+			strncat(tasksfile, "/cpugroup1", sizeof(tasksfile));
+			strncat(tasksfile, "/tasks", sizeof(tasksfile));
+
+			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
+			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
+
+			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+				return -1;
+		} else {
+			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
+						 ++i, retval);
+		}
+
+		/*
+		 * Test07: Call cgroup_attach_task() with a group with memory
+		 * controller and check if return values are correct. If yes
+		 * check if task exists in the groups under both cpu controller
+		 * hierarchy and other controllers hierarchy.
+		 * TODO: This test needs some modification in script
+		 * Shall we hardcode mountpoints for each controller ?
+		 */
+		retval = cgroup_attach_task(mem_cgroup1);
+		if (retval == 0) {
+			strncpy(tasksfile, mountpoint, sizeof(tasksfile));
+			strncat(tasksfile, "/cpugroup1", sizeof(tasksfile));
+			strncat(tasksfile, "/tasks", sizeof(tasksfile));
+
+			strncpy(tasksfile2, mountpoint2, sizeof(tasksfile2));
+			strncat(tasksfile2, "/memgroup1", sizeof(tasksfile2));
+			strncat(tasksfile2, "/tasks", sizeof(tasksfile2));
+
+			if (check_task(tasksfile) || i-- && check_task(tasksfile2))
+				return -1;
+		} else {
+			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
+						 ++i, retval);
+		}
+
+		/*
+		 * Test: Create a valid cgroup structure
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "memgroup2", sizeof(group));
+		mem_cgroup2 = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/*
+		 * Test08: Try to attach a task to this non existing group.
+		 * Group does not exist in fs so should return ECGROUPNOTEXIST
+		 */
+		retval = cgroup_attach_task(mem_cgroup2);
+		if (retval == ECGROUPNOTEXIST) {
+			printf("Test[1:%2d]\tPASS: cgroup_attach_task() ret: %d\n",\
+								 ++i, retval);
+		} else {
+			printf("Test[2:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
+						 ++i, retval);
+		}
 
 		break;
 
