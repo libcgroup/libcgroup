@@ -252,7 +252,7 @@ mount_fs ()
 			echo "WARN: Earlier groups found and removed...";
 		fi;
 
-		debug "cgroup filesystem mounted on $NEWTARGET  directory"
+		debug "$CONTROLLERS controllers mounted on $NEWTARGET  directory"
 	done;
 
 	if [ $FS_MOUNTED -gt 2 ]
@@ -274,8 +274,8 @@ get_ctl_num()
 	# Add any new controller developed here
 	declare -a ctl_list;
 	# Following list has to be in sync with enums in header
-	ctl_list[0]="memory";
-	ctl_list[1]="cpu";
+	ctl_list[0]="cpu";
+	ctl_list[1]="memory";
 	ctl_list[2]="cpuset";
 
 	local i=0;
