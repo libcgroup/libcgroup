@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		strncpy(mountpoint, argv[4], sizeof(mountpoint));
 		dbg("C:DBG: mountpoint1 as recieved from script=%s\n",
 								 mountpoint);
-		if (fs_mounted == 2) {
+		if (fs_mounted == FS_MULTI_MOUNTED) {
 			strncpy(mountpoint2, argv[5], sizeof(mountpoint2));
 			dbg("C:DBG: mountpoint2 as recieved from script=%s\n",
 								 mountpoint2);
@@ -1275,12 +1275,12 @@ static inline void build_path(char *target, char *mountpoint,
 	strncpy(target, mountpoint, FILENAME_MAX);
 
 	if (group) {
-		strncat(target, "/", sizeof("/"));
+		strncat(target, "/", FILENAME_MAX);
 		strncat(target, group, FILENAME_MAX);
 	}
 
 	if (file) {
-		strncat(target, "/", sizeof("/"));
+		strncat(target, "/", FILENAME_MAX);
 		strncat(target, file, FILENAME_MAX);
 	}
 }
