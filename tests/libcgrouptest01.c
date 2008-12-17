@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 	/* In case of multimount for readability we use the controller name
 	 * before the cgroup structure name */
 	struct cgroup *ctl1_cgroup1, *ctl2_cgroup1, *ctl2_cgroup2;
+	struct cgroup *mod_ctl1_cgroup1, *mod_ctl2_cgroup1, *mod_common_cgroup;
 	struct cgroup *common_cgroup;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 	char path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
@@ -714,8 +715,41 @@ int main(int argc, char *argv[])
 
 		strncpy(extra, "\n", SIZE);
 
+
 		/*
-		 * Test09: delete cgroups
+		 * Create another valid cgroup structure with same group name
+		 * to modify the existing group ctl1_group1
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "ctl1_group1", sizeof(group));
+		retval = set_controller(ctl1, controller_name, control_file);
+		strncpy(val_string, "7000000", sizeof(val_string));
+
+		if (retval) {
+			fprintf(stderr, "Setting controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
+
+		mod_ctl1_cgroup1 = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/*
+		 * Test09: modify existing cgroup with this new cgroup
+		 * Exp outcome: zero return value and control value modified
+		 */
+		build_path(path_control_file, mountpoint,
+						 "ctl1_group1", control_file);
+
+		retval = cgroup_modify_cgroup(mod_ctl1_cgroup1);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			message(++i, PASS, "modify_cgroup()", retval, extra);
+		else
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
+		/*
+		 * Test10: delete cgroups
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(ctl1_cgroup1, 1);
