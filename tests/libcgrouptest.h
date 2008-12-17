@@ -87,6 +87,8 @@ static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
 						 char *control_file);
 static int group_modified(char *path_control_file, int value_type);
+static int add_control_value(struct cgroup_controller *newcontroller,
+				 char * control_file, char *wr, int value_type);
 struct cgroup *new_cgroup(char *group, char *controller_name,
 				 char *control_file, int value_type);
 int check_fsmounted(int multimnt);

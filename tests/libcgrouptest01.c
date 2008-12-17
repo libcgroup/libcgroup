@@ -1109,12 +1109,46 @@ static int group_modified(char *path_control_file, int value_type)
 	}
 	return 1;
 }
+static int add_control_value(struct cgroup_controller *newcontroller,
+				 char * control_file, char *wr, int value_type)
+{
+	int retval;
+
+	switch (value_type) {
+
+	case BOOL:
+		retval = cgroup_add_value_bool(newcontroller,
+					 control_file, val_bool);
+		snprintf(wr, SIZE, "add_value_bool()");
+		break;
+	case INT64:
+		retval = cgroup_add_value_int64(newcontroller,
+					 control_file, val_int64);
+		snprintf(wr, SIZE, "add_value_int64()");
+		break;
+	case UINT64:
+		retval = cgroup_add_value_uint64(newcontroller,
+					 control_file, val_uint64);
+		snprintf(wr, SIZE, "add_value_uint64()");
+		break;
+	case STRING:
+		retval = cgroup_add_value_string(newcontroller,
+					 control_file, val_string);
+		snprintf(wr, SIZE, "add_value_string()");
+		break;
+	default:
+		printf("ERROR: wrong value in add_control_value()\n");
+		return 1;
+		break;
+	}
+	return retval;
+}
 
 struct cgroup *new_cgroup(char *group, char *controller_name,
 				 char *control_file, int value_type)
 {
 	int retval;
-	char wr[SIZE]; /* Na,es of wrapper apis */
+	char wr[SIZE]; /* Names of wrapper apis */
 	struct cgroup *newcgroup;
 	struct cgroup_controller *newcontroller;
 	newcgroup = cgroup_new_cgroup(group);
@@ -1130,33 +1164,8 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 
 		newcontroller = cgroup_add_controller(newcgroup, controller_name);
 		if (newcontroller) {
-			switch (value_type) {
-
-			case BOOL:
-				retval = cgroup_add_value_bool(newcontroller,
-						 control_file, val_bool);
-				snprintf(wr, sizeof(wr), "add_value_bool()");
-				break;
-			case INT64:
-				retval = cgroup_add_value_int64(newcontroller,
-						 control_file, val_int64);
-				snprintf(wr, sizeof(wr), "add_value_int64()");
-				break;
-			case UINT64:
-				retval = cgroup_add_value_uint64(newcontroller,
-						 control_file, val_uint64);
-				snprintf(wr, sizeof(wr), "add_value_uint64()");
-				break;
-			case STRING:
-				retval = cgroup_add_value_string(newcontroller,
-						 control_file, val_string);
-				snprintf(wr, sizeof(wr), "add_value_string()");
-				break;
-			default:
-				printf("ERROR: wrong value in new_cgroup()\n");
-				return NULL;
-				break;
-			}
+			retval =  add_control_value(newcontroller,
+						 control_file, wr, value_type);
 
 			if (!retval) {
 				message(++i, PASS, "new_cgroup()",
