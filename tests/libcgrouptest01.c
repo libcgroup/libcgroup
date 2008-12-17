@@ -175,14 +175,14 @@ int main(int argc, char *argv[])
 		 * without calling cgroup_inti(). We can check other apis too.
 		 * Exp outcome: error ECGROUPNOTINITIALIZED
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval == ECGROUPNOTINITIALIZED)
-			printf("Test[1:%2d]\tPASS: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
+			message(++i, PASS, "attach_task()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test02: call cgroup_init() and check return values
@@ -191,29 +191,37 @@ int main(int argc, char *argv[])
 
 		retval = cgroup_init();
 		if (retval == 0)
-			printf("Test[1:%2d]\tPASS: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, PASS, "init()\t", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_init() retval= %d:\n",\
-								 ++i, retval);
+			message(++i, FAIL, "init()\t",  retval, extra);
 
 		/*
-		 * Test03: Call cgroup_attach_task() with null group and check if
-		 * return values are correct. If yes check if task exists in
+		 * Test03: Call cgroup_attach_task() with null group and check
+		 * if return values are correct. If yes check if task exists in
 		 * root group tasks file
 		 * TODO: This test needs some modification in script
 		 * Exp outcome: current task should be attached to root group
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_attach_task(nullcgroup);
 		if (retval == 0) {
 			strncpy(tasksfile, mountpoint, sizeof(mountpoint));
 			strcat(tasksfile, "/tasks");
-			if (check_task(tasksfile))
-				return -1;
+			if (check_task(tasksfile)) {
+				strncpy(extra, " Task found in grp\n", SIZE);
+				message(++i, PASS, "attach_task()", retval,
+									 extra);
+			} else {
+				strncpy(extra, " Task not found in grp\n",
+									 SIZE);
+				message(++i, FAIL, "attach_task()", retval,
+									 extra);
+			}
 		} else {
-			printf("Test[1:%2d]\tFAIL: cgroup_attach_task() ret: %d\n",\
-								 ++i, retval);
+			message(++i, FAIL, "attach_task()", retval, extra);
 		}
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test04: Call cgroup_attach_task_pid() with null group
@@ -222,11 +230,9 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task_pid(nullcgroup, -1);
 		if (retval != 0)
-			printf("Test[1:%2d]\tPASS: cgroup_attach_task_pid() ret: %d\n",\
-								 ++i, retval);
+			message(++i, PASS, "attach_task_pid()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_attach_task_pid() ret: %d\n",\
-								 ++i, retval);
+			message(++i, FAIL, "attach_task_pid()", retval, extra);
 
 		/*
 		 * Test05: Create a valid cgroup structure
@@ -240,32 +246,38 @@ int main(int argc, char *argv[])
 			retval = set_controller(CPU, controller_name,
 								control_file);
 			strncpy(val_string, "2048", sizeof(val_string));
-			if (retval) {
+			if (retval)
 				fprintf(stderr, "Failed to set any controllers "
 					"Tests dependent on this structure will"
 					" fail\n");
-			}
 		}
 
 		cgroup1 = new_cgroup(group, controller_name,
 						 control_file, STRING);
 
 		/*
-		 * Test06: Then Call cgroup_create_cgroup() with this valid group
+		 * Test06: Then Call cgroup_create_cgroup() with this group
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_create_cgroup(cgroup1, 1);
 		if (!retval) {
 			/* Check if the group exists in the dir tree */
 			strncpy(path_group, mountpoint, sizeof(mountpoint));
-			strncat(path_group, "/group1", sizeof("group1"));
-			if (group_exist(path_group) == 0)
-				printf("Test[1:%2d]\tPASS: cgroup_create_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[1:%2d]\tFAIL: group not found in fs\n", ++i);
-		} else
-			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+			strncat(path_group, "/group1", sizeof("/group1"));
+			if (group_exist(path_group) == 0) {
+				strncpy(extra, " grp found in fs\n", SIZE);
+				message(++i, PASS, "create_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " grp not found in fs\n", SIZE);
+				message(++i, FAIL, "create_cgroup()",
+								 retval, extra);
+			}
+
+		} else {
+			message(++i, FAIL, "create_cgroup()", retval, extra);
+		}
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Create another valid cgroup structure
@@ -286,16 +298,16 @@ int main(int argc, char *argv[])
 		 * Exp outcome: zero return value
 		 */
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/group1", sizeof("group1"));
+		strncat(path_control_file, "/group1", sizeof("/group1"));
 		strncat(path_control_file, "/", sizeof("/"));
 		strncat(path_control_file, control_file, sizeof(control_file));
 
 		retval = cgroup_modify_cgroup(cgroup2);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
 
 		/*
 		 * Test08: modify cgroup with the same cgroup
@@ -305,15 +317,17 @@ int main(int argc, char *argv[])
 		retval = cgroup_modify_cgroup(cgroup1);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
 
 		/*
 		 * Test09: modify cgroup with the null cgroup
 		 * Exp outcome: zero return value. root group unchanged.
 		 */
 
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
 		strncat(path_control_file, "/", sizeof("/"));
 		strncat(path_control_file, control_file, sizeof(control_file));
@@ -321,9 +335,11 @@ int main(int argc, char *argv[])
 		retval = cgroup_modify_cgroup(nullcgroup);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Create another valid cgroup structure with diff controller
@@ -344,7 +360,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: zero return value
 		 */
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
-		strncat(path_control_file, "/group1", sizeof("group2"));
+		strncat(path_control_file, "/group1", sizeof("/group2"));
 		strncat(path_control_file, "/", sizeof("/"));
 		strncat(path_control_file, control_file, sizeof(control_file));
 
@@ -353,10 +369,9 @@ int main(int argc, char *argv[])
 		retval = cgroup_modify_cgroup(cgroup3);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			printf("Test[1:%2d]\tPASS: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
+			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_modify_cgroup() retval=%d\n", ++i, retval);
-
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
 
 		/*
 		 * Test11: delete cgroup
@@ -366,33 +381,49 @@ int main(int argc, char *argv[])
 		if (!retval) {
 			/* Check if the group is deleted from the dir tree */
 			strncpy(path_group, mountpoint, sizeof(mountpoint));
-			strncat(path_group, "/group1", sizeof("group1"));
-			if (group_exist(path_group) == -1)
-				printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() retval=%d\n",
-										 ++i, retval);
-			else
-				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
-		} else
-			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+			strncat(path_group, "/group1", sizeof("/group1"));
+
+			if (group_exist(path_group) == -1) {
+				strncpy(extra, " group deleted from fs\n",
+									 SIZE);
+				message(++i, PASS, "delete_cgroup()",
+								 retval, extra);
+			} else {
+				strncpy(extra, " group still found in fs\n",
+									 SIZE);
+				message(++i, FAIL, "delete_cgroup()",
+								 retval, extra);
+			}
+
+		} else {
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
+		}
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test12: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGINVAL
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_create_cgroup(nullcgroup, 1);
 		if (retval)
-			printf("Test[1:%2d]\tPASS: cgroup_create_cgroup() nullcgroup handled\n", ++i);
+			message(++i, PASS, "create_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_create_cgroup() nullcgroup not handled\n", ++i);
+			message(++i, FAIL, "create_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		/*
 		 * Test13: delete nullcgroup
 		 */
+		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
 		retval = cgroup_delete_cgroup(nullcgroup, 1);
 		if (retval)
-			printf("Test[1:%2d]\tPASS: cgroup_delete_cgroup() nullcgroup handled\n", ++i);
+			message(++i, PASS, "delete_cgroup()", retval, extra);
 		else
-			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() Unable to handle nullcgroup\n", ++i);
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
@@ -927,7 +958,8 @@ static int check_task(char *tasksfile)
 	file = fopen(tasksfile, "r");
 	if (!file) {
 		printf("ERROR: in opening %s\n", tasksfile);
-		return -1;
+		printf("Exiting without running other testcases in this set\n");
+		exit(1);
 	}
 
 	curr_tid = cgrouptest_gettid();
@@ -938,12 +970,8 @@ static int check_task(char *tasksfile)
 			break;
 		}
 	}
-	if (pass)
-		printf("Test[2:%2d]\tPASS: Task found in %s\n", ++i, tasksfile);
-	else
-		printf("Test[2:%2d]\tFAIL: Task not found in %s\n", ++i, tasksfile);
 
-	return 0;
+	return pass;
 }
 
 static inline void message(int num, int pass, char *api,
