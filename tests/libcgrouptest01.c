@@ -836,6 +836,7 @@ int main(int argc, char *argv[])
 		 * Test12: delete this common cgroup
 		 * Exp outcome: zero return value
 		 */
+		strncpy(extra, " Called with commongroup. ", SIZE);
 		retval = cgroup_delete_cgroup(common_cgroup, 1);
 		if (!retval) {
 			/* Check if the group is deleted from both dir tree */
@@ -845,24 +846,25 @@ int main(int argc, char *argv[])
 				build_path(path2_common_group, mountpoint2,
 							 "commongroup", NULL);
 				if (group_exist(path2_common_group) == -1) {
-					strncpy(extra, " group "
+					strncat(extra, " group "
 						"deleted globally\n", SIZE);
 					message(++i, PASS, "create_cgroup()",
 								 retval, extra);
 				} else {
-					strncpy(extra, " group not "
+					strncat(extra, " group not "
 						"deleted globally\n", SIZE);
 					message(++i, FAIL, "create_cgroup()",
 								 retval, extra);
 				}
 			} else {
-				strncpy(extra, " group still found in fs\n",
+				strncat(extra, " group still found in fs\n",
 									 SIZE);
-				message(++i, FAIL, "create_cgroup()", retval,
+				message(++i, FAIL, "delete_cgroup()", retval,
 									 extra);
 			}
 		} else {
-			message(++i, FAIL, "create_cgroup()", retval, extra);
+			strncat(extra, "\n", sizeof("\n"));
+			message(++i, FAIL, "delete_cgroup()", retval, extra);
 		}
 
 		strncpy(extra, "\n", SIZE);
