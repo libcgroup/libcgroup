@@ -286,7 +286,27 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Create another valid cgroup structure
+		 * Test07: modify cgroup with the same cgroup
+		 * Exp outcome: zero return value. No change.
+		 */
+		strncpy(extra, " Called with same cgroup argument\n", SIZE);
+
+		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
+		strncat(path_control_file, "/group1", sizeof("/group1"));
+		strncat(path_control_file, "/", sizeof("/"));
+		strncat(path_control_file, control_file, sizeof(control_file));
+
+		retval = cgroup_modify_cgroup(cgroup1);
+		/* Check if the values are changed */
+		if (!retval && !group_modified(path_control_file, STRING))
+			message(++i, PASS, "modify_cgroup()", retval, extra);
+		else
+			message(++i, FAIL, "modify_cgroup()", retval, extra);
+
+		strncpy(extra, "\n", SIZE);
+
+		/*
+		 * Create another valid cgroup structure with same group
 		 * Exp outcome: no error. 0 return value
 		 */
 		strncpy(group, "group1", sizeof(group));
@@ -300,7 +320,7 @@ int main(int argc, char *argv[])
 						 control_file, STRING);
 
 		/*
-		 * Test07: modify cgroup
+		 * Test08: modify cgroup with this new cgroup
 		 * Exp outcome: zero return value
 		 */
 		strncpy(path_control_file, mountpoint, sizeof(mountpoint));
@@ -314,19 +334,6 @@ int main(int argc, char *argv[])
 			message(++i, PASS, "modify_cgroup()", retval, extra);
 		else
 			message(++i, FAIL, "modify_cgroup()", retval, extra);
-
-		/*
-		 * Test08: modify cgroup with the same cgroup
-		 * Exp outcome: zero return value
-		 */
-
-		retval = cgroup_modify_cgroup(cgroup1);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
-
 
 		/*
 		 * Test09: modify cgroup with the null cgroup
