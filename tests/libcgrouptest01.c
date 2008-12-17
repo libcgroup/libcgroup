@@ -635,6 +635,8 @@ int main(int argc, char *argv[])
 		else
 			message(++i, FAIL, "create_cgroup()", retval, extra);
 
+		strncpy(extra, "\n", SIZE);
+
 		/*
 		 * Test06: Call cgroup_attach_task() with a group with ctl1
 		 * controller and check if return values are correct. If yes
@@ -1106,6 +1108,8 @@ static int set_controller(int controller, char *controller_name,
 		/* Future controllers can be added here */
 
 	default:
+		printf("Invalid controller name passed. Setting controller"
+					" failed. Dependent tests may fail\n");
 		return 1;
 		break;
 	}
