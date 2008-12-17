@@ -111,11 +111,22 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 	case FTS_NS:
 	case FTS_DNR:
 	case FTS_DP:
+		ret = chown(filename, owner, group);
+		if (ret)
+			goto fail_chown;
+		ret = chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP |
+					S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
+		break;
 	case FTS_F:
 	case FTS_DEFAULT:
 		ret = chown(filename, owner, group);
+		if (ret)
+			goto fail_chown;
+		ret = chmod(filename, S_IRUSR | S_IWUSR |  S_IRGRP |
+						S_IWGRP | S_IROTH);
 		break;
 	}
+fail_chown:
 	return ret;
 }
 
