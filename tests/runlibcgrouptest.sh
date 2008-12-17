@@ -21,7 +21,7 @@ MOUNTPOINT=/dev/cgroup_controllers;	# Just to initialize
 TARGET=/dev/cgroup_controllers;
 CONTROLLERS=cpu,memory;
 NUM_MOUNT=1;		# Number of places to be mounted on
-
+MULTIMOUNT=false;	# mounted at on epoint only
 debug()
 {
 	# Function parameter is the string to print out
@@ -66,7 +66,7 @@ umount_fs ()
 		PROC_ENTRY=`cat /proc/mounts|grep cgroup|tr -s [:space:]|cut -d" " -f2`;
 		# Get first mountpoint in case of multiple mounts
 		PROC_ENTRY=`echo $PROC_ENTRY|cut -d" " -f1`;
-		if [ -n "$PROC_ENTRY" ]
+		if [ ! -z "$PROC_ENTRY" ]
 		then
 			TARGET=$PROC_ENTRY;
 			# Need to take care if there are tasks running in any group ??
@@ -93,15 +93,15 @@ no_controllers()
 		MEMORY=`cat /proc/cgroups|grep -w memory|cut -f1`;
 	fi;
 
-	if [ -n $CPU ] && [ -n $MEMORY ]
+	if [ ! -z $CPU ] && [ ! -z $MEMORY ]
 	then
 		CONTROLLERS=$CPU,$MEMORY ;
 		return 1;	# false
-	elif [ -n $CPU ]
+	elif [ ! -z $CPU ]
 	then
 		CONTROLLERS=$CPU ;
 		return 1;	# false
-	elif [ -n $MEMORY ]
+	elif [ ! -z $MEMORY ]
 	then
 		CONTROLLERS=$MEMORY ;
 		return 1;	# false
