@@ -21,7 +21,15 @@ MOUNTPOINT=/dev/cgroup_controllers;	# Just to initialize
 TARGET=/dev/cgroup_controllers;
 CONTROLLERS=cpu,memory;
 NUM_MOUNT=1;		# Number of places to be mounted on
-MULTIMOUNT=false;	# mounted at on epoint only
+MULTIMOUNT=false;	# mounted at one point only
+NUM_CTLRS=0;		# num of controllers supported
+CTLR1="";
+CTLR2="";
+CPU="";
+MEMORY="";
+
+declare -a allcontrollers;
+
 debug()
 {
 	# Function parameter is the string to print out
@@ -82,31 +90,85 @@ umount_fs ()
 	echo "Cleanup done";
 }
 
+# Put all the supported controllers in an array
+# We have the priority for cpu and memory controller. So prefer to mount
+# them if they exist
+get_all_controllers()
+{
+	while [ 1 ]; do
+		read line || break;
+		if ! echo $line | grep -q ^#
+		then
+			allcontrollers[$NUM_CTLRS]=`echo $line | cut -d" " -f1`;
+			if [ ${allcontrollers[$NUM_CTLRS]} == "cpu" ]; then
+				CPU="cpu";
+			elif [ ${allcontrollers[$NUM_CTLRS]} == "memory" ]; then
+				MEMORY="memory";
+			fi;
+			debug "controller: ${allcontrollers[$NUM_CTLRS]}";
+			NUM_CTLRS=`expr $NUM_CTLRS + 1`;
+		fi
+	done < /proc/cgroups;
+	debug "Total controllers $NUM_CTLRS";
+}
+
+# Get a second controller other than cpu or memory
+get_second_controller()
+{
+	local i=0;
+	while [ $i -lt $NUM_CTLRS ]
+	do
+		if [ "${allcontrollers[$i]}" != "cpu" ] &&
+				 [ "${allcontrollers[$i]}" != "memory" ]
+		then
+			CTLR2=${allcontrollers[$i]};
+			return 0;
+		fi;
+	i=`expr $i + 1`;
+	done;
+}
+
 # Check if kernel is not having any of the controllers enabled
 no_controllers()
 {
-	CPU="";
-	MEMORY="";
-	if [ -e /proc/cgroups ]
-	then
-		CPU=`cat /proc/cgroups|grep -w cpu|cut -f1`;
-		MEMORY=`cat /proc/cgroups|grep -w memory|cut -f1`;
-	fi;
-
+	# prefer if cpu and memory controller are enabled
 	if [ ! -z $CPU ] && [ ! -z $MEMORY ]
 	then
 		CONTROLLERS=$CPU,$MEMORY ;
+		CTLR1=$CPU;
+		CTLR2=$MEMORY;
+		debug "first controller is $CTLR1";
+		debug "second controller is $CTLR2";
 		return 1;	# false
 	elif [ ! -z $CPU ]
 	then
 		CONTROLLERS=$CPU ;
+		CTLR1=$CPU;
+		get_second_controller;
+		debug "first controller is $CTLR1";
+		debug "second controller is $CTLR2";
 		return 1;	# false
 	elif [ ! -z $MEMORY ]
 	then
 		CONTROLLERS=$MEMORY ;
+		CTLR1=$MEMORY;
+		get_second_controller;
+		debug "first controller is $CTLR1";
+		debug "second controller is $CTLR2";
 		return 1;	# false
 	fi;
-	# Kernel has no controllers enabled
+	# Kernel has neither cpu nor memory controller enabled. So there is
+	# no point in running the testcases. At least one of them should be
+	# supported.(or should I run testcases with controllers such as
+	#  ns, devices etc? Thoughts???)
+	if [ $NUM_CTLRS -lt 1 ]
+	then
+		echo "Kernel has no controllers enabled";
+		echo "Recompile your kernel with at least one controller"
+		echo "Exiting the tests.....";
+		exit 1;
+	fi;
+
 	return 0;	# true
 }
 
@@ -120,8 +182,8 @@ mount_fs ()
 	# Check if kernel has controllers enabled
 	if no_controllers
 	then
-		echo "Kernel has no controllers enabled";
-		echo "Recompile your kernel with controllers enabled"
+		echo "Kernel has none of cpu/memory controllers enabled";
+		echo "Recompile your kernel with at least one of these enabled"
 		echo "Exiting the tests.....";
 		exit 1;
 	fi;
@@ -155,14 +217,14 @@ mount_fs ()
 
 		# In case of multimount, mount controllers at diff points
 		if $MULTIMOUNT ; then
-			if [ $CPU ] && [ $MEMORY ] ; then
+			if [ $CTLR1 ] && [ $CTLR2 ] ; then
 				if [ $CUR_MOUNT -eq 1 ] ; then
-					CONTROLLERS="cpu";
+					CONTROLLERS=$CTLR1;
 				else
-					CONTROLLERS="memory";
+					CONTROLLERS=$CTLR2;
 				fi;
 			else
-				echo "Only 1 controleer enabled in kernel";
+				echo "Only 1 controler enabled in kernel";
 				echo "So not running multiple mount testcases";
 				exit 1;
 			fi;
@@ -224,6 +286,20 @@ runtest()
 		echo Sources not compiled. please run make;
 	fi
 }
+
+###############################
+# Main starts here
+	# Check if kernel has controllers support
+	if [ -e /proc/cgroups ]
+	then
+		get_all_controllers;
+	else
+		echo "Your Kernel seems to be too old. Plz recompile your"
+		echo "Kernel with cgroups and appropriate controllers enabled"
+		echo " Exiting the testcases...."
+		exit 1;
+	fi;
+
 # TestSet01: Run tests without mounting cgroup filesystem
 	echo;
 	echo Running first set of testcases;
