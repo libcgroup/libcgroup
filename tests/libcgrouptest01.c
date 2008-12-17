@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 	case FS_MOUNTED:
 
 		/* Do a sanity check if cgroup fs is mounted */
-		if (check_fsmounted()) {
+		if (check_fsmounted(0)) {
 			printf("Sanity check fails. cgroup fs not mounted\n");
 			printf("Exiting without running this set of tests\n");
 			exit(1);
@@ -397,6 +397,14 @@ int main(int argc, char *argv[])
 		break;
 
 	case FS_MULTI_MOUNTED:
+
+		/* Do a sanity check if cgroup fs is multi mounted */
+		if (check_fsmounted(1)) {
+			printf("Sanity check fails. cgroup fs not multi mounted\n");
+			printf("Exiting without running this set of tests\n");
+			exit(1);
+		}
+
 		/*
 		 * Test01: call apis and check return values
 		 * Exp outcome:
@@ -862,8 +870,9 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 	return newcgroup;
 }
 
-int check_fsmounted()
+int check_fsmounted(int multimnt)
 {
+	int count = 0;
 	struct mntent *entry, *tmp_entry;
 	/* Need a better mechanism to decide memory allocation size here */
 	char entry_buffer[FILENAME_MAX * 4];
@@ -882,8 +891,16 @@ int check_fsmounted()
 	}
 	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer, FILENAME_MAX*4)) != NULL) {
 		if (!strncmp(entry->mnt_type, "cgroup", strlen("cgroup"))) {
-			printf("sanity check pass.... %s\n", entry->mnt_type);
-			return 0;
+			count++;
+			if (multimnt) {
+				if (count >= 2) {
+					printf("sanity check pass.... %s\n", entry->mnt_type);
+					return 0;
+				}
+			} else {
+				printf("sanity check pass.... %s\n", entry->mnt_type);
+				return 0;
+			}
 		}
 	}
 	return 1;

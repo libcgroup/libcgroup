@@ -68,7 +68,7 @@ static int set_controller(int controller, char *controller_name,
 static int group_modified(char *path_control_file, int value_type);
 struct cgroup *new_cgroup(char *group, char *controller_name,
 				 char *control_file, int value_type);
-int check_fsmounted();
+int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
 
 static inline pid_t cgrouptest_gettid()
