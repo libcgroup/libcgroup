@@ -22,9 +22,13 @@ int main(int argc, char *argv[])
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	/* In case of multimount for readability we use the controller name
 	 * before the cgroup structure name */
-	struct cgroup *cpu_cgroup1, *mem_cgroup1, *mem_cgroup2;
-	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX],
-		path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
+	struct cgroup *cpu_cgroup1, *mem_cgroup1, *mem_cgroup2, *common_cgroup;
+	struct cgroup_controller *newcontroller;
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	char path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
+
+	/* The path to the common group under different controllers */
+	char path1_common_group[FILENAME_MAX], path2_common_group[FILENAME_MAX];
 	char mountpoint[FILENAME_MAX], tasksfile[FILENAME_MAX], group[FILENAME_MAX];
 
 	/* Hardcode second mountpoint for now. Will update soon */
@@ -610,6 +614,72 @@ int main(int argc, char *argv[])
 										 ++i, retval);
 			else
 				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+		} else {
+			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
+		}
+
+		/*
+		 * Test10: Create a valid cgroup structure which has multiple controllers
+		 * Exp outcome: no error. 0 return value
+		 */
+		strncpy(group, "commongroup", sizeof(group));
+		strncpy(val_string, "4096", sizeof(val_string));
+		retval = set_controller(CPU, controller_name, control_file);
+
+		if (retval)
+			fprintf(stderr, "Setting controller failled\n");
+
+		common_cgroup = new_cgroup(group, controller_name,
+						 control_file, STRING);
+
+		/* Add one more controller to the cgroup */
+		strncpy(controller_name, "memory", sizeof(controller_name));
+		if (!cgroup_add_controller(common_cgroup, controller_name))
+			printf("Test[2:%2d]\tFAIL: cgroup_add_controller()\n", ++i);
+
+		/*
+		 * Test11: Then Call cgroup_create_cgroup() with this valid group
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_create_cgroup(common_cgroup, 1);
+		if (!retval) {
+			/* Check if the group exists under both controllers */
+			strncpy(path1_common_group, mountpoint, sizeof(path1_common_group));
+			strncat(path1_common_group, "/commongroup", sizeof(path1_common_group));
+			if (group_exist(path1_common_group) == 0) {
+
+				strncpy(path2_common_group, mountpoint, sizeof(path2_common_group));
+				strncat(path2_common_group, "/commongroup", sizeof(path2_common_group));
+
+				if (group_exist(path2_common_group) == 0)
+					printf("Test[2:%2d]\tPASS: group found under both controllers\n", ++i);
+				else
+					printf("Test[2:%2d]\tFAIL: group not found under 2nd controller\n", ++i);
+
+			} else {
+				printf("Test[2:%2d]\tFAIL: group not found in fs\n", ++i);
+			}
+		} else {
+			printf("Test[2:%2d]\tFAIL: cgroup_create_cgroup() retval=%d\n", ++i, retval);
+		}
+
+		/*
+		 * Test12: delete this common cgroup
+		 * Exp outcome: zero return value
+		 */
+		retval = cgroup_delete_cgroup(common_cgroup, 1);
+		if (!retval) {
+			/* Check if the group is deleted from both dir tree */
+			if (group_exist(path1_common_group) == -1) {
+
+				if (group_exist(path2_common_group) == -1)
+					printf("Test[1:%2d]\tPASS: group deleted globally\n", ++i);
+				else
+					printf("Test[1:%2d]\tPASS: group not deleted globally\n", ++i);
+
+			} else {
+				printf("Test[1:%2d]\tFAIL: group still found in fs\n", ++i);
+			}
 		} else {
 			printf("Test[1:%2d]\tFAIL: cgroup_delete_cgroup() retval=%d\n", ++i, retval);
 		}
