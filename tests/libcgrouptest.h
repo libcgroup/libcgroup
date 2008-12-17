@@ -73,6 +73,10 @@ static int i;
 /* No extra message unless specified */
 char extra[SIZE] = "\n";
 
+/* Functions to test each API */
+void test_cgroup_init(int retcode, int i);
+/* API test functions end here */
+
 void get_controllers(char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,

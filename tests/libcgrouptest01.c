@@ -95,11 +95,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: error ECGROUPNOTMOUNTED
 		 */
 
-		retval = cgroup_init();
-		if (retval == ECGROUPNOTMOUNTED)
-			message(++i, PASS, "init()\t", retval, extra);
-		else
-			message(++i, FAIL, "init()",  retval, extra);
+		test_cgroup_init(ECGROUPNOTMOUNTED, 1);
 
 		/*
 		 * Test02: call cgroup_attach_task() with null group
@@ -209,11 +205,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome:  no error. return value 0
 		 */
 
-		retval = cgroup_init();
-		if (retval == 0)
-			message(++i, PASS, "init()\t", retval, extra);
-		else
-			message(++i, FAIL, "init()\t",  retval, extra);
+		test_cgroup_init(0, 2);
 
 		/*
 		 * Test03: Call cgroup_attach_task() with null group and check
@@ -512,11 +504,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 
-		retval = cgroup_init();
-		if (retval == 0)
-			message(++i, PASS, "init()\t", retval, extra);
-		else
-			message(++i, FAIL, "init()\t",  retval, extra);
+		test_cgroup_init(0, 1);
 
 		/*
 		 * Test02: Call cgroup_attach_task() with null group and check
@@ -1061,6 +1049,19 @@ int main(int argc, char *argv[])
 		break;
 	}
 	return 0;
+}
+
+
+void test_cgroup_init(int retcode, int i)
+{
+	int retval;
+	char extra[SIZE] = "\n";
+
+	retval = cgroup_init();
+	if (retval == retcode)
+		message(i, PASS, "init()\t", retval, extra);
+	else
+		message(i, FAIL, "init()",  retval, extra);
 }
 
 void get_controllers(char *name, int *exist)
