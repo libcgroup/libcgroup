@@ -649,7 +649,7 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(group, "ctl2_group1", sizeof(group));
 		retval = set_controller(ctl2, controller_name, control_file);
-		strncpy(val_string, "70000000", sizeof(val_string));
+		strncpy(val_string, "7000064", sizeof(val_string));
 
 		if (retval) {
 			fprintf(stderr, "Setting controller failled "
@@ -834,7 +834,7 @@ int main(int argc, char *argv[])
 			printf("The cgroup_modify_cgroup() test will fail\n");
 		}
 
-		strncpy(val_string, "7000000", sizeof(val_string));
+		strncpy(val_string, "7000064", sizeof(val_string));
 		retval = cgroup_add_value_string(sec_controller,
 						 control_file, val_string);
 		if (retval)
@@ -857,7 +857,7 @@ int main(int argc, char *argv[])
 								 control_file);
 				build_path(path_control_file, mountpoint2,
 						 "commongroup", control_file);
-				strncpy(val_string, "7000000",
+				strncpy(val_string, "7000064",
 							 sizeof(val_string));
 				if (!group_modified(path_control_file, STRING)) {
 					strncat(extra, " group modified under"
