@@ -83,6 +83,7 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
 				int fs_info, int k, int i);
 /* API test functions end here */
 
+void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
 void get_controllers(const char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,

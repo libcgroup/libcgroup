@@ -431,6 +431,11 @@ int main(int argc, char *argv[])
 
 		strncpy(extra, "\n", SIZE);
 
+		/* Test17: Test the wrapper to compare cgroup
+		 * Create 2 cgroups and test it
+		 */
+		test_cgroup_compare_cgroup(ctl1, ctl2, 19);
+
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
 		cgroup_free(&cgroup2);
@@ -1381,4 +1386,67 @@ void free_info_msgs()
 
 	if (info)
 		free(info);
+}
+
+void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
+{
+	int retval;
+	struct cgroup *cgroup1, *cgroup2;
+	struct cgroup_controller *controller;
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	char wr[SIZE], extra[] = "in cgroup_compare_cgroup";
+
+	retval = cgroup_compare_cgroup(NULL, NULL);
+	if (retval)
+		message(i++, PASS, "compare_cgroup()", retval, info[0]);
+	else
+		message(i++, FAIL, "compare_cgroup()", retval, info[0]);
+
+	cgroup1 = cgroup_new_cgroup("testgroup");
+	cgroup2 = cgroup_new_cgroup("testgroup");
+	cgroup_set_uid_gid(cgroup1, 0, 0, 0, 0);
+	cgroup_set_uid_gid(cgroup2, 0, 0, 0, 0);
+
+	retval = set_controller(ctl1, controller_name, control_file);
+
+	controller = cgroup_add_controller(cgroup1, controller_name);
+	if (controller) {
+		retval =  add_control_value(controller,
+						 control_file, wr, STRING);
+		if (retval)
+			message(i++, FAIL, wr, retval, extra);
+	}
+
+	controller = cgroup_add_controller(cgroup2, controller_name);
+	if (controller) {
+		retval =  add_control_value(controller,
+						 control_file, wr, STRING);
+		if (retval)
+			message(i++, FAIL, wr, retval, extra);
+	}
+
+	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
+	if (retval)
+		message(i++, FAIL, "compare_cgroup()", retval, info[19]);
+	else
+		message(i++, PASS, "compare_cgroup()", retval, info[19]);
+
+	/* Test the api by putting diff number of controllers in cgroups */
+	retval = set_controller(ctl2, controller_name, control_file);
+	controller = cgroup_add_controller(cgroup2, controller_name);
+	if (controller) {
+		retval =  add_control_value(controller,
+						 control_file, wr, STRING);
+		if (retval)
+			message(i++, FAIL, wr, retval, extra);
+	}
+
+	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
+	if (retval == ECGROUPNOTEQUAL)
+		message(i++, PASS, "compare_cgroup()", retval, info[19]);
+	else
+		message(i++, FAIL, "compare_cgroup()", retval, info[19]);
+
+	cgroup_free(&cgroup1);
+	cgroup_free(&cgroup2);
 }
