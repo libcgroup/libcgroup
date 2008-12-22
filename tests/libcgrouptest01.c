@@ -297,9 +297,11 @@ int main(int argc, char *argv[])
 		 * filesystem. Read it using the api and check if the values
 		 * are correct as we know all the control values now.
 		 * WARN: If any of the previous api fails and control reaches
-		 * here, this api also will fail
+		 * here, this api also will fail. Also the test function assumes
+		 * that "group1" exists in fs. So call cgroup_create_cgroup()
+		 * with "group1" named group before calling this test function.
 		 */
-		test_cgroup_get_cgroup(14);
+		test_cgroup_get_cgroup(ctl1, ctl2, 14);
 
 		/*
 		 * Test16: delete cgroup
@@ -607,6 +609,7 @@ int main(int argc, char *argv[])
 		 */
 		test_cgroup_delete_cgroup(0, common_cgroup,
 						 "commongroup", 1, 2, 1, 23);
+		test_cgroup_get_cgroup(ctl1, ctl2, 24);
 
 		/* Free the cgroup structures */
 		cgroup_free(&nullcgroup);
@@ -1407,39 +1410,84 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	cgroup_free(&cgroup2);
 }
 
-void test_cgroup_get_cgroup(int i)
+void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
 {
-	struct cgroup *cgroup_filled;
+	struct cgroup *cgroup_filled, *cgroup_a, *cgroup_b;
+	struct cgroup_controller *controller;
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 	int ret;
 
-	/* Test with nullcgroup first */
-	ret = cgroup_get_cgroup(NULL);
-	if (ret == ECGROUPNOTALLOWED)
-		message(i++, PASS, "get_cgroup()", ret, info[NULLGRP]);
-	else
-		message(i++, FAIL, "get_cgroup()", ret, info[NULLGRP]);
+	/*
+	 * No need to test the next 3 scenarios again for Multimnt
+	 * so testing them only under single mount
+	 */
+	if (fs_mounted == FS_MOUNTED) {
+		/* 1. Test with nullcgroup first */
+		ret = cgroup_get_cgroup(NULL);
+		if (ret == ECGROUPNOTALLOWED)
+			message(i++, PASS, "get_cgroup()", ret, info[NULLGRP]);
+		else
+			message(i++, FAIL, "get_cgroup()", ret, info[NULLGRP]);
 
-	/* Test with invalid name filled cgroup(non existing) */
-	cgroup_filled = cgroup_new_cgroup("nogroup");
-	if (!cgroup_filled)
+		/* 2. Test with invalid name filled cgroup(non existing) */
+		cgroup_filled = cgroup_new_cgroup("nogroup");
+		if (!cgroup_filled)
+			message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
+
+		ret = cgroup_get_cgroup(cgroup_filled);
+		if (ret)
+			message(i++, PASS, "get_cgroup()", ret,
+							 info[NOTCRTDGRP]);
+		else
+			message(i++, FAIL, "get_cgroup()", ret,
+							 info[NOTCRTDGRP]);
+
+		/* 3.
+		 * Test with name filled cgroup. Ensure the group group1 exists
+		 * in the filesystem before calling this test function
+		 */
+		cgroup_filled = cgroup_new_cgroup("group1");
+		if (!cgroup_filled)
+			message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
+
+		ret = cgroup_get_cgroup(cgroup_filled);
+		if (!ret)
+			message(i++, PASS, "get_cgroup()", ret,
+							 info[NOMESSAGE]);
+		else
+			message(i++, FAIL, "get_cgroup()", ret,
+							 info[NOMESSAGE]);
+	}
+
+	/* MULTIMOUNT: Create, get and compare a cgroup under both mounts */
+
+	/* get cgroup_a ds and create group_a in filesystem */
+	cgroup_a = create_new_cgroup_ds(ctl1, "group_a", STRING, 00);
+	if (fs_mounted == FS_MULTI_MOUNTED) {
+		/* Create under another controller also */
+		ret = set_controller(ctl2, controller_name, control_file);
+		controller = cgroup_add_controller(cgroup_a, controller_name);
+	}
+	test_cgroup_create_cgroup(0, cgroup_a, "group_a", 0, 1, 1, 00);
+
+	/* create group_b ds to be filled by cgroup_get_cgroup */
+	cgroup_b = cgroup_new_cgroup("group_a");
+	if (!cgroup_b)
 		message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
-
-	ret = cgroup_get_cgroup(cgroup_filled);
-	if (ret)
-		message(i++, PASS, "get_cgroup()", ret, info[NOTCRTDGRP]);
-	else
-		message(i++, FAIL, "get_cgroup()", ret, info[NOTCRTDGRP]);
-
-	/* Test with name filled cgroup */
-	cgroup_filled = cgroup_new_cgroup("group1");
-	if (!cgroup_filled)
-		message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
-
-	ret = cgroup_get_cgroup(cgroup_filled);
-	if (!ret)
-		message(i++, PASS, "get_cgroup()", ret, info[NOMESSAGE]);
-	else
+	/* Fill the ds and compare the two */
+	ret = cgroup_get_cgroup(cgroup_b);
+	if (!ret) {
+		ret = cgroup_compare_cgroup(cgroup_a, cgroup_b);
+		if (ret == 0)
+			message(i++, PASS, "get_cgroup()", ret, info[SAMEGRP]);
+		else
+			message(i++, FAIL, "get_cgroup()", ret,
+							 info[NOMESSAGE]);
+	} else {
 		message(i++, FAIL, "get_cgroup()", ret, info[NOMESSAGE]);
+	}
 
+	cgroup_free(&cgroup_a);
+	cgroup_free(&cgroup_b);
 	cgroup_free(&cgroup_filled);
 }

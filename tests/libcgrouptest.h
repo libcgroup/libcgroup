@@ -113,10 +113,10 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int which_ctl, int ctl1, int ctl2,
 						 int value_type, int i);
+void test_cgroup_get_cgroup(int ctl1, int ctl2, int i);
 /* API test functions end here */
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
-void test_cgroup_get_cgroup(int i);
 void get_controllers(const char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
