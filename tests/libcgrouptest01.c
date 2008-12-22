@@ -114,11 +114,8 @@ int main(int argc, char *argv[])
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: non zero return value
 		 */
-		retval = cgroup_create_cgroup(cgroup1, 1);
-		if (retval)
-			message(++i, PASS, "create_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "create_cgroup()", retval, extra);
+		test_cgroup_create_cgroup(ECGROUPNOTINITIALIZED, cgroup1,
+							 "group1", 0, 1, 1, 4);
 
 		/*
 		 * Test05: delete cgroup
@@ -134,14 +131,8 @@ int main(int argc, char *argv[])
 		 * Test06: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGROUPNOTALLOWED
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_create_cgroup(nullcgroup, 1);
-		if (retval == ECGROUPNOTINITIALIZED)
-			message(++i, PASS, "create_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(ECGROUPNOTINITIALIZED, nullcgroup,
+							 "group1", 0, 1, 1, 6);
 
 		/*
 		 * Test07: delete nullcgroup
@@ -231,28 +222,7 @@ int main(int argc, char *argv[])
 		 * Test06: Then Call cgroup_create_cgroup() with this group
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(cgroup1, 1);
-		if (!retval) {
-			/* Check if the group exists in the dir tree */
-			build_path(path_group, mountpoint, "group1", NULL);
-			if (group_exist(path_group) == 0) {
-				strncpy(extra, " grp found in fs\n", SIZE);
-				message(++i, PASS, "create_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " grp not found in fs. "
-						"tests dependent on this"
-						" grp will fail\n", SIZE);
-				message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-			}
-
-		} else {
-			strncpy(extra, " Tests dependent on this grp "
-							"will fail\n", SIZE);
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-		}
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(0, cgroup1, "group1", 0, 1, 1, 6);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with valid cgroup and check
@@ -399,17 +369,11 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test15: Check if cgroup_create_cgroup() handles a NULL cgroup
+		 * Test16: Check if cgroup_create_cgroup() handles a NULL cgroup
 		 * Exp outcome: error ECGROUPNOTALLOWED
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_create_cgroup(nullcgroup, 1);
-		if (retval == ECGROUPNOTALLOWED)
-			message(++i, PASS, "create_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(ECGROUPNOTALLOWED, nullcgroup,
+							 "group1", 0, 1, 1, 17);
 
 		/*
 		 * Test16: delete nullcgroup
@@ -487,25 +451,8 @@ int main(int argc, char *argv[])
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(ctl1_cgroup1, 1);
-		if (!retval) {
-			/* Check if the group exists in the dir tree */
-			build_path(path_group, mountpoint, "ctl1_group1", NULL);
-			if (group_exist(path_group) == 0) {
-				strncpy(extra, " grp found in fs\n", SIZE);
-				message(++i, PASS, "create_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " grp not found in fs\n", SIZE);
-				message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-			}
-
-		} else {
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(0, ctl1_cgroup1,
+						 "ctl1_group1", 0, 1, 1, 4);
 
 		/*
 		 * Test05: Create a valid cgroup structure
@@ -521,42 +468,18 @@ int main(int argc, char *argv[])
 		}
 
 		/*
-		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
+		 * Test06: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(ctl2_cgroup1, 1);
-		if (!retval) {
-			/* Check if the group exists in the dir tree */
-			build_path(path_group, mountpoint2,
-							 "ctl2_group1", NULL);
-			if (group_exist(path_group) == 0) {
-				strncpy(extra, " grp found in fs\n", SIZE);
-				message(++i, PASS, "create_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " grp not found in fs\n", SIZE);
-				message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-			}
-		} else {
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(0, ctl2_cgroup1,
+						 "ctl2_group1", 0, 2, 1, 6);
 
 		/*
-		 * Test05: Call cgroup_create_cgroup() with the same group
-		 * Exp outcome: non zero return value
+		 * Test07: Call cgroup_create_cgroup() with the same group
+		 * Exp outcome: zero return value as the latest changes in api
 		 */
-		strncpy(extra, " Second call with same arg\n", SIZE);
-		retval = cgroup_create_cgroup(ctl1_cgroup1, 1);
-		/* BUG: The error should be ECGROUPALREADYEXISTS */
-		if (retval == ECGROUPNOTALLOWED)
-			message(++i, PASS, "create_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(0, ctl2_cgroup1,
+						 "ctl2_group1", 0, 2, 1, 7);
 
 		/*
 		 * Test06: Call cgroup_attach_task() with a group with ctl1
@@ -743,37 +666,8 @@ int main(int argc, char *argv[])
 		 * Test11: Then Call cgroup_create_cgroup() with this valid grp
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_create_cgroup(common_cgroup, 1);
-		if (!retval) {
-			/* Check if the group exists under both controllers */
-			build_path(path1_common_group, mountpoint,
-							 "commongroup", NULL);
-			if (group_exist(path1_common_group) == 0) {
-				build_path(path2_common_group, mountpoint2,
-							 "commongroup", NULL);
-
-				if (group_exist(path2_common_group) == 0) {
-					strncpy(extra, " group found under"
-						" both controllers\n", SIZE);
-					message(++i, PASS, "create_cgroup()",
-								 retval, extra);
-				} else {
-					strncpy(extra, " group not found "
-						"under 2nd controller\n", SIZE);
-					message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-				}
-			} else {
-				strncpy(extra, " group not found under any "
-							"controller\n", SIZE);
-				message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-			}
-		} else {
-			message(++i, FAIL, "create_cgroup()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_create_cgroup(0, common_cgroup,
+						 "commongroup", 1, 2, 1, 19);
 
 		/*
 		 * Test12: Call cgroup_attach_task() with this common group
@@ -1019,6 +913,61 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	return new_cgroup(group, controller_name, control_file, value_type, i);
 }
 
+
+void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
+			 const char *name, int common, int mpnt, int ign, int i)
+{
+	int retval;
+	char path1_group[FILENAME_MAX], path2_group[FILENAME_MAX];
+	/* Check, In case some error is expected due to a negative scenario */
+	if (retcode) {
+		retval = cgroup_create_cgroup(cgrp, ign);
+		if (retval == retcode)
+			message(i, PASS, "create_cgroup()", retval, info[19]);
+		else
+			message(i, FAIL, "create_cgroup()", retval, info[19]);
+
+		return;
+	}
+
+	/* Now there is no error and it is a genuine call */
+	retval = cgroup_create_cgroup(cgrp, ign);
+	if (retval) {
+		message(i, FAIL, "create_cgroup()", retval,  info[19]);
+		return;
+	}
+
+	/* Let us now check if the group exist in file system */
+	if (!common) { /* group only under one mountpoint */
+		if (mpnt == 1)  /* group under mountpoint */
+			build_path(path1_group, mountpoint, name, NULL);
+		else		/* group under mountpoint2 */
+			build_path(path1_group, mountpoint2, name, NULL);
+
+		if (group_exist(path1_group) == 0)
+			message(i, PASS, "create_cgroup()", retval, info[7]);
+		else
+			message(i, FAIL, "create_cgroup()", retval, info[8]);
+
+	} else { /* group under both mountpoints */
+		/* Check if the group exists under both controllers */
+		build_path(path1_group, mountpoint, name, NULL);
+		if (group_exist(path1_group) == 0) {
+			build_path(path2_group, mountpoint2, name, NULL);
+
+			if (group_exist(path2_group) == 0)
+				message(i, PASS, "create_cgroup()",
+							 retval, info[9]);
+			else
+				message(i, FAIL, "create_cgroup()",
+							 retval, info[10]);
+		} else {
+			message(i, FAIL, "create_cgroup()", retval, info[11]);
+		}
+	}
+
+	return;
+}
 
 void get_controllers(const char *name, int *exist)
 {
