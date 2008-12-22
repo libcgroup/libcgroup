@@ -1349,36 +1349,42 @@ void set_info_msgs()
 							" groups\n", SIZE);
 			break;
 		case 7:
+			strncpy(info[k], " group found in filesystem\n", SIZE);
+			break;
+		case 8:
+			strncpy(info[k], " group not in filesystem\n", SIZE);
+			break;
+		case 9:
 			strncpy(info[k], " group found under both"
 						" controllers\n", SIZE);
 			break;
-		case 8:
+		case 10:
 			strncpy(info[k], " group not found under"
 						" second controller\n", SIZE);
 			break;
-		case 9:
+		case 11:
 			strncpy(info[k], " group not found under"
-						" any controller\n", SIZE);
+						" first controller\n", SIZE);
 			break;
-		case 10:
+		case 12:
 			strncpy(info[k], " group modified under"
 						" both controllers\n", SIZE);
 			break;
-		case 11:
+		case 13:
 			strncpy(info[k], " group not modified under"
 						" second controller\n", SIZE);
 			break;
-		case 12:
+		case 14:
 			strncpy(info[k], " group not modified under"
 						" any controller\n", SIZE);
 			break;
-		case 13:
+		case 15:
 			strncpy(info[k], " Group deleted from fs\n", SIZE);
 			break;
-		case 14:
+		case 16:
 			strncpy(info[k], " Group not deleted from fs\n", SIZE);
 			break;
-		case 15:
+		case 17:
 			strncpy(info[k], " Group not deleted globaly\n", SIZE);
 			break;
 		/* In case there is no extra info messages to be printed */
