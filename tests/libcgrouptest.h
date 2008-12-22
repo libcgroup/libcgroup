@@ -81,6 +81,8 @@ void test_cgroup_init(int retcode, int i);
 void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
 				const char *group1, const char *group2,
 				int fs_info, int k, int i);
+struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
+						 int value_type, int i);
 /* API test functions end here */
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
@@ -93,7 +95,7 @@ static int group_modified(char *path_control_file, int value_type);
 static int add_control_value(struct cgroup_controller *newcontroller,
 				 char * control_file, char *wr, int value_type);
 struct cgroup *new_cgroup(char *group, char *controller_name,
-				 char *control_file, int value_type);
+				 char *control_file, int value_type, int i);
 int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
 /* function to print messages in better format */

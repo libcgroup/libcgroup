@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
 
 	/* The path to the common group under different controllers */
 	char path1_common_group[FILENAME_MAX], path2_common_group[FILENAME_MAX];
-	char group[FILENAME_MAX];
 
 	/* Get controllers name from script */
 	int ctl1 = CPU, ctl2 = MEMORY;
@@ -105,19 +104,11 @@ int main(int argc, char *argv[])
 					 NULL, NULL, FS_NOT_MOUNTED, 0, 2);
 
 		/*
-		 * Test03: Create a valid cgroup and check all return values
-		 * Exp outcome: no error. 0 return value
+		 * Test03: Create a valid cgroup ds and check all return values
+		 * Exp outcome: no error
 		 */
 
-		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "40960000", sizeof(val_string));
-
-		if (retval)
-			fprintf(stderr, "Setting controller failled\n");
-
-		cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
+		cgroup1 = create_new_cgroup_ds(0, "group1", STRING, 3);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
@@ -222,24 +213,19 @@ int main(int argc, char *argv[])
 		 * Test05: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "250000", sizeof(val_string));
-
-		if (retval) {
-			fprintf(stderr, "Failed to set first controller. "
+		cgroup1 = create_new_cgroup_ds(ctl1, "group1", STRING, 5);
+		if (!cgroup1) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Trying with second controller\n");
-			retval = set_controller(ctl2, controller_name,
-								control_file);
-			strncpy(val_string, "250000", sizeof(val_string));
-			if (retval)
-				fprintf(stderr, "Failed to set any controllers "
-					"Tests dependent on this structure will"
-					" fail\n");
+			cgroup1 = create_new_cgroup_ds(ctl2, "group1", STRING,
+									5);
+			if (!cgroup1) {
+				fprintf(stderr, "Failed to create cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
+				exit(1);
+			}
 		}
-
-		cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test06: Then Call cgroup_create_cgroup() with this group
@@ -297,26 +283,21 @@ int main(int argc, char *argv[])
 
 		/*
 		 * Create another valid cgroup structure with same group
-		 * Exp outcome: no error. 0 return value
+		 * to modify the existing group
 		 */
-		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "260000", sizeof(val_string));
-
-		if (retval) {
-			fprintf(stderr, "Failed to set first controller. "
+		cgroup2 = create_new_cgroup_ds(ctl1, "group1", STRING, 9);
+		if (!cgroup2) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Trying with second controller\n");
-			retval = set_controller(ctl2, controller_name,
-								control_file);
-			strncpy(val_string, "260000", sizeof(val_string));
-			if (retval)
-				fprintf(stderr, "Failed to set any controllers "
-					"Tests dependent on this structure will"
-					" fail\n");
+			cgroup2 = create_new_cgroup_ds(ctl2, "group1", STRING,
+									9);
+			if (!cgroup2) {
+				fprintf(stderr, "Failed to create cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
+				exit(1);
+			}
 		}
-
-		cgroup2 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test10: modify cgroup with this new cgroup
@@ -351,17 +332,15 @@ int main(int argc, char *argv[])
 		/*
 		 * Create another valid cgroup structure with diff controller
 		 * to modify the existing group
-		 * Exp outcome: no error. 0 return value
 		 */
-		val_int64 = 20480000;
-		strncpy(group, "group1", sizeof(group));
-		retval = set_controller(ctl2, controller_name, control_file);
-		if (retval)
-			fprintf(stderr, "Setting controller failled. "
-				"Tests dependent on this struct may fail\n");
-
-		cgroup3 = new_cgroup(group, controller_name,
-						 control_file, INT64);
+		val_int64 = 262144;
+		cgroup3 = create_new_cgroup_ds(ctl2, "group1", INT64, 12);
+		if (!cgroup3) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
+			exit(1);
+		}
 
 		/*
 		 * Test13: modify existing group with this cgroup
@@ -369,6 +348,11 @@ int main(int argc, char *argv[])
 		 */
 		strncpy(extra, " Called with a cgroup argument with "
 						"different controller\n", SIZE);
+		/* This line is added to fix the next broken test because of
+		 * the cgroup_new_cgroup_ds() function creation. This is a temp
+		 * fix for the moment and this breaking will disappear after
+		 * complete development */
+		retval = set_controller(ctl2, controller_name, control_file);
 		build_path(path_control_file, mountpoint,
 						 "group1", control_file);
 
@@ -492,21 +476,14 @@ int main(int argc, char *argv[])
 		 * Test03: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "ctl1_group1", sizeof(group));
-		strncpy(val_string, "250000", sizeof(val_string));
-		retval = set_controller(ctl1, controller_name, control_file);
-		/*
-		 * Since diff ctl will be mounted at different point, so exit
-		 * if setting a controller fails
-		 */
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		ctl1_cgroup1 = create_new_cgroup_ds(ctl1, "ctl1_group1",
+								 STRING, 3);
+		if (!ctl1_cgroup1) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
-
-		ctl1_cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
@@ -533,21 +510,17 @@ int main(int argc, char *argv[])
 		strncpy(extra, "\n", SIZE);
 
 		/*
-		 * Test03: Create a valid cgroup structure
+		 * Test05: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "ctl2_group1", sizeof(group));
-		retval = set_controller(ctl2, controller_name, control_file);
-		strncpy(val_string, "52428800", sizeof(val_string));
-
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		ctl2_cgroup1 = create_new_cgroup_ds(ctl2, "ctl2_group1",
+								 STRING, 5);
+		if (!ctl2_cgroup1) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
-
-		ctl2_cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
@@ -612,9 +585,14 @@ int main(int argc, char *argv[])
 		 * Test: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "ctl2_group2", sizeof(group));
-		ctl2_cgroup2 = new_cgroup(group, controller_name,
-						 control_file, STRING);
+		ctl2_cgroup2 = create_new_cgroup_ds(ctl2, "ctl2_group2",
+								 STRING, 10);
+		if (!ctl2_cgroup2) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
+			exit(1);
+		}
 
 		/*
 		 * Test08: Try to attach a task to this non existing group.
@@ -629,18 +607,14 @@ int main(int argc, char *argv[])
 		 * to modify the existing group ctl1_group1
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "ctl1_group1", sizeof(group));
-		retval = set_controller(ctl1, controller_name, control_file);
-		strncpy(val_string, "250000", sizeof(val_string));
-
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		mod_ctl1_cgroup1 = create_new_cgroup_ds(ctl1, "ctl1_group1",
+								 STRING, 12);
+		if (!mod_ctl1_cgroup1) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
-
-		mod_ctl1_cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test09: modify existing cgroup with this new cgroup
@@ -661,18 +635,14 @@ int main(int argc, char *argv[])
 		 * to modify the existing group ctl2_group1
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "ctl2_group1", sizeof(group));
-		retval = set_controller(ctl2, controller_name, control_file);
-		strncpy(val_string, "7000064", sizeof(val_string));
-
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		mod_ctl2_cgroup1 = create_new_cgroup_ds(ctl2, "ctl2_group1",
+								 STRING, 14);
+		if (!mod_ctl2_cgroup1) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
-
-		mod_ctl2_cgroup1 = new_cgroup(group, controller_name,
-						 control_file, STRING);
 
 		/*
 		 * Test10: modify existing cgroup with this new cgroup
@@ -743,32 +713,33 @@ int main(int argc, char *argv[])
 
 
 		/*
-		 * Test10: Create a valid cgroup structure
+		 * Test15: Create a valid cgroup structure
 		 * which has multiple controllers
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "commongroup", sizeof(group));
-		strncpy(val_string, "250000", sizeof(val_string));
-		retval = set_controller(ctl1, controller_name, control_file);
-
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		common_cgroup = create_new_cgroup_ds(ctl1, "commongroup",
+								 STRING, 18);
+		if (!common_cgroup) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
 
-		common_cgroup = new_cgroup(group, controller_name,
-						 control_file, STRING);
-
 		/* Add one more controller to the cgroup */
+		/* This also needs to be a function.. will do?? */
 		retval = set_controller(ctl2, controller_name, control_file);
 		if (retval) {
 			fprintf(stderr, "Setting controller failled "
 				" Exiting without running further testcases\n");
 			exit(1);
 		}
-		if (!cgroup_add_controller(common_cgroup, controller_name))
-			message(++i, FAIL, "add_controller()", retval, extra);
+		if (!cgroup_add_controller(common_cgroup, controller_name)) {
+			message(15, FAIL, "add_controller()", retval, extra);
+			fprintf(stderr, "Adding second controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
+		}
 
 		/*
 		 * Test11: Then Call cgroup_create_cgroup() with this valid grp
@@ -816,36 +787,34 @@ int main(int argc, char *argv[])
 				 "commongroup", FS_MULTI_MOUNTED, 1, 20);
 
 		/*
-		 * Test13: Create a valid cgroup structure to modify the
+		 * Test18: Create a valid cgroup structure to modify the
 		 * commongroup which is under multiple controllers
 		 * Exp outcome: no error. 0 return value
 		 */
-		strncpy(group, "commongroup", sizeof(group));
-		strncpy(val_string, "260000", sizeof(val_string));
-		retval = set_controller(ctl1, controller_name, control_file);
-
-		if (retval) {
-			fprintf(stderr, "Setting controller failled "
-				" Exiting without running further testcases\n");
+		mod_common_cgroup = create_new_cgroup_ds(ctl1, "commongroup",
+								 STRING, 21);
+		if (!common_cgroup) {
+			fprintf(stderr, "Failed to create new cgroup ds. "
+					"Tests dependent on this structure "
+					"will fail. So exiting...\n");
 			exit(1);
 		}
 
-		mod_common_cgroup = new_cgroup(group, controller_name,
-						 control_file, STRING);
-
 		/* Add one more controller to the cgroup */
+		/* This also needs to be a function.. will do?? */
 		retval = set_controller(ctl2, controller_name, control_file);
 		if (retval) {
 			fprintf(stderr, "Setting controller failled "
 				" Exiting without running further testcases\n");
 			exit(1);
 		}
-
 		sec_controller = cgroup_add_controller(mod_common_cgroup,
 							 controller_name);
 		if (!sec_controller) {
-			message(++i, FAIL, "add_controller()", retval, extra);
-			printf("The cgroup_modify_cgroup() test will fail\n");
+			message(18, FAIL, "add_controller()", retval, extra);
+			fprintf(stderr, "Adding second controller failled "
+				" Exiting without running further testcases\n");
+			exit(1);
 		}
 
 		strncpy(val_string, "7000064", sizeof(val_string));
@@ -1014,6 +983,45 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 	}
 }
 
+
+struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
+						 int value_type, int i)
+{
+	int retval;
+	char group[FILENAME_MAX];
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+
+	strncpy(group, grpname, sizeof(group));
+	retval = set_controller(ctl, controller_name, control_file);
+	if (retval) {
+		fprintf(stderr, "Setting controller failled\n");
+		return NULL;
+	}
+
+	/* val_string is still global. Will replace soon with config file */
+	switch (ctl) {
+		/* control values are controller specific, so will be set
+		 * accordingly from the config file */
+	case CPU:
+		strncpy(val_string, "260000", sizeof(val_string));
+		break;
+
+	case MEMORY:
+		strncpy(val_string, "7000064", sizeof(val_string));
+		break;
+
+	/* To be added for other controllers */
+	default:
+		printf("Invalid controller name passed. Setting control value"
+					" failed. Dependent tests may fail\n");
+		return NULL;
+		break;
+	}
+
+	return new_cgroup(group, controller_name, control_file, value_type, i);
+}
+
+
 void get_controllers(const char *name, int *exist)
 {
 	int hierarchy, num_cgroups, enabled;
@@ -1160,7 +1168,7 @@ static int add_control_value(struct cgroup_controller *newcontroller,
 }
 
 struct cgroup *new_cgroup(char *group, char *controller_name,
-				 char *control_file, int value_type)
+				 char *control_file, int value_type, int i)
 {
 	int retval;
 	char wr[SIZE]; /* Names of wrapper apis */
@@ -1185,19 +1193,19 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 						 control_file, wr, value_type);
 
 			if (!retval) {
-				message(++i, PASS, "new_cgroup()",
+				message(i++, PASS, "new_cgroup()",
 								 retval, extra);
 			} else {
-				message(++i, FAIL, wr, retval, extra);
+				message(i++, FAIL, wr, retval, extra);
 				return NULL;
 			}
 		 } else {
 			/* Since these wrappers do not return an int so -1 */
-			message(++i, FAIL, "add_controller", -1, extra);
+			message(i++, FAIL, "add_controller", -1, extra);
 			return NULL;
 		}
 	} else {
-		message(++i, FAIL, "new_cgroup", -1, extra);
+		message(i++, FAIL, "new_cgroup", -1, extra);
 		return NULL;
 	}
 	return newcgroup;
