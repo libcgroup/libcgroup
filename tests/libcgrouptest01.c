@@ -1419,6 +1419,17 @@ void test_cgroup_get_cgroup(int i)
 	else
 		message(i++, FAIL, "get_cgroup()", ret, info[NULLGRP]);
 
+	/* Test with invalid name filled cgroup(non existing) */
+	cgroup_filled = cgroup_new_cgroup("nogroup");
+	if (!cgroup_filled)
+		message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
+
+	ret = cgroup_get_cgroup(cgroup_filled);
+	if (ret)
+		message(i++, PASS, "get_cgroup()", ret, info[NOTCRTDGRP]);
+	else
+		message(i++, FAIL, "get_cgroup()", ret, info[NOTCRTDGRP]);
+
 	/* Test with name filled cgroup */
 	cgroup_filled = cgroup_new_cgroup("group1");
 	if (!cgroup_filled)
