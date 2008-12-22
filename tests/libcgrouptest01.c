@@ -133,6 +133,8 @@ int main(int argc, char *argv[])
 		 */
 		test_cgroup_delete_cgroup(ECGROUPNOTINITIALIZED, nullcgroup,
 							 "group1", 0, 1, 1, 7);
+		/* Test08: test the wrapper */
+		test_cgroup_add_free_controller(8);
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
@@ -1490,4 +1492,34 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
 	cgroup_free(&cgroup_a);
 	cgroup_free(&cgroup_b);
 	cgroup_free(&cgroup_filled);
+}
+
+void test_cgroup_add_free_controller(int i)
+{
+	struct cgroup *cgroup1 = NULL, *cgroup2 = NULL;
+	struct cgroup_controller *cgctl1, *cgctl2;
+
+	/* Test with a Null cgroup */
+	cgctl1 = cgroup_add_controller(cgroup1, "cpu");
+	if (!cgctl1)
+		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
+	else
+		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
+
+	cgroup1 = cgroup_new_cgroup("testgroup");
+	cgctl1 = cgroup_add_controller(cgroup1, "cpuset");
+	if (cgctl1)
+		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
+	else
+		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
+
+	cgctl2 = cgroup_add_controller(cgroup1, "cpu");
+	if (cgctl2)
+		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
+	else
+		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
+
+	cgroup_free(&cgroup1);
+	cgroup_free_controllers(cgroup2);
+
 }
