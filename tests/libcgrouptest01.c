@@ -381,8 +381,17 @@ int main(int argc, char *argv[])
 
 		strncpy(extra, "\n", SIZE);
 
+		/* Test14: Test cgroup_get_cgroup() api
+		 * The group group1 has been created and modified in the
+		 * filesystem. Read it using the api and check if the values
+		 * are correct as we know all the control values now.
+		 * WARN: If any of the previous api fails and control reaches
+		 * here, this api also will fail
+		 */
+		test_cgroup_get_cgroup(14);
+
 		/*
-		 * Test14: delete cgroup
+		 * Test15: delete cgroup
 		 * Exp outcome: zero return value
 		 */
 		retval = cgroup_delete_cgroup(cgroup1, 1);
@@ -1366,6 +1375,7 @@ void set_info_msgs()
 		case 15:
 			strncpy(info[k], " Group not deleted globaly\n", SIZE);
 			break;
+		/* In case there is no extra info messages to be printed */
 		case 19:
 			strncpy(info[k], " \n", SIZE);
 			break;
@@ -1449,4 +1459,30 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	cgroup_free(&cgroup1);
 	cgroup_free(&cgroup2);
+}
+
+void test_cgroup_get_cgroup(int i)
+{
+	struct cgroup *cgroup_filled;
+	int ret;
+
+	/* Test with nullcgroup first */
+	ret = cgroup_get_cgroup(NULL);
+	if (ret == ECGROUPNOTALLOWED)
+		message(i++, PASS, "get_cgroup()", ret, info[0]);
+	else
+		message(i++, FAIL, "get_cgroup()", ret, info[0]);
+
+	/* Test with name filled cgroup */
+	cgroup_filled = cgroup_new_cgroup("group1");
+	if (!cgroup_filled)
+		message(i++, FAIL, "new_cgroup()", 0, info[19]);
+
+	ret = cgroup_get_cgroup(cgroup_filled);
+	if (!ret)
+		message(i++, PASS, "get_cgroup()", ret, info[19]);
+	else
+		message(i++, FAIL, "get_cgroup()", ret, info[19]);
+
+	cgroup_free(&cgroup_filled);
 }
