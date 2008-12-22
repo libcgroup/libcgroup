@@ -225,18 +225,14 @@ int main(int argc, char *argv[])
 		 * Test08: modify cgroup with the same cgroup
 		 * Exp outcome: zero return value. No change.
 		 */
-		strncpy(extra, " Called with same cgroup argument\n", SIZE);
-
 		build_path(path_control_file, mountpoint,
 						 "group1", control_file);
 		retval = cgroup_modify_cgroup(cgroup1);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
+			message(8, PASS, "modify_cgroup()", retval, info[3]);
 		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+			message(8, FAIL, "modify_cgroup()", retval, info[3]);
 
 		/*
 		 * Create another valid cgroup structure with same group
@@ -259,32 +255,19 @@ int main(int argc, char *argv[])
 		/*
 		 * Test10: modify cgroup with this new cgroup
 		 * Exp outcome: zero return value
+		 * Drawback: In case of first attempt failure above for
+		 * create_new_cgroup_ds(), this test will fail
 		 */
-		build_path(path_control_file, mountpoint,
-						 "group1", control_file);
-
-		retval = cgroup_modify_cgroup(cgroup2);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
+		test_cgroup_modify_cgroup(0, cgroup2, "group1",
+					 1, ctl1, ctl2, STRING, 10);
 
 		/*
 		 * Test11: modify cgroup with the null cgroup
 		 * Exp outcome: zero return value.
 		 */
 
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-
-		retval = cgroup_modify_cgroup(nullcgroup);
-		/* No need to check if the values are changed */
-		if (retval == ECGROUPNOTALLOWED)
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_modify_cgroup(ECGROUPNOTALLOWED, nullcgroup,
+					 "group1", 1, ctl1, ctl2, STRING, 11);
 
 		/*
 		 * Create another valid cgroup structure with diff controller
@@ -303,24 +286,8 @@ int main(int argc, char *argv[])
 		 * Test13: modify existing group with this cgroup
 		 * Exp outcome: zero return value
 		 */
-		strncpy(extra, " Called with a cgroup argument with "
-						"different controller\n", SIZE);
-		/* This line is added to fix the next broken test because of
-		 * the cgroup_new_cgroup_ds() function creation. This is a temp
-		 * fix for the moment and this breaking will disappear after
-		 * complete development */
-		retval = set_controller(ctl2, controller_name, control_file);
-		build_path(path_control_file, mountpoint,
-						 "group1", control_file);
-
-		retval = cgroup_modify_cgroup(cgroup3);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, INT64))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_modify_cgroup(0, cgroup3, "group1",
+						 2, ctl1, ctl2, INT64, 13);
 
 		/* Test14: Test cgroup_get_cgroup() api
 		 * The group group1 has been created and modified in the
@@ -504,15 +471,8 @@ int main(int argc, char *argv[])
 		 * Test09: modify existing cgroup with this new cgroup
 		 * Exp outcome: zero return value and control value modified
 		 */
-		build_path(path_control_file, mountpoint,
-						 "ctl1_group1", control_file);
-
-		retval = cgroup_modify_cgroup(mod_ctl1_cgroup1);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
+		test_cgroup_modify_cgroup(0, mod_ctl1_cgroup1, "ctl1_group1",
+						 1, ctl1, ctl2, STRING, 13);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -532,15 +492,8 @@ int main(int argc, char *argv[])
 		 * Test10: modify existing cgroup with this new cgroup
 		 * Exp outcome: zero return value and control value modified
 		 */
-		build_path(path_control_file, mountpoint2,
-						 "ctl2_group1", control_file);
-
-		retval = cgroup_modify_cgroup(mod_ctl2_cgroup1);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
-			message(++i, PASS, "modify_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
+		test_cgroup_modify_cgroup(0, mod_ctl2_cgroup1, "ctl2_group1",
+						 2, ctl1, ctl2, STRING, 15);
 
 		/*
 		 * Test11: delete cgroups
@@ -642,44 +595,8 @@ int main(int argc, char *argv[])
 		 * Test14: modify existing cgroup with this new cgroup
 		 * Exp outcome: zero return value and control value modified
 		 */
-		strncpy(extra, " Called with commongroup. ", SIZE);
-		retval = cgroup_modify_cgroup(mod_common_cgroup);
-		/* Check if the values are changed */
-		if (!retval) {
-			set_controller(ctl1, controller_name, control_file);
-			build_path(path_control_file, mountpoint,
-						 "commongroup", control_file);
-			strncpy(val_string, "260000", sizeof(val_string));
-			if (!group_modified(path_control_file, STRING)) {
-				set_controller(ctl2, controller_name,
-								 control_file);
-				build_path(path_control_file, mountpoint2,
-						 "commongroup", control_file);
-				strncpy(val_string, "7000064",
-							 sizeof(val_string));
-				if (!group_modified(path_control_file, STRING)) {
-					strncat(extra, " group modified under"
-						" both controllers\n", SIZE);
-					message(++i, PASS, "modify_cgroup()",
-								 retval, extra);
-				} else {
-					strncat(extra, " group not modified "
-						"under 2nd controller\n", SIZE);
-					message(++i, FAIL, "modify_cgroup()",
-								 retval, extra);
-				}
-			} else {
-				strncat(extra, " group not modified under any "
-							"controller\n", SIZE);
-				message(++i, FAIL, "modify_cgroup()",
-								 retval, extra);
-			}
-		} else {
-			strncat(extra, "\n", sizeof("\n"));
-			message(++i, FAIL, "modify_cgroup()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_modify_cgroup(0, mod_common_cgroup, "commongroup",
+						 0, ctl1, ctl2, STRING, 22);
 
 		/*
 		 * Test15: delete this common cgroup
@@ -912,6 +829,106 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 		} else {
 			message(i, FAIL, "delete_cgroup()", retval, info[16]);
 		}
+	}
+
+}
+
+void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
+			 const char *name, int which_ctl, int ctl1,
+					 int ctl2, int value_type, int i)
+{
+	int retval;
+	char path1_control_file[FILENAME_MAX], path2_control_file[FILENAME_MAX];
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+
+	/* Check, In case some error is expected due to a negative scenario */
+	if (retcode) {
+		retval = cgroup_modify_cgroup(cgrp);
+		if (retval == retcode)
+			message(i, PASS, "modify_cgroup()", retval, info[19]);
+		else
+			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+
+		return;
+	}
+
+	/* Now there is no error and it is a genuine call */
+	retval = cgroup_modify_cgroup(cgrp);
+	if (retval) {
+		message(i, FAIL, "modify_cgroup()", retval,  info[19]);
+		return;
+	}
+
+	/* Let us now check if the group modified in file system */
+	switch (which_ctl) { /* group modified under which controllers */
+
+	case 1: /* group is modified under ctl1 which is always
+		 * mounted at mountpoint in both cases */
+		set_controller(ctl1, controller_name, control_file);
+		build_path(path1_control_file, mountpoint, name, control_file);
+		/* this approach will be changed in coming patches */
+		strncpy(val_string, "260000", sizeof(val_string));
+
+		if (!group_modified(path1_control_file, value_type))
+			message(i, PASS, "modify_cgroup()", retval, info[19]);
+		else
+			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+
+		break;
+	case 2: /* group is modified under ctl2 which may be
+		 * mounted at mountpoint or mountpoint2 */
+		set_controller(ctl2, controller_name, control_file);
+
+		if (fs_mounted == FS_MOUNTED)	/* group under mountpoint */
+			build_path(path2_control_file, mountpoint,
+						 name, control_file);
+		else	/* group under mountpoint2 */
+			build_path(path2_control_file, mountpoint2,
+						 name, control_file);
+
+		/* this approach will be changed in coming patches */
+		strncpy(val_string, "7000064", sizeof(val_string));
+		if (!group_modified(path2_control_file, value_type))
+			message(i, PASS, "modify_cgroup()", retval, info[19]);
+		else
+			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+
+		break;
+	case 0:
+		/* ctl1 is always mounted at mountpoint */
+		set_controller(ctl1, controller_name, control_file);
+		build_path(path1_control_file, mountpoint,
+						 name, control_file);
+		/* ctl2 may be mounted at mountpoint or mountpoint2 depending
+		 * on single or multiple mount case */
+		if (fs_mounted == FS_MOUNTED) {	/* group under mountpoint */
+			set_controller(ctl2, controller_name, control_file);
+			build_path(path2_control_file, mountpoint,
+						 name, control_file);
+		} else {	/* group under mountpoint2 */
+			set_controller(ctl2, controller_name, control_file);
+			build_path(path2_control_file, mountpoint2,
+						 name, control_file);
+		}
+		/* this approach will be changed in coming patches */
+		strncpy(val_string, "260000", sizeof(val_string));
+		if (!group_modified(path1_control_file, value_type)) {
+			strncpy(val_string, "7000064", sizeof(val_string));
+			if (!group_modified(path2_control_file, value_type))
+				message(i, PASS, "modify_cgroup()",
+							 retval, info[12]);
+			else
+				message(i, FAIL, "modify_cgroup()",
+							 retval, info[13]);
+		} else {
+			message(i, FAIL, "modify_cgroup()", retval, info[14]);
+		}
+
+		break;
+	default:
+		printf("Wrong controller parameter received....\n");
+		message(i, FAIL, "modify_cgroup()", retval, info[19]);
+		break;
 	}
 
 	return;

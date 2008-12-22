@@ -68,7 +68,6 @@ uid_t control_uid;
 gid_t control_gid;
 uid_t tasks_uid;
 gid_t tasks_gid;
-
 /* this variable is never modified */
 int fs_mounted;
 
@@ -89,6 +88,9 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int common, int mpnt, int ign, int i);
 void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int common, int mpnt, int ign, int i);
+void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
+		 const char *name, int which_ctl, int ctl1, int ctl2,
+						 int value_type, int i);
 /* API test functions end here */
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
