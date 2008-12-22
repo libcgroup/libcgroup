@@ -87,6 +87,8 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 						 int value_type, int i);
 void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int common, int mpnt, int ign, int i);
+void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
+		 const char *name, int common, int mpnt, int ign, int i);
 /* API test functions end here */
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);

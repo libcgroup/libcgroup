@@ -27,10 +27,7 @@ int main(int argc, char *argv[])
 	struct cgroup *mod_ctl1_cgroup1, *mod_ctl2_cgroup1, *mod_common_cgroup;
 	struct cgroup *common_cgroup;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
-	char path_group[FILENAME_MAX], path_control_file[FILENAME_MAX];
-
-	/* The path to the common group under different controllers */
-	char path1_common_group[FILENAME_MAX], path2_common_group[FILENAME_MAX];
+	char path_control_file[FILENAME_MAX];
 
 	/* Get controllers name from script */
 	int ctl1 = CPU, ctl2 = MEMORY;
@@ -121,11 +118,8 @@ int main(int argc, char *argv[])
 		 * Test05: delete cgroup
 		 * Exp outcome: non zero return value but what ?
 		 */
-		retval = cgroup_delete_cgroup(cgroup1, 1);
-		if (retval)
-			message(++i, PASS, "delete_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
+		test_cgroup_delete_cgroup(ECGROUPNOTINITIALIZED, cgroup1,
+							 "group1", 0, 1, 1, 5);
 
 		/*
 		 * Test06: Check if cgroup_create_cgroup() handles a NULL cgroup
@@ -137,14 +131,8 @@ int main(int argc, char *argv[])
 		/*
 		 * Test07: delete nullcgroup
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_delete_cgroup(nullcgroup, 1);
-		if (retval)
-			message(++i, PASS, "delete_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_delete_cgroup(ECGROUPNOTINITIALIZED, nullcgroup,
+							 "group1", 0, 1, 1, 7);
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
@@ -344,29 +332,10 @@ int main(int argc, char *argv[])
 		test_cgroup_get_cgroup(14);
 
 		/*
-		 * Test15: delete cgroup
+		 * Test16: delete cgroup
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_delete_cgroup(cgroup1, 1);
-		if (!retval) {
-			/* Check if the group is deleted from the dir tree */
-			build_path(path_group, mountpoint, "group1", NULL);
-			if (group_exist(path_group) == -1) {
-				strncpy(extra, " group deleted from fs\n",
-									 SIZE);
-				message(++i, PASS, "delete_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " group still found in fs\n",
-									 SIZE);
-				message(++i, FAIL, "delete_cgroup()",
-								 retval, extra);
-			}
-
-		} else {
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-		}
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_delete_cgroup(0, cgroup1, "group1", 0, 1, 1, 16);
 
 		/*
 		 * Test16: Check if cgroup_create_cgroup() handles a NULL cgroup
@@ -378,14 +347,8 @@ int main(int argc, char *argv[])
 		/*
 		 * Test16: delete nullcgroup
 		 */
-		strncpy(extra, " Called with NULL cgroup argument\n", SIZE);
-		retval = cgroup_delete_cgroup(nullcgroup, 1);
-		if (retval)
-			message(++i, PASS, "delete_cgroup()", retval, extra);
-		else
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_delete_cgroup(ECGROUPNOTALLOWED, NULL,
+							 "group1", 0, 1, 1, 18);
 
 		/* Test17: Test the wrapper to compare cgroup
 		 * Create 2 cgroups and test it
@@ -583,55 +546,15 @@ int main(int argc, char *argv[])
 		 * Test11: delete cgroups
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_delete_cgroup(ctl1_cgroup1, 1);
-		if (!retval) {
-			/* Check if the group is deleted from the dir tree */
-			build_path(path_group, mountpoint, "ctl1_group1", NULL);
-
-			if (group_exist(path_group) == -1) {
-				strncpy(extra, " group deleted from fs\n",
-									 SIZE);
-				message(++i, PASS, "delete_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " group still found in fs\n",
-									 SIZE);
-				message(++i, FAIL, "delete_cgroup()",
-								 retval, extra);
-			}
-
-		} else {
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-		}
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_delete_cgroup(0, ctl1_cgroup1,
+						 "ctl1_group1", 0, 1, 1, 16);
 
 		/*
 		 * Test09: delete other cgroups too
 		 * Exp outcome: zero return value
 		 */
-		retval = cgroup_delete_cgroup(ctl2_cgroup1, 1);
-		if (!retval) {
-			/* Check if the group is deleted from the dir tree */
-			build_path(path_group, mountpoint2,
-							 "ctl2_group1", NULL);
-
-			if (group_exist(path_group) == -1) {
-				strncpy(extra, " group deleted from fs\n",
-									 SIZE);
-				message(++i, PASS, "delete_cgroup()",
-								 retval, extra);
-			} else {
-				strncpy(extra, " group still found in fs\n",
-									 SIZE);
-				message(++i, FAIL, "delete_cgroup()",
-								 retval, extra);
-			}
-
-		} else {
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-		}
-		strncpy(extra, "\n", SIZE);
-
+		test_cgroup_delete_cgroup(0, ctl2_cgroup1,
+						 "ctl2_group1", 0, 1, 1, 17);
 
 		/*
 		 * Test15: Create a valid cgroup structure
@@ -762,38 +685,8 @@ int main(int argc, char *argv[])
 		 * Test15: delete this common cgroup
 		 * Exp outcome: zero return value
 		 */
-		strncpy(extra, " Called with commongroup. ", SIZE);
-		retval = cgroup_delete_cgroup(common_cgroup, 1);
-		if (!retval) {
-			/* Check if the group is deleted from both dir tree */
-			build_path(path1_common_group, mountpoint,
-							 "commongroup", NULL);
-			if (group_exist(path1_common_group) == -1) {
-				build_path(path2_common_group, mountpoint2,
-							 "commongroup", NULL);
-				if (group_exist(path2_common_group) == -1) {
-					strncat(extra, " group "
-						"deleted globally\n", SIZE);
-					message(++i, PASS, "create_cgroup()",
-								 retval, extra);
-				} else {
-					strncat(extra, " group not "
-						"deleted globally\n", SIZE);
-					message(++i, FAIL, "create_cgroup()",
-								 retval, extra);
-				}
-			} else {
-				strncat(extra, " group still found in fs\n",
-									 SIZE);
-				message(++i, FAIL, "delete_cgroup()", retval,
-									 extra);
-			}
-		} else {
-			strncat(extra, "\n", sizeof("\n"));
-			message(++i, FAIL, "delete_cgroup()", retval, extra);
-		}
-
-		strncpy(extra, "\n", SIZE);
+		test_cgroup_delete_cgroup(0, common_cgroup,
+						 "commongroup", 1, 2, 1, 23);
 
 		/* Free the cgroup structures */
 		cgroup_free(&nullcgroup);
@@ -963,6 +856,61 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 							 retval, info[10]);
 		} else {
 			message(i, FAIL, "create_cgroup()", retval, info[11]);
+		}
+	}
+
+	return;
+}
+
+void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
+			 const char *name, int common, int mpnt, int ign, int i)
+{
+	int retval;
+	char path1_group[FILENAME_MAX], path2_group[FILENAME_MAX];
+	/* Check, In case some error is expected due to a negative scenario */
+	if (retcode) {
+		retval = cgroup_delete_cgroup(cgrp, ign);
+		if (retval == retcode)
+			message(i, PASS, "delete_cgroup()", retval, info[19]);
+		else
+			message(i, FAIL, "delete_cgroup()", retval, info[19]);
+
+		return;
+	}
+
+	/* Now there is no error and it is a genuine call */
+	retval = cgroup_delete_cgroup(cgrp, ign);
+	if (retval) {
+		message(i, FAIL, "delete_cgroup()", retval,  info[19]);
+		return;
+	}
+
+	/* Let us now check if the group has been deleted from file system */
+	if (!common) { /* check only under one mountpoint */
+		if (mpnt == 1)  /* check group under mountpoint */
+			build_path(path1_group, mountpoint, name, NULL);
+		else		/* check group under mountpoint2 */
+			build_path(path1_group, mountpoint2, name, NULL);
+
+		if (group_exist(path1_group) == -1)
+			message(i, PASS, "delete_cgroup()", retval, info[15]);
+		else
+			message(i, FAIL, "delete_cgroup()", retval, info[16]);
+
+	} else { /* check group under both mountpoints */
+		/* Check if the group deleted under both controllers */
+		build_path(path1_group, mountpoint, name, NULL);
+		if (group_exist(path1_group) == -1) {
+			build_path(path2_group, mountpoint2, name, NULL);
+
+			if (group_exist(path2_group) == -1)
+				message(i, PASS, "delete_cgroup()",
+							 retval, info[15]);
+			else
+				message(i, FAIL, "delete_cgroup()",
+							 retval, info[17]);
+		} else {
+			message(i, FAIL, "delete_cgroup()", retval, info[16]);
 		}
 	}
 
