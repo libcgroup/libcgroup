@@ -18,7 +18,7 @@
 
 int main(int argc, char *argv[])
 {
-	int fs_mounted, retval;
+	int retval;
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	struct cgroup_controller *sec_controller;
 	/* In case of multimount for readability we use the controller name
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-					 NULL, NULL, FS_NOT_MOUNTED, 0, 2);
+					 NULL, NULL, 0, 2);
 
 		/*
 		 * Test03: Create a valid cgroup ds and check all return values
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-						 NULL, NULL, FS_MOUNTED, 0, 1);
+						 NULL, NULL, 0, 1);
 
 		/*
 		 * Test02: call cgroup_init() and check return values
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, nullcgroup,
-						 NULL, NULL, FS_MOUNTED, 0, 3);
+						 NULL, NULL, 0, 3);
 		/*
 		 * Test04: Call cgroup_attach_task_pid() with null group
 		 * and invalid pid
@@ -261,8 +261,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to that group
 		 */
 
-		test_cgroup_attach_task(0, cgroup1, "group1", NULL,
-							 FS_MOUNTED, 20, 7);
+		test_cgroup_attach_task(0, cgroup1, "group1", NULL, 20, 7);
 
 		/*
 		 * Test08: modify cgroup with the same cgroup
@@ -469,8 +468,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to root groups
 		 */
 
-		test_cgroup_attach_task(0, nullcgroup,
-					 NULL, NULL, FS_MULTI_MOUNTED, 0, 2);
+		test_cgroup_attach_task(0, nullcgroup, NULL, NULL, 0, 2);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -569,7 +567,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl1_cgroup1, "ctl1_group1",
-						 NULL, FS_MULTI_MOUNTED, 20, 8);
+								 NULL, 20, 8);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with ctl2
@@ -579,7 +577,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl2_cgroup1, "ctl1_group1",
-				 "ctl2_group1", FS_MULTI_MOUNTED, 20, 9);
+							 "ctl2_group1", 20, 9);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -600,7 +598,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTEXIST, ctl2_cgroup2,
-					 NULL, NULL, FS_MULTI_MOUNTED, 2, 11);
+							 NULL, NULL, 2, 11);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -784,7 +782,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, common_cgroup, "commongroup",
-				 "commongroup", FS_MULTI_MOUNTED, 1, 20);
+							 "commongroup", 1, 20);
 
 		/*
 		 * Test18: Create a valid cgroup structure to modify the
@@ -938,7 +936,7 @@ void test_cgroup_init(int retcode, int i)
 
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 				 const char *group1, const char *group2,
-				 int fs_info, int k, int i)
+								int k, int i)
 {
 	int retval;
 	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
@@ -960,7 +958,7 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 					 group1, "tasks");
 
 		if (check_task(tasksfile)) {
-			if (fs_info == 2) { /* multiple mounts */
+			if (fs_mounted == 2) { /* multiple mounts */
 				build_path(tasksfile2, mountpoint2,
 							 group2, "tasks");
 				if (check_task(tasksfile2)) {

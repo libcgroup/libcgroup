@@ -68,7 +68,9 @@ uid_t control_uid;
 gid_t control_gid;
 uid_t tasks_uid;
 gid_t tasks_gid;
-static int i;
+
+/* this variable is never modified */
+int fs_mounted;
 
 /* The mountpoints as received from script */
 char mountpoint[FILENAME_MAX], mountpoint2[FILENAME_MAX];
@@ -80,7 +82,7 @@ char extra[SIZE] = "\n";
 void test_cgroup_init(int retcode, int i);
 void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
 				const char *group1, const char *group2,
-				int fs_info, int k, int i);
+								int k, int i);
 struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 						 int value_type, int i);
 /* API test functions end here */
