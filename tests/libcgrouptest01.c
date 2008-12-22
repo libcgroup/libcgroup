@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-					 NULL, NULL, 0, 2);
+					 NULL, NULL, NULLGRP, 2);
 
 		/*
 		 * Test03: Create a valid cgroup ds and check all return values
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-						 NULL, NULL, 0, 1);
+						 NULL, NULL, NULLGRP, 1);
 
 		/*
 		 * Test02: call cgroup_init() and check return values
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, nullcgroup,
-						 NULL, NULL, 0, 3);
+						 NULL, NULL, NULLGRP, 3);
 		/*
 		 * Test04: Call cgroup_attach_task_pid() with null group
 		 * and invalid pid
@@ -219,7 +219,8 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to that group
 		 */
 
-		test_cgroup_attach_task(0, cgroup1, "group1", NULL, 20, 7);
+		test_cgroup_attach_task(0, cgroup1, "group1", NULL,
+								 NOMESSAGE, 7);
 
 		/*
 		 * Test08: modify cgroup with the same cgroup
@@ -230,9 +231,11 @@ int main(int argc, char *argv[])
 		retval = cgroup_modify_cgroup(cgroup1);
 		/* Check if the values are changed */
 		if (!retval && !group_modified(path_control_file, STRING))
-			message(8, PASS, "modify_cgroup()", retval, info[3]);
+			message(8, PASS, "modify_cgroup()", retval,
+							 info[SAMEGRP]);
 		else
-			message(8, FAIL, "modify_cgroup()", retval, info[3]);
+			message(8, FAIL, "modify_cgroup()", retval,
+							 info[SAMEGRP]);
 
 		/*
 		 * Create another valid cgroup structure with same group
@@ -362,7 +365,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to root groups
 		 */
 
-		test_cgroup_attach_task(0, nullcgroup, NULL, NULL, 0, 2);
+		test_cgroup_attach_task(0, nullcgroup, NULL, NULL, NULLGRP, 2);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -420,7 +423,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl1_cgroup1, "ctl1_group1",
-								 NULL, 20, 8);
+							 NULL, NOMESSAGE, 8);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with ctl2
@@ -430,7 +433,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl2_cgroup1, "ctl1_group1",
-							 "ctl2_group1", 20, 9);
+						 "ctl2_group1", NOMESSAGE, 9);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -451,7 +454,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTEXIST, ctl2_cgroup2,
-							 NULL, NULL, 2, 11);
+						 NULL, NULL, NOTCRTDGRP, 11);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -552,7 +555,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, common_cgroup, "commongroup",
-							 "commongroup", 1, 20);
+						 "commongroup", COMMONGRP, 20);
 
 		/*
 		 * Test18: Create a valid cgroup structure to modify the
@@ -667,18 +670,18 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 							 group2, "tasks");
 				if (check_task(tasksfile2)) {
 					message(i, PASS, "attach_task()",
-							 retval, info[4]);
+						 retval, info[TASKINGRP]);
 				} else {
 					message(i, FAIL, "attach_task()",
-							 retval, info[6]);
+						 retval, info[TASKNOTINANYGRP]);
 				}
 			} else { /* single mount */
 				message(i, PASS, "attach_task()",
-							 retval, info[4]);
+						 retval, info[TASKINGRP]);
 			}
 		} else {
 			message(i, FAIL, "attach_task()", retval,
-								 info[5]);
+							 info[TASKNOTINGRP]);
 		}
 	} else {
 		message(i, FAIL, "attach_task()", retval, (char *)"\n");
@@ -733,9 +736,11 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 	if (retcode) {
 		retval = cgroup_create_cgroup(cgrp, ign);
 		if (retval == retcode)
-			message(i, PASS, "create_cgroup()", retval, info[19]);
+			message(i, PASS, "create_cgroup()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(i, FAIL, "create_cgroup()", retval, info[19]);
+			message(i, FAIL, "create_cgroup()", retval,
+							 info[NOMESSAGE]);
 
 		return;
 	}
@@ -743,7 +748,7 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 	/* Now there is no error and it is a genuine call */
 	retval = cgroup_create_cgroup(cgrp, ign);
 	if (retval) {
-		message(i, FAIL, "create_cgroup()", retval,  info[19]);
+		message(i, FAIL, "create_cgroup()", retval,  info[NOMESSAGE]);
 		return;
 	}
 
@@ -755,9 +760,11 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 			build_path(path1_group, mountpoint2, name, NULL);
 
 		if (group_exist(path1_group) == 0)
-			message(i, PASS, "create_cgroup()", retval, info[7]);
+			message(i, PASS, "create_cgroup()", retval,
+							 info[GRPINFS]);
 		else
-			message(i, FAIL, "create_cgroup()", retval, info[8]);
+			message(i, FAIL, "create_cgroup()", retval,
+							 info[GRPNOTINFS]);
 
 	} else { /* group under both mountpoints */
 		/* Check if the group exists under both controllers */
@@ -767,12 +774,13 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 
 			if (group_exist(path2_group) == 0)
 				message(i, PASS, "create_cgroup()",
-							 retval, info[9]);
+						 retval, info[GRPINBOTHCTLS]);
 			else
 				message(i, FAIL, "create_cgroup()",
-							 retval, info[10]);
+						 retval, info[GRPNOTIN2NDCTL]);
 		} else {
-			message(i, FAIL, "create_cgroup()", retval, info[11]);
+			message(i, FAIL, "create_cgroup()", retval,
+							 info[GRPNOTIN1STCTL]);
 		}
 	}
 
@@ -788,9 +796,11 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 	if (retcode) {
 		retval = cgroup_delete_cgroup(cgrp, ign);
 		if (retval == retcode)
-			message(i, PASS, "delete_cgroup()", retval, info[19]);
+			message(i, PASS, "delete_cgroup()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(i, FAIL, "delete_cgroup()", retval, info[19]);
+			message(i, FAIL, "delete_cgroup()", retval,
+							 info[NOMESSAGE]);
 
 		return;
 	}
@@ -798,7 +808,7 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 	/* Now there is no error and it is a genuine call */
 	retval = cgroup_delete_cgroup(cgrp, ign);
 	if (retval) {
-		message(i, FAIL, "delete_cgroup()", retval,  info[19]);
+		message(i, FAIL, "delete_cgroup()", retval,  info[NOMESSAGE]);
 		return;
 	}
 
@@ -810,9 +820,11 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 			build_path(path1_group, mountpoint2, name, NULL);
 
 		if (group_exist(path1_group) == -1)
-			message(i, PASS, "delete_cgroup()", retval, info[15]);
+			message(i, PASS, "delete_cgroup()", retval,
+						 info[GRPDELETEDINFS]);
 		else
-			message(i, FAIL, "delete_cgroup()", retval, info[16]);
+			message(i, FAIL, "delete_cgroup()", retval,
+						 info[GRPNOTDELETEDINFS]);
 
 	} else { /* check group under both mountpoints */
 		/* Check if the group deleted under both controllers */
@@ -822,12 +834,13 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 
 			if (group_exist(path2_group) == -1)
 				message(i, PASS, "delete_cgroup()",
-							 retval, info[15]);
+						 retval, info[GRPDELETEDINFS]);
 			else
 				message(i, FAIL, "delete_cgroup()",
-							 retval, info[17]);
+					 retval, info[GRPNOTDELETEDGLOBALY]);
 		} else {
-			message(i, FAIL, "delete_cgroup()", retval, info[16]);
+			message(i, FAIL, "delete_cgroup()", retval,
+						 info[GRPNOTDELETEDINFS]);
 		}
 	}
 
@@ -845,9 +858,11 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 	if (retcode) {
 		retval = cgroup_modify_cgroup(cgrp);
 		if (retval == retcode)
-			message(i, PASS, "modify_cgroup()", retval, info[19]);
+			message(i, PASS, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+			message(i, FAIL, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 
 		return;
 	}
@@ -855,7 +870,7 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 	/* Now there is no error and it is a genuine call */
 	retval = cgroup_modify_cgroup(cgrp);
 	if (retval) {
-		message(i, FAIL, "modify_cgroup()", retval,  info[19]);
+		message(i, FAIL, "modify_cgroup()", retval,  info[NOMESSAGE]);
 		return;
 	}
 
@@ -870,9 +885,11 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 		strncpy(val_string, "260000", sizeof(val_string));
 
 		if (!group_modified(path1_control_file, value_type))
-			message(i, PASS, "modify_cgroup()", retval, info[19]);
+			message(i, PASS, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+			message(i, FAIL, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 
 		break;
 	case 2: /* group is modified under ctl2 which may be
@@ -889,9 +906,11 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 		/* this approach will be changed in coming patches */
 		strncpy(val_string, "7000064", sizeof(val_string));
 		if (!group_modified(path2_control_file, value_type))
-			message(i, PASS, "modify_cgroup()", retval, info[19]);
+			message(i, PASS, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(i, FAIL, "modify_cgroup()", retval, info[19]);
+			message(i, FAIL, "modify_cgroup()", retval,
+							 info[NOMESSAGE]);
 
 		break;
 	case 0:
@@ -916,18 +935,19 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 			strncpy(val_string, "7000064", sizeof(val_string));
 			if (!group_modified(path2_control_file, value_type))
 				message(i, PASS, "modify_cgroup()",
-							 retval, info[12]);
+					 retval, info[GRPMODINBOTHCTLS]);
 			else
 				message(i, FAIL, "modify_cgroup()",
-							 retval, info[13]);
+					 retval, info[GRPNOTMODIN2NDCTL]);
 		} else {
-			message(i, FAIL, "modify_cgroup()", retval, info[14]);
+			message(i, FAIL, "modify_cgroup()", retval,
+						 info[GRPNOTMODINANYCTL]);
 		}
 
 		break;
 	default:
 		printf("Wrong controller parameter received....\n");
-		message(i, FAIL, "modify_cgroup()", retval, info[19]);
+		message(i, FAIL, "modify_cgroup()", retval, info[NOMESSAGE]);
 		break;
 	}
 
@@ -1240,69 +1260,69 @@ void set_info_msgs()
 
 	/* Is initialization this way ok or just n seqential lines?? */
 		switch (k) {
-		case 0:
+		case NULLGRP:
 			strncpy(info[k], " Par: nullcgroup\n", SIZE);
 			break;
-		case 1:
+		case COMMONGRP:
 			strncpy(info[k], " Par: commoncgroup\n", SIZE);
 			break;
-		case 2:
+		case NOTCRTDGRP:
 			strncpy(info[k], " Par: not created group\n", SIZE);
 			break;
-		case 3:
+		case SAMEGRP:
 			strncpy(info[k], " Par: same cgroup\n", SIZE);
 			break;
-		case 4:
+		case TASKINGRP:
 			strncpy(info[k], " Task found in group/s\n", SIZE);
 			break;
-		case 5:
+		case TASKNOTINGRP:
 			strncpy(info[k], " Task not found in group/s\n", SIZE);
 			break;
-		case 6:
+		case TASKNOTINANYGRP:
 			strncpy(info[k], " Task not found in all"
 							" groups\n", SIZE);
 			break;
-		case 7:
+		case GRPINFS:
 			strncpy(info[k], " group found in filesystem\n", SIZE);
 			break;
-		case 8:
+		case GRPNOTINFS:
 			strncpy(info[k], " group not in filesystem\n", SIZE);
 			break;
-		case 9:
+		case GRPINBOTHCTLS:
 			strncpy(info[k], " group found under both"
 						" controllers\n", SIZE);
 			break;
-		case 10:
+		case GRPNOTIN2NDCTL:
 			strncpy(info[k], " group not found under"
 						" second controller\n", SIZE);
 			break;
-		case 11:
+		case GRPNOTIN1STCTL:
 			strncpy(info[k], " group not found under"
 						" first controller\n", SIZE);
 			break;
-		case 12:
+		case GRPMODINBOTHCTLS:
 			strncpy(info[k], " group modified under"
 						" both controllers\n", SIZE);
 			break;
-		case 13:
+		case GRPNOTMODIN2NDCTL:
 			strncpy(info[k], " group not modified under"
 						" second controller\n", SIZE);
 			break;
-		case 14:
+		case GRPNOTMODINANYCTL:
 			strncpy(info[k], " group not modified under"
 						" any controller\n", SIZE);
 			break;
-		case 15:
+		case GRPDELETEDINFS:
 			strncpy(info[k], " Group deleted from fs\n", SIZE);
 			break;
-		case 16:
+		case GRPNOTDELETEDINFS:
 			strncpy(info[k], " Group not deleted from fs\n", SIZE);
 			break;
-		case 17:
+		case GRPNOTDELETEDGLOBALY:
 			strncpy(info[k], " Group not deleted globaly\n", SIZE);
 			break;
 		/* In case there is no extra info messages to be printed */
-		case 19:
+		case NOMESSAGE:
 			strncpy(info[k], " \n", SIZE);
 			break;
 		/* Add more messages here and change NUM_MSGS */
@@ -1334,9 +1354,9 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	retval = cgroup_compare_cgroup(NULL, NULL);
 	if (retval)
-		message(i++, PASS, "compare_cgroup()", retval, info[0]);
+		message(i++, PASS, "compare_cgroup()", retval, info[NULLGRP]);
 	else
-		message(i++, FAIL, "compare_cgroup()", retval, info[0]);
+		message(i++, FAIL, "compare_cgroup()", retval, info[NULLGRP]);
 
 	cgroup1 = cgroup_new_cgroup("testgroup");
 	cgroup2 = cgroup_new_cgroup("testgroup");
@@ -1363,9 +1383,9 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
 	if (retval)
-		message(i++, FAIL, "compare_cgroup()", retval, info[19]);
+		message(i++, FAIL, "compare_cgroup()", retval, info[NOMESSAGE]);
 	else
-		message(i++, PASS, "compare_cgroup()", retval, info[19]);
+		message(i++, PASS, "compare_cgroup()", retval, info[NOMESSAGE]);
 
 	/* Test the api by putting diff number of controllers in cgroups */
 	retval = set_controller(ctl2, controller_name, control_file);
@@ -1379,9 +1399,9 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
 	if (retval == ECGROUPNOTEQUAL)
-		message(i++, PASS, "compare_cgroup()", retval, info[19]);
+		message(i++, PASS, "compare_cgroup()", retval, info[NOMESSAGE]);
 	else
-		message(i++, FAIL, "compare_cgroup()", retval, info[19]);
+		message(i++, FAIL, "compare_cgroup()", retval, info[NOMESSAGE]);
 
 	cgroup_free(&cgroup1);
 	cgroup_free(&cgroup2);
@@ -1395,20 +1415,20 @@ void test_cgroup_get_cgroup(int i)
 	/* Test with nullcgroup first */
 	ret = cgroup_get_cgroup(NULL);
 	if (ret == ECGROUPNOTALLOWED)
-		message(i++, PASS, "get_cgroup()", ret, info[0]);
+		message(i++, PASS, "get_cgroup()", ret, info[NULLGRP]);
 	else
-		message(i++, FAIL, "get_cgroup()", ret, info[0]);
+		message(i++, FAIL, "get_cgroup()", ret, info[NULLGRP]);
 
 	/* Test with name filled cgroup */
 	cgroup_filled = cgroup_new_cgroup("group1");
 	if (!cgroup_filled)
-		message(i++, FAIL, "new_cgroup()", 0, info[19]);
+		message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
 
 	ret = cgroup_get_cgroup(cgroup_filled);
 	if (!ret)
-		message(i++, PASS, "get_cgroup()", ret, info[19]);
+		message(i++, PASS, "get_cgroup()", ret, info[NOMESSAGE]);
 	else
-		message(i++, FAIL, "get_cgroup()", ret, info[19]);
+		message(i++, FAIL, "get_cgroup()", ret, info[NOMESSAGE]);
 
 	cgroup_free(&cgroup_filled);
 }
