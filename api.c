@@ -1371,38 +1371,37 @@ open_err:
  * will assume that the callers have taken care of everything.
  * Including the locking.
  */
-static char *cg_rd_ctrl_file(char *subsys, char *cgroup, char *file)
+static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 {
-	char *value;
 	char path[FILENAME_MAX];
 	FILE *ctrl_file;
 	int ret;
 
 	if (!cg_build_path_locked(cgroup, path, subsys))
-		return NULL;
+		return ECGFAIL;
 
 	strcat(path, file);
 	ctrl_file = fopen(path, "r");
 	if (!ctrl_file)
-		return NULL;
+		return ECGROUPVALUENOTEXIST;
 
-	value = malloc(CG_VALUE_MAX);
-	if (!value)
-		return NULL;
+	*value = malloc(CG_VALUE_MAX);
+	if (!*value)
+		return ECGOTHER;
 
 	/*
 	 * using %as crashes when we try to read from files like
 	 * memory.stat
 	 */
-	ret = fscanf(ctrl_file, "%s", value);
+	ret = fscanf(ctrl_file, "%s", *value);
 	if (ret == 0 || ret == EOF) {
-		free(value);
-		value = NULL;
+		free(*value);
+		*value = NULL;
 	}
 
 	fclose(ctrl_file);
 
-	return value;
+	return 0;
 }
 
 /*
@@ -1461,12 +1460,10 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	}
 
 	if (strcmp(ctrl_name, cg_mount_table[index].name) == 0) {
-		ctrl_value = cg_rd_ctrl_file(cg_mount_table[index].name,
-				cgroup->name, ctrl_dir->d_name);
-		if (!ctrl_value) {
-			error = ECGFAIL;
+		error = cg_rd_ctrl_file(cg_mount_table[index].name,
+				cgroup->name, ctrl_dir->d_name, &ctrl_value);
+		if (error || !ctrl_value)
 			goto fill_error;
-		}
 
 		if (cgroup_add_value_string(cgc, ctrl_dir->d_name,
 				ctrl_value)) {
