@@ -16,6 +16,30 @@
 
 #include "libcgrouptest.h"
 
+/* The messages that may be useful to the user */
+char info[NUM_MSGS][SIZE] = {
+	" Parameter nullcgroup\n", 			/* NULLGRP */
+	" Parameter commoncgroup\n",			/* COMMONGRP */
+	" Parameter not created group\n",		/* NOTCRTDGRP */
+	" Parameter same cgroup\n",			/* SAMEGRP */
+	" Task found in group/s\n",			/* TASKINGRP */
+	" Task not found in group/s\n",			/* TASKNOTINGRP */
+	" Task not found in all groups\n",		/* TASKNOTINANYGRP */
+	" group found in filesystem\n",			/* GRPINFS */
+	" group not found in filesystem\n",		/* GRPNOTINFS */
+	" group found under both controllers\n",	/* GRPINBOTHCTLS */
+	" group not found under second controller\n",	/* GRPNOTIN2NDCTL */
+	" group not found under first controller\n",	/* GRPNOTIN1STCTL */
+	" group modified under both controllers\n",	/* GRPMODINBOTHCTLS */
+	" group not modified under second controller\n",/* GRPNOTMODIN2NDCTL */
+	" group not modified under any controller\n",	/* GRPNOTMODINANYCTL */
+	" Group deleted from filesystem\n",		/* GRPDELETEDINFS */
+	" Group not deleted from filesystem\n",		/* GRPNOTDELETEDINFS */
+	" Group not deleted globally\n",		/* GRPNOTDELETEDGLOBALY */
+	/* In case there is no extra info messages to be printed */
+	"\n",						/* NOMESSAGE */
+};
+
 int main(int argc, char *argv[])
 {
 	int retval;
@@ -71,9 +95,6 @@ int main(int argc, char *argv[])
 	control_gid = 0;
 	tasks_uid = 0;
 	tasks_gid = 0;
-
-	/* Initialize the message buffer with info messages */
-	set_info_msgs();
 
 	/*
 	 * Testsets: Testcases are broadly devided into 3 categories based on
@@ -138,9 +159,6 @@ int main(int argc, char *argv[])
 
 		cgroup_free(&nullcgroup);
 		cgroup_free(&cgroup1);
-
-		/* Free the allocated memory for info messages */
-		free_info_msgs();
 
 		break;
 
@@ -333,9 +351,6 @@ int main(int argc, char *argv[])
 		cgroup_free(&cgroup1);
 		cgroup_free(&cgroup2);
 		cgroup_free(&cgroup3);
-
-		/* Free the allocated memory for info messages */
-		free_info_msgs();
 
 		break;
 
@@ -618,9 +633,6 @@ int main(int argc, char *argv[])
 		cgroup_free(&ctl1_cgroup1);
 		cgroup_free(&ctl2_cgroup1);
 		cgroup_free(&ctl2_cgroup2);
-
-		/* Free the allocated memory for info messages */
-		free_info_msgs();
 
 		break;
 
@@ -1242,111 +1254,6 @@ static inline void build_path(char *target, char *mountpoint,
 		strncat(target, "/", FILENAME_MAX);
 		strncat(target, file, FILENAME_MAX);
 	}
-}
-
-/* Initialize the info matrix with possible info messages */
-void set_info_msgs()
-{
-	info = (char **) malloc(NUM_MSGS * sizeof(char *));
-	if (!info) {
-		printf("Could not allocate memory for msg buffer. Check if"
-		" system has sufficient memory. Exiting the testcases...\n");
-		free_info_msgs();
-		exit(1);
-	}
-	for (int k = 0; k < NUM_MSGS; ++k) {
-		info[k] = (char *) malloc(SIZE * sizeof(char));
-		if (!info[k]) {
-			printf("Failed to allocate memory for msg %d. Check "
-			"your system memory. Exiting the testcases...\n", k);
-			free_info_msgs();
-			exit(1);
-		}
-
-	/* Is initialization this way ok or just n seqential lines?? */
-		switch (k) {
-		case NULLGRP:
-			strncpy(info[k], " Par: nullcgroup\n", SIZE);
-			break;
-		case COMMONGRP:
-			strncpy(info[k], " Par: commoncgroup\n", SIZE);
-			break;
-		case NOTCRTDGRP:
-			strncpy(info[k], " Par: not created group\n", SIZE);
-			break;
-		case SAMEGRP:
-			strncpy(info[k], " Par: same cgroup\n", SIZE);
-			break;
-		case TASKINGRP:
-			strncpy(info[k], " Task found in group/s\n", SIZE);
-			break;
-		case TASKNOTINGRP:
-			strncpy(info[k], " Task not found in group/s\n", SIZE);
-			break;
-		case TASKNOTINANYGRP:
-			strncpy(info[k], " Task not found in all"
-							" groups\n", SIZE);
-			break;
-		case GRPINFS:
-			strncpy(info[k], " group found in filesystem\n", SIZE);
-			break;
-		case GRPNOTINFS:
-			strncpy(info[k], " group not in filesystem\n", SIZE);
-			break;
-		case GRPINBOTHCTLS:
-			strncpy(info[k], " group found under both"
-						" controllers\n", SIZE);
-			break;
-		case GRPNOTIN2NDCTL:
-			strncpy(info[k], " group not found under"
-						" second controller\n", SIZE);
-			break;
-		case GRPNOTIN1STCTL:
-			strncpy(info[k], " group not found under"
-						" first controller\n", SIZE);
-			break;
-		case GRPMODINBOTHCTLS:
-			strncpy(info[k], " group modified under"
-						" both controllers\n", SIZE);
-			break;
-		case GRPNOTMODIN2NDCTL:
-			strncpy(info[k], " group not modified under"
-						" second controller\n", SIZE);
-			break;
-		case GRPNOTMODINANYCTL:
-			strncpy(info[k], " group not modified under"
-						" any controller\n", SIZE);
-			break;
-		case GRPDELETEDINFS:
-			strncpy(info[k], " Group deleted from fs\n", SIZE);
-			break;
-		case GRPNOTDELETEDINFS:
-			strncpy(info[k], " Group not deleted from fs\n", SIZE);
-			break;
-		case GRPNOTDELETEDGLOBALY:
-			strncpy(info[k], " Group not deleted globaly\n", SIZE);
-			break;
-		/* In case there is no extra info messages to be printed */
-		case NOMESSAGE:
-			strncpy(info[k], " \n", SIZE);
-			break;
-		/* Add more messages here and change NUM_MSGS */
-		default:
-			break;
-		}
-	}
-}
-
-/* Free the allocated memory for buffers */
-void free_info_msgs()
-{
-	for (int k = 0; k < NUM_MSGS; ++k) {
-		if (info[k])
-			free(info[k]);
-	}
-
-	if (info)
-		free(info);
 }
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)

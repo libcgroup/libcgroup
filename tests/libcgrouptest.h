@@ -78,8 +78,8 @@ enum info_message_t {
 	NOMESSAGE,
 };
 
-/* Create a matrix of possible info messages */
-char **info;
+/* The set of verbose messages useful to the user */
+extern char info[NUM_MSGS][SIZE];
 
 int64_t val_int64;
 u_int64_t val_uint64;
@@ -134,11 +134,6 @@ static inline void message(int num, int pass, const char *api,
 						 int ret, char *extra);
 static inline void build_path(char *target, char *mountpoint,
 				 const char *group, const char *file);
-
-/* Allocate memory and populate info messages */
-void set_info_msgs();
-/* Free the allocated memory for info messages */
-void free_info_msgs();
 
 static inline pid_t cgrouptest_gettid()
 {
