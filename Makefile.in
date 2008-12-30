@@ -61,7 +61,7 @@ libcgroup.so: api.c libcgroup.h wrapper.c config.c lex.yy.c y.tab.c
 test:
 	$(MAKE) -C tests
 
-pam_cgroup.so: pam_cgroup.c
+pam_cgroup.so: pam_cgroup.c libcgroup.so
 	$(CC) $(CFLAGS) -shared -fPIC -Wall -o $@ pam_cgroup.c $(LDFLAGS) \
 	$(LIBS) -lpam
 
