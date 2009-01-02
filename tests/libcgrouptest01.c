@@ -1321,8 +1321,8 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
 {
-	struct cgroup *cgroup_filled, *cgroup_a, *cgroup_b;
-	struct cgroup_controller *controller;
+	struct cgroup *cgroup_filled = NULL, *cgroup_a = NULL, *cgroup_b = NULL;
+	struct cgroup_controller *controller = NULL;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 	int ret;
 
