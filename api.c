@@ -563,11 +563,17 @@ int cgroup_init()
 	 *
 	 * XX: fix the size for fgets
 	 */
-	buf = fgets(subsys_name, FILENAME_MAX, proc_cgroup);
+	buf = malloc(FILENAME_MAX);
+	if (!buf) {
+		ret = ECGOTHER;
+		goto unlock_exit;
+	}
+	buf = fgets(buf, FILENAME_MAX, proc_cgroup);
 	if (!buf) {
 		ret = EIO;
 		goto unlock_exit;
 	}
+	free(buf);
 
 	while (!feof(proc_cgroup)) {
 		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
@@ -579,7 +585,6 @@ int cgroup_init()
 		i++;
 	}
 	controllers[i] = NULL;
-	fclose(proc_cgroup);
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
@@ -633,10 +638,18 @@ int cgroup_init()
 	found_mnt++;
 	cg_mount_table[found_mnt].name[0] = '\0';
 
-	fclose(proc_mount);
 	cgroup_initialized = 1;
 
 unlock_exit:
+	if (proc_cgroup)
+		fclose(proc_cgroup);
+
+	if (proc_mount)
+		fclose(proc_mount);
+
+	for (i = 0; controllers[i]; i++)
+		free(controllers[i]);
+
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }
@@ -852,6 +865,7 @@ static int cg_mkdir_p(const char *path)
 	char *buf = NULL;
 
 	buf = getcwd(cwd, FILENAME_MAX);
+
 	if (!buf)
 		return ECGOTHER;
 
