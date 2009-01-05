@@ -532,20 +532,21 @@ finish:
  */
 int cgroup_init()
 {
-	FILE *proc_mount;
-	struct mntent *ent, *temp_ent;
+	FILE *proc_mount = NULL;
+	struct mntent *ent = NULL;
+	struct mntent *temp_ent = NULL;
 	int found_mnt = 0;
 	int ret = 0;
 	static char *controllers[CG_CONTROLLER_MAX];
-	FILE *proc_cgroup;
+	FILE *proc_cgroup = NULL;
 	char subsys_name[FILENAME_MAX];
 	int hierarchy, num_cgroups, enabled;
 	int i=0;
-	char *mntopt;
+	char *mntopt = NULL;
 	int err;
-	char *buf;
+	char *buf = NULL;
 	char mntent_buffer[4 * FILENAME_MAX];
-	char *strtok_buffer;
+	char *strtok_buffer = NULL;
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 
@@ -642,8 +643,9 @@ unlock_exit:
 
 static int cg_test_mounted_fs()
 {
-	FILE *proc_mount;
-	struct mntent *ent, *temp_ent;
+	FILE *proc_mount = NULL;
+	struct mntent *ent = NULL;
+	struct mntent *temp_ent = NULL;
 	char mntent_buff[4 * FILENAME_MAX];
 	int ret = 1;
 
@@ -722,7 +724,7 @@ char *cg_build_path(char *name, char *path, char *type)
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
-	FILE *tasks;
+	FILE *tasks = NULL;
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -840,11 +842,14 @@ int cgroup_attach_task(struct cgroup *cgroup)
  */
 static int cg_mkdir_p(const char *path)
 {
-	char *real_path, *wd;
+	char *real_path = NULL;
+	char *wd = NULL;
 	int i = 0, j = 0;
-	char pos, *str;
+	char pos;
+	char *str = NULL;
 	int ret = 0;
-	char cwd[FILENAME_MAX], *buf;
+	char cwd[FILENAME_MAX];
+	char *buf = NULL;
 
 	buf = getcwd(cwd, FILENAME_MAX);
 	if (!buf)
@@ -927,7 +932,7 @@ static int cg_create_control_group(char *path)
  */
 static int cg_set_control_value(char *path, char *val)
 {
-	FILE *control_file;
+	FILE *control_file = NULL;
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
 
@@ -1099,7 +1104,8 @@ err:
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
-	char *fts_path[2], base[FILENAME_MAX], *path;
+	char *fts_path[2], base[FILENAME_MAX];
+	char *path = NULL;
 	int i, j, k;
 	int error = 0;
 	int retval = 0;
@@ -1191,10 +1197,11 @@ err:
  */
 char *cgroup_find_parent(char *name)
 {
-	char child[FILENAME_MAX], *parent;
+	char child[FILENAME_MAX];
+	char *parent = NULL;
 	struct stat stat_child, stat_parent;
-	char *type;
-	char *dir;
+	char *type = NULL;
+	char *dir = NULL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	type = cg_mount_table[0].name;
@@ -1251,8 +1258,8 @@ free_parent:
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 					int ignore_ownership)
 {
-	char *parent;
-	struct cgroup *parent_cgroup;
+	char *parent = NULL;
+	struct cgroup *parent_cgroup = NULL;
 	int ret = ECGFAIL;
 
 	if (!cgroup_initialized)
@@ -1293,7 +1300,7 @@ err_nomem:
  */
 int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
-	FILE *delete_tasks, *base_tasks = NULL;
+	FILE *delete_tasks = NULL, *base_tasks = NULL;
 	int tids;
 	char path[FILENAME_MAX];
 	int error = ECGROUPNOTALLOWED;
@@ -1374,7 +1381,7 @@ open_err:
 static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 {
 	char path[FILENAME_MAX];
-	FILE *ctrl_file;
+	FILE *ctrl_file = NULL;
 	int ret;
 
 	if (!cg_build_path_locked(cgroup, path, subsys))
@@ -1410,12 +1417,12 @@ static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 			struct cgroup_controller *cgc, int index)
 {
-	char *ctrl_name;
-	char *ctrl_file;
+	char *ctrl_name = NULL;
+	char *ctrl_file = NULL;
 	char *ctrl_value = NULL;
-	char *d_name;
+	char *d_name = NULL;
 	char path[FILENAME_MAX+1];
-	char *buffer;
+	char *buffer = NULL;
 	int error = 0;
 	struct stat stat_buffer;
 
@@ -1488,9 +1495,9 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 {
 	int i;
 	char path[FILENAME_MAX];
-	DIR *dir;
-	struct dirent *ctrl_dir;
-	char *control_path;
+	DIR *dir = NULL;
+	struct dirent *ctrl_dir = NULL;
+	char *control_path = NULL;
 	int error;
 
 	if (!cgroup_initialized) {
@@ -1619,8 +1626,8 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 					char *controllers[])
 {
 	int ret = 0, i;
-	char *controller;
-	struct cgroup_controller *cptr;
+	char *controller = NULL;
+	struct cgroup_controller *cptr = NULL;
 
 	/* Fill in cgroup details.  */
 	dbg("Will move pid %d to cgroup '%s'\n", pid, dest);
@@ -1676,7 +1683,8 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 static int cg_prepare_controller_array(char *cstr, char *controllers[])
 {
 	int j = 0;
-	char *temp, *saveptr = NULL;
+	char *temp = NULL;
+	char *saveptr = NULL;
 
 	do {
 		if (j == 0)
@@ -1934,7 +1942,7 @@ int cgroup_change_cgroup_path(char *dest, pid_t pid, char *controllers[])
 void cgroup_print_rules_config(FILE *fp)
 {
 	/* Iterator */
-	struct cgroup_rule *itr;
+	struct cgroup_rule *itr = NULL;
 
 	/* Loop variable */
 	int i = 0;
@@ -2036,9 +2044,9 @@ int cgroup_init_rules_cache()
 int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 					char **current_path)
 {
-	char *path;
+	char *path = NULL;
 	int ret;
-	FILE *pid_cgroup_fd;
+	FILE *pid_cgroup_fd = NULL;
 
 	if (!controller)
 		return ECGOTHER;
