@@ -15,6 +15,7 @@
  */
 
 #include "libcgrouptest.h"
+#include <errno.h>
 
 /* The messages that may be useful to the user */
 char info[NUM_MSGS][SIZE] = {
@@ -986,6 +987,8 @@ void get_controllers(const char *name, int *exist)
 		if (strncmp(name, subsys_name, sizeof(*name)) == 0)
 			*exist = 1;
 	}
+
+	fclose(fd);
 }
 
 static int group_exist(char *path_group)
@@ -1042,6 +1045,7 @@ static int group_modified(char *path_control_file, int value_type)
 	u_int64_t uint64_val;
 	char string_val[FILENAME_MAX]; /* Doubt: what should be the size ? */
 	FILE *fd;
+	int error = 1;
 
 	fd = fopen(path_control_file, "r");
 	if (!fd) {
@@ -1055,31 +1059,32 @@ static int group_modified(char *path_control_file, int value_type)
 	case BOOL:
 		fscanf(fd, "%d", &bool_val);
 		if (bool_val == val_bool)
-			return 0;
+			error = 0;
 		break;
 	case INT64:
 		fscanf(fd, "%lld", &int64_val);
 		if (int64_val == val_int64)
-			return 0;
+			error = 0;
 		break;
 	case UINT64:
 		fscanf(fd, "%llu", &uint64_val);
 		if (uint64_val == val_uint64)
-			return 0;
+			error = 0;
 		break;
 	case STRING:
 		fscanf(fd, "%s", string_val);
 		if (!strncmp(string_val, val_string, strlen(string_val)))
-			return 0;
+			error = 0;
 		break;
 	default:
 		fprintf(stderr, "Wrong value_type passed "
 						"in group_modified()\n");
 		fprintf(stderr, "Skipping modified values check....\n");
-		return 0;	/* Can not report test result as failure */
+		error =  0;	/* Can not report test result as failure */
 		break;
 	}
-	return 1;
+	fclose(fd);
+	return error;
 }
 static int add_control_value(struct cgroup_controller *newcontroller,
 				 char * control_file, char *wr, int value_type)
@@ -1163,21 +1168,24 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 int check_fsmounted(int multimnt)
 {
 	int count = 0;
-	struct mntent *entry, *tmp_entry;
+	struct mntent *entry, *tmp_entry = NULL;
 	/* Need a better mechanism to decide memory allocation size here */
 	char entry_buffer[FILENAME_MAX * 4];
-	FILE *proc_file;
+	FILE *proc_file = NULL;
+	int ret = 1;
 
 	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent));
 	if (!tmp_entry) {
 		perror("Error: failled to mallloc for mntent\n");
-		return 1;
+		ret = 1;
+		goto error;
 	}
 
 	proc_file = fopen("/proc/mounts", "r");
 	if (!proc_file) {
 		printf("Error in opening /proc/mounts.\n");
-		return EIO;
+		ret = errno;
+		goto error;
 	}
 	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer,
 						 FILENAME_MAX*4)) != NULL) {
@@ -1187,16 +1195,23 @@ int check_fsmounted(int multimnt)
 				if (count >= 2) {
 					printf("sanity check pass. %s\n",
 							 entry->mnt_type);
-					return 0;
+					ret = 0;
+					goto error;
 				}
 			} else {
 				printf("sanity check pass. %s\n",
 							 entry->mnt_type);
-				return 0;
+				ret = 0;
+				goto error;
 			}
 		}
 	}
-	return 1;
+error:
+	if (tmp_entry)
+		free(tmp_entry);
+	if (proc_file)
+		fclose(proc_file);
+	return ret;
 }
 
 static int check_task(char *tasksfile)
@@ -1220,6 +1235,7 @@ static int check_task(char *tasksfile)
 			break;
 		}
 	}
+	fclose(file);
 
 	return pass;
 }
@@ -1246,13 +1262,13 @@ static inline void build_path(char *target, char *mountpoint,
 	strncpy(target, mountpoint, FILENAME_MAX);
 
 	if (group) {
-		strncat(target, "/", FILENAME_MAX);
-		strncat(target, group, FILENAME_MAX);
+		strncat(target, "/", FILENAME_MAX - strlen(target));
+		strncat(target, group, FILENAME_MAX - strlen(target));
 	}
 
 	if (file) {
-		strncat(target, "/", FILENAME_MAX);
-		strncat(target, file, FILENAME_MAX);
+		strncat(target, "/", FILENAME_MAX - strlen(target));
+		strncat(target, file, FILENAME_MAX - strlen(target));
 	}
 }
 
@@ -1350,6 +1366,7 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
 		else
 			message(i++, FAIL, "get_cgroup()", ret,
 							 info[NOTCRTDGRP]);
+		cgroup_free(&cgroup_filled);
 
 		/* 3.
 		 * Test with name filled cgroup. Ensure the group group1 exists
