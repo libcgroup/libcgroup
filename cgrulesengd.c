@@ -324,7 +324,7 @@ int cgre_create_netlink_socket_process_msg()
 	cn_hdr->ack = 0;
 	cn_hdr->len = sizeof(enum proc_cn_mcast_op);
 	printf("sending netlink message len=%d, cn_msg len=%d\n",
-		nl_hdr->nlmsg_len, sizeof(struct cn_msg));
+		nl_hdr->nlmsg_len, (int) sizeof(struct cn_msg));
 	if (send(sk_nl, nl_hdr, nl_hdr->nlmsg_len, 0) != nl_hdr->nlmsg_len) {
 		printf("failed to send proc connector mcast ctl op!\n");
 		goto close_and_exit;
