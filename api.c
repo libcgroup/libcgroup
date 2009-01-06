@@ -580,8 +580,7 @@ int cgroup_init()
 				&hierarchy, &num_cgroups, &enabled);
 		if (err < 0)
 			break;
-		controllers[i] = (char *)malloc(strlen(subsys_name) + 1);
-		strcpy(controllers[i], subsys_name);
+		controllers[i] = strdup(subsys_name);
 		i++;
 	}
 	controllers[i] = NULL;
@@ -647,10 +646,13 @@ unlock_exit:
 	if (proc_mount)
 		fclose(proc_mount);
 
-	for (i = 0; controllers[i]; i++)
+	for (i = 0; controllers[i]; i++) {
 		free(controllers[i]);
+		controllers[i] = NULL;
+	}
 
 	pthread_rwlock_unlock(&cg_mount_table_lock);
+
 	return ret;
 }
 
@@ -704,12 +706,16 @@ static char *cg_build_path_locked(char *name, char *path, char *type)
 {
 	int i;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		/*
+		 * XX: Change to snprintf once you figure what n should be
+		 */
 		if (strcmp(cg_mount_table[i].name, type) == 0) {
-			strcpy(path, cg_mount_table[i].path);
-			strcat(path, "/");
+			sprintf(path, "%s/", cg_mount_table[i].path);
 			if (name) {
-				strcat(path, name);
-				strcat(path, "/");
+				char *tmp;
+				tmp = strdup(path);
+				sprintf(path, "%s%s/", tmp, name);
+				free(tmp);
 			}
 			return path;
 		}
@@ -752,7 +758,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			if (!cg_build_path_locked(NULL, path,
 						cg_mount_table[i].name))
 				continue;
-			strcat(path, "/tasks");
+			strncat(path, "/tasks", sizeof(path) - strlen(path));
 
 			tasks = fopen(path, "w");
 			if (!tasks) {
@@ -798,7 +804,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 					cgroup->controller[i]->name))
 				continue;
 
-			strcat(path, "/tasks");
+			strncat(path, "/tasks", sizeof(path) - strlen(path));
 
 			tasks = fopen(path, "w");
 			if (!tasks) {
@@ -966,7 +972,7 @@ static int cg_set_control_value(char *path, char *val)
 			while (*(path+len) != '/')
 				len--;
 			*(path+len+1) = '\0';
-			strcat(path, "tasks");
+			strncat(path, "tasks", sizeof(path) - strlen(path));
 			control_file = fopen(path, "r");
 			if (!control_file) {
 				if (errno == ENOENT)
@@ -996,9 +1002,10 @@ static int cg_set_control_value(char *path, char *val)
 
 int cgroup_modify_cgroup(struct cgroup *cgroup)
 {
-	char path[FILENAME_MAX], base[FILENAME_MAX];
+	char *path, base[FILENAME_MAX];
 	int i;
 	int error;
+	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1014,24 +1021,32 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 		}
 	}
 
-	strcpy(path, base);
-	for (i = 0; i < cgroup->index; i++, strcpy(path, base)) {
+	for (i = 0; i < cgroup->index; i++) {
 		int j;
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		strcpy(path, base);
-		for (j = 0; j < cgroup->controller[i]->index;
-				j++, strcpy(path, base)) {
-			strcat(path, cgroup->controller[i]->values[j]->name);
+		for (j = 0; j < cgroup->controller[i]->index; j++) {
+			ret = asprintf(&path, "%s%s", base,
+				cgroup->controller[i]->values[j]->name);
+			if (ret < 0) {
+				error = ECGOTHER;
+				goto err;
+			}
 			error = cg_set_control_value(path,
 				cgroup->controller[i]->values[j]->value);
+			free(path);
+			path = NULL;
 			if (error)
 				goto err;
 		}
 	}
+	if (path)
+		free(path);
 	return 0;
 err:
+	if (path)
+		free(path);
 	return error;
 
 }
@@ -1118,11 +1133,13 @@ err:
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
-	char *fts_path[2], base[FILENAME_MAX];
+	char *fts_path[2];
+	char *base = NULL;
 	char *path = NULL;
 	int i, j, k;
 	int error = 0;
 	int retval = 0;
+	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1147,8 +1164,6 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	 * data structure. If not, we fail.
 	 */
 	for (k = 0; k < cgroup->index; k++) {
-		path[0] = '\0';
-
 		if (!cg_build_path(cgroup->name, path,
 				cgroup->controller[k]->name))
 			continue;
@@ -1157,7 +1172,12 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		strcpy(base, path);
+		base = strdup(path);
+
+		if (!base) {
+			error = ECGOTHER;
+			goto err;
+		}
 
 		if (!ignore_ownership)
 			error = cg_chown_recursive(fts_path,
@@ -1166,9 +1186,14 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		for (j = 0; j < cgroup->controller[k]->index; j++,
-							strcpy(path, base)) {
-			strcat(path, cgroup->controller[k]->values[j]->name);
+		for (j = 0; j < cgroup->controller[k]->index; j++) {
+			free(path);
+			ret = asprintf(&path, "%s%s", base,
+					cgroup->controller[k]->values[j]->name);
+			if (ret < 0) {
+				error = ECGOTHER;
+				goto err;
+			}
 			error = cg_set_control_value(path,
 				cgroup->controller[k]->values[j]->value);
 			/*
@@ -1187,19 +1212,28 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		}
 
 		if (!ignore_ownership) {
-			strcpy(path, base);
-			strcat(path, "/tasks");
+			free(path);
+			ret = asprintf(&path, "%s/tasks", base);
+			if (ret < 0) {
+				error = ECGOTHER;
+				goto err;
+			}
 			error = chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
 			if (error) {
-				error = ECGFAIL;
+				error = ECGOTHER;
 				goto err;
 			}
 		}
+		free(base);
+		base = NULL;
 	}
 
 err:
-	free(path);
+	if (path)
+		free(path);
+	if (base)
+		free(base);
 	if (retval && !error)
 		error = retval;
 	return error;
@@ -1335,7 +1369,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 		if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 			continue;
-		strcat(path, "../tasks");
+		strncat(path, "../tasks", sizeof(path) - strlen(path));
 
 		base_tasks = fopen(path, "w");
 		if (!base_tasks)
@@ -1347,7 +1381,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 			continue;
 		}
 
-		strcat(path, "tasks");
+		strncat(path, "tasks", sizeof(path) - strlen(path));
 
 		delete_tasks = fopen(path, "r");
 		if (!delete_tasks) {
@@ -1401,7 +1435,7 @@ static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 	if (!cg_build_path_locked(cgroup, path, subsys))
 		return ECGFAIL;
 
-	strcat(path, file);
+	strncat(path, file, sizeof(path) - strlen(path));
 	ctrl_file = fopen(path, "r");
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
@@ -1454,7 +1488,7 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	 */
 
 	cg_build_path_locked(cgroup->name, path, cg_mount_table[index].name);
-	strcat(path, d_name);
+	strncat(path, d_name, sizeof(path) - strlen(path));
 
 	error = stat(path, &stat_buffer);
 
@@ -1513,6 +1547,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 	struct dirent *ctrl_dir = NULL;
 	char *control_path = NULL;
 	int error;
+	int ret;
 
 	if (!cgroup_initialized) {
 		/* ECGROUPNOTINITIALIZED */
@@ -1558,16 +1593,12 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		 * Get the uid and gid information
 		 */
 
-		control_path = malloc(strlen(path) + strlen("tasks") + 1);
+		ret = asprintf(&control_path, "%s/tasks", path);
 
-		if (!control_path) {
+		if (ret < 0) {
 			error = ECGOTHER;
 			goto unlock_error;
 		}
-
-		strcpy(control_path, path);
-
-		strcat(control_path, "tasks");
 
 		if (stat(control_path, &stat_buffer)) {
 			free(control_path);
