@@ -127,26 +127,23 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i);
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
 void test_cgroup_add_free_controller(int i);
 void get_controllers(const char *name, int *exist);
-static int group_exist(char *path_group);
-static int set_controller(int controller, char *controller_name,
+int group_exist(char *path_group);
+int set_controller(int controller, char *controller_name,
 						 char *control_file);
-static int group_modified(char *path_control_file, int value_type,
+int group_modified(char *path_control_file, int value_type,
 						 struct cntl_val_t cval);
-static int add_control_value(struct cgroup_controller *newcontroller,
+int add_control_value(struct cgroup_controller *newcontroller,
 	 char *control_file, char *wr, int value_type, struct cntl_val_t cval);
 struct cgroup *new_cgroup(char *group, char *controller_name,
 	 char *control_file, int value_type, struct cntl_val_t cval,
 					 struct uid_gid_t ids, int i);
 int check_fsmounted(int multimnt);
-static int check_task(char *tasksfile);
+int check_task(char *tasksfile);
 /* function to print messages in better format */
-static inline void message(int num, int pass, const char *api,
+void message(int num, int pass, const char *api,
 						 int ret, char *extra);
-static inline void build_path(char *target, char *mountpoint,
+void build_path(char *target, char *mountpoint,
 				 const char *group, const char *file);
+pid_t cgrouptest_gettid();
 
-static inline pid_t cgrouptest_gettid()
-{
-	return syscall(__NR_gettid);
-}
 #endif
