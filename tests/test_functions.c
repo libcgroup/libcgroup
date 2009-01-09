@@ -96,12 +96,12 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 		build_path(tasksfile, mountpoint,
 					 group1, "tasks");
 
-		if (check_task(tasksfile)) {
+		if (check_task(tasksfile, 0)) {
 			if (fs_mounted == 2) {
 				/* multiple mounts */
 				build_path(tasksfile2, mountpoint2,
 							 group2, "tasks");
-				if (check_task(tasksfile2)) {
+				if (check_task(tasksfile2, 0)) {
 					message(i, PASS, "attach_task()",
 						 retval, info[TASKINGRP]);
 				} else {
@@ -613,7 +613,7 @@ error:
  * Checks if the current task belongs to the given tasks file
  * @param tasksfile the task file to be tested for the task
  */
-int check_task(char *tasksfile)
+int check_task(char *tasksfile, pid_t pid)
 {
 	FILE *file;
 	pid_t curr_tid, tid;
@@ -626,7 +626,11 @@ int check_task(char *tasksfile)
 		exit(1);
 	}
 
-	curr_tid = cgrouptest_gettid();
+	if (pid)
+		curr_tid = pid;
+	else
+		curr_tid = cgrouptest_gettid();
+
 	while (!feof(file)) {
 		fscanf(file, "%u", &tid);
 		if (tid == curr_tid) {

@@ -138,7 +138,7 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 	 char *control_file, int value_type, struct cntl_val_t cval,
 					 struct uid_gid_t ids, int i);
 int check_fsmounted(int multimnt);
-int check_task(char *tasksfile);
+int check_task(char *tasksfile, pid_t pid);
 /* function to print messages in better format */
 void message(int num, int pass, const char *api,
 						 int ret, char *extra);
