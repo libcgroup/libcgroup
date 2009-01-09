@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-					 NULL, NULL, NULLGRP, 2);
+						 NULL, NULL, 0, NULLGRP, 2);
 
 		/*
 		 * Test03: Create a valid cgroup ds and check all return values
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTINITIALIZED, nullcgroup,
-						 NULL, NULL, NULLGRP, 1);
+						 NULL, NULL, 0, NULLGRP, 1);
 
 		/*
 		 * Test02: call cgroup_init() and check return values
@@ -182,8 +182,8 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to root group
 		 */
 
-		test_cgroup_attach_task(0, nullcgroup,
-						 NULL, NULL, NULLGRP, 3);
+		test_cgroup_attach_task(0, nullcgroup, NULL, NULL, 0,
+							 NULLGRP, 3);
 		/*
 		 * Test04: Call cgroup_attach_task_pid() with null group
 		 * and invalid pid
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, cgroup1, "group1", NULL,
-								 NOMESSAGE, 7);
+							 0, NOMESSAGE, 7);
 
 		/*
 		 * Test08: modify cgroup with the same cgroup
@@ -378,7 +378,8 @@ int main(int argc, char *argv[])
 		 * Exp outcome: current task should be attached to root groups
 		 */
 
-		test_cgroup_attach_task(0, nullcgroup, NULL, NULL, NULLGRP, 2);
+		test_cgroup_attach_task(0, nullcgroup, NULL, NULL,
+							 0, NULLGRP, 2);
 
 		/*
 		 * Test03: Create a valid cgroup structure
@@ -436,7 +437,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl1_cgroup1, "ctl1_group1",
-							 NULL, NOMESSAGE, 8);
+						 NULL, 0, NOMESSAGE, 8);
 
 		/*
 		 * Test07: Call cgroup_attach_task() with a group with ctl2
@@ -446,7 +447,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, ctl2_cgroup1, "ctl1_group1",
-						 "ctl2_group1", NOMESSAGE, 9);
+					 "ctl2_group1", 0, NOMESSAGE, 9);
 
 		/*
 		 * Test: Create a valid cgroup structure
@@ -467,7 +468,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(ECGROUPNOTEXIST, ctl2_cgroup2,
-						 NULL, NULL, NOTCRTDGRP, 11);
+					 NULL, NULL, 0, NOTCRTDGRP, 11);
 
 		/*
 		 * Create another valid cgroup structure with same group name
@@ -569,7 +570,7 @@ int main(int argc, char *argv[])
 		 */
 
 		test_cgroup_attach_task(0, common_cgroup, "commongroup",
-						 "commongroup", COMMONGRP, 20);
+					 "commongroup", 0, COMMONGRP, 20);
 
 		/*
 		 * Test18: Create a valid cgroup structure to modify the

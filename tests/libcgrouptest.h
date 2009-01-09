@@ -110,8 +110,8 @@ extern char mountpoint[], mountpoint2[];
 /* Functions to test each API */
 void test_cgroup_init(int retcode, int i);
 void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
-				const char *group1, const char *group2,
-								int k, int i);
+		const char *group1, const char *group2, pid_t pid,
+		int k, int i);
 struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	 int value_type, struct cntl_val_t cval, struct uid_gid_t ids, int i);
 void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,

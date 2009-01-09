@@ -66,13 +66,17 @@ void test_cgroup_init(int retcode, int i)
  * @param k the message enum number to print the useful message
  */
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
-		 const char *group1, const char *group2, int k, int i)
+	 const char *group1, const char *group2, pid_t pid, int k, int i)
 {
 	int retval;
 	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
 	/* Check, In case some error is expected due to a negative scenario */
 	if (retcode) {
-		retval = cgroup_attach_task(cgrp);
+		if (pid)
+			retval = cgroup_attach_task_pid(cgrp, pid);
+		else
+			retval = cgroup_attach_task(cgrp);
+
 		if (retval == retcode)
 			message(i, PASS, "attach_task()", retval, info[k]);
 		else
@@ -82,7 +86,11 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 	}
 
 	/* Now there is no error and it is a genuine call */
-	retval = cgroup_attach_task(cgrp);
+	if (pid)
+		retval = cgroup_attach_task_pid(cgrp, pid);
+	else
+		retval = cgroup_attach_task(cgrp);
+
 	/* API returned success, so perform check */
 	if (retval == 0) {
 		build_path(tasksfile, mountpoint,
