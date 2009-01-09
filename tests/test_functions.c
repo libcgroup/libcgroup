@@ -288,7 +288,7 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 			/* check group under mountpoint2 */
 			build_path(path1_group, mountpoint2, name, NULL);
 
-		if (group_exist(path1_group) == -1)
+		if (group_exist(path1_group) == ENOENT)
 			message(i, PASS, "delete_cgroup()", retval,
 						 info[GRPDELETEDINFS]);
 		else
@@ -299,10 +299,10 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 		/* check group under both mountpoints */
 		/* Check if the group deleted under both mountpoints */
 		build_path(path1_group, mountpoint, name, NULL);
-		if (group_exist(path1_group) == -1) {
+		if (group_exist(path1_group) == ENOENT) {
 			build_path(path2_group, mountpoint2, name, NULL);
 
-			if (group_exist(path2_group) == -1)
+			if (group_exist(path2_group) == ENOENT)
 				message(i, PASS, "delete_cgroup()",
 						 retval, info[GRPDELETEDINFS]);
 			else
@@ -347,11 +347,20 @@ void get_controllers(const char *name, int *exist)
  */
 int group_exist(char *path_group)
 {
-	int ret;
-	ret = open(path_group, O_DIRECTORY);
-	if (ret == -1)
-		return ret;
-	return 0;
+	struct stat statbuf;
+	if (stat(path_group, &statbuf) == -1) {
+		/* Group deleted. OK */
+		if (errno == ENOENT)
+			return ENOENT;
+		/* There is some other failure */
+		printf("stat failed, return code is %d\n", errno);
+		return -1;
+	}
+
+	if (S_ISDIR(statbuf.st_mode))
+		return 0;
+	else
+		return -1;
 }
 
 /**
