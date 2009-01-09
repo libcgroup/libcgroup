@@ -18,7 +18,7 @@
 #include <errno.h>
 
 /* The messages that may be useful to the user */
-char info[NUM_MSGS][SIZE] = {
+char info[][SIZE] = {
 	" Parameter nullcgroup\n", 			/* NULLGRP */
 	" Parameter commoncgroup\n",			/* COMMONGRP */
 	" Parameter not created group\n",		/* NOTCRTDGRP */
@@ -41,9 +41,25 @@ char info[NUM_MSGS][SIZE] = {
 	"\n",						/* NOMESSAGE */
 };
 
+
+int cpu, memory;
+int fs_mounted;
+/* We use mountpoint for single mount.
+ * For multimount we use mountpoint and mountpoint2.
+ */
+char mountpoint[FILENAME_MAX], mountpoint2[FILENAME_MAX];
+
 int main(int argc, char *argv[])
 {
 	int retval;
+	struct uid_gid_t ids = {0}; /* Set default control permissions */
+
+	struct cntl_val_t cval;
+	cval.val_int64 = 200000;
+	cval.val_uint64 = 200000;
+	cval.val_bool = 1;
+	strcpy(cval.val_string, "200000");
+
 	struct cgroup *cgroup1, *cgroup2, *cgroup3, *nullcgroup = NULL;
 	struct cgroup_controller *sec_controller;
 	/* In case of multimount for readability we use the controller name
@@ -91,12 +107,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* Set default control permissions */
-	control_uid = 0;
-	control_gid = 0;
-	tasks_uid = 0;
-	tasks_gid = 0;
-
 	/*
 	 * Testsets: Testcases are broadly devided into 3 categories based on
 	 * filesystem(fs) mount scenario. fs not mounted, fs mounted, fs multi
@@ -127,7 +137,8 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error
 		 */
 
-		cgroup1 = create_new_cgroup_ds(0, "group1", STRING, 3);
+		cgroup1 = create_new_cgroup_ds(0, "group1",
+						 STRING, cval, ids, 3);
 
 		/*
 		 * Test04: Then Call cgroup_create_cgroup() with this valid grp
@@ -205,20 +216,23 @@ int main(int argc, char *argv[])
 		 */
 		retval = cgroup_attach_task_pid(nullcgroup, -1);
 		if (retval != 0)
-			message(4, PASS, "attach_task_pid()", retval, extra);
+			message(4, PASS, "attach_task_pid()", retval,
+							 info[NOMESSAGE]);
 		else
-			message(4, FAIL, "attach_task_pid()", retval, extra);
+			message(4, FAIL, "attach_task_pid()", retval,
+							 info[NOMESSAGE]);
 
 		/*
 		 * Test05: Create a valid cgroup structure
 		 * Exp outcome: no error. 0 return value
 		 */
-		cgroup1 = create_new_cgroup_ds(ctl1, "group1", STRING, 5);
+		cgroup1 = create_new_cgroup_ds(ctl1, "group1",
+							 STRING, cval, ids, 5);
 		if (!cgroup1) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Trying with second controller\n");
 			cgroup1 = create_new_cgroup_ds(ctl2, "group1", STRING,
-									5);
+								cval, ids, 5);
 			if (!cgroup1) {
 				fprintf(stderr, "Failed to create cgroup ds. "
 					"Tests dependent on this structure "
@@ -247,11 +261,13 @@ int main(int argc, char *argv[])
 		 * Test08: modify cgroup with the same cgroup
 		 * Exp outcome: zero return value. No change.
 		 */
+		set_controller(ctl1, controller_name, control_file);
 		build_path(path_control_file, mountpoint,
 						 "group1", control_file);
+		strncpy(cval.val_string, "260000", sizeof(cval.val_string));
 		retval = cgroup_modify_cgroup(cgroup1);
-		/* Check if the values are changed */
-		if (!retval && !group_modified(path_control_file, STRING))
+		/* Check if the values are changed. cval contains orig values */
+		if (!retval && !group_modified(path_control_file, STRING, cval))
 			message(8, PASS, "modify_cgroup()", retval,
 							 info[SAMEGRP]);
 		else
@@ -262,12 +278,13 @@ int main(int argc, char *argv[])
 		 * Create another valid cgroup structure with same group
 		 * to modify the existing group
 		 */
-		cgroup2 = create_new_cgroup_ds(ctl1, "group1", STRING, 9);
+		cgroup2 = create_new_cgroup_ds(ctl1, "group1",
+						 STRING, cval, ids, 9);
 		if (!cgroup2) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Trying with second controller\n");
-			cgroup2 = create_new_cgroup_ds(ctl2, "group1", STRING,
-									9);
+			cgroup2 = create_new_cgroup_ds(ctl2, "group1",
+							 STRING, cval, ids, 9);
 			if (!cgroup2) {
 				fprintf(stderr, "Failed to create cgroup ds. "
 					"Tests dependent on this structure "
@@ -297,8 +314,9 @@ int main(int argc, char *argv[])
 		 * Create another valid cgroup structure with diff controller
 		 * to modify the existing group
 		 */
-		val_int64 = 262144;
-		cgroup3 = create_new_cgroup_ds(ctl2, "group1", INT64, 12);
+		cval.val_int64 = 262144;
+		cgroup3 = create_new_cgroup_ds(ctl2, "group1",
+						 INT64, cval, ids, 12);
 		if (!cgroup3) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -322,7 +340,7 @@ int main(int argc, char *argv[])
 		 * that "group1" exists in fs. So call cgroup_create_cgroup()
 		 * with "group1" named group before calling this test function.
 		 */
-		test_cgroup_get_cgroup(ctl1, ctl2, 14);
+		test_cgroup_get_cgroup(ctl1, ctl2, ids, 14);
 
 		/*
 		 * Test16: delete cgroup
@@ -392,7 +410,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		ctl1_cgroup1 = create_new_cgroup_ds(ctl1, "ctl1_group1",
-								 STRING, 3);
+							 STRING, cval, ids, 3);
 		if (!ctl1_cgroup1) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -412,7 +430,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		ctl2_cgroup1 = create_new_cgroup_ds(ctl2, "ctl2_group1",
-								 STRING, 5);
+							 STRING, cval, ids, 5);
 		if (!ctl2_cgroup1) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -460,7 +478,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		ctl2_cgroup2 = create_new_cgroup_ds(ctl2, "ctl2_group2",
-								 STRING, 10);
+							 STRING, cval, ids, 10);
 		if (!ctl2_cgroup2) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -482,7 +500,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		mod_ctl1_cgroup1 = create_new_cgroup_ds(ctl1, "ctl1_group1",
-								 STRING, 12);
+							 STRING, cval, ids, 12);
 		if (!mod_ctl1_cgroup1) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -503,7 +521,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		mod_ctl2_cgroup1 = create_new_cgroup_ds(ctl2, "ctl2_group1",
-								 STRING, 14);
+							 STRING, cval, ids, 14);
 		if (!mod_ctl2_cgroup1) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -538,7 +556,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		common_cgroup = create_new_cgroup_ds(ctl1, "commongroup",
-								 STRING, 18);
+							 STRING, cval, ids, 18);
 		if (!common_cgroup) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -555,7 +573,8 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		if (!cgroup_add_controller(common_cgroup, controller_name)) {
-			message(15, FAIL, "add_controller()", retval, extra);
+			message(15, FAIL, "add_controller()", retval,
+							 info[NOMESSAGE]);
 			fprintf(stderr, "Adding second controller failled "
 				" Exiting without running further testcases\n");
 			exit(1);
@@ -583,7 +602,7 @@ int main(int argc, char *argv[])
 		 * Exp outcome: no error. 0 return value
 		 */
 		mod_common_cgroup = create_new_cgroup_ds(ctl1, "commongroup",
-								 STRING, 21);
+							 STRING, cval, ids, 21);
 		if (!common_cgroup) {
 			fprintf(stderr, "Failed to create new cgroup ds. "
 					"Tests dependent on this structure "
@@ -602,15 +621,16 @@ int main(int argc, char *argv[])
 		sec_controller = cgroup_add_controller(mod_common_cgroup,
 							 controller_name);
 		if (!sec_controller) {
-			message(18, FAIL, "add_controller()", retval, extra);
+			message(18, FAIL, "add_controller()", retval,
+							 info[NOMESSAGE]);
 			fprintf(stderr, "Adding second controller failled "
 				" Exiting without running further testcases\n");
 			exit(1);
 		}
 
-		strncpy(val_string, "7000064", sizeof(val_string));
+		strncpy(cval.val_string, "7000064", sizeof(cval.val_string));
 		retval = cgroup_add_value_string(sec_controller,
-						 control_file, val_string);
+						 control_file, cval.val_string);
 		if (retval)
 			printf("The cgroup_modify_cgroup() test will fail\n");
 
@@ -627,7 +647,7 @@ int main(int argc, char *argv[])
 		 */
 		test_cgroup_delete_cgroup(0, common_cgroup,
 						 "commongroup", 1, 2, 1, 23);
-		test_cgroup_get_cgroup(ctl1, ctl2, 24);
+		test_cgroup_get_cgroup(ctl1, ctl2, ids, 24);
 
 		/* Free the cgroup structures */
 		cgroup_free(&nullcgroup);
@@ -650,13 +670,12 @@ int main(int argc, char *argv[])
 void test_cgroup_init(int retcode, int i)
 {
 	int retval;
-	char extra[SIZE] = "\n";
 
 	retval = cgroup_init();
 	if (retval == retcode)
-		message(i, PASS, "init()\t", retval, extra);
+		message(i, PASS, "init()\t", retval, info[NOMESSAGE]);
 	else
-		message(i, FAIL, "init()",  retval, extra);
+		message(i, FAIL, "init()\t",  retval, info[NOMESSAGE]);
 }
 
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
@@ -708,7 +727,7 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 
 
 struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
-						 int value_type, int i)
+	 int value_type, struct cntl_val_t cval, struct uid_gid_t ids, int i)
 {
 	int retval;
 	char group[FILENAME_MAX];
@@ -721,16 +740,15 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 		return NULL;
 	}
 
-	/* val_string is still global. Will replace soon with config file */
 	switch (ctl) {
 		/* control values are controller specific, so will be set
 		 * accordingly from the config file */
 	case CPU:
-		strncpy(val_string, "260000", sizeof(val_string));
+		strncpy(cval.val_string, "260000", sizeof(cval.val_string));
 		break;
 
 	case MEMORY:
-		strncpy(val_string, "7000064", sizeof(val_string));
+		strncpy(cval.val_string, "7000064", sizeof(cval.val_string));
 		break;
 
 	/* To be added for other controllers */
@@ -741,7 +759,8 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 		break;
 	}
 
-	return new_cgroup(group, controller_name, control_file, value_type, i);
+	return new_cgroup(group, controller_name, control_file,
+						 value_type, cval, ids, i);
 }
 
 
@@ -869,6 +888,7 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 					 int ctl2, int value_type, int i)
 {
 	int retval;
+	struct cntl_val_t cval = {0, 0, 0, "1000"};
 	char path1_control_file[FILENAME_MAX], path2_control_file[FILENAME_MAX];
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 
@@ -900,9 +920,9 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 		set_controller(ctl1, controller_name, control_file);
 		build_path(path1_control_file, mountpoint, name, control_file);
 		/* this approach will be changed in coming patches */
-		strncpy(val_string, "260000", sizeof(val_string));
+		strncpy(cval.val_string, "260000", sizeof(cval.val_string));
 
-		if (!group_modified(path1_control_file, value_type))
+		if (!group_modified(path1_control_file, value_type, cval))
 			message(i, PASS, "modify_cgroup()", retval,
 							 info[NOMESSAGE]);
 		else
@@ -922,8 +942,9 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 						 name, control_file);
 
 		/* this approach will be changed in coming patches */
-		strncpy(val_string, "7000064", sizeof(val_string));
-		if (!group_modified(path2_control_file, value_type))
+		strncpy(cval.val_string, "7000064", sizeof(cval.val_string));
+		cval.val_int64 = 262144;
+		if (!group_modified(path2_control_file, value_type, cval))
 			message(i, PASS, "modify_cgroup()", retval,
 							 info[NOMESSAGE]);
 		else
@@ -948,10 +969,12 @@ void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 						 name, control_file);
 		}
 		/* this approach will be changed in coming patches */
-		strncpy(val_string, "260000", sizeof(val_string));
-		if (!group_modified(path1_control_file, value_type)) {
-			strncpy(val_string, "7000064", sizeof(val_string));
-			if (!group_modified(path2_control_file, value_type))
+		strncpy(cval.val_string, "260000", sizeof(cval.val_string));
+		if (!group_modified(path1_control_file, value_type, cval)) {
+			strncpy(cval.val_string, "7000064",
+						 sizeof(cval.val_string));
+			if (!group_modified(path2_control_file,
+							 value_type, cval))
 				message(i, PASS, "modify_cgroup()",
 					 retval, info[GRPMODINBOTHCTLS]);
 			else
@@ -1038,7 +1061,8 @@ static int set_controller(int controller, char *controller_name,
 	}
 }
 
-static int group_modified(char *path_control_file, int value_type)
+static int group_modified(char *path_control_file, int value_type,
+						 struct cntl_val_t cval)
 {
 	bool bool_val;
 	int64_t int64_val;
@@ -1058,22 +1082,22 @@ static int group_modified(char *path_control_file, int value_type)
 
 	case BOOL:
 		fscanf(fd, "%d", &bool_val);
-		if (bool_val == val_bool)
+		if (bool_val == cval.val_bool)
 			error = 0;
 		break;
 	case INT64:
 		fscanf(fd, "%lld", &int64_val);
-		if (int64_val == val_int64)
+		if (int64_val == cval.val_int64)
 			error = 0;
 		break;
 	case UINT64:
 		fscanf(fd, "%llu", &uint64_val);
-		if (uint64_val == val_uint64)
+		if (uint64_val == cval.val_uint64)
 			error = 0;
 		break;
 	case STRING:
 		fscanf(fd, "%s", string_val);
-		if (!strncmp(string_val, val_string, strlen(string_val)))
+		if (!strncmp(string_val, cval.val_string, strlen(string_val)))
 			error = 0;
 		break;
 	default:
@@ -1087,7 +1111,7 @@ static int group_modified(char *path_control_file, int value_type)
 	return error;
 }
 static int add_control_value(struct cgroup_controller *newcontroller,
-				 char * control_file, char *wr, int value_type)
+	 char *control_file, char *wr, int value_type, struct cntl_val_t cval)
 {
 	int retval;
 
@@ -1095,22 +1119,22 @@ static int add_control_value(struct cgroup_controller *newcontroller,
 
 	case BOOL:
 		retval = cgroup_add_value_bool(newcontroller,
-					 control_file, val_bool);
+					 control_file, cval.val_bool);
 		snprintf(wr, SIZE, "add_value_bool()");
 		break;
 	case INT64:
 		retval = cgroup_add_value_int64(newcontroller,
-					 control_file, val_int64);
+					 control_file, cval.val_int64);
 		snprintf(wr, SIZE, "add_value_int64()");
 		break;
 	case UINT64:
 		retval = cgroup_add_value_uint64(newcontroller,
-					 control_file, val_uint64);
+					 control_file, cval.val_uint64);
 		snprintf(wr, SIZE, "add_value_uint64()");
 		break;
 	case STRING:
 		retval = cgroup_add_value_string(newcontroller,
-					 control_file, val_string);
+					 control_file, cval.val_string);
 		snprintf(wr, SIZE, "add_value_string()");
 		break;
 	default:
@@ -1122,7 +1146,8 @@ static int add_control_value(struct cgroup_controller *newcontroller,
 }
 
 struct cgroup *new_cgroup(char *group, char *controller_name,
-				 char *control_file, int value_type, int i)
+				 char *control_file, int value_type,
+			 struct cntl_val_t cval, struct uid_gid_t ids, int i)
 {
 	int retval;
 	char wr[SIZE]; /* Names of wrapper apis */
@@ -1132,34 +1157,36 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 	newcgroup = cgroup_new_cgroup(group);
 
 	if (newcgroup) {
-		retval = cgroup_set_uid_gid(newcgroup, tasks_uid, tasks_gid,
-						control_uid, control_gid);
+		retval = cgroup_set_uid_gid(newcgroup, ids.tasks_uid,
+			 ids.tasks_gid,	ids.control_uid, ids.control_gid);
 
 		if (retval) {
 			snprintf(wr, SIZE, "set_uid_gid()");
-			message(i++, FAIL, wr, retval, extra);
+			message(i++, FAIL, wr, retval, info[NOMESSAGE]);
 		}
 
 		newcontroller = cgroup_add_controller(newcgroup,
 							 controller_name);
 		if (newcontroller) {
 			retval =  add_control_value(newcontroller,
-						 control_file, wr, value_type);
+					 control_file, wr, value_type, cval);
 
 			if (!retval) {
 				message(i++, PASS, "new_cgroup()",
-								 retval, extra);
+						 retval, info[NOMESSAGE]);
 			} else {
-				message(i++, FAIL, wr, retval, extra);
+				message(i++, FAIL, wr, retval,
+							 info[NOMESSAGE]);
 				return NULL;
 			}
 		 } else {
 			/* Since these wrappers do not return an int so -1 */
-			message(i++, FAIL, "add_controller", -1, extra);
+			message(i++, FAIL, "add_controller", -1,
+							 info[NOMESSAGE]);
 			return NULL;
 		}
 	} else {
-		message(i++, FAIL, "new_cgroup", -1, extra);
+		message(i++, FAIL, "new_cgroup", -1, info[NOMESSAGE]);
 		return NULL;
 	}
 	return newcgroup;
@@ -1275,6 +1302,13 @@ static inline void build_path(char *target, char *mountpoint,
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 {
 	int retval;
+
+	struct cntl_val_t cval;
+	cval.val_int64 = 0;
+	cval.val_uint64 = 0;
+	cval.val_bool = 0;
+	strcpy(cval.val_string, "5000");
+
 	struct cgroup *cgroup1, *cgroup2;
 	struct cgroup_controller *controller;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
@@ -1296,7 +1330,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup1, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-						 control_file, wr, STRING);
+					 control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -1304,7 +1338,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-						 control_file, wr, STRING);
+					 control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -1320,7 +1354,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-						 control_file, wr, STRING);
+					 control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -1335,11 +1369,12 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	cgroup_free(&cgroup2);
 }
 
-void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
+void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 {
 	struct cgroup *cgroup_filled = NULL, *cgroup_a = NULL, *cgroup_b = NULL;
 	struct cgroup_controller *controller = NULL;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	struct cntl_val_t cval = {0, 0, 0, "5000"};
 	int ret;
 
 	/*
@@ -1388,7 +1423,7 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, int i)
 	/* MULTIMOUNT: Create, get and compare a cgroup under both mounts */
 
 	/* get cgroup_a ds and create group_a in filesystem */
-	cgroup_a = create_new_cgroup_ds(ctl1, "group_a", STRING, 00);
+	cgroup_a = create_new_cgroup_ds(ctl1, "group_a", STRING, cval, ids, 0);
 	if (fs_mounted == FS_MULTI_MOUNTED) {
 		/* Create under another controller also */
 		ret = set_controller(ctl2, controller_name, control_file);

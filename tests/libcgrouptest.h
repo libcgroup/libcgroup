@@ -34,8 +34,6 @@
 #define PASS 1		/* test passed */
 #define FAIL 0		/* test failed */
 
-int cpu = 0, memory = 0;
-
 enum cgroup_mount_t {
 	FS_NOT_MOUNTED,
 	FS_MOUNTED,
@@ -78,26 +76,36 @@ enum info_message_t {
 	NOMESSAGE,
 };
 
+/* Keep a single struct of all ids */
+struct uid_gid_t {
+	uid_t control_uid;
+	gid_t control_gid;
+	uid_t tasks_uid;
+	gid_t tasks_gid;
+};
+
+/* Keep a single struct of all control values */
+struct cntl_val_t {
+	int64_t val_int64;
+	u_int64_t val_uint64;
+	bool val_bool;
+	/* size worth of 100 digit num is fair enough */
+	char val_string[100];	/* string value of control parameter */
+};
+
+extern int cpu, memory;
+
 /* The set of verbose messages useful to the user */
 extern char info[NUM_MSGS][SIZE];
 
-int64_t val_int64;
-u_int64_t val_uint64;
-bool val_bool;
-/* Doubt: size of following string. is'nt this wrong ?*/
-char val_string[FILENAME_MAX];	/* string value of control parameter */
-uid_t control_uid;
-gid_t control_gid;
-uid_t tasks_uid;
-gid_t tasks_gid;
 /* this variable is never modified */
-int fs_mounted;
+extern int fs_mounted;
 
-/* The mountpoints as received from script */
-char mountpoint[FILENAME_MAX], mountpoint2[FILENAME_MAX];
-
-/* No extra message unless specified */
-char extra[SIZE] = "\n";
+/* The mountpoints as received from script
+ * We use mountpoint for single mount.
+ * For multimount we use mountpoint and mountpoint2.
+ */
+extern char mountpoint[], mountpoint2[];
 
 /* Functions to test each API */
 void test_cgroup_init(int retcode, int i);
@@ -105,7 +113,7 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgroup1,
 				const char *group1, const char *group2,
 								int k, int i);
 struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
-						 int value_type, int i);
+	 int value_type, struct cntl_val_t cval, struct uid_gid_t ids, int i);
 void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int common, int mpnt, int ign, int i);
 void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
@@ -113,7 +121,7 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 void test_cgroup_modify_cgroup(int retcode, struct cgroup *cgrp,
 		 const char *name, int which_ctl, int ctl1, int ctl2,
 						 int value_type, int i);
-void test_cgroup_get_cgroup(int ctl1, int ctl2, int i);
+void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i);
 /* API test functions end here */
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
@@ -122,11 +130,13 @@ void get_controllers(const char *name, int *exist);
 static int group_exist(char *path_group);
 static int set_controller(int controller, char *controller_name,
 						 char *control_file);
-static int group_modified(char *path_control_file, int value_type);
+static int group_modified(char *path_control_file, int value_type,
+						 struct cntl_val_t cval);
 static int add_control_value(struct cgroup_controller *newcontroller,
-				 char * control_file, char *wr, int value_type);
+	 char *control_file, char *wr, int value_type, struct cntl_val_t cval);
 struct cgroup *new_cgroup(char *group, char *controller_name,
-				 char *control_file, int value_type, int i);
+	 char *control_file, int value_type, struct cntl_val_t cval,
+					 struct uid_gid_t ids, int i);
 int check_fsmounted(int multimnt);
 static int check_task(char *tasksfile);
 /* function to print messages in better format */
