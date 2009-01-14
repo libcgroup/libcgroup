@@ -126,7 +126,7 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i);
 
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i);
 void test_cgroup_add_free_controller(int i);
-void get_controllers(const char *name, int *exist);
+void is_subsystem_enabled(const char *name, int *exist);
 int group_exist(char *path_group);
 int set_controller(int controller, char *controller_name,
 						 char *control_file);

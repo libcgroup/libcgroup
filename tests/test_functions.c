@@ -321,7 +321,7 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
  * @param name the name of the controller to be checked
  * @param exist set to 1 if the controller exists
  */
-void get_controllers(const char *name, int *exist)
+void is_subsystem_enabled(const char *name, int *exist)
 {
 	int hierarchy, num_cgroups, enabled;
 	FILE *fd;

@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
 	/*
 	 * check if one of the supported controllers is cpu or memory
 	 */
-	get_controllers("cpu", &cpu);
-	get_controllers("memory", &memory);
+	is_subsystem_enabled("cpu", &cpu);
+	is_subsystem_enabled("memory", &memory);
 	if (cpu == 0 && memory == 0) {
 		fprintf(stderr, "none of cpu and memory controllers"
 						" is enabled in kernel\n");
