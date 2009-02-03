@@ -44,7 +44,7 @@ int euid_of_pid(pid_t pid)
 	sprintf(path, "/proc/%d/status", pid);
 	fp = fopen(path, "r");
 	if (!fp) {
-		fprintf(stderr, "Error in opening file %s:%s\n", path,
+		dbg("Error in opening file %s:%s\n", path,
 				strerror(errno));
 		return -1;
 	}
@@ -79,7 +79,7 @@ int egid_of_pid(pid_t pid)
 	sprintf(path, "/proc/%d/status", pid);
 	fp = fopen(path, "r");
 	if (!fp) {
-		fprintf(stderr, "Error in opening file %s:%s\n", path,
+		dbg("Error in opening file %s:%s\n", path,
 				strerror(errno));
 		return -1;
 	}
