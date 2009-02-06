@@ -84,8 +84,16 @@ Name of the control group. It can contain only characters, which are
 allowed for directory names. 
 The groups form a tree, i.e. a control group can contain zero or more
 subgroups. Subgroups can be specified using '/' delimiter. 
+
+The root control group is always created automatically in all hierarchies
+and it is the base of the group hierarchy. It can be explicitly specified in
+.B cgconfig.conf
+file by using '.' as group name. This can be used e.g. to set its permissions,
+as shown in Example 5.
+
 When the parent control group of a subgroup is not specified,
 then it is created automatically.
+
 .TP
 .B permissions
 Permissions of the given control group on mounted filesystem.
@@ -292,7 +300,7 @@ Since both
 and
 .I cpu
 subsystems are mounted to the same directory, all
-groups are implicilty controlled also by
+groups are implicitly controlled also by
 .I cpuacct
 subsystem, even if there is no
 .I cpuacct
@@ -406,12 +414,11 @@ mkdir /mnt/cgroups/cpu/daemons/www
 mkdir /mnt/cgroups/cpu/daemons/ftp
 .fi
 .RE
-
 Group
 .I daemons
 is created in both hierarchies. In
 .I cpuacct
-hierarchy the groupis explicitly mentioned in the configuration
+hierarchy the group is explicitly mentioned in the configuration
 file. In 
 .I cpu
 hierarchy is the group created implicitly when
@@ -427,13 +434,105 @@ hierarchy and are not controlled by
 .I cpuacct
 subsystem.
 
+.SS Example 5
+.LP
+The configuration file:
+.LP
+.RS
+.nf
+mount {
+.RS
+cpu = /mnt/cgroups/cpu;
+cpuacct = /mnt/cgroups/cpu;
+.RE
+}
+
+group . {
+.RS
+perm {
+.RS
+task {
+.RS
+uid = root;
+gid = operator;
+.RE
+}
+admin {
+.RS
+uid = root;
+gid = operator;
+.RE
+}
+.RE
+}
+cpu {
+}
+.RE
+}
+
+group daemons {
+.RS
+perm {
+.RS
+task {
+.RS
+uid = root;
+gid = daemonmaster;
+.RE
+}
+admin {
+.RS
+uid = root;
+gid = operator;
+.RE
+}
+.RE
+}
+cpu {
+}
+.RE
+}
+.RE
+.fi
+creates the hierarchy controlled by two subsystems with one group with some
+special permissions.
+It corresponds to following operations:
+.LP
+.RS
+.nf
+mkdir /mnt/cgroups/cpu
+mount -t cgroup -o cpu,cpuacct cpu /mnt/cgroups/cpu
+
+chown root:operator /mnt/cgroups/cpu/*
+chown root:operator /mnt/cgroups/cpu/tasks
+
+mkdir /mnt/cgroups/cpu/daemons
+chown root:operator /mnt/cgroups/cpu/daemons/*
+chown root:daemonmaster /mnt/cgroups/cpu/daemons/tasks
+.fi
+.RE
+
+Users, which are members of the 
+.I operator
+group are allowed to administer the control groups, i.e. create new control
+groups and can move processes between these groups without having root
+privileges.
+
+Members of
+.I daemonmaster
+group can move processes to
+.I daemons
+control group, but they can not move the process out of the group. Only
+.I operator
+or root can do that.
+
 .SH RECOMMENDATIONS
 .SS Keep hierarchies separated
 Having multiple hierarchies is perfectly valid and can be useful
 in various scenarios. To keeps things clean, do not
 create one group in multiple hierarchies. Examples 3 and 4 shows,
 how unreadable and confusing it can be, especially when reading
-somebody other's configuration file.
+somebody others configuration file.
 
 .SS Explicit is better than implicit
 .B libcgroup
