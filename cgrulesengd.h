@@ -65,13 +65,14 @@ __BEGIN_DECLS
 void cgre_usage(FILE *fd, const char *msg, ...);
 
 /**
- * Prints a formatted message (like printf()) to a file stream, and flushes
- * the file stream's buffer so that the message is immediately readable.
- * 	@param fd The file stream to write to
+ * Prints a formatted message (like printf()) to all log destinations.
+ * Flushes the file stream's buffer so that the message is immediately
+ * readable.
+ * 	@param level The log level (LOG_EMERG ... LOG_DEBUG)
  * 	@param format The format for the message (printf style)
  * 	@param ... Any args to format (printf style)
  */
-void flog(FILE* fd, const char* msg, ...);
+void flog(int level, const char *msg, ...);
 
 /**
  * Process an event from the kernel, and determine the correct UID/GID/PID to
@@ -96,13 +97,14 @@ int cgre_handle_message(struct cn_msg *cn_hdr);
  * Turns this program into a daemon.  In doing so, we fork() and kill the
  * parent process.  Note too that stdout, stdin, and stderr are closed in
  * daemon mode, and a file descriptor for a log file is opened.
- * 	@param logp Path of the log file
+ * 	@param logp Path of the log file, NULL if no log file was specified
+ * 	@param logf Syslog facility, NULL if no facility was specified
  * 	@param daemon False to turn off daemon mode (no fork, leave FDs open)
- * 	@param logs False to disable logging (no log FD, leave stdout open)
+ * 	@param logv Log verbosity, 2 is the default, 0 = no logging, 5 = everything
  * 	@return 0 on success, > 0 on error
  */
-int cgre_start_daemon(const char *logp, const unsigned char daemon,
-			const unsigned char logs);
+int cgre_start_daemon(const char *logp, const int logf,
+			const unsigned char daemon, const int logv);
 
 /**
  * Catch the SIGUSR2 signal and reload the rules configuration.  This function
