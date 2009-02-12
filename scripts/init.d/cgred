@@ -50,7 +50,10 @@ CGRED_BIN=${exec_prefix}/${bindir}/cgrulesengd
 # Read in configuration options.
 if [ -f "/etc/cgred.d/cgred.conf" ] ; then
 	. /etc/cgred.d/cgred.conf
-	OPTIONS="--log $LOG_FILE $NODAEMON $NOLOG"
+	OPTIONS="$NODAEMON $LOG"
+	if [ -n "$LOG_FILE" ]; then
+		OPTIONS="$OPTIONS --log-file=$LOG_FILE"
+	fi
 else
 	OPTIONS=""
 fi
