@@ -142,10 +142,13 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	char *buf = NULL;
 
 	/* UID data */
-	uid_t ruid, euid, suid, fsuid;
+	uid_t ruid, euid, suid, fsuid, log_uid = 0;
 
 	/* GID data */
-	gid_t rgid, egid, sgid, fsgid;
+	gid_t rgid, egid, sgid, fsgid, log_gid = 0;
+
+	/* PID, just for logging */
+	pid_t log_pid = 0;
 
 	/* Return codes */
 	int ret = 0;
@@ -210,20 +213,18 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	 */
 	switch (type) {
 	case PROC_EVENT_UID:
-		flog(LOG_DEBUG, "Attempting to change cgroup for PID: %d, "
-				"UID: %d, GID: %d... ",
-				ev->event_data.id.process_pid,
-				ev->event_data.id.e.euid, egid);
+		log_uid = ev->event_data.id.e.euid;
+		log_gid = egid;
+		log_pid = ev->event_data.id.process_pid;
 		ret = cgroup_change_cgroup_uid_gid_flags(
 					ev->event_data.id.e.euid,
 					egid, ev->event_data.id.process_pid,
 					CGFLAG_USECACHE);
 		break;
 	case PROC_EVENT_GID:
-		flog(LOG_DEBUG, "Attempting to change cgroup for PID: %d, "
-				"UID: %d, GID: %d... ",
-				ev->event_data.id.process_pid, euid,
-				ev->event_data.id.e.egid);
+		log_uid = euid;
+		log_gid = ev->event_data.id.e.egid;
+		log_pid = ev->event_data.id.process_pid;
 		ret = cgroup_change_cgroup_uid_gid_flags(euid,
 					ev->event_data.id.e.egid,
 					ev->event_data.id.process_pid,
@@ -234,9 +235,16 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	}
 
 	if (ret) {
-		flog(LOG_WARNING, "FAILED!\n  (Error Code: %d)\n", ret);
+		/*
+		 * TODO: add some supression, do not spam log when every group
+		 * change fails
+		 */
+		flog(LOG_WARNING, "Cgroup change for PID: %d, UID: %d, GID: %d"
+			" FAILED! (Error Code: %d)", log_pid, log_uid, log_gid,
+			ret);
 	} else {
-		flog(LOG_INFO, "OK!\n");
+		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d OK",
+			log_pid, log_uid, log_gid);
 	}
 
 finished:
