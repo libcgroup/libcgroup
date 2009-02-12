@@ -45,6 +45,7 @@
 #include <signal.h>
 #include <time.h>
 #include <syslog.h>
+#include <getopt.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
@@ -78,9 +79,18 @@ void usage(FILE* fd, const char* msg, ...)
 	if (msg)
 		vfprintf(fd, msg, ap);
 	fprintf(fd, "\n");
-	fprintf(fd, "cgrulesengd -- a daemon for the cgroups rules engine\n");
-	fprintf(fd, "  usage : cgrulesengd [--nodaemon] [--nolog] [--log FILE]"
-			"\n");
+	fprintf(fd, "cgrulesengd -- a daemon for the cgroups rules engine\n\n");
+	fprintf(fd, "Usage : cgrulesengd [options]\n\n");
+	fprintf(fd, "  options :\n");
+	fprintf(fd, "    -q           | --quiet             quiet mode\n"
+		"    -v           | --verbose           verbose mode\n"
+		"    -f <path>    | --logfile=<path>    write log to file\n"
+		"    -s[facility] | --syslog=[facility] write log to syslog\n"
+		"    -n           | --nodaemom          don't fork daemon\n"
+		"    -d           | --debug             same as -v -v -n -f -\n"
+		"    -Q           | --nolog             disable logging\n"
+		"    -h           | --help              show this help\n\n"
+		);
 	va_end(ap);
 }
 
@@ -576,10 +586,53 @@ void cgre_catch_term(int signum)
 	exit(EXIT_SUCCESS);
 }
 
+/**
+ * Parse the syslog facility as received on command line.
+ * 	@param arg Command line argument with the syslog facility
+ * 	@return the syslog facility (e.g. LOG_DAEMON) or 0 on error
+ */
+static int cgre_parse_syslog_facility(const char *arg)
+{
+    if (arg == NULL)
+	return 0;
+
+    if (strlen(arg) > 1)
+	return 0;
+
+	switch (arg[0]) {
+	case '0':
+		return LOG_LOCAL0;
+	case '1':
+		return LOG_LOCAL1;
+	case '2':
+		return LOG_LOCAL2;
+	case '3':
+		return LOG_LOCAL3;
+	case '4':
+		return LOG_LOCAL4;
+	case '5':
+		return LOG_LOCAL5;
+	case '6':
+		return LOG_LOCAL6;
+	case '7':
+		return LOG_LOCAL7;
+	case 'D':
+		return LOG_DAEMON;
+	default:
+		return 0;
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	/* Patch to the log file */
-	char logp[FILENAME_MAX];
+	const char *logp = NULL;
+
+	/* Syslog facility */
+	int facility = 0;
+
+	/* Verbose level */
+	int verbosity = 2;
 
 	/* For catching signals */
 	struct sigaction sa;
@@ -587,14 +640,22 @@ int main(int argc, char *argv[])
 	/* Should we daemonize? */
 	unsigned char daemon = 1;
 
-	/* Log level */
-	int loglevel = 4;
-
 	/* Return codes */
 	int ret = 0;
 
-	/* Loop variable */
-	int i = 0;
+	/* Command line arguments */
+	const char *short_options = "hvqf:s::ndQ";
+	struct option long_options[] = {
+		{"help", no_argument, NULL, 'h'},
+		{"verbose", no_argument, NULL, 'v'},
+		{"quiet", no_argument, NULL, 'q'},
+		{"logfile", required_argument, NULL, 'f'},
+		{"syslog", optional_argument, NULL, 's'},
+		{"nodaemon", no_argument, NULL, 'n'},
+		{"debug", no_argument, NULL, 'd'},
+		{"nolog", no_argument, NULL, 'Q'},
+		{NULL, 0, NULL, 0}
+	};
 
 	/* Make sure the user is root. */
 	if (getuid() != 0) {
@@ -604,33 +665,66 @@ int main(int argc, char *argv[])
 		goto finished;
 	}
 
-	/* Set the default log file. */
-	memset(logp, '\0', FILENAME_MAX);
-	strncpy(logp, "/root/cgrulesengd.log",
-			strlen("/root/cgrulesengd.log"));
-	logfile = NULL;
+	while (1) {
+		int c;
 
-	/* Parse user args. */
-	for (i = 1; i < argc; i++) {
-		if (strncmp(argv[i], "--log", strlen("--log")) == 0) {
-			i++;
-			memset(logp, '\0', FILENAME_MAX);
-			strncpy(logp, argv[i], strlen(argv[i]));
-			continue;
-		}
-		if (strncmp(argv[i], "--nodaemon", strlen("--nodaemon")) == 0) {
+		c = getopt_long(argc, argv, short_options, long_options, NULL);
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 'h':   /* --help */
+			usage(stdout, "Help:\n");
+			ret = 0;
+			goto finished;
+
+		case 'v':   /* --verbose */
+			verbosity++;
+			break;
+
+		case 'q':   /* --quiet */
+			verbosity--;
+			break;
+
+		case 'Q':   /* --nolog */
+			verbosity = 0;
+			break;
+
+		case 'f':   /* --logfile=<filename> */
+			logp = optarg;
+			break;
+
+		case 's':   /* --syslog=[facility] */
+			if (optarg) {
+				facility = cgre_parse_syslog_facility(optarg);
+				if (facility == 0) {
+					fprintf(stderr,
+						"Unknown syslog facility: %s\n",
+						optarg);
+					ret = 2;
+					goto finished;
+				}
+			} else {
+				facility = LOG_DAEMON;
+			}
+			break;
+
+		case 'n':   /* --no-fork */
 			daemon = 0;
-			continue;
-		}
-		if (strncmp(argv[i], "--nolog", strlen("--nolog")) == 0) {
-			loglevel = 0;
-			continue;
-		}
+			break;
 
-		/* If we get here, the user specified an invalid arg. */
-		usage(stderr, "Invalid argument: %s", argv[i]);
-		ret = 2;
-		goto finished;
+		case 'd':   /* --debug */
+			/* same as -vvn */
+			daemon = 0;
+			verbosity = 4;
+			logp = "-";
+			break;
+
+		default:
+			usage(stderr, "");
+			ret = 2;
+			goto finished;
+		}
 	}
 
 	/* Initialize libcgroup. */
@@ -648,7 +742,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Now, start the daemon. */
-	ret = cgre_start_daemon(logp, 0, daemon, loglevel);
+	ret = cgre_start_daemon(logp, facility, daemon, verbosity);
 	if (ret < 0) {
 		fprintf(stderr, "Error: Failed to launch the daemon, %d\n",
 			ret);
