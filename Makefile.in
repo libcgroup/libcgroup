@@ -76,6 +76,7 @@ install: $(TARGETS)
 	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 	$(INSTALL) -D cgrulesengd $(DESTDIR)$(bindir)/cgrulesengd
 	$(INSTALL) -D doc/man/cgconfig.conf.5 $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
+	$(INSTALL) -D pam_cgroup.so $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
@@ -87,6 +88,7 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(bindir)/cgclassify
 	rm -f $(DESTDIR)$(bindir)/cgrulesengd
 	rm -f $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
+	rm -f $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify \
