@@ -22,6 +22,8 @@ libdir=@libdir@
 includedir=@includedir@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
+mandir=@mandir@
 INSTALL=install
 INSTALL_DATA=install -m 644
 PACKAGE_VERSION=@PACKAGE_VERSION@
@@ -73,6 +75,7 @@ install: $(TARGETS)
 	$(INSTALL) -D cgexec $(DESTDIR)$(bindir)/cgexec
 	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 	$(INSTALL) -D cgrulesengd $(DESTDIR)$(bindir)/cgrulesengd
+	$(INSTALL) -D doc/man/cgconfig.conf.5 $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
 
 uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(includedir)/libcgroup.h
@@ -83,6 +86,7 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(bindir)/cgexec
 	rm -f $(DESTDIR)$(bindir)/cgclassify
 	rm -f $(DESTDIR)$(bindir)/cgrulesengd
+	rm -f $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
 
 clean:
 	\rm -f y.tab.c y.tab.h lex.yy.c y.output libcgroup.so cgclassify \
