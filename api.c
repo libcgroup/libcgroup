@@ -2050,7 +2050,7 @@ int cgroup_reload_cached_rules()
 		goto finished;
 	}
 		
-	#ifdef DEBUG
+	#ifdef CGROUP_DEBUG
 		cgroup_print_rules_config(stdout);
 	#endif
 

@@ -30,12 +30,12 @@ __BEGIN_DECLS
 #define __USE_GNU
 #endif
 
-/* A simple macro for printing messages only when DEBUG is defined. */
-#ifdef DEBUG
+/* A simple macro for printing messages only when CGROUP_DEBUG is defined. */
+#ifdef CGROUP_DEBUG
   #define fdbg(a, b...) fprintf(a, b)
 #else
   #define fdbg(a, b...) do {} while(0)
-#endif /* DEBUG */
+#endif /* CGROUP_DEBUG */
 
 /* The following ten macros are all for the Netlink code. */
 #define SEND_MESSAGE_LEN (NLMSG_LENGTH(sizeof(struct cn_msg) + \
