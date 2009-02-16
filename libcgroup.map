@@ -45,3 +45,9 @@ CGROUP_0.32.1 {
 global:
 	cgroup_strerror;
 } CGROUP_0.32;
+
+CGROUP_0.33 {
+global:
+	cgroup_get_last_errno;
+} CGROUP_0.32.1;
+

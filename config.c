@@ -339,17 +339,22 @@ int cgroup_config_mount_fs()
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
 
 		ret = stat(curr->path, &buff);
-
-		if (ret < 0 && errno != ENOENT)
+		
+		if (ret < 0 && errno != ENOENT) {
+			last_errno = errno;
 			return ECGOTHER;
+		}
 
 		if (errno == ENOENT) {
 			ret = mkdir(curr->path,
 					S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-			if (ret < 0)
+			if (ret < 0) {
+				last_errno = errno;
 				return ECGOTHER;
+			}
 		} else if (!S_ISDIR(buff.st_mode)) {
 			errno = ENOTDIR;
+			last_errno = errno;
 			return ECGOTHER;
 		}
 
@@ -432,6 +437,7 @@ int cgroup_config_load_config(const char *pathname)
 
 	if (!yyin) {
 		dbg("Failed to open file %s\n", pathname);
+		last_errno = errno;
 		return ECGOTHER;
 	}
 

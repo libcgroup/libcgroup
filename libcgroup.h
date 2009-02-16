@@ -68,6 +68,11 @@ enum cgflags {
 	CGFLAG_USECACHE = 0x01,
 };
 
+/**
+ * per thread errno variable, to be used when return code is ECGOTHER
+ */
+extern __thread int last_errno;
+
 enum cgroup_errors {
 	ECGROUPNOTCOMPILED=50000,
 	ECGROUPNOTMOUNTED,
@@ -88,7 +93,7 @@ enum cgroup_errors {
 	/* Represents error coming from other libraries like glibc. libcgroup
 	 * users need to check errno upon encoutering ECGOTHER.
 	 */
-	ECGOTHER,
+	ECGOTHER,	/* OS error, see errno */
 	ECGROUPNOTEQUAL,
 	ECGCONTROLLERNOTEQUAL,
 	ECGROUPPARSEFAIL, /* Failed to parse rules configuration file. */
@@ -194,6 +199,12 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
  * returned
  */
 char *cgroup_strerror(int code);
+
+/**
+ * Return last errno, which caused ECGOTHER error.
+ */
+int cgroup_get_last_errno();
+
 
 /* The wrappers for filling libcg structures */
 

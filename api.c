@@ -49,6 +49,16 @@
 #define VERSION(ver)	#ver
 
 /*
+ * The errno which happend the last time (have to be thread specific)
+ */
+__thread int last_errno;
+
+#define MAXLEN 256
+
+/* the value have to be thread specific */
+__thread char errtext[MAXLEN];
+
+/*
  * Remember to bump this up for major API changes.
  */
 const static char cg_version[] = VERSION(PACKAGE_VERSION);
@@ -94,6 +104,7 @@ char *cgroup_strerror_codes[] = {
 	"Cgroup parsing failed",
 	"Cgroup, rules file does not exist",
 	"Cgroup mounting failed",
+	"The config file can not be opend",
 };
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
@@ -294,14 +305,15 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		dbg("Failed to open configuration file %s with"
 				" error: %s\n", CGRULES_CONF_FILE,
 				strerror(errno));
-		ret = errno;
+		last_errno = errno;
 		goto finish;
 	}
 
 	buff = calloc(CGROUP_RULE_MAXLINE, sizeof(char));
 	if (!buff) {
 		dbg("Out of memory?  Error: %s\n", strerror(errno));
-		ret = errno;
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto close_unlock;
 	}
 
@@ -442,7 +454,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		newrule = calloc(1, sizeof(struct cgroup_rule));
 		if (!newrule) {
 			dbg("Out of memory?  Error: %s\n", strerror(errno));
-			ret = errno;
+			last_errno = errno;
+			ret = ECGOTHER;
 			goto cleanup;
 		}
 
@@ -565,6 +578,7 @@ int cgroup_init()
 	 */
 	buf = malloc(FILENAME_MAX);
 	if (!buf) {
+		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
 	}
@@ -777,11 +791,13 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 				dbg("Error writing tid %d to %s:%s\n",
 						tid, path, strerror(errno));
 				fclose(tasks);
+				last_errno = errno;
 				return ECGOTHER;
 			}
 
 			ret = fflush(tasks);
 			if (ret) {
+				last_errno = errno;
 				dbg("Error writing tid  %d to %s:%s\n",
 						tid, path, strerror(errno));
 				fclose(tasks);
@@ -822,6 +838,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			}
 			ret = fprintf(tasks, "%d", tid);
 			if (ret < 0) {
+				last_errno = errno;
 				dbg("Error writing tid %d to %s:%s\n",
 						tid, path, strerror(errno));
 				fclose(tasks);
@@ -829,6 +846,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			}
 			ret = fflush(tasks);
 			if (ret) {
+				last_errno = errno;
 				dbg("Error writing tid  %d to %s:%s\n",
 						tid, path, strerror(errno));
 				fclose(tasks);
@@ -872,12 +890,16 @@ static int cg_mkdir_p(const char *path)
 
 	buf = getcwd(cwd, FILENAME_MAX);
 
-	if (!buf)
+	if (!buf) {
+		last_errno = errno;
 		return ECGOTHER;
+	}
 
 	real_path = strdup(path);
-	if (!real_path)
+	if (!real_path) {
+		last_errno = errno;
 		return ECGOTHER;
+	}
 
 	do {
 		while (real_path[j] != '\0' && real_path[j] != '/')
@@ -892,6 +914,7 @@ static int cg_mkdir_p(const char *path)
 		ret = mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		wd = strdup(str);
 		if (!wd) {
+			last_errno = errno;
 			ret = ECGOTHER;
 			break;
 		}
@@ -1030,6 +1053,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 			ret = asprintf(&path, "%s%s", base,
 				cgroup->controller[i]->values[j]->name);
 			if (ret < 0) {
+				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
 			}
@@ -1175,6 +1199,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		base = strdup(path);
 
 		if (!base) {
+			last_errno = errno;
 			error = ECGOTHER;
 			goto err;
 		}
@@ -1191,6 +1216,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			ret = asprintf(&path, "%s%s", base,
 					cgroup->controller[k]->values[j]->name);
 			if (ret < 0) {
+				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
 			}
@@ -1215,12 +1241,14 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			free(path);
 			ret = asprintf(&path, "%s/tasks", base);
 			if (ret < 0) {
+				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
 			}
 			error = chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
 			if (error) {
+				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
 			}
@@ -1403,6 +1431,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 					cgroup->controller[i]->name))
 			continue;
 		error = rmdir(path);
+		last_errno = errno;
 	}
 open_err:
 	if (ignore_migration) {
@@ -1411,8 +1440,10 @@ open_err:
 						cgroup->controller[i]->name))
 				continue;
 			error = rmdir(path);
-			if (error < 0 && errno == ENOENT)
+			if (error < 0 && errno == ENOENT) {
+				last_errno = errno;
 				error = 0;
+			}
 		}
 	}
 	if (error)
@@ -1441,8 +1472,10 @@ static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 		return ECGROUPVALUENOTEXIST;
 
 	*value = malloc(CG_VALUE_MAX);
-	if (!*value)
+	if (!*value) {
+		last_errno = errno;
 		return ECGOTHER;
+	}
 
 	/*
 	 * using %as crashes when we try to read from files like
@@ -1596,11 +1629,13 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		ret = asprintf(&control_path, "%s/tasks", path);
 
 		if (ret < 0) {
+			last_errno = errno;
 			error = ECGOTHER;
 			goto unlock_error;
 		}
 
 		if (stat(control_path, &stat_buffer)) {
+			last_errno = errno;
 			free(control_path);
 			error = ECGOTHER;
 			goto unlock_error;
@@ -1620,6 +1655,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 
 		dir = opendir(path);
 		if (!dir) {
+			last_errno = errno;
 			error = ECGOTHER;
 			goto unlock_error;
 		}
@@ -1739,8 +1775,10 @@ static int cg_prepare_controller_array(char *cstr, char *controllers[])
 
 		if (temp) {
 			controllers[j] = strdup(temp);
-			if (!controllers[j])
+			if (!controllers[j]) {
+				last_errno = errno;
 				return ECGOTHER;
+			}
 		}
 		j++;
 	} while (temp);
@@ -2137,6 +2175,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		 */
 		if (ret != 3 || ret == EOF) {
 			dbg("read failed for pid_cgroup_fd ret %d\n", ret);
+			last_errno = errno;
 			ret = ECGOTHER;
 			goto done;
 		}
@@ -2147,6 +2186,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 								== 0) {
 				*current_path = strdup(cgroup_path);
 				if (!*current_path) {
+					last_errno = errno;
 					ret = ECGOTHER;
 					goto done;
 				}
@@ -2168,5 +2208,19 @@ cleanup_path:
 char *cgroup_strerror(int code)
 {
 	assert((code >= ECGROUPNOTCOMPILED) && (code < ECGSENTINEL));
+	if (code == ECGOTHER) {
+		snprintf(errtext, MAXLEN, "%s: error message: %s",
+			cgroup_strerror_codes[code % ECGROUPNOTCOMPILED],
+			strerror(cgroup_get_last_errno()));
+		return errtext;
+	}
 	return cgroup_strerror_codes[code % ECGROUPNOTCOMPILED];
+}
+
+/**
+ * Return last errno, which caused ECGOTHER error.
+ */
+int cgroup_get_last_errno()
+{
+    return last_errno;
 }

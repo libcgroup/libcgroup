@@ -140,7 +140,8 @@ int main(int argc, char *argv[])
 		ret = cgroup_change_cgroup_uid_gid(euid, egid, pid);
 		if (ret) {
 			fprintf(stderr, "Error: change of cgroup failed for"
-					" pid %d\n", pid);
+					" pid %d: %s\n",
+					pid, cgroup_strerror(ret));
 			return ret;
 		}
 	}

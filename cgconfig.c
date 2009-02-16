@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 			ret = cgroup_config_load_config(filename);
 			if (ret) {
 				printf("Loading configuration file %s "
-					"failed, error: %s\n", filename,
+					"failed\n%s\n", filename,
 					cgroup_strerror(ret));
 				exit(3);
 			}
