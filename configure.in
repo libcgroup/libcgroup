@@ -18,6 +18,14 @@ AC_INIT([control groups library and utilities], 0.32.2,
 AC_CONFIG_SRCDIR([wrapper.c])
 AC_CONFIG_HEADER([config.h])
 
+# Process command line options
+AC_ARG_ENABLE([debug],
+	[AC_HELP_STRING([--enable-debug],
+		[enable extra debugging output [default=no]])],
+	[AC_DEFINE([CGROUP_DEBUG], [],
+		[Define to enable extra debugging output.])],
+	[])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
