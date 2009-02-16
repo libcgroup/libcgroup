@@ -11,7 +11,6 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 YACC_DEBUG=-t
-DEBUG=-DDEBUG
 INC=-I.
 LIBS= -lcgroup -lpthread
 LDFLAGS=@LDFLAGS@ -L .
@@ -43,7 +42,7 @@ cgclassify: libcgroup.so cgclassify.c
 	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c $(LDFLAGS) $(LIBS)
 
 cgrulesengd: libcgroup.so libcgroup.h cgrulesengd.c cgrulesengd.h
-	$(CC) -std=gnu99 $(DEBUG) $(CFLAGS) -Wall -o $@ cgrulesengd.c \
+	$(CC) -std=gnu99 $(CFLAGS) -Wall -o $@ cgrulesengd.c \
 		$(LDFLAGS) $(LIBS)
 
 y.tab.c: parse.y lex.yy.c
