@@ -1,0 +1,31 @@
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Varekova <varekova@redhat.com>.
+
+.TH CGCLASSIFY  1 2009-03-15 "Linux" "libcg Manual"
+.SH NAME
+cgclassify \- move running task(s) to given cgroups
+
+.SH SYNOPSIS
+\fBcgclassify\fR <\fIpidlist\fR>
+
+this command moves processes defined by the list
+of processes
+(\fBpidlist\fR)
+to control groups which they
+belong according to \fB/etc/cgrules.conf\fR
+configuration file.
+
+The pids in the pidlist are separated by spaces
+
+.SH FILES
+.LP
+.PD .1v
+.TP 20
+.B /etc/cgrules.conf
+.TP
+default libcgroup configuration file
+
+
+.SH SEE ALSO
+cgrules.conf (5), cgexec (1)
+
