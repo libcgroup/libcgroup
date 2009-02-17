@@ -1,0 +1,72 @@
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Varekova <varekova@redhat.com>
+
+.TH CGEXEC  1 2009-03-15 "Linux" "libcg Manual"
+.SH NAME
+
+cgexec \- run the task in given control groups
+
+.SH SYNOPSIS
+\fBcgexec\fR [\fB-g\fR <\fIcontrollers>:<path\fR>] \fBcommand\fR [\fIarguments\fR]
+
+.SH DESCRIPTION
+The \fBcgexec\fR
+program executes the task \fBcommand\fR
+with arguments \fBarguments\fR in given control groups.
+
+.TP
+.B -g <controllers>:<path>
+defines control groups in which the task will be run.
+\fBcontrollers\fR is a list of controllers and
+\fBpath\fR is the relative path to control groups
+in the given controllers list.
+
+This flag can be used multiple times to
+define multiple pairs of lists of controllers
+and relative paths.
+Instead of the list of all mounted controllers,
+wildcard \fBb*b\fR can be used.
+
+If this option is not used then
+\fBcgexec\fR will automatically place the task to the right
+cgroup based on \fB/etc/cgrules.conf\fR.
+
+.LP
+
+.SH EXAMPLES
+
+.nf
+.ft B
+cgexec -g *:test1 ls
+.ft R
+.fi
+runs command \fBls\fR in control group test1
+in all mounted controllers.
+
+.nf
+.ft B
+cgexec -g cpu,memory:test1 ls -l
+.ft R
+.fi
+runs command \fBls -l\fR in control group test1
+in controllers cpu and memory.
+
+.nf
+.ft B
+cgexec -g cpu,memory:test1 -g swap:test2 ls -l
+.ft R
+.fi
+runs command \fBls -l\fR in control group test1
+in controllers cpu and memory and control group 
+test2 in controller swap.
+
+.SH FILES
+.LP
+.PD .1v
+.TP 20
+.B /etc/cgrules.conf
+.TP
+default libcgroup configuration file
+
+.SH SEE ALSO
+cgrules.conf (5)
