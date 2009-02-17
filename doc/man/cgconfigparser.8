@@ -1,0 +1,31 @@
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Varekova <varekova@redhat.com>.
+
+.TH CGCONFIGPARSER  8 2009-03-16 "Linux" "libcg Manual"
+.SH NAME
+
+cgconfigparser \- setup control group file system
+
+.SH SYNOPSIS
+\fBcgconfigparser\fR [\fB-h\fR | \fB-l\fR \fI<filename>\fR]
+
+.SH OPTIONS
+.TP
+.B -h|--help
+Displays help.
+.TP
+.B -l, --load=FILE
+Parses the control groups configuration file
+Sets up the control group file system
+defined by the configuration file and mount
+mounts points described by the configuration file.
+The format of the file is described in
+\fBcgconfig.conf\fR.
+.LP
+
+.SH SEE ALSO
+cgconfig.conf (5)
+
+
+
+
