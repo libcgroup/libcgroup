@@ -1,0 +1,120 @@
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved. 
+.\" Written by Ivana Varekova <varekova@redhat.com> 
+
+.TH CGRULES.CONF  5 2009-03-10 "Linux" "libcg Manual"
+.SH NAME
+cgrules.conf \- libcgroup configuration file 
+.SH DESCRIPTION
+.B "cgrules.conf"
+configuration file is used by
+.B libcgroups
+to define the control groups to which the process belongs to.
+
+
+The file the contains list of rules which assign
+to a defined group/user a control group in a subsystem 
+(or control groups in subsystems)
+
+Rules have the form: 
+
+.in +4n
+.nf
+<user>		<controllers>		<destination>
+.fi
+.in
+
+Where:
+
+.I user
+can be:
+.nf
+    - an user name
+    - a group name, with @group syntax
+    - the wildcard '*', for any user or group
+    - '%', which is equivalent to "ditto" (useful for 
+      multi-line rules where different cgroups need to be 
+      specified for various hierarchies for a single user)
+.fi
+
+.I controllers
+can be:
+.nf
+    - comma separated controller names (no spaces) or 
+    - * (for all mounted controllers)
+.fi
+
+.I destination
+can be:
+.nf
+    - path relative to the controller hierarchy (ex. pgrp1/gid1/uid1)
+    
+.fi
+
+First rule which matches the criteria  will be executed.
+
+
+Any text starting with '#' is considered as a start of comment line and is
+ignored.
+
+
+.SH EXAMPLES
+.nf
+student         devices         /usergroup/students
+.fi
+the processes of user 
+student
+in the subsystem 'device' belong to the control group /usergroup/students.
+
+.nf
+@admin           *              admingroup/
+.fi
+the processes which belong to group
+admin
+in all subsystems belongs to the control group /admingroup.
+
+.nf
+peter           cpu             test1/
+%               memory          test2/
+.fi
+First line says Peter's task for cpu controller
+belongs to test1 control group
+second line says put Peter's tasks for memory controller
+belongs to test2/ control group
+
+.nf 
+*               *               default/ 
+.fi
+all processes belong in all subsystems
+to the control group default/.  Because there is applied the first task which is find -
+it has a sense to have this row at the end of list to put the
+tasks which was not mentioned in the previous rules
+to the default/ control group.
+
+
+
+.SH FILES
+.LP
+.PD .1v
+.TP 20
+.B /etc/cgrules.conf
+.TP
+default libcgroup configuration file
+.PD.
+
+
+.SH SEE ALSO
+cgconfig.conf (5), cgclassify (1), cgred.conf(5)
+
+.SH BUGS
+
+
+
+
+
+
+
+
+
+
+
+
