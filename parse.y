@@ -121,9 +121,16 @@ namevalue_conf
 	}
         |       namevalue_conf ID '=' ID ';'
 	{
-		$2 = realloc($2, strlen($2) + strlen($4) + 2);
+		int len = 0;
+		if ($1)
+			len = strlen($1);
+		$2 = realloc($2, len + strlen($2) + strlen($4) + 3);
 		$2 = strncat($2, " ", strlen(" "));
 		$$ = strncat($2, $4, strlen($4));
+		if ($1) {
+			$2 = strncat($2, ":", strlen(":"));
+			$$ = strncat($2, $1, strlen($1));
+		}
 		free($4);
 	}
 	|

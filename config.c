@@ -107,7 +107,9 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 	int error;
 	struct cgroup *config_cgroup =
 		&config_cgroup_table[cgroup_table_index];
+	char *nm_pairs, *nv_buf;
 
+	dbg("Adding controller %s, value %s\n", controller, name_value);
 	cgc = cgroup_add_controller(config_cgroup, controller);
 
 	if (!cgc)
@@ -120,7 +122,9 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 	if (!name_value)
 		goto done;
 
-	name = strtok_r(name_value, " ", &buffer);
+	nm_pairs = strtok_r(name_value, ":", &nv_buf);
+	dbg("[1] name value pair being processed is %s\n", nm_pairs);
+	name = strtok_r(nm_pairs, " ", &buffer);
 
 	if (!name)
 		goto parse_error;
@@ -130,11 +134,30 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 	if (!value)
 		goto parse_error;
 
-
+	dbg("name is %s, value is %s\n", name, value);
 	error = cgroup_add_value_string(cgc, name, value);
 
 	if (error)
 		goto parse_error;
+
+	while ((nm_pairs = strtok_r(NULL, ":", &nv_buf))) {
+		dbg("[2] name value pair being processed is %s\n", nm_pairs);
+		name = strtok_r(nm_pairs, " ", &buffer);
+
+		if (!name)
+			goto parse_error;
+
+		value = strtok_r(NULL, " ", &buffer);
+
+		if (!value)
+			goto parse_error;
+
+		dbg("name is %s, value is %s\n", name, value);
+		error = cgroup_add_value_string(cgc, name, value);
+
+		if (error)
+			goto parse_error;
+	}
 
 done:
 	free(controller);
