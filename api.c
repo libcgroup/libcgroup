@@ -138,6 +138,10 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 		break;
 	}
 fail_chown:
+	if (ret < 0) {
+		last_errno = errno;
+		ret = ECGOTHER;
+	}
 	return ret;
 }
 
@@ -680,7 +684,7 @@ static int cg_test_mounted_fs()
 
 	proc_mount = fopen("/proc/mounts", "r");
 	if (proc_mount == NULL) {
-		return -1;
+		return 0;
 	}
 
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
@@ -937,15 +941,18 @@ static int cg_mkdir_p(const char *path)
 		i = j;
 		ret = chdir(wd);
 		if (ret) {
-			printf("could not chdir to child directory (%s)\n", wd);
+			dbg("could not chdir to child directory (%s)\n", wd);
 			break;
 		}
 		free(wd);
 	} while (real_path[i]);
 
 	ret = chdir(buf);
-	if (ret)
-		printf("could not go back to old directory (%s)\n", cwd);
+	if (ret) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		dbg("could not go back to old directory (%s)\n", cwd);
+	}
 
 done:
 	free(real_path);
