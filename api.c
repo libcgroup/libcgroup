@@ -1211,18 +1211,21 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			goto err;
 		}
 
-		if (!ignore_ownership)
+		if (!ignore_ownership) {
+			dbg("Changing ownership of %s\n", fts_path[0]);
 			error = cg_chown_recursive(fts_path,
 				cgroup->control_uid, cgroup->control_gid);
+		}
 
 		if (error)
 			goto err;
 
 		for (j = 0; j < cgroup->controller[k]->index; j++) {
-			free(path);
-			ret = asprintf(&path, "%s%s", base,
+			ret = snprintf(path, FILENAME_MAX, "%s%s", base,
 					cgroup->controller[k]->values[j]->name);
-			if (ret < 0) {
+			dbg("setting %s to %s, error %d\n", path,
+				cgroup->controller[k]->values[j]->name, ret);
+			if (ret < 0 || ret >= FILENAME_MAX) {
 				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
@@ -1245,9 +1248,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		}
 
 		if (!ignore_ownership) {
-			free(path);
-			ret = asprintf(&path, "%s/tasks", base);
-			if (ret < 0) {
+			ret = snprintf(path, FILENAME_MAX, "%s/tasks", base);
+			if (ret < 0 || ret >= FILENAME_MAX) {
 				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
