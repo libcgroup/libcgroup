@@ -40,7 +40,10 @@ make DESTDIR=$RPM_BUILD_ROOT install
 mkdir -p $RPM_BUILD_ROOT/%{_initrddir}
 cp scripts/init.d/cgconfig $RPM_BUILD_ROOT/%{_initrddir}/cgconfig
 cp scripts/init.d/cgred $RPM_BUILD_ROOT/%{_initrddir}/cgred
-
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
+cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
+cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
+cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -63,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/sysconfig/cgred.conf
+%config(noreplace) %{_sysconfdir}/cgconfig.conf
+%config(noreplace) %{_sysconfdir}/cgrules.conf
 %{_libdir}/libcgroup-%{version}.so
 %{_libdir}/libcgroup.so.*
 %{_bindir}/cgexec

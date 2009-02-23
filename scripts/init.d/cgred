@@ -48,8 +48,8 @@ CGRED_BIN=${exec_prefix}/${bindir}/cgrulesengd
 . /lib/lsb/init-functions
 
 # Read in configuration options.
-if [ -f "/etc/cgred.d/cgred.conf" ] ; then
-	. /etc/cgred.d/cgred.conf
+if [ -f "/etc/sysconfig/cgred.conf" ] ; then
+	. /etc/sysconfig/cgred.conf
 	OPTIONS="$NODAEMON $LOG"
 	if [ -n "$LOG_FILE" ]; then
 		OPTIONS="$OPTIONS --log-file=$LOG_FILE"
