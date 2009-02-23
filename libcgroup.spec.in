@@ -11,6 +11,7 @@ BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: coreutils
 Requires(post): chkconfig, /sbin/service
+Requires(preun): /sbin/chkconfig
 
 %description
 Control groups infrastructure. The tools and library help manipulate, control,
@@ -50,17 +51,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %post 
 /sbin/ldconfig
-#
-# Do this later if required
-#
-#/sbin/chkconfig --add cgred
-#/sbin/chkconfig --add cgconfig
+/sbin/chkconfig --add cgred
+/sbin/chkconfig --add cgconfig
 
 %preun
-/sbin/service cgred stop > /dev/null 2>&1 || :
-/sbin/service cgconfig stop > /dev/null 2>&1 || :
-/sbin/chkconfig --del cgconfig
-/sbin/chkconfig --del cgred
+if [ $1 = 0 ]; then
+    /sbin/service cgred stop > /dev/null 2>&1 || :
+    /sbin/service cgconfig stop > /dev/null 2>&1 || :
+    /sbin/chkconfig --del cgconfig
+    /sbin/chkconfig --del cgred
+fi
 
 %postun -p /sbin/ldconfig
 

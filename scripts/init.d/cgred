@@ -14,7 +14,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # cgred		GGroups Rules Engine Daemon
-# chkconfig:	2345 80 20
+# chkconfig:	- 13 87
 # description:	This is a daemon for automatically classifying processes \
 #		into cgroups based on UID/GID.
 #
@@ -27,8 +27,6 @@
 # Required-Stop:	$local_fs $syslog
 # Should-Start:		
 # Should-Stop:		
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
 # Short-Description:	start and stop the cgroups rules engine daemon
 # Description:		CGroup Rules Engine is a tool for automatically using \
 #			cgroups to classify processes
