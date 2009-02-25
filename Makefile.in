@@ -40,8 +40,8 @@ cgconfigparser: libcgroup.so cgconfig.c libcgroup.h
 cgexec: libcgroup.so cgexec.c libcgroup.h tools-common.c tools-common.h
 	$(CC) $(CFLAGS) -Wall -o $@ cgexec.c tools-common.c $(LDFLAGS) $(LIBS)
 
-cgclassify: libcgroup.so cgclassify.c
-	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c $(LDFLAGS) $(LIBS)
+cgclassify: libcgroup.so cgclassify.c tools-common.c tools-common.h
+	$(CC) $(CFLAGS) -Wall -o $@ cgclassify.c tools-common.c $(LDFLAGS) $(LIBS)
 
 cgrulesengd: libcgroup.so libcgroup.h cgrulesengd.c cgrulesengd.h
 	$(CC) -std=gnu99 $(CFLAGS) -Wall -o $@ cgrulesengd.c \

@@ -26,6 +26,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "tools-common.h"
+
 #define TEMP_BUF	81
 
 /*
@@ -98,17 +100,98 @@ int egid_of_pid(pid_t pid)
 	return -1;
 }
 
-int main(int argc, char *argv[])
+/*
+ * Change process group as specified on command line.
+ */
+int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 {
-	int ret = 0, i;
+	int i;
+	int ret = 0;
+
+	for (i = 0; i < CG_HIER_MAX; i++) {
+		if (!cgroup_list[i])
+			break;
+
+		ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
+			cgroup_list[i]->controllers);
+		if (ret)
+			fprintf(stderr, "Error changing group of pid %d: %s\n",
+				pid, cgroup_strerror(ret));
+			return -1;
+	}
+
+	return 0;
+}
+
+/*
+ * Change process group as specified in cgrules.conf.
+ */
+int change_group_uid_gid(pid_t pid)
+{
 	uid_t euid;
 	gid_t egid;
+	int ret;
+
+	/* Put pid into right cgroup as per rules in /etc/cgrules.conf */
+	euid = euid_of_pid(pid);
+	if (euid == -1) {
+		fprintf(stderr, "Error in determining euid of"
+		" pid %d\n", pid);
+		return -1;
+	}
+
+	egid = egid_of_pid(pid);
+	if (egid == -1) {
+		fprintf(stderr, "Error in determining egid of"
+		" pid %d\n", pid);
+		return -1;
+	}
+
+	/* Change the cgroup by determining the rules based on uid */
+	ret = cgroup_change_cgroup_uid_gid(euid, egid, pid);
+	if (ret) {
+		fprintf(stderr, "Error: change of cgroup failed for"
+		" pid %d: %s\n",
+		pid, cgroup_strerror(ret));
+		return -1;
+	}
+
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+	int ret = 0, i, exit_code = 0;
 	pid_t pid;
+	int cg_specified = 0;
+	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+	int c;
+
 
 	if (argc < 2) {
-		fprintf(stderr, "usage is %s <list of pids>  \n",
+		fprintf(stderr, "usage is %s "
+			"[-g <list of controllers>:<relative path to cgroup>] "
+			"<list of pids>  \n",
 			argv[0]);
 		exit(2);
+	}
+
+	memset(cgroup_list, 0, sizeof(cgroup_list));
+	while ((c = getopt(argc, argv, "+g:")) > 0) {
+		switch (c) {
+		case 'g':
+			if (parse_cgroup_spec(cgroup_list, optarg)) {
+				fprintf(stderr, "cgroup controller and path"
+						"parsing failed\n");
+				return -1;
+			}
+			cg_specified = 1;
+			break;
+		default:
+			fprintf(stderr, "Invalid command line option\n");
+			exit(2);
+			break;
+		}
 	}
 
 
@@ -119,31 +202,18 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* Put pids into right cgroups as per rules in /etc/cgrules.conf */
-	for (i = 1; i < argc; i++) {
+	for (i = optind; i < argc; i++) {
 		pid = (uid_t) atoi(argv[i]);
-		euid = euid_of_pid(pid);
-		if (euid == -1) {
-			fprintf(stderr, "Error in determining euid of"
-					" pid %d\n", pid);
-			return -1;
-		}
 
-		egid = egid_of_pid(pid);
-		if (egid == -1) {
-			fprintf(stderr, "Error in determining egid of"
-					" pid %d\n", pid);
-			return -1;
-		}
+		if (cg_specified)
+			ret = change_group_path(pid, cgroup_list);
+		else
+			ret = change_group_uid_gid(pid);
 
-		/* Change the cgroup by determining the rules based on uid */
-		ret = cgroup_change_cgroup_uid_gid(euid, egid, pid);
-		if (ret) {
-			fprintf(stderr, "Error: change of cgroup failed for"
-					" pid %d: %s\n",
-					pid, cgroup_strerror(ret));
-			return ret;
-		}
+		/* if any group change fails */
+		if (ret)
+			exit_code = 1;
 	}
-	return 0;
+	return exit_code;
+
 }
