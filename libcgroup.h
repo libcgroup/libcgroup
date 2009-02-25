@@ -43,12 +43,6 @@ __BEGIN_DECLS
 /* Estimated number of groups created */
 #define MAX_GROUP_ELEMENTS	128
 
-#ifdef CGROUP_DEBUG
-#define dbg(x...) printf(x)
-#else
-#define dbg(x...) do {} while(0)
-#endif
-
 /*
  * NOTE: Wide characters are not supported at the moment. Wide character support
  * would require us to use a scanner/parser that can parse beyond ASCII

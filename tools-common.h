@@ -19,7 +19,12 @@
 #define __TOOLS_COMMON
 
 #include <libcgroup.h>
-#include "libcgroup-internal.h"
+
+#ifdef CGROUP_DEBUG
+#define dbg(x...) printf(x)
+#else
+#define dbg(x...) do {} while (0)
+#endif
 
 /**
  * Auxiliary specifier of group, used to store parsed command line options.

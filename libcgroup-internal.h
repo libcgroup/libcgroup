@@ -26,6 +26,12 @@ __BEGIN_DECLS
 
 #define CGROUP_BUFFER_LEN (5 * FILENAME_MAX)
 
+#ifdef CGROUP_DEBUG
+#define dbg(x...) printf(x)
+#else
+#define dbg(x...) do {} while (0)
+#endif
+
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_VALUE_MAX];
