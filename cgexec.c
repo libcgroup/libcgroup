@@ -28,74 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-
-struct cgroup_data {
-	char path[FILENAME_MAX];
-	char *controllers[CG_CONTROLLER_MAX];
-};
-
-int parse_cgroup_data(struct cgroup_data *cdptr[], char *optarg)
-{
-	struct cgroup_data *ptr;
-	int i, j;
-	char *cptr, *pathptr, *temp;
-
-	ptr = *cdptr;
-
-	/* Find first free entry inside the cgroup data array */
-	for (i = 0; i < CG_HIER_MAX; i++, ptr++) {
-		if (!cdptr[i])
-			break;
-	}
-
-	if (i == CG_HIER_MAX) {
-		/* No free slot found */
-		fprintf(stderr, "Max allowed hierarchies %d reached\n",
-				CG_HIER_MAX);
-		return -1;
-	}
-
-	/* Extract list of controllers */
-	cptr = strtok(optarg, ":");
-	dbg("list of controllers is %s\n", cptr);
-	if (!cptr)
-		return -1;
-
-	/* Extract cgroup path */
-	pathptr = strtok(NULL, ":");
-	dbg("cgroup path is %s\n", pathptr);
-	if (!pathptr)
-		return -1;
-
-	/* instanciate cgroup_data. */
-	cdptr[i] = malloc(sizeof(struct cgroup_data));
-	if (!cdptr[i]) {
-		fprintf(stderr, "%s\n", strerror(errno));
-		return -1;
-	}
-	/* Convert list of controllers into an array of strings. */
-	j = 0;
-	do {
-		if (j == 0)
-			temp = strtok(cptr, ",");
-		else
-			temp = strtok(NULL, ",");
-
-		if (temp) {
-			cdptr[i]->controllers[j] = strdup(temp);
-			if (!cdptr[i]->controllers[j]) {
-				free(cdptr[i]);
-				fprintf(stderr, "%s\n", strerror(errno));
-				return -1;
-			}
-		}
-		j++;
-	} while (temp);
-
-	/* Store path to the cgroup */
-	strcpy(cdptr[i]->path, pathptr);
-	return 0;
-}
+#include "tools-common.h"
 
 int main(int argc, char *argv[])
 {
@@ -105,7 +38,7 @@ int main(int argc, char *argv[])
 	pid_t pid;
 	gid_t egid;
 	char c;
-	struct cgroup_data *cgroup_list[CG_HIER_MAX];
+	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage is %s"
@@ -120,7 +53,7 @@ int main(int argc, char *argv[])
 	while ((c = getopt(argc, argv, "+g:")) > 0) {
 		switch (c) {
 		case 'g':
-			if (parse_cgroup_data(cgroup_list, optarg)) {
+			if (parse_cgroup_spec(cgroup_list, optarg)) {
 				fprintf(stderr, "cgroup controller and path"
 						"parsing failed\n");
 				return -1;
