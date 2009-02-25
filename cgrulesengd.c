@@ -323,7 +323,7 @@ int cgre_create_netlink_socket_process_msg()
 	 */
 	sk_nl = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 	if (sk_nl == -1) {
-		dbg("socket sk_nl error");
+		cgroup_dbg("socket sk_nl error");
 		return rc;
 	}
 
@@ -339,14 +339,14 @@ int cgre_create_netlink_socket_process_msg()
 
 	err = bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla));
 	if (err == -1) {
-		dbg("binding sk_nl error");
+		cgroup_dbg("binding sk_nl error");
 		goto close_and_exit;
 	}
 
 	nl_hdr = (struct nlmsghdr *)buff;
 	cn_hdr = (struct cn_msg *)NLMSG_DATA(nl_hdr);
 	mcop_msg = (enum proc_cn_mcast_op*)&cn_hdr->data[0];
-	dbg("sending proc connector: PROC_CN_MCAST_LISTEN... ");
+	cgroup_dbg("sending proc connector: PROC_CN_MCAST_LISTEN... ");
 	memset(buff, 0, sizeof(buff));
 	*mcop_msg = PROC_CN_MCAST_LISTEN;
 
@@ -363,13 +363,13 @@ int cgre_create_netlink_socket_process_msg()
 	cn_hdr->seq = 0;
 	cn_hdr->ack = 0;
 	cn_hdr->len = sizeof(enum proc_cn_mcast_op);
-	dbg("sending netlink message len=%d, cn_msg len=%d\n",
+	cgroup_dbg("sending netlink message len=%d, cn_msg len=%d\n",
 		nl_hdr->nlmsg_len, (int) sizeof(struct cn_msg));
 	if (send(sk_nl, nl_hdr, nl_hdr->nlmsg_len, 0) != nl_hdr->nlmsg_len) {
-		dbg("failed to send proc connector mcast ctl op!\n");
+		cgroup_dbg("failed to send proc connector mcast ctl op!\n");
 		goto close_and_exit;
 	}
-	dbg("sent\n");
+	cgroup_dbg("sent\n");
 
 	for(memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla);
 	; memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla)) {
@@ -502,7 +502,7 @@ int cgre_start_daemon(const char *logp, const int logf,
 		/* Change the file mode mask. */
 		umask(0);
 	} else {
-		dbg("Not using daemon mode.\n");
+		cgroup_dbg("Not using daemon mode.\n");
 		pid = getpid();
 	}
 

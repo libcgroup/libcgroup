@@ -22,9 +22,9 @@
 #include <libcgroup.h>
 
 #ifdef CGROUP_DEBUG
-#define dbg(x...) printf(x)
+#define cgroup_dbg(x...) printf(x)
 #else
-#define dbg(x...) do {} while (0)
+#define cgroup_dbg(x...) do {} while (0)
 #endif
 
 /**

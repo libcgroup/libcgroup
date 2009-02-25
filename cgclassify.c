@@ -46,7 +46,7 @@ int euid_of_pid(pid_t pid)
 	sprintf(path, "/proc/%d/status", pid);
 	fp = fopen(path, "r");
 	if (!fp) {
-		dbg("Error in opening file %s:%s\n", path,
+		cgroup_dbg("Error in opening file %s:%s\n", path,
 				strerror(errno));
 		return -1;
 	}
@@ -55,7 +55,7 @@ int euid_of_pid(pid_t pid)
 		if (!strncmp(buf, "Uid:", 4)) {
 			sscanf((buf + 5), "%d%d%d%d", (int *)&ruid,
 				(int *)&euid, (int *)&suid, (int *)&fsuid);
-			dbg("Scanned proc values are %d %d %d %d\n",
+			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				ruid, euid, suid, fsuid);
 			return euid;
 		}
@@ -81,7 +81,7 @@ int egid_of_pid(pid_t pid)
 	sprintf(path, "/proc/%d/status", pid);
 	fp = fopen(path, "r");
 	if (!fp) {
-		dbg("Error in opening file %s:%s\n", path,
+		cgroup_dbg("Error in opening file %s:%s\n", path,
 				strerror(errno));
 		return -1;
 	}
@@ -90,7 +90,7 @@ int egid_of_pid(pid_t pid)
 		if (!strncmp(buf, "Gid:", 4)) {
 			sscanf((buf + 5), "%d%d%d%d", (int *)&rgid,
 				(int *)&egid, (int *)&sgid, (int *)&fsgid);
-			dbg("Scanned proc values are %d %d %d %d\n",
+			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				rgid, egid, sgid, fsgid);
 			return egid;
 		}

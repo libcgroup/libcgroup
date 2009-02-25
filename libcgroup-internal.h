@@ -28,9 +28,9 @@ __BEGIN_DECLS
 #define CGROUP_BUFFER_LEN (5 * FILENAME_MAX)
 
 #ifdef CGROUP_DEBUG
-#define dbg(x...) printf(x)
+#define cgroup_dbg(x...) printf(x)
 #else
-#define dbg(x...) do {} while (0)
+#define cgroup_dbg(x...) do {} while (0)
 #endif
 
 struct control_value {

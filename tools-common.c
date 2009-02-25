@@ -45,13 +45,13 @@ int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg)
 
 	/* Extract list of controllers */
 	cptr = strtok(optarg, ":");
-	dbg("list of controllers is %s\n", cptr);
+	cgroup_dbg("list of controllers is %s\n", cptr);
 	if (!cptr)
 		return -1;
 
 	/* Extract cgroup path */
 	pathptr = strtok(NULL, ":");
-	dbg("cgroup path is %s\n", pathptr);
+	cgroup_dbg("cgroup path is %s\n", pathptr);
 	if (!pathptr)
 		return -1;
 

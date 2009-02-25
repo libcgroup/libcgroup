@@ -109,7 +109,7 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 		&config_cgroup_table[cgroup_table_index];
 	char *nm_pairs, *nv_buf;
 
-	dbg("Adding controller %s, value %s\n", controller, name_value);
+	cgroup_dbg("Adding controller %s, value %s\n", controller, name_value);
 	cgc = cgroup_add_controller(config_cgroup, controller);
 
 	if (!cgc)
@@ -123,7 +123,7 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 		goto done;
 
 	nm_pairs = strtok_r(name_value, ":", &nv_buf);
-	dbg("[1] name value pair being processed is %s\n", nm_pairs);
+	cgroup_dbg("[1] name value pair being processed is %s\n", nm_pairs);
 	name = strtok_r(nm_pairs, " ", &buffer);
 
 	if (!name)
@@ -134,14 +134,15 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 	if (!value)
 		goto parse_error;
 
-	dbg("name is %s, value is %s\n", name, value);
+	cgroup_dbg("name is %s, value is %s\n", name, value);
 	error = cgroup_add_value_string(cgc, name, value);
 
 	if (error)
 		goto parse_error;
 
 	while ((nm_pairs = strtok_r(NULL, ":", &nv_buf))) {
-		dbg("[2] name value pair being processed is %s\n", nm_pairs);
+		cgroup_dbg("[2] name value pair being processed is %s\n",
+			nm_pairs);
 		name = strtok_r(nm_pairs, " ", &buffer);
 
 		if (!name)
@@ -152,7 +153,7 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 		if (!value)
 			goto parse_error;
 
-		dbg("name is %s, value is %s\n", name, value);
+		cgroup_dbg("name is %s, value is %s\n", name, value);
 		error = cgroup_add_value_string(cgc, name, value);
 
 		if (error)
@@ -401,7 +402,8 @@ int cgroup_config_create_groups()
 	for (i = 0; i < cgroup_table_index; i++) {
 		struct cgroup *cgroup = &config_cgroup_table[i];
 		error = cgroup_create_cgroup(cgroup, 0);
-		dbg("creating group %s, error %d\n", cgroup->name, error);
+		cgroup_dbg("creating group %s, error %d\n", cgroup->name,
+			error);
 		if (error)
 			return error;
 	}
@@ -440,10 +442,10 @@ int cgroup_config_unmount_controllers(void)
 		 */
 		error = umount(config_mount_table[i].path);
 		if (error < 0)
-			dbg("Unmount failed\n");
+			cgroup_dbg("Unmount failed\n");
 		error = rmdir(config_mount_table[i].path);
 		if (error < 0)
-			dbg("rmdir failed\n");
+			cgroup_dbg("rmdir failed\n");
 	}
 
 	return 0;
@@ -459,13 +461,13 @@ int cgroup_config_load_config(const char *pathname)
 	yyin = fopen(pathname, "r");
 
 	if (!yyin) {
-		dbg("Failed to open file %s\n", pathname);
+		cgroup_dbg("Failed to open file %s\n", pathname);
 		last_errno = errno;
 		return ECGOTHER;
 	}
 
 	if (yyparse() != 0) {
-		dbg("Failed to parse file %s\n", pathname);
+		cgroup_dbg("Failed to parse file %s\n", pathname);
 		return ECGROUPPARSEFAIL;
 	}
 
@@ -478,7 +480,7 @@ int cgroup_config_load_config(const char *pathname)
 		goto err_mnt;
 
 	error = cgroup_config_create_groups();
-	dbg("creating all cgroups now, error=%d\n", error);
+	cgroup_dbg("creating all cgroups now, error=%d\n", error);
 	if (error)
 		goto err_grp;
 

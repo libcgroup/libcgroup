@@ -33,9 +33,9 @@ __BEGIN_DECLS
 
 /* A simple macro for printing messages only when CGROUP_DEBUG is defined. */
 #ifdef CGROUP_DEBUG
-  #define dbg(a...) printf(a)
+  #define cgroup_dbg(a...) printf(a)
 #else
-  #define dbg(a...) do {} while (0)
+  #define cgroup_dbg(a...) do {} while (0)
 #endif /* CGROUP_DEBUG */
 
 /* The following ten macros are all for the Netlink code. */
