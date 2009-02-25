@@ -18,6 +18,7 @@
 
 #define __TOOLS_COMMON
 
+#include "config.h"
 #include <libcgroup.h>
 
 #ifdef CGROUP_DEBUG

@@ -19,6 +19,7 @@
 
 __BEGIN_DECLS
 
+#include "config.h"
 #include "libcgroup.h"
 #include <linux/connector.h>
 
