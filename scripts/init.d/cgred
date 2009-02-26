@@ -111,7 +111,7 @@ case "$1" in
 			start
 		fi
 		;;
-	flash)
+	reload|flash)
 		if [ -f /var/lock/subsys/$servicename ] ; then
 			echo $"Reloading rules configuration..."
 			kill -s 12 `cat ${pidfile}`
@@ -122,7 +122,7 @@ case "$1" in
 		fi
 		;;
 	*)
-		echo $"Usage: $0 {start|stop|status|restart|condrestart|flash}"
+		echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
 		;;
 esac
 

@@ -51,9 +51,9 @@ To stop it,
 	/etc/init.d/cgred stop
 The restart (stop,start), condrestart (same as restart, but only if the daemon
 was already started), and status (print whether the daemon is started or
-stopped) commands are also supported.  An additional command, "flash", allows
+stopped) commands are also supported.  An additional command, "reload", allows
 you to reload the configuration file without stopping the daemon.
-	/etc/init.d/cgred flash
+	/etc/init.d/cgred reload
 The cgred script automatically loads configuration from /etc/sysconfig/cgred.conf,
 which is shipped as samples/cgred.conf.  See that file for more information.
 
