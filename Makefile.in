@@ -74,7 +74,12 @@ install: $(TARGETS)
 	$(INSTALL) -D cgexec $(DESTDIR)$(bindir)/cgexec
 	$(INSTALL) -D cgclassify $(DESTDIR)$(bindir)/cgclassify
 	$(INSTALL) -D cgrulesengd $(DESTDIR)$(bindir)/cgrulesengd
+	$(INSTALL) -D doc/man/cgclassify.1 $(DESTDIR)$(mandir)/man1/cgclassify.1
+	$(INSTALL) -D doc/man/cgexec.1 $(DESTDIR)$(mandir)/man1/cgexec.1
+	$(INSTALL) -D doc/man/cgred.conf.5 $(DESTDIR)$(mandir)/man5/cgred.conf.5
 	$(INSTALL) -D doc/man/cgconfig.conf.5 $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
+	$(INSTALL) -D doc/man/cgrules.conf.5 $(DESTDIR)$(mandir)/man5/cgrules.conf.5
+	$(INSTALL) -D doc/man/cgconfigparser.8 $(DESTDIR)$(mandir)/man8/cgconfigparser.8
 	$(INSTALL) -D pam_cgroup.so $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 uninstall: libcgroup.so
