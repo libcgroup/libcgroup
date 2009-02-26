@@ -14,7 +14,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # cgred		GGroups Rules Engine Daemon
-# chkconfig:	- 13 87
+# chkconfig:	- 14 86
 # description:	This is a daemon for automatically classifying processes \
 #		into cgroups based on UID/GID.
 #
