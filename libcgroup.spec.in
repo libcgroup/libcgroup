@@ -7,6 +7,7 @@ License: LGPLv2+
 URL: http://libcg.sourceforge.net/
 Source0: http://downloads.sourceforge.net/libcg/%{name}-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: pam-devel
 BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: coreutils
@@ -45,6 +46,9 @@ mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
 cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
+mkdir -p $RPM_BUILD_ROOT/%{_lib}/security/
+mv $RPM_BUILD_ROOT/%{_libdir}/security/pam_cgroup.so \
+	$RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -75,8 +79,12 @@ fi
 %{_bindir}/cgclassify
 %{_sbindir}/cgconfigparser
 %{_bindir}/cgrulesengd
+%attr(0644, root, root) %{_mandir}/man1/*
+%attr(0644, root, root) %{_mandir}/man5/*
+%attr(0644, root, root) %{_mandir}/man8/*
 %attr(0755,root,root) %{_initrddir}/cgconfig
 %attr(0755,root,root) %{_initrddir}/cgred
+%attr(0755,root,root) /%{_lib}/security/pam_cgroup.so
 
 %doc COPYING INSTALL README_daemon
 
@@ -88,6 +96,8 @@ fi
 
 
 %changelog
+* Tue Feb 24 2009 Balbir Singh <balbir@linux.vnet.ibm.com> 0.33-1
+- Update to 0.33, spec file changes to add Makefiles and pam_cgroup module
 * Fri Oct 10 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.32-1
 - Update to latest upstream
 * Thu Sep 11 2008 Dhaval Giani <dhaval@linux-vnet.ibm.com> 0.31-1

@@ -94,6 +94,10 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(bindir)/cgrulesengd
 	rm -f $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
 	rm -f $(DESTDIR)$(mandir)/man8/cgrulesengd.8
+	rm -f $(DESTDIR)$(mandir)/man5/cgrules.conf.5
+	rm -f $(DESTDIR)$(mandir)/man1/cgexec.1
+	rm -f $(DESTDIR)$(mandir)/man1/cgclassify.1
+	rm -f $(DESTDIR)$(mandir)/man8/cgconfigparser.8
 	rm -f $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 clean:
