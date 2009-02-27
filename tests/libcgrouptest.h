@@ -28,6 +28,7 @@
 #include <sys/types.h>
 
 #include <libcgroup.h>
+#include "../config.h"
 
 #define SIZE 100	/* Max size of a message to be printed */
 #define NUM_MSGS 20	/* Number of such messsages */
@@ -145,5 +146,11 @@ void message(int num, int pass, const char *api,
 void build_path(char *target, char *mountpoint,
 				 const char *group, const char *file);
 pid_t cgrouptest_gettid();
+
+#ifdef CGROUP_DEBUG
+#define cgroup_dbg(p...)	printf(p...)
+#else
+#define cgroup_dbg(p...)	do {} while (0);
+#endif
 
 #endif

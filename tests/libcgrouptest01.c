@@ -54,18 +54,19 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	fs_mounted = atoi(argv[1]);
-	dbg("C:DBG: fs_mounted as recieved from script=%d\n", fs_mounted);
+	cgroup_dbg("C:DBG: fs_mounted as recieved from script=%d\n",
+								fs_mounted);
 	/* All possible controller will be element of an enum */
 	if (fs_mounted) {
 		ctl1 = atoi(argv[2]);
 		ctl2 = atoi(argv[3]);
 		strncpy(mountpoint, argv[4], sizeof(mountpoint));
-		dbg("C:DBG: mountpoint1 as recieved from script=%s\n",
+		cgroup_dbg("C:DBG: mountpoint1 as recieved from script=%s\n",
 								 mountpoint);
 		if (fs_mounted == FS_MULTI_MOUNTED) {
 			strncpy(mountpoint2, argv[5], sizeof(mountpoint2));
-			dbg("C:DBG: mountpoint2 as recieved from script=%s\n",
-								 mountpoint2);
+			cgroup_dbg("C:DBG: mountpoint2 as recieved from "
+					"script=%s\n", mountpoint2);
 		}
 
 	}

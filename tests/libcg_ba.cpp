@@ -25,6 +25,14 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 
+#include "../config.h"
+
+#ifdef CGROUP_DBG
+#define cgroup_dbg(p...)	printf(p...)
+#else
+#define cgroup_dbg(p...)	do {} while (0)
+#endif
+
 namespace cgtest {
 
 class cg {
@@ -83,7 +91,7 @@ struct cgroup *cg::makenode(const string &name, const string &task_uid,
 		return NULL;
 	cgid = grp->gr_gid;
 
-	dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
+	cgroup_dbg("tuid %d, tgid %d, cuid %d, cgid %d\n", tuid, tgid, cuid, cgid);
 
 	cgroup_name = (char *) malloc(name.length());
 	strncpy(cgroup_name, name.c_str(), name.length() + 1);
