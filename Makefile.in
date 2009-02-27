@@ -80,6 +80,7 @@ install: $(TARGETS)
 	$(INSTALL) -D doc/man/cgconfig.conf.5 $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
 	$(INSTALL) -D doc/man/cgrules.conf.5 $(DESTDIR)$(mandir)/man5/cgrules.conf.5
 	$(INSTALL) -D doc/man/cgconfigparser.8 $(DESTDIR)$(mandir)/man8/cgconfigparser.8
+	$(INSTALL) -D doc/man/cgrulesengd.8 $(DESTDIR)$(mandir)/man8/cgrulesengd.8
 	$(INSTALL) -D pam_cgroup.so $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 uninstall: libcgroup.so
@@ -92,6 +93,7 @@ uninstall: libcgroup.so
 	rm -f $(DESTDIR)$(bindir)/cgclassify
 	rm -f $(DESTDIR)$(bindir)/cgrulesengd
 	rm -f $(DESTDIR)$(mandir)/man5/cgconfig.conf.5
+	rm -f $(DESTDIR)$(mandir)/man8/cgrulesengd.8
 	rm -f $(DESTDIR)$(libdir)/security/pam_cgroup.so
 
 clean:

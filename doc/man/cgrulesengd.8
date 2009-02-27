@@ -1,0 +1,60 @@
+.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved.
+.\" Written by Jan Safranek <jsafrane@redhat.com>.
+.TH CGRULESENGD  8 2009-02-18 "Linux" "libcgroup Manual"
+.SH NAME
+cgrulesengd \- control group rules daemon
+
+.SH SYNOPSIS
+\fBcgrulesengd\fR [options]
+
+.SH DESCRIPTION
+\fBcgrulesengd\fR is a daemon, which distributes processes to control groups. When
+any process changes its effective UID or GID, \fBcgrulesengd\fR inspects list
+of rules loaded from \fIcgrules.conf\fR file and moves the process to
+the appropriate control group.
+
+The list of rules is read during the daemon startup and are cached in daemon's memory.
+The daemon reloads the list of rules when it receives SIGUSR2 signal.
+
+.SH OPTIONS
+.TP
+.B -h|--help
+Display help.
+.TP
+.B -f <path>|--logfile=<path>
+Write log messages to the given log file. When '-' is used as <path>, log messages
+are written to the standard output. Both '\fB-f\fR' and '\fB-s\fR' can be used together then logs
+are sent to both destinations.
+.TP
+.B -s[facility]|--syslog=[facility]
+Write log messages to syslog. The default facility is DAEMON. Both '\fB-f\fR'
+and '\fB-s\fR' can be used together then logs are sent to both destinations.
+.TP
+.B -n|--nodaemon
+Don't fork the daemon, stay in foreground.
+.TP
+.B -v|--verbose
+Display more log messages. This option can be used twice to enable even more log
+messages.
+.TP
+.B -q|--quiet
+Display less log messages. This option can be used twice to enable even less log
+messages and log errors only.
+.TP
+.B -Q|--nolog
+Disable logging.
+.TP
+.B -d|--debug
+Equivalent to '-nvvf -', i.e. don't fork the daemon, display all log messages and
+write them to the standard output.
+
+.SH FILES
+.LP
+.PD .1v
+.TP 20
+.B /etc/cgrules.conf
+.TP
+the default libcgroup configuration file
+
+.SH SEE ALSO
+cgrules.conf (5)
