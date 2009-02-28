@@ -94,6 +94,31 @@ enum cgroup_errors {
 	ECGROUPNORULES, /* Rules list does not exist. */
 	ECGMOUNTFAIL,
 	ECGSENTINEL,	/* Please insert further error codes above this */
+	ECGEOF,		/* End of file, iterator */
+};
+
+/*
+ * Don't use CGROUP_WALK_TYPE_FILE right now. It is added here for
+ * later refactoring and better implementation. Most users *should*
+ * use CGROUP_WALK_TYPE_PRE_DIR.
+ */
+enum cgroup_walk_type {
+	CGROUP_WALK_TYPE_PRE_DIR = 0x1,	/* Pre Order Directory */
+	CGROUP_WALK_TYPE_POST_DIR = 0x2,	/* Post Order Directory */
+};
+
+enum cgroup_file_type {
+	CGROUP_FILE_TYPE_FILE,		/* File */
+	CGROUP_FILE_TYPE_DIR,		/* Directory */
+	CGROUP_FILE_TYPE_OTHER,		/* Directory */
+};
+
+struct cgroup_file_info {
+	enum cgroup_file_type type;
+	const char *path;
+	const char *parent;
+	const char *full_path;
+	short depth;
 };
 
 #define CG_NV_MAX 100
@@ -199,6 +224,31 @@ char *cgroup_strerror(int code);
  */
 int cgroup_get_last_errno();
 
+/**
+ * Walk through the directory tree for the specified controller.
+ * @controller: Name of the controller, for which we want to walk
+ * the directory tree
+ * @base_path: Begin walking from this path
+ * @depth: The maximum depth to which the function should walk, 0
+ * implies all the way down
+ * @handle: Handle to be used during iteration
+ * @info: info filled and returned about directory information
+ */
+int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
+				void **handle, struct cgroup_file_info *info,
+				int *base_level);
+/**
+ * Get the next element during the walk
+ * @depth: The maximum depth to which the function should walk, 0
+ * implies all the way down
+ * @handle: Handle to be used during iteration
+ * @info: info filled and returned about directory information
+ *
+ * Returns ECGEOF when we are done walking through the nodes.
+ */
+int cgroup_walk_tree_next(const int depth, void **handle,
+				struct cgroup_file_info *info, int base_level);
+int cgroup_walk_tree_end(void **handle);
 
 /* The wrappers for filling libcg structures */
 

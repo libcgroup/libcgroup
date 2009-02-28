@@ -49,5 +49,8 @@ global:
 CGROUP_0.33 {
 global:
 	cgroup_get_last_errno;
+	cgroup_walk_tree_begin;
+	cgroup_walk_tree_next;
+	cgroup_walk_tree_end;
 } CGROUP_0.32.1;
 

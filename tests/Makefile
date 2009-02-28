@@ -8,7 +8,8 @@ TARGET= libtest_functions.a \
 	libcgrouptest01 \
 	libcg_ba \
 	setuid \
-	pathtest
+	pathtest \
+	walk_test
 
 all:	$(TARGET)
 
@@ -28,6 +29,9 @@ setuid: setuid.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 pathtest: pathtest.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
+
+walk_test: walk_test.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
 
 clean:

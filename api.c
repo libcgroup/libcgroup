@@ -105,6 +105,7 @@ char *cgroup_strerror_codes[] = {
 	"Cgroup, rules file does not exist",
 	"Cgroup mounting failed",
 	"The config file can not be opend",
+	"End of File or iterator",
 };
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
@@ -2241,4 +2242,109 @@ char *cgroup_strerror(int code)
 int cgroup_get_last_errno()
 {
     return last_errno;
+}
+
+
+static int cg_walk_node(FTS *fts, FTSENT *ent, const int depth,
+			struct cgroup_file_info *info)
+{
+	int ret = 0;
+	int base_level;
+
+	cgroup_dbg("seeing file %s\n", ent->fts_path);
+
+	info->path = ent->fts_name;
+	info->parent = ent->fts_parent->fts_name;
+	info->full_path = ent->fts_path;
+	info->depth = ent->fts_level;
+	info->type = CGROUP_FILE_TYPE_OTHER;
+
+	if (depth && (info->depth > depth))
+		return 0;
+
+	switch (ent->fts_info) {
+	case FTS_DNR:
+	case FTS_ERR:
+		errno = ent->fts_errno;
+		break;
+	case FTS_D:
+		info->type = CGROUP_FILE_TYPE_DIR;
+		break;
+	case FTS_DC:
+	case FTS_NSOK:
+	case FTS_NS:
+	case FTS_DP:
+		break;
+	case FTS_F:
+		info->type = CGROUP_FILE_TYPE_FILE;
+		break;
+	case FTS_DEFAULT:
+		break;
+	}
+	return ret;
+}
+
+int cgroup_walk_tree_next(const int depth, void **handle,
+				struct cgroup_file_info *info, int base_level)
+{
+	int ret = 0;
+	FTS *fts = *(FTS **)handle;
+	FTSENT *ent;
+
+	if (!handle)
+		return ECGINVAL;
+	ent = fts_read(fts);
+	if (!ent)
+		return ECGEOF;
+	if (!base_level && depth)
+		base_level = ent->fts_level + depth;
+	ret = cg_walk_node(fts, ent, base_level, info);
+	*handle = fts;
+	return ret;
+}
+
+int cgroup_walk_tree_end(void **handle)
+{
+	int ret = 0;
+	FTS *fts = *(FTS **)handle;
+
+	if (!handle)
+		return ECGINVAL;
+	fts_close(fts);
+	return 0;
+}
+
+/*
+ * TODO: Need to decide a better place to put this function.
+ */
+int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
+				void **handle, struct cgroup_file_info *info,
+				int *base_level)
+{
+	int ret = 0;
+	cgroup_dbg("path is %s\n", base_path);
+	char *cg_path[2];
+	char full_path[FILENAME_MAX];
+	FTSENT *ent;
+	FTS *fts;
+
+	if (!cg_build_path(base_path, full_path, controller))
+		return ECGOTHER;
+
+	*base_level = 0;
+	cg_path[0] = full_path;
+	cg_path[1] = NULL;
+
+	fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
+				FTS_NOSTAT, NULL);
+	ent = fts_read(fts);
+	if (!ent) {
+		cgroup_dbg("fts_read failed\n");
+		return ECGINVAL;
+	}
+	if (!*base_level && depth)
+		*base_level = ent->fts_level + depth;
+	ret = cg_walk_node(fts, ent, *base_level, info);
+	*handle = fts;
+	return ret;
 }
