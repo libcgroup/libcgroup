@@ -26,6 +26,7 @@ datarootdir=@datarootdir@
 mandir=@mandir@
 INSTALL=install
 INSTALL_DATA=install -m 644
+PACKAGE_VERSION=@PACKAGE_VERSION@
 CFLAGS=@CFLAGS@ $(INC)
 VERSION=1
 
