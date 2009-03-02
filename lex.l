@@ -12,6 +12,7 @@
  */
 
 %{
+#include <string.h>
 #include "y.tab.h"
 int line_no = 1;
 
