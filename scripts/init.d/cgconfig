@@ -130,7 +130,7 @@ start() {
             done
         done
 	
-        [ $? == 0 ] && touch /var/lock/subsys/$servicename
+        touch /var/lock/subsys/$servicename
         return $?
 }
 
