@@ -2251,6 +2251,9 @@ static int cg_walk_node(FTS *fts, FTSENT *ent, const int depth,
 	int ret = 0;
 	int base_level;
 
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
 	cgroup_dbg("seeing file %s\n", ent->fts_path);
 
 	info->path = ent->fts_name;
@@ -2291,6 +2294,9 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 	FTS *fts = *(FTS **)handle;
 	FTSENT *ent;
 
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
 	if (!handle)
 		return ECGINVAL;
 	ent = fts_read(fts);
@@ -2307,6 +2313,9 @@ int cgroup_walk_tree_end(void **handle)
 {
 	int ret = 0;
 	FTS *fts = *(FTS **)handle;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
 
 	if (!handle)
 		return ECGINVAL;
@@ -2327,6 +2336,9 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 	char full_path[FILENAME_MAX];
 	FTSENT *ent;
 	FTS *fts;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
 
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
