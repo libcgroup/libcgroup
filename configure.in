@@ -64,4 +64,5 @@ AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([libcgroup.spec:libcgroup.spec.in])
 AC_CONFIG_FILES([mktarball:mktarball.in])
+CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
