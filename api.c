@@ -1770,51 +1770,6 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 }
 
 /**
- * This function takes a string which has got list of controllers separated
- * by commas and it converts it to an array of string pointer where each
- * string contains name of one controller.
- *
- * returns 0 on success.
- */
-static int cg_prepare_controller_array(char *cstr, char *controllers[])
-{
-	int j = 0;
-	char *temp = NULL;
-	char *saveptr = NULL;
-
-	do {
-		if (j == 0)
-			temp = strtok_r(cstr, ",", &saveptr);
-		else
-			temp = strtok_r(NULL, ",", &saveptr);
-
-		if (temp) {
-			controllers[j] = strdup(temp);
-			if (!controllers[j]) {
-				last_errno = errno;
-				return ECGOTHER;
-			}
-		}
-		j++;
-	} while (temp);
-	return 0;
-}
-
-
-static void cg_free_controller_array(char *controllers[])
-{
-	int j = 0;
-
-	/* Free up temporary controllers array */
-	for (j = 0; j < CG_CONTROLLER_MAX; j++) {
-		if (!controllers[j])
-			break;
-		free(controllers[j]);
-		controllers[j] = 0;
-	}
-}
-
-/**
  * Finds the first rule in the cached list that matches the given UID or GID,
  * and returns a pointer to that rule.  This function uses rl_lock.
  *
