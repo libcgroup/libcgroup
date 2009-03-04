@@ -2249,7 +2249,6 @@ static int cg_walk_node(FTS *fts, FTSENT *ent, const int depth,
 			struct cgroup_file_info *info)
 {
 	int ret = 0;
-	int base_level;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -2311,7 +2310,6 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 
 int cgroup_walk_tree_end(void **handle)
 {
-	int ret = 0;
 	FTS *fts = *(FTS **)handle;
 
 	if (!cgroup_initialized)
