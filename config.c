@@ -101,7 +101,7 @@ int cgroup_config_insert_cgroup(char *cg_name)
  */
 int cgroup_config_parse_controller_options(char *controller, char *name_value)
 {
-	char *buffer;
+	char *buffer = NULL;
 	char *name, *value;
 	struct cgroup_controller *cgc;
 	int error;
@@ -124,6 +124,7 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value)
 
 	nm_pairs = strtok_r(name_value, ":", &nv_buf);
 	cgroup_dbg("[1] name value pair being processed is %s\n", nm_pairs);
+
 	name = strtok_r(nm_pairs, " ", &buffer);
 
 	if (!name)
