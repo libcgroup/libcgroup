@@ -14,15 +14,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # cgconfig Control Groups Configuration Startup
-# chkconfig: - 13 87
+# chkconfig: - 5 95
 # description: This script runs the cgconfigparser utility to parse and setup
 #              the control group filesystem. It uses /etc/cgconfig.conf
 #              and parses the configuration specified in there.
 
 ### BEGIN INIT INFO
 # Provides:             cgconfig
-# Required-Start:       $local_fs $syslog $time
-# Required-Stop:        $local_fs $syslog
+# Required-Start:
+# Required-Stop:
 # Should-Start:
 # Should-Stop:
 # Short-Description:    start and stop the WLM configuration
