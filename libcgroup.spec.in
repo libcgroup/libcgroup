@@ -32,7 +32,8 @@ provide scripts to manage that configuration.
 %setup -q
 
 %build
-%configure
+%configure --bindir=/bin --sbindir=/sbin --libdir=/%{_lib}
+
 make %{?_smp_mflags}
 
 
@@ -46,9 +47,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
 cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
-mkdir -p $RPM_BUILD_ROOT/%{_lib}/security/
-mv $RPM_BUILD_ROOT/%{_libdir}/security/pam_cgroup.so \
-	$RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -73,12 +71,12 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/cgred.conf
 %config(noreplace) %{_sysconfdir}/cgconfig.conf
 %config(noreplace) %{_sysconfdir}/cgrules.conf
-%{_libdir}/libcgroup-%{version}.so
-%{_libdir}/libcgroup.so.*
-%{_bindir}/cgexec
-%{_bindir}/cgclassify
-%{_sbindir}/cgconfigparser
-%{_bindir}/cgrulesengd
+/%{_lib}/libcgroup-%{version}.so
+/%{_lib}/libcgroup.so.*
+/bin/cgexec
+/bin/cgclassify
+/sbin/cgconfigparser
+/bin/cgrulesengd
 %attr(0644, root, root) %{_mandir}/man1/*
 %attr(0644, root, root) %{_mandir}/man5/*
 %attr(0644, root, root) %{_mandir}/man8/*
@@ -91,7 +89,7 @@ fi
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/libcgroup.h
-%{_libdir}/libcgroup.so
+/%{_lib}/libcgroup.so
 %doc COPYING INSTALL 
 
 
