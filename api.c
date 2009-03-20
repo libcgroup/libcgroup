@@ -573,7 +573,8 @@ int cgroup_init()
 	proc_cgroup = fopen("/proc/cgroups", "r");
 
 	if (!proc_cgroup) {
-		ret = EIO;
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto unlock_exit;
 	}
 
@@ -591,7 +592,8 @@ int cgroup_init()
 	}
 	buf = fgets(buf, FILENAME_MAX, proc_cgroup);
 	if (!buf) {
-		ret = EIO;
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto unlock_exit;
 	}
 	free(buf);
@@ -615,7 +617,8 @@ int cgroup_init()
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
 
 	if (!temp_ent) {
-		ret = ECGFAIL;
+		last_errno = errno; 
+		ret = ECGOTHER;
 		goto unlock_exit;
 	}
 
@@ -1188,8 +1191,10 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	}
 
 	fts_path[0] = (char *)malloc(FILENAME_MAX);
-	if (!fts_path[0])
-		return ENOMEM;
+	if (!fts_path[0]) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	fts_path[1] = NULL;
 	path = fts_path[0];
 
