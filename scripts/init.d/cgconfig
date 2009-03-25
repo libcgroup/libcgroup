@@ -79,6 +79,11 @@ start() {
         then
                 #log_progress_msg "Starting cgconfig service: "
                 cgconfigparser -l $CONFIG_FILE
+                retval=$?
+                if [ $retval -ne 0 ]
+                then
+                    return $retval
+                fi
         fi
 
         declare defaultcgroup
