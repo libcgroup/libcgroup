@@ -22,6 +22,8 @@ AM_INIT_AUTOMAKE(libcgroup, 0.34)
 # soname is libcgroup.so.X
 AC_SUBST(LIBRARY_VERSION, 1:0:34)
 
+# we do not want static libraries
+AC_DISABLE_STATIC
 
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADER([config.h])
