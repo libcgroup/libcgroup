@@ -13,7 +13,7 @@
 
 %{
 #include <string.h>
-#include "y.tab.h"
+#include "parse.h"
 int line_no = 1;
 
 %}

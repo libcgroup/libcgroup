@@ -27,6 +27,8 @@ CTLR1="";
 CTLR2="";
 CPU="";
 MEMORY="";
+SKIP_TEST=77
+RET=0
 
 declare -a allcontrollers;
 declare -a targets;
@@ -167,7 +169,7 @@ no_controllers()
 		echo "Kernel needs to have 2 controllers enabled";
 		echo "Recompile your kernel with at least 2 controllers"
 		echo "Exiting the tests.....";
-		exit 1;
+		exit $SKIP_TEST;
 	fi;
 
 	return 0;	# true
@@ -186,7 +188,7 @@ mount_fs ()
 		echo "Kernel has none of cpu/memory controllers enabled";
 		echo "Recompile your kernel with at least one of these enabled"
 		echo "Exiting the tests.....";
-		exit 1;
+		exit $SKIP_TEST;
 	fi;
 
 	# At least one Controller is enabled. So proceed further.
@@ -227,7 +229,7 @@ mount_fs ()
 			else
 				echo "Only 1 controler enabled in kernel";
 				echo "So not running multiple mount testcases";
-				exit 1;
+				exit $SKIP_TEST;
 			fi;
 		fi;
 
@@ -320,8 +322,15 @@ runtest()
 		echo "Your Kernel seems to be too old. Plz recompile your"
 		echo "Kernel with cgroups and appropriate controllers enabled"
 		echo " Exiting the testcases...."
-		exit 1;
+		exit $SKIP_TEST;
 	fi;
+
+	MY_ID=`id -u`
+	if [ $MY_ID -ne 0 ]; then
+		echo "Only root can start this script."
+		echo " Exiting the testcase..."
+		exit $SKIP_TEST
+	fi
 
 # TestSet01: Run tests without mounting cgroup filesystem
 	echo;
@@ -345,6 +354,7 @@ runtest()
 		echo Test binary $FILE exited abnormaly with return value $RC;
 		# Do not exit here. Failure in this case does not imply
 		# failure in other cases also
+		RET=$RC
 	fi;
 
 # TestSet02: Run tests with mounting cgroup filesystem
@@ -372,6 +382,7 @@ runtest()
 	if [ $RC -ne 0 ]
 	then
 		echo Test binary $FILE exited abnormaly with return value $RC;
+		RET=$RC
 	fi;
 	umount_fs;
 
@@ -402,7 +413,8 @@ runtest()
 	if [ $RC -ne 0 ]
 	then
 		echo Test binary $FILE exited abnormaly with return value $RC;
+		RET=$RC
 	fi;
 	umount_fs;
 
-	exit 0;
+	exit $RET;

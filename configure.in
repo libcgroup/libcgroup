@@ -13,9 +13,19 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 AC_PREREQ(2.61)
+
+# In following section update all occurences of version, including soname
 AC_INIT([control groups library and utilities], 0.34,
 	[http://sourceforge.net/tracker/?group_id=218421&atid=1043649])
-AC_CONFIG_SRCDIR([wrapper.c])
+AM_INIT_AUTOMAKE(libcgroup, 0.34)
+# set library version (X:Y:Z gets transfromed to libcgroup.so.X.Y.Z,
+# soname is libcgroup.so.X
+AC_SUBST(LIBRARY_VERSION, 1:0:34)
+
+# we do not want static libraries
+AC_DISABLE_STATIC
+
+AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADER([config.h])
 
 # Process command line options
@@ -34,10 +44,10 @@ if test "$YACC" != byacc; then
 	YACC="$SHELL $missing_dir/missing byacc"
 	AC_SUBST(YACC, "byacc")
 fi
-AC_PROG_LEX
+AM_PROG_LEX
+AC_PROG_LIBTOOL
 
 # Checks for libraries.
-# FIXME: Replace `main' with a function in `-lcgroup':
 AC_CHECK_LIB([cgroup], [cgroup_create_cgroup])
 
 # Checks for header files.
@@ -61,8 +71,19 @@ AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
 
-AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([libcgroup.spec:libcgroup.spec.in])
-AC_CONFIG_FILES([mktarball:mktarball.in])
+AC_CONFIG_FILES([Makefile
+	tests/Makefile
+	src/Makefile
+	src/daemon/Makefile
+	src/tools/Makefile
+	src/pam/Makefile
+	scripts/Makefile
+	samples/Makefile
+	include/Makefile
+	doc/Makefile
+	doc/man/Makefile
+	dist/Makefile])
+AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
+
