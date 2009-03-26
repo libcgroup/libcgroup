@@ -129,7 +129,9 @@ LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
-LIBRARY_VERSION = @LIBRARY_VERSION@
+LIBRARY_VERSION_MAJOR = @LIBRARY_VERSION_MAJOR@
+LIBRARY_VERSION_MINOR = @LIBRARY_VERSION_MINOR@
+LIBRARY_VERSION_RELEASE = @LIBRARY_VERSION_RELEASE@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
@@ -211,7 +213,9 @@ INCLUDES = -I$(top_srcdir)/include
 lib_LTLIBRARIES = libcgroup.la
 libcgroup_la_SOURCES = parse.y lex.l api.c config.c libcgroup-internal.h libcgroup.map wrapper.c
 libcgroup_la_LIBADD = -lpthread
-libcgroup_la_LDFLAGS = -Wl,--version-script,libcgroup.map -version-number $(LIBRARY_VERSION)
+libcgroup_la_LDFLAGS = -Wl,--version-script,libcgroup.map -version-number \
+	-version-number $(LIBRARY_VERSION_MAJOR):$(LIBRARY_VERSION_MINOR):$(LIBRARY_VERSION_RELEASE)
+
 all: all-recursive
 
 .SUFFIXES:
@@ -225,9 +229,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

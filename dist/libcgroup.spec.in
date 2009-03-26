@@ -1,3 +1,5 @@
+%define soversion @LIBRARY_VERSION_MAJOR@.@LIBRARY_VERSION_MINOR@.@LIBRARY_VERSION_RELEASE@
+
 Name: libcgroup
 Summary: Tools and libraries to control and monitor control groups
 Group: Development/Libraries
@@ -40,13 +42,28 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
+
+# install init scripts
 mkdir -p $RPM_BUILD_ROOT/%{_initrddir}
 cp scripts/init.d/cgconfig $RPM_BUILD_ROOT/%{_initrddir}/cgconfig
 cp scripts/init.d/cgred $RPM_BUILD_ROOT/%{_initrddir}/cgred
+
+# install config files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
 cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
+
+# sanitize pam module, we need only pam_cgroup.so in the right directory
+mkdir -p $RPM_BUILD_ROOT/%{_lib}/security
+mv -f $RPM_BUILD_ROOT/%{_lib}/pam_cgroup.so.*.*.* $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
+rm -f $RPM_BUILD_ROOT/%{_lib}/pam_cgroup*
+
+# move the devel stuff to /usr
+mkdir -p $RPM_BUILD_ROOT/%{_libdir}
+mv -f $RPM_BUILD_ROOT/%{_lib}/libcgroup.la $RPM_BUILD_ROOT/%{_libdir}
+rm -f $RPM_BUILD_ROOT/%{_lib}/libcgroup.so
+ln -sf ../../%{_lib}/libcgroup.so.%{soversion} $RPM_BUILD_ROOT/%{_libdir}/libcgroup.so
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -71,12 +88,11 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/cgred.conf
 %config(noreplace) %{_sysconfdir}/cgconfig.conf
 %config(noreplace) %{_sysconfdir}/cgrules.conf
-/%{_lib}/libcgroup-%{version}.so
 /%{_lib}/libcgroup.so.*
 /bin/cgexec
 /bin/cgclassify
 /sbin/cgconfigparser
-/bin/cgrulesengd
+/sbin/cgrulesengd
 %attr(0644, root, root) %{_mandir}/man1/*
 %attr(0644, root, root) %{_mandir}/man5/*
 %attr(0644, root, root) %{_mandir}/man8/*
@@ -89,7 +105,7 @@ fi
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/libcgroup.h
-/%{_lib}/libcgroup.so
+%{_libdir}/libcgroup.*
 %doc COPYING INSTALL 
 
 

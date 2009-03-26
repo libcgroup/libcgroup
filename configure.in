@@ -15,12 +15,13 @@
 AC_PREREQ(2.61)
 
 # In following section update all occurences of version, including soname
-AC_INIT([control groups library and utilities], 0.34,
+AC_INIT([libcgroup], 0.34,
 	[http://sourceforge.net/tracker/?group_id=218421&atid=1043649])
-AM_INIT_AUTOMAKE(libcgroup, 0.34)
-# set library version (X:Y:Z gets transfromed to libcgroup.so.X.Y.Z,
-# soname is libcgroup.so.X
-AC_SUBST(LIBRARY_VERSION, 1:0:34)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
+# set library version, soname is libcgroup.so.MAJOR
+AC_SUBST(LIBRARY_VERSION_MAJOR, 1)
+AC_SUBST(LIBRARY_VERSION_MINOR, 0)
+AC_SUBST(LIBRARY_VERSION_RELEASE, 34)
 
 # we do not want static libraries
 AC_DISABLE_STATIC

@@ -82,7 +82,9 @@ LEX = @LEX@
 LEXLIB = @LEXLIB@
 LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
-LIBRARY_VERSION = @LIBRARY_VERSION@
+LIBRARY_VERSION_MAJOR = @LIBRARY_VERSION_MAJOR@
+LIBRARY_VERSION_MINOR = @LIBRARY_VERSION_MINOR@
+LIBRARY_VERSION_RELEASE = @LIBRARY_VERSION_RELEASE@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
@@ -169,9 +171,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  dist/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  dist/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  dist/Makefile
+	  $(AUTOMAKE) --foreign  dist/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
