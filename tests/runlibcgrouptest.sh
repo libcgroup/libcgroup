@@ -325,6 +325,13 @@ runtest()
 		exit $SKIP_TEST;
 	fi;
 
+	MY_ID=`id -u`
+	if [ $MY_ID -ne 0 ]; then
+		echo "Only root can start this script."
+		echo " Exiting the testcase..."
+		exit $SKIP_TEST
+	fi
+
 # TestSet01: Run tests without mounting cgroup filesystem
 	echo;
 	echo Running first set of testcases;
