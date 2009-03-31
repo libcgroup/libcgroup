@@ -590,8 +590,8 @@ int cgroup_init()
 		ret = ECGOTHER;
 		goto unlock_exit;
 	}
-	buf = fgets(buf, FILENAME_MAX, proc_cgroup);
-	if (!buf) {
+	if (!fgets(buf, FILENAME_MAX, proc_cgroup)) {
+		free(buf);
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
