@@ -57,9 +57,11 @@ int euid_of_pid(pid_t pid)
 				(int *)&euid, (int *)&suid, (int *)&fsuid);
 			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				ruid, euid, suid, fsuid);
+			fclose(fp);
 			return euid;
 		}
 	}
+	fclose(fp);
 
 	/* If we are here, we could not find euid. Return error. */
 	return -1;

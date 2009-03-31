@@ -696,14 +696,17 @@ static int cg_test_mounted_fs()
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
 	if (!temp_ent) {
 		/* We just fail at the moment. */
+		fclose(proc_mount);
 		return 0;
 	}
 
 	ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
 						sizeof(mntent_buff));
 
-	if (!ent)
-		return 0;
+	if (!ent) {
+		ret = 0;
+		goto done;
+	}
 
 	while (strcmp(ent->mnt_type, "cgroup") !=0) {
 		ent = getmntent_r(proc_mount, temp_ent, mntent_buff,

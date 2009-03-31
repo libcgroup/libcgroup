@@ -469,6 +469,7 @@ int cgroup_config_load_config(const char *pathname)
 
 	if (yyparse() != 0) {
 		cgroup_dbg("Failed to parse file %s\n", pathname);
+		fclose(yyin);
 		return ECGROUPPARSEFAIL;
 	}
 
