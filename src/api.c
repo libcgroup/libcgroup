@@ -20,6 +20,9 @@
  *
  * Code initiated and designed by Dhaval Giani. All faults are most likely
  * his mistake.
+ *
+ * Bharata B Rao <bharata@linux.vnet.ibm.com> is willing is take blame
+ * for mistakes in APIs for reading statistics.
  */
 
 #include <dirent.h>
@@ -2319,5 +2322,104 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 		*base_level = ent->fts_level + depth;
 	ret = cg_walk_node(fts, ent, *base_level, info);
 	*handle = fts;
+	return ret;
+}
+
+/*
+ * This parses a stat line which is in the form of (name value) pair
+ * separated by a space.
+ */
+int cg_read_stat(FILE *fp, struct cgroup_stat *stat)
+{
+	int ret = 0;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	char *token, *saveptr;
+
+	read = getline(&line, &len, fp);
+	if (read == -1)
+		return ECGEOF;
+
+	token = strtok_r(line, " ", &saveptr);
+	if (!token) {
+		ret = ECGINVAL;
+		goto out_free;
+	}
+	strncpy(stat->name, token, FILENAME_MAX);
+
+	token = strtok_r(NULL, " ", &saveptr);
+	if (!token) {
+		ret = ECGINVAL;
+		goto out_free;
+	}
+	strncpy(stat->value, token, CG_VALUE_MAX);
+
+out_free:
+	free(line);
+	return 0;
+}
+
+int cgroup_read_stats_end(void **handle)
+{
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!handle)
+		return ECGINVAL;
+
+	fp = (FILE *)*handle;
+	fclose(fp);
+	return 0;
+}
+
+int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat)
+{
+	int ret = 0;
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!handle || !stat)
+		return ECGINVAL;
+
+	fp = (FILE *)*handle;
+	ret = cg_read_stat(fp, stat);
+	*handle = fp;
+	return ret;
+}
+
+/*
+ * TODO: Need to decide a better place to put this function.
+ */
+int cgroup_read_stats_begin(char *controller, char *path, void **handle,
+				struct cgroup_stat *stat)
+{
+	int ret = 0;
+	char stat_file[FILENAME_MAX];
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!stat || !handle)
+		return ECGINVAL;
+
+	if (!cg_build_path(path, stat_file, controller))
+		return ECGOTHER;
+
+	sprintf(stat_file, "%s/%s.stat", stat_file, controller);
+
+	fp = fopen(stat_file, "r");
+	if (!fp) {
+		cgroup_dbg("fopen failed\n");
+		return ECGINVAL;
+	}
+
+	ret = cg_read_stat(fp, stat);
+	*handle = fp;
 	return ret;
 }

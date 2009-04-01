@@ -129,6 +129,11 @@ struct cgroup_file_info {
  */
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
+struct cgroup_stat {
+	char name[FILENAME_MAX];
+	char value[CG_VALUE_MAX];
+};
+
 /* Functions and structures that can be used by the application*/
 struct cgroup;
 struct cgroup_controller;
@@ -249,6 +254,25 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 int cgroup_walk_tree_next(const int depth, void **handle,
 				struct cgroup_file_info *info, int base_level);
 int cgroup_walk_tree_end(void **handle);
+
+/**
+ * Read the statistics values for the specified controller
+ * @controller: Name of the controller for which stats are requested.
+ * @path: cgroup path.
+ * @handle: Handle to be used during iteration.
+ * @stat: Stats values will be filled and returned here.
+ */
+int cgroup_read_stats_begin(char *controller, char *path, void **handle,
+				struct cgroup_stat *stat);
+
+/**
+ * Read the next stat value.
+ * @handle: Handle to be used during iteration.
+ * @stat: Stats values will be filled and returned here.
+ */
+int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat);
+
+int cgroup_read_stats_end(void **handle);
 
 /* The wrappers for filling libcg structures */
 

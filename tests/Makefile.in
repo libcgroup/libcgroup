@@ -33,7 +33,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = libcgrouptest01$(EXEEXT) libcg_ba$(EXEEXT) \
-	setuid$(EXEEXT) pathtest$(EXEEXT) walk_test$(EXEEXT)
+	setuid$(EXEEXT) pathtest$(EXEEXT) walk_test$(EXEEXT) \
+	read_stats$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -65,6 +66,10 @@ am_walk_test_OBJECTS = walk_test.$(OBJEXT)
 walk_test_OBJECTS = $(am_walk_test_OBJECTS)
 walk_test_LDADD = $(LDADD)
 walk_test_DEPENDENCIES = $(top_srcdir)/src/.libs/libcgroup.la
+am_read_stats_OBJECTS = read_stats.$(OBJEXT)
+read_stats_OBJECTS = $(am_read_stats_OBJECTS)
+read_stats_LDADD = $(LDADD)
+read_stats_DEPENDENCIES = $(top_srcdir)/src/.libs/libcgroup.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -87,9 +92,11 @@ CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(libcg_ba_SOURCES) $(libcgrouptest01_SOURCES) \
-	$(pathtest_SOURCES) $(setuid_SOURCES) $(walk_test_SOURCES)
+	$(pathtest_SOURCES) $(setuid_SOURCES) $(walk_test_SOURCES) \
+	$(read_stats_SOURCES)
 DIST_SOURCES = $(libcg_ba_SOURCES) $(libcgrouptest01_SOURCES) \
-	$(pathtest_SOURCES) $(setuid_SOURCES) $(walk_test_SOURCES)
+	$(pathtest_SOURCES) $(setuid_SOURCES) $(walk_test_SOURCES) \
+	$(read_test_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -214,6 +221,7 @@ libcg_ba_SOURCES = libcg_ba.cpp
 setuid_SOURCES = setuid.c
 pathtest_SOURCES = pathtest.c
 walk_test_SOURCES = walk_test.c
+read_stats_SOURCES = read_stats.c
 EXTRA_DIST = pathtest.sh runlibcgrouptest.sh
 TESTS = runlibcgrouptest.sh
 all: all-am
@@ -271,6 +279,9 @@ setuid$(EXEEXT): $(setuid_OBJECTS) $(setuid_DEPENDENCIES)
 walk_test$(EXEEXT): $(walk_test_OBJECTS) $(walk_test_DEPENDENCIES) 
 	@rm -f walk_test$(EXEEXT)
 	$(LINK) $(walk_test_OBJECTS) $(walk_test_LDADD) $(LIBS)
+read_stats$(EXEEXT): $(read_stats_OBJECTS) $(read_stats_DEPENDENCIES)
+	@rm -f read_stats$(EXEEXT)
+	$(LINK) $(read_stats_OBJECTS) $(read_stats_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -284,6 +295,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setuid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_functions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/walk_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/read_stats.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
