@@ -25,6 +25,10 @@
  * for mistakes in APIs for reading statistics.
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <dirent.h>
 #include <errno.h>
 #include <libcgroup.h>
