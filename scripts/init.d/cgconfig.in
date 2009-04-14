@@ -29,7 +29,9 @@
 # Description:          This script allows us to create a default configuration
 ### END INIT INFO
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin:.
+# get correct location of binaries from configure
+prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
+CGCONFIGPARSER_BIN=$sbindir/cgconfigparser
 MOUNTS_FILE=/proc/mounts
 PROC_CGROUPS_FILE=/proc/cgroups
 CGROUP_FS=cgroup
@@ -78,7 +80,7 @@ start() {
 
         if [ $? -eq 0 ]
         then
-                cgconfigparser -l $CONFIG_FILE
+                $CGCONFIGPARSER_BIN -l $CONFIG_FILE
                 retval=$?
                 if [ $retval -ne 0 ]
                 then

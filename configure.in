@@ -76,6 +76,8 @@ AC_CONFIG_FILES([Makefile
 	src/tools/Makefile
 	src/pam/Makefile
 	scripts/Makefile
+	scripts/init.d/cgconfig
+	scripts/init.d/cgred
 	samples/Makefile
 	include/Makefile
 	doc/Makefile

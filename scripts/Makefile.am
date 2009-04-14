@@ -1,1 +1,1 @@
-EXTRA_DIST = init.d/cgconfig init.d/cgred
+EXTRA_DIST = init.d/cgconfig.in init.d/cgred.in
