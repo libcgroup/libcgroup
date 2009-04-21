@@ -25,6 +25,10 @@
  * for mistakes in APIs for reading statistics.
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <dirent.h>
 #include <errno.h>
 #include <libcgroup.h>
@@ -762,6 +766,43 @@ char *cg_build_path(char *name, char *path, char *type)
 	return path;
 }
 
+static int __cgroup_attach_task_pid(char *path, pid_t tid)
+{
+	int ret = 0;
+	FILE *tasks = NULL;
+
+	tasks = fopen(path, "w");
+	if (!tasks) {
+		switch (errno) {
+		case EPERM:
+			return ECGROUPNOTOWNER;
+		case ENOENT:
+			return ECGROUPNOTEXIST;
+		default:
+			return ECGROUPNOTALLOWED;
+		}
+	}
+	ret = fprintf(tasks, "%d", tid);
+	if (ret < 0) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+	ret = fflush(tasks);
+	if (ret) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+	fclose(tasks);
+	return 0;
+err:
+	cgroup_dbg("Error writing tid %d to %s:%s\n",
+			tid, path, strerror(errno));
+	fclose(tasks);
+	return ret;
+}
+
 /** cgroup_attach_task_pid is used to assign tasks to a cgroup.
  *  struct cgroup *cgroup: The cgroup to assign the thread to.
  *  pid_t tid: The thread to be assigned to the cgroup.
@@ -773,7 +814,6 @@ char *cg_build_path(char *name, char *path, char *type)
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX];
-	FILE *tasks = NULL;
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -789,37 +829,11 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 						cg_mount_table[i].name))
 				continue;
 			strncat(path, "/tasks", sizeof(path) - strlen(path));
-
-			tasks = fopen(path, "w");
-			if (!tasks) {
-				pthread_rwlock_unlock(&cg_mount_table_lock);
-				switch (errno) {
-				case EPERM:
-					return ECGROUPNOTOWNER;
-				case ENOENT:
-					return ECGROUPNOTEXIST;
-				default:
-					return ECGROUPNOTALLOWED;
-				}
-			}
-			ret = fprintf(tasks, "%d", tid);
-			if (ret < 0) {
-				cgroup_dbg("Error writing tid %d to %s:%s\n",
-						tid, path, strerror(errno));
-				fclose(tasks);
-				last_errno = errno;
-				return ECGOTHER;
-			}
-
-			ret = fflush(tasks);
+			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret) {
-				last_errno = errno;
-				cgroup_dbg("Error writing tid  %d to %s:%s\n",
-						tid, path, strerror(errno));
-				fclose(tasks);
-				return ECGOTHER;
+				pthread_rwlock_unlock(&cg_mount_table_lock);
+				return ret;
 			}
-			fclose(tasks);
 		}
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 	} else {
@@ -835,40 +849,10 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			if (!cg_build_path(cgroup->name, path,
 					cgroup->controller[i]->name))
 				continue;
-
 			strncat(path, "/tasks", sizeof(path) - strlen(path));
-
-			tasks = fopen(path, "w");
-			if (!tasks) {
-				cgroup_dbg("fopen failed for %s:%s", path,
-							strerror(errno));
-
-				switch (errno) {
-				case EPERM:
-					return ECGROUPNOTOWNER;
-				case ENOENT:
-					return ECGROUPNOTEXIST;
-				default:
-					return ECGROUPNOTALLOWED;
-				}
-			}
-			ret = fprintf(tasks, "%d", tid);
-			if (ret < 0) {
-				last_errno = errno;
-				cgroup_dbg("Error writing tid %d to %s:%s\n",
-						tid, path, strerror(errno));
-				fclose(tasks);
-				return ECGOTHER;
-			}
-			ret = fflush(tasks);
-			if (ret) {
-				last_errno = errno;
-				cgroup_dbg("Error writing tid  %d to %s:%s\n",
-						tid, path, strerror(errno));
-				fclose(tasks);
-				return ECGOTHER;
-			}
-			fclose(tasks);
+			ret = __cgroup_attach_task_pid(path, tid);
+			if (ret)
+				return ret;
 		}
 	}
 	return 0;

@@ -48,9 +48,6 @@ fi
 AM_PROG_LEX
 AC_PROG_LIBTOOL
 
-# Checks for libraries.
-AC_CHECK_LIB([cgroup], [cgroup_create_cgroup])
-
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC

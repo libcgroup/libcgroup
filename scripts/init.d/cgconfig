@@ -69,6 +69,7 @@ umount_fs() {
 }
 
 start() {
+        echo -n "Starting cgconfig service: "
 	if [ -f /var/lock/subsys/$servicename ]
         then
             log_warning_msg "lock file already exists"
@@ -77,11 +78,11 @@ start() {
 
         if [ $? -eq 0 ]
         then
-                #log_progress_msg "Starting cgconfig service: "
                 cgconfigparser -l $CONFIG_FILE
                 retval=$?
                 if [ $retval -ne 0 ]
                 then
+                    log_failure_msg "Failed to parse " $CONFIG_FILE
                     return $retval
                 fi
         fi
@@ -136,7 +137,14 @@ start() {
         done
 	
         touch /var/lock/subsys/$servicename
-        return $?
+        retval=$?
+        if [ $retval -ne 0 ]
+        then
+            log_failure_msg "Failed to touch " /var/lock/subsys/$servicename
+            return $retval
+        fi
+        log_success_msg
+        return 0
 }
 
 move_all_to_init_class() {
@@ -169,9 +177,11 @@ move_all_to_init_class() {
 
 
 stop() {
+    echo -n "Stopping cgconfig service: "
     move_all_to_init_class
     umount_fs
     rm -f /var/lock/subsys/$servicename
+    log_success_msg
 }
 
 trapped() {

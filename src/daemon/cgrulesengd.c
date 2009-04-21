@@ -386,8 +386,10 @@ int cgre_create_netlink_socket_process_msg()
 			continue;
 		while (NLMSG_OK(nlh, recv_len)) {
 			cn_hdr = NLMSG_DATA(nlh);
-			if (nlh->nlmsg_type == NLMSG_NOOP)
+			if (nlh->nlmsg_type == NLMSG_NOOP) {
+				nlh = NLMSG_NEXT(nlh, recv_len);
 				continue;
+			}
 			if ((nlh->nlmsg_type == NLMSG_ERROR) ||
 					(nlh->nlmsg_type == NLMSG_OVERRUN))
 				break;
