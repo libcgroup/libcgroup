@@ -2407,3 +2407,71 @@ int cgroup_read_stats_begin(char *controller, char *path, void **handle,
 	*handle = fp;
 	return ret;
 }
+
+int cgroup_get_task_end(void **handle)
+{
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!*handle)
+		return ECGINVAL;
+
+	fclose((FILE *) *handle);
+	*handle = NULL;
+
+	return 0;
+}
+
+int cgroup_get_task_next(void *handle, pid_t *pid)
+{
+	int ret;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!handle)
+		return ECGINVAL;
+
+	ret = fscanf((FILE *) handle, "%u", pid);
+
+	if (ret != 1) {
+		if (ret == EOF)
+			return ECGEOF;
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	return 0;
+}
+
+int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
+								pid_t *pid)
+{
+	int ret = 0;
+	char path[FILENAME_MAX];
+	char *fullpath = NULL;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!cg_build_path(cgroup, path, controller))
+		return ECGOTHER;
+
+	ret = asprintf(&fullpath, "%s/tasks", path);
+
+	if (ret < 0) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	*handle = (void *) fopen(fullpath, "r");
+	free(fullpath);
+
+	if (!*handle) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	ret = cgroup_get_task_next(*handle, pid);
+
+	return ret;
+}

@@ -274,6 +274,25 @@ int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat);
 
 int cgroup_read_stats_end(void **handle);
 
+/**
+ * Read the tasks file to get the list of tasks in a cgroup
+ * @cgroup: Name of the cgroup
+ * @controller: Name of the cgroup subsystem
+ * @handle: Handle to be used in the iteration
+ * @pid: The pid read from the tasks file. Will be filled in by the API
+ */
+int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
+								pid_t *pid);
+
+/**
+ * Read the next task value
+ * @handle: The handle used for iterating
+ * @pid: The variable where the value will be stored
+ *
+ * return ECGEOF when the iterator finishes getting the list of tasks.
+ */
+int cgroup_get_task_next(void *handle, pid_t *pid);
+int cgroup_get_task_end(void **handle);
 /* The wrappers for filling libcg structures */
 
 struct cgroup *cgroup_new_cgroup(const char *name);

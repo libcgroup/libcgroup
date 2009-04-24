@@ -52,8 +52,14 @@ global:
 	cgroup_walk_tree_begin;
 	cgroup_walk_tree_next;
 	cgroup_walk_tree_end;
+} CGROUP_0.32.1;
+
+CGROUP_0.34 {
+global:
+	cgroup_get_task_begin;
+	cgroup_get_task_end;
+	cgroup_get_task_next;
 	cgroup_read_stats_begin;
 	cgroup_read_stats_next;
 	cgroup_read_stats_end;
-} CGROUP_0.32.1;
-
+} CGROUP_0.33;
