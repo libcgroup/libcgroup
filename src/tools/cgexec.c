@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
 	/* Initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "libcgroup initialization failed:%d", ret);
+		fprintf(stderr, "libcgroup initialization failed: %s\n",
+			cgroup_strerror(ret));
 		return ret;
 	}
 
