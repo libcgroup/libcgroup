@@ -105,7 +105,7 @@ char *cgroup_strerror_codes[] = {
 	"Cgroup operation failed",
 	"Cgroup not initialized",
 	"Cgroup trying to set value for control that does not exist",
-	"Cgroup generic error, see errno",
+	"Cgroup generic error",
 	"Cgroup values are not equal",
 	"Cgroup controllers are different",
 	"Cgroup parsing failed",
@@ -2180,7 +2180,7 @@ char *cgroup_strerror(int code)
 {
 	assert((code >= ECGROUPNOTCOMPILED) && (code < ECGSENTINEL));
 	if (code == ECGOTHER) {
-		snprintf(errtext, MAXLEN, "%s: error message: %s",
+		snprintf(errtext, MAXLEN, "%s, error message: %s",
 			cgroup_strerror_codes[code % ECGROUPNOTCOMPILED],
 			strerror(cgroup_get_last_errno()));
 		return errtext;
