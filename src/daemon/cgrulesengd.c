@@ -180,6 +180,91 @@ static int cgre_get_euid_egid_from_status(pid_t pid, uid_t *euid, gid_t *egid)
 	return 0;
 }
 
+struct parent_info {
+	__u64 timestamp;
+	pid_t pid;
+};
+struct array_parent_info {
+	int index;
+	int num_allocation;
+	struct parent_info **parent_info;
+};
+struct array_parent_info array_pi;
+
+static int cgre_store_parent_info(pid_t pid)
+{
+	__u64 uptime_ns;
+	struct timespec tp;
+	struct parent_info *info;
+
+	if (clock_gettime(CLOCK_MONOTONIC, &tp) < 0) {
+		flog(LOG_WARNING, "Failed to get time");
+		return 1;
+	}
+	uptime_ns = ((__u64)tp.tv_sec * 1000 * 1000 * 1000 ) + tp.tv_nsec;
+
+	if (array_pi.index >= array_pi.num_allocation) {
+		array_pi.num_allocation += 100;
+		array_pi.parent_info = realloc(array_pi.parent_info,
+					sizeof(info) * array_pi.num_allocation);
+		if (!array_pi.parent_info) {
+			flog(LOG_WARNING, "Failed to allocate memory");
+			return 1;
+		}
+	}
+	info = calloc(1, sizeof(struct parent_info));
+	if (!info) {
+		flog(LOG_WARNING, "Failed to allocate memory");
+		return 1;
+	}
+	info->timestamp = uptime_ns;
+	info->pid = pid;
+
+	array_pi.parent_info[array_pi.index] = info;
+	array_pi.index++;
+
+	return 0;
+}
+
+static void cgre_remove_old_parent_info(__u64 key_timestamp)
+{
+	int i, j;
+
+	for (i = 0; i < array_pi.index; i++) {
+		if (key_timestamp < array_pi.parent_info[i]->timestamp)
+			continue;
+		free(array_pi.parent_info[i]);
+		for (j = i; j < array_pi.index - 1; j++)
+			array_pi.parent_info[j] = array_pi.parent_info[j + 1];
+		array_pi.index--;
+		i--;
+	}
+	return;
+}
+
+static int cgre_was_parent_changed_when_forking(const struct proc_event *ev)
+{
+	int i;
+	pid_t parent_pid;
+	__u64 timestamp_child;
+	__u64 timestamp_parent;
+
+	parent_pid = ev->event_data.fork.parent_pid;
+	timestamp_child = ev->timestamp_ns;
+
+	cgre_remove_old_parent_info(timestamp_child);
+
+	for (i = 0; i < array_pi.index; i++) {
+		if (parent_pid != array_pi.parent_info[i]->pid)
+			continue;
+		timestamp_parent = array_pi.parent_info[i]->timestamp;
+		if (timestamp_child > timestamp_parent)
+			continue;
+		return 1;
+	}
+	return 0;
+}
+
 /**
  * Process an event from the kernel, and determine the correct UID/GID/PID to
  * pass to libcgroup.  Then, libcgroup will decide the cgroup to move the PID
@@ -200,6 +285,15 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	case PROC_EVENT_UID:
 	case PROC_EVENT_GID:
 		pid = ev->event_data.id.process_pid;
+		break;
+	case PROC_EVENT_FORK:
+		/*
+		 * If this process was forked while changing parent's cgroup,
+		 * this process's cgroup also should be changed.
+		 */
+		if (!cgre_was_parent_changed_when_forking(ev))
+			return 0;
+		pid = ev->event_data.fork.child_pid;
 		break;
 	default:
 		break;
@@ -229,6 +323,12 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 					ev->event_data.id.e.egid,
 					pid, CGFLAG_USECACHE);
 		break;
+	case PROC_EVENT_FORK:
+		log_uid = euid;
+		log_gid = egid;
+		ret = cgroup_change_cgroup_uid_gid_flags(euid,
+					egid, pid, CGFLAG_USECACHE);
+		break;
 	default:
 		break;
 	}
@@ -242,6 +342,7 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 			" FAILED! (Error Code: %d)", log_pid, log_uid, log_gid,
 			ret);
 	} else {
+		ret = cgre_store_parent_info(pid);
 		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d OK",
 			log_pid, log_uid, log_gid);
 	}
@@ -281,6 +382,9 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 				ev->event_data.id.r.rgid,
 				ev->event_data.id.e.egid);
 		ret = cgre_process_event(ev, PROC_EVENT_GID);
+		break;
+	case PROC_EVENT_FORK:
+		ret = cgre_process_event(ev, PROC_EVENT_FORK);
 		break;
 	default:
 		break;
