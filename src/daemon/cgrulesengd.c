@@ -460,8 +460,9 @@ int cgre_create_netlink_socket_process_msg()
 	}
 	cgroup_dbg("sent\n");
 
-	for(memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla);
-	; memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla)) {
+	for(;;) {
+		memset(buff, 0, sizeof(buff));
+		from_nla_len = sizeof(from_nla);
 		struct nlmsghdr *nlh = (struct nlmsghdr*)buff;
 		memcpy(&from_nla, &kern_nla, sizeof(from_nla));
 		recv_len = recvfrom(sk_nl, buff, BUFF_SIZE, 0,
