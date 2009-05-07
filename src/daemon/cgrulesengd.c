@@ -132,6 +132,54 @@ void flog(int level, const char *format, ...)
 	}
 }
 
+static int cgre_get_euid_egid_from_status(pid_t pid, uid_t *euid, gid_t *egid)
+{
+	/* Handle for the /proc/PID/status file */
+	FILE *f;
+
+	/* Path for /proc/PID/status file */
+	char path[FILENAME_MAX];
+
+	/* Temporary buffer */
+	char buf[4092];
+
+	/* UID data */
+	uid_t ruid, suid, fsuid;
+
+	/* GID data */
+	gid_t rgid, sgid, fsgid;
+
+	/*
+	 * First, we need to open the /proc/PID/status file so that we can
+	 * get the effective UID and GID for the process that we're working
+	 * on.  This process is probably not us, so we can't just call
+	 * geteuid() or getegid().
+	 */
+	sprintf(path, "/proc/%d/status", pid);
+	f = fopen(path, "r");
+	if (!f) {
+		flog(LOG_WARNING, "Failed to open %s", path);
+		return 1;
+	}
+
+	/* Have the eUID, need to find the eGID. */
+	memset(buf, '\0', sizeof(buf));
+	while (fgets(buf, sizeof(buf), f)) {
+		if (!strncmp(buf, "Uid:", 4)) {
+			sscanf((buf + 5), "%d%d%d%d", &ruid, euid,
+				&suid, &fsuid);
+			break;
+		} else if (!strncmp(buf, "Gid:", 4)) {
+			sscanf((buf + 5), "%d%d%d%d", &rgid, egid,
+				&sgid, &fsgid);
+			break;
+		}
+		memset(buf, '\0', sizeof(buf));
+	}
+	fclose(f);
+	return 0;
+}
+
 /**
  * Process an event from the kernel, and determine the correct UID/GID/PID to
  * pass to libcgroup.  Then, libcgroup will decide the cgroup to move the PID
@@ -142,103 +190,44 @@ void flog(int level, const char *format, ...)
  */
 int cgre_process_event(const struct proc_event *ev, const int type)
 {
-	/* Handle for the /proc/PID/status file */
-	FILE *f;
+	pid_t pid = 0, log_pid = 0;
+	uid_t euid, log_uid = 0;
+	gid_t egid, log_gid = 0;
 
-	/* Path for /proc/PID/status file */
-	char path[FILENAME_MAX];
-
-	/* Temporary buffer */
-	char *buf = NULL;
-
-	/* UID data */
-	uid_t ruid, euid, suid, fsuid, log_uid = 0;
-
-	/* GID data */
-	gid_t rgid, egid, sgid, fsgid, log_gid = 0;
-
-	/* PID, just for logging */
-	pid_t log_pid = 0;
-
-	/* Return codes */
 	int ret = 0;
 
-	/*
-	 * First, we need to open the /proc/PID/status file so that we can
-	 * get the effective UID and GID for the process that we're working
-	 * on.  This process is probably not us, so we can't just call
-	 * geteuid() or getegid().
-	 */
-	sprintf(path, "/proc/%d/status", ev->event_data.id.process_pid);
-	f = fopen(path, "r");
-	if (!f) {
-		flog(LOG_WARNING, "Failed to open %s", path);
-		goto finished;
-	}
-
-	/* Now, we need to find either the eUID or the eGID of the process. */
-	buf = calloc(4096, sizeof(char));
-	if (!buf) {
-		flog(LOG_WARNING, "Failed to process event, out of"
-				"memory?  Error: %s",
-				strerror(errno));
-		ret = errno;
-		fclose(f);
-		goto finished;
-	}
 	switch (type) {
 	case PROC_EVENT_UID:
-		/* Have the eUID, need to find the eGID. */
-		while (fgets(buf, 4096, f)) {
-			if (!strncmp(buf, "Gid:", 4)) {
-				sscanf((buf + 5), "%d%d%d%d", &rgid, &egid,
-					&sgid, &fsgid);
-				break;
-			}
-			memset(buf, '\0', 4096);
-		}
-		break;
 	case PROC_EVENT_GID:
-		/* Have the eGID, need to find the eUID. */
-		while (fgets(buf, 4096, f)) {
-			if (!strncmp(buf, "Uid:", 4)) {
-				sscanf((buf + 5), "%d%d%d%d", &ruid, &euid,
-					&suid, &fsuid);
-				break;
-			}
-			memset(buf, '\0', 4096);
-		}
+		pid = ev->event_data.id.process_pid;
 		break;
 	default:
-		flog(LOG_WARNING, "For some reason, we're processing a"
-				" non-UID/GID event. Something is wrong!");
 		break;
 	}
-	free(buf);
-	fclose(f);
+	if (cgre_get_euid_egid_from_status(pid, &euid, &egid))
+		/* cgre_get_euid_egid_from_status() returns 1 if it fails to
+		 * open /proc/<pid>/status file and that is not a problem. */
+		return 0;
 
 	/*
 	 * Now that we have the UID, the GID, and the PID, we can make a call
 	 * to libcgroup to change the cgroup for this PID.
 	 */
+	log_pid = pid;
 	switch (type) {
 	case PROC_EVENT_UID:
 		log_uid = ev->event_data.id.e.euid;
 		log_gid = egid;
-		log_pid = ev->event_data.id.process_pid;
 		ret = cgroup_change_cgroup_uid_gid_flags(
 					ev->event_data.id.e.euid,
-					egid, ev->event_data.id.process_pid,
-					CGFLAG_USECACHE);
+					egid, pid, CGFLAG_USECACHE);
 		break;
 	case PROC_EVENT_GID:
 		log_uid = euid;
 		log_gid = ev->event_data.id.e.egid;
-		log_pid = ev->event_data.id.process_pid;
 		ret = cgroup_change_cgroup_uid_gid_flags(euid,
 					ev->event_data.id.e.egid,
-					ev->event_data.id.process_pid,
-					CGFLAG_USECACHE);
+					pid, CGFLAG_USECACHE);
 		break;
 	default:
 		break;
@@ -256,8 +245,6 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d OK",
 			log_pid, log_uid, log_gid);
 	}
-
-finished:
 	return ret;
 }
 
