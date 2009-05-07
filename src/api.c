@@ -1699,6 +1699,7 @@ unlock_error:
 	 * XX: Need to figure out how to cleanup? Cleanup just the stuff
 	 * we added, or the whole structure.
 	 */
+	cgroup_free_controllers(cgroup);
 	cgroup = NULL;
 	return error;
 }
@@ -1744,6 +1745,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 						" failed\n",
 						cg_mount_table[i].name);
 					pthread_rwlock_unlock(&cg_mount_table_lock);
+					cgroup_free_controllers(cgroup);
 					return ECGROUPNOTALLOWED;
 				}
 			}
@@ -1757,6 +1759,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 		if (!cptr) {
 			cgroup_dbg("Adding controller '%s' failed\n",
 				controller);
+			cgroup_free_controllers(cgroup);
 			return ECGROUPNOTALLOWED;
 		}
 	}
@@ -1975,11 +1978,10 @@ int cgroup_change_cgroup_path(char *dest, pid_t pid, char *controllers[])
 		return ret;
 	/* Add task to cgroup */
 	ret = cgroup_attach_task_pid(&cgroup, pid);
-	if (ret) {
+	if (ret)
 		cgroup_dbg("cgroup_attach_task_pid failed:%d\n", ret);
-		return ret;
-	}
-	return 0;
+	cgroup_free_controllers(&cgroup);
+	return ret;
 }
 
 /**

@@ -83,8 +83,10 @@ void cgroup_free_controllers(struct cgroup *cgroup)
 	for (i = 0; i < cgroup->index; i++) {
 		for (j = 0; j < cgroup->controller[i]->index; j++)
 			free(cgroup->controller[i]->values[j]);
+		cgroup->controller[i]->index = 0;
 		free(cgroup->controller[i]);
 	}
+	cgroup->index = 0;
 }
 
 void cgroup_free(struct cgroup **cgroup)
