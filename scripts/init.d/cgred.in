@@ -32,8 +32,8 @@
 #			cgroups to classify processes
 ### END INIT INFO
 
-prefix=@prefix@;exec_prefix=@exec_prefix@;bindir=@bindir@
-CGRED_BIN=$bindir/cgrulesengd
+prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
+CGRED_BIN=$sbindir/cgrulesengd
 
 # Sanity checks
 [ -x $CGRED_BIN ] || exit 1
