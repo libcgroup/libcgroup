@@ -633,28 +633,26 @@ int cgroup_init()
 	while ((ent = getmntent_r(proc_mount, temp_ent,
 					mntent_buffer,
 					sizeof(mntent_buffer))) != NULL) {
-		if (!strcmp(ent->mnt_type, "cgroup")) {
-			for (i = 0; controllers[i] != NULL; i++) {
-				mntopt = hasmntopt(ent, controllers[i]);
+		if (strcmp(ent->mnt_type, "cgroup"))
+			continue;
 
-				if (!mntopt)
-					continue;
+		for (i = 0; controllers[i] != NULL; i++) {
+			mntopt = hasmntopt(ent, controllers[i]);
 
-				mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+			if (!mntopt)
+				continue;
 
-				if (strcmp(mntopt, controllers[i]) == 0) {
-					cgroup_dbg("matched %s:%s\n", mntopt,
-						controllers[i]);
-					strcpy(cg_mount_table[found_mnt].name,
-						controllers[i]);
-					strcpy(cg_mount_table[found_mnt].path,
-						ent->mnt_dir);
-					cgroup_dbg("Found cgroup option %s, "
-						" count %d\n",
-						ent->mnt_opts, found_mnt);
-					found_mnt++;
-				}
-			}
+			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+
+			if (strcmp(mntopt, controllers[i]))
+				continue;
+
+			cgroup_dbg("matched %s:%s\n", mntopt, controllers[i]);
+			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
+			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
+			cgroup_dbg("Found cgroup option %s, count %d\n",
+				ent->mnt_opts, found_mnt);
+			found_mnt++;
 		}
 	}
 
