@@ -13,7 +13,7 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
-# cgred		GGroups Rules Engine Daemon
+# cgred		CGroups Rules Engine Daemon
 # chkconfig:	- 14 86
 # description:	This is a daemon for automatically classifying processes \
 #		into cgroups based on UID/GID.
