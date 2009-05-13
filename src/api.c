@@ -318,7 +318,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 				" error: %s\n", CGRULES_CONF_FILE,
 				strerror(errno));
 		last_errno = errno;
-		goto finish;
+		ret = ECGOTHER;
+		goto unlock;
 	}
 
 	buff = calloc(CGROUP_RULE_MAXLINE, sizeof(char));
@@ -326,7 +327,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		cgroup_dbg("Out of memory?  Error: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
-		goto close_unlock;
+		goto close;
 	}
 
 	/* Determine which list we're using. */
@@ -542,10 +543,10 @@ parsefail:
 cleanup:
 	free(buff);
 
-close_unlock:
+close:
 	fclose(fp);
+unlock:
 	pthread_rwlock_unlock(&rl_lock);
-finish:
 	return ret;
 }
 
