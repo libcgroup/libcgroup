@@ -168,11 +168,9 @@ static int cgre_get_euid_egid_from_status(pid_t pid, uid_t *euid, gid_t *egid)
 		if (!strncmp(buf, "Uid:", 4)) {
 			sscanf((buf + 5), "%d%d%d%d", &ruid, euid,
 				&suid, &fsuid);
-			break;
 		} else if (!strncmp(buf, "Gid:", 4)) {
 			sscanf((buf + 5), "%d%d%d%d", &rgid, egid,
 				&sgid, &fsgid);
-			break;
 		}
 		memset(buf, '\0', sizeof(buf));
 	}
