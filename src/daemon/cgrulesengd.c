@@ -126,9 +126,17 @@ void flog(int level, const char *format, ...)
 	}
 
 	if (logfacility) {
+		sigset_t sigset;
+
+		sigemptyset(&sigset);
+		sigaddset(&sigset, SIGUSR2);
+		sigprocmask(SIG_BLOCK, &sigset, NULL);
+
 		va_start(ap, format);
 		vsyslog(LOG_MAKEPRI(logfacility, level), format, ap);
 		va_end(ap);
+
+		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 	}
 }
 
