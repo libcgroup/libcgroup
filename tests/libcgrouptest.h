@@ -148,7 +148,7 @@ void build_path(char *target, char *mountpoint,
 pid_t cgrouptest_gettid();
 
 #ifdef CGROUP_DEBUG
-#define cgroup_dbg(p...)	printf(p...)
+#define cgroup_dbg(p...)	printf(p)
 #else
 #define cgroup_dbg(p...)	do {} while (0);
 #endif
