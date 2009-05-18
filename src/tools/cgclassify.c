@@ -94,9 +94,11 @@ int egid_of_pid(pid_t pid)
 				(int *)&egid, (int *)&sgid, (int *)&fsgid);
 			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				rgid, egid, sgid, fsgid);
+			fclose(fp);
 			return egid;
 		}
 	}
+	fclose(fp);
 
 	/* If we are here, we could not find egid. Return error. */
 	return -1;
