@@ -271,6 +271,27 @@ static int cgre_was_parent_changed_when_forking(const struct proc_event *ev)
 	return 0;
 }
 
+static int cgre_change_cgroup_uid_gid(const uid_t uid, const gid_t gid,
+					const pid_t pid)
+{
+	int ret;
+	sigset_t sigset;
+
+	/*
+	 * For avoiding the deadlock, protect cdgroup_change_cgroup_
+	 * ~uid_gid_flags() by blocking SIGUSR2 signal.
+	 */
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGUSR2);
+	sigprocmask(SIG_BLOCK, &sigset, NULL);
+
+	ret = cgroup_change_cgroup_uid_gid_flags(uid, gid, pid,
+						 CGFLAG_USECACHE);
+	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+
+	return ret;
+}
+
 /**
  * Process an event from the kernel, and determine the correct UID/GID/PID to
  * pass to libcgroup.  Then, libcgroup will decide the cgroup to move the PID
@@ -318,22 +339,20 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	case PROC_EVENT_UID:
 		log_uid = ev->event_data.id.e.euid;
 		log_gid = egid;
-		ret = cgroup_change_cgroup_uid_gid_flags(
+		ret = cgre_change_cgroup_uid_gid(
 					ev->event_data.id.e.euid,
-					egid, pid, CGFLAG_USECACHE);
+					egid, pid);
 		break;
 	case PROC_EVENT_GID:
 		log_uid = euid;
 		log_gid = ev->event_data.id.e.egid;
-		ret = cgroup_change_cgroup_uid_gid_flags(euid,
-					ev->event_data.id.e.egid,
-					pid, CGFLAG_USECACHE);
+		ret = cgre_change_cgroup_uid_gid(euid,
+					ev->event_data.id.e.egid, pid);
 		break;
 	case PROC_EVENT_FORK:
 		log_uid = euid;
 		log_gid = egid;
-		ret = cgroup_change_cgroup_uid_gid_flags(euid,
-					egid, pid, CGFLAG_USECACHE);
+		ret = cgre_change_cgroup_uid_gid(euid, egid, pid);
 		break;
 	default:
 		break;
