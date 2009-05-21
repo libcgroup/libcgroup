@@ -50,5 +50,10 @@ struct cgroup_group_spec {
  */
 int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg);
 
+/**
+ * Free a single cgroup_group_spec structure.
+ * 	@param cl The structure to free from memory
+ */
+void cgroup_free_group_spec(struct cgroup_group_spec *cl);
 
 #endif /* TOOLS_COMMON */

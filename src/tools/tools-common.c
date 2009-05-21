@@ -86,3 +86,30 @@ int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg)
 
 	return 0;
 }
+
+
+/**
+ * Free a single cgroup_group_spec structure
+ * <--->@param cl The structure to free from memory.
+ */
+void cgroup_free_group_spec(struct cgroup_group_spec *cl)
+{
+	/* Loop variable */
+	int i = 0;
+
+	/* Make sure our structure is not NULL, first. */
+	if (!cl) {
+		cgroup_dbg("Warning: Attempted to free NULL rule.\n");
+		return;
+	}
+
+	/* We must free any used controller strings, too. */
+	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
+		if (cl->controllers[i])
+			free(cl->controllers[i]);
+	}
+
+	free(cl);
+}
+
+
