@@ -56,7 +56,7 @@ int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg)
 		return -1;
 
 	/* instanciate cgroup_data. */
-	cdptr[i] = malloc(sizeof(struct cgroup_group_spec));
+	cdptr[i] = calloc(1, sizeof(struct cgroup_group_spec));
 	if (!cdptr[i]) {
 		fprintf(stderr, "%s\n", strerror(errno));
 		return -1;
