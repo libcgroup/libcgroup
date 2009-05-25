@@ -113,6 +113,20 @@ AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
 
+if test x$with_pam = xtrue; then
+	AC_CHECK_LIB(
+		[pam],
+		[pam_syslog],
+		[],
+		[AC_MSG_ERROR([Cannot compile PAM module without libpam!])])
+
+	AC_CHECK_HEADERS(
+		[security/pam_modules.h	security/pam_modutil.h security/pam_ext.h],
+		[],
+		[AC_MSG_ERROR([Cannot compile PAM module without necessary
+		header files!])])
+fi
+
 AC_CONFIG_FILES([Makefile
 	tests/Makefile
 	src/Makefile
