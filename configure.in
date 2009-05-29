@@ -37,6 +37,45 @@ AC_ARG_ENABLE([debug],
 		[Define to enable extra debugging output.])],
 	[])
 
+AC_ARG_ENABLE([tools],
+	[AC_HELP_STRING([--enable-tools],
+		[compile libcgroup tools [default=yes]])],
+	[
+		if test "x$enableval" = xno; then
+			with_tools=false
+		else
+			with_tools=true
+		fi
+	],
+	[with_tools=true])
+AM_CONDITIONAL([WITH_TOOLS], [test x$with_tools = xtrue])
+
+AC_ARG_ENABLE([pam],
+	[AC_HELP_STRING([--enable-pam],
+		[compile libcgroup PAM module [default=yes]])],
+	[
+		if test "x$enableval" = xno; then
+			with_pam=false
+		else
+			with_pam=true
+		fi
+	],
+	[with_pam=true])
+AM_CONDITIONAL([WITH_PAM], [test x$with_pam = xtrue])
+
+AC_ARG_ENABLE([daemon],
+	[AC_HELP_STRING([--enable-daemon],
+		[compile libcgroup daemon [default=yes]])],
+	[
+		if test "x$enableval" = xno; then
+			with_daemon=false
+		else
+			with_daemon=true
+		fi
+	],
+	[with_daemon=true])
+AM_CONDITIONAL([WITH_DAEMON], [test x$with_daemon = xtrue])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -73,6 +112,20 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
+
+if test x$with_pam = xtrue; then
+	AC_CHECK_LIB(
+		[pam],
+		[pam_syslog],
+		[],
+		[AC_MSG_ERROR([Cannot compile PAM module without libpam!])])
+
+	AC_CHECK_HEADERS(
+		[security/pam_modules.h	security/pam_modutil.h security/pam_ext.h],
+		[],
+		[AC_MSG_ERROR([Cannot compile PAM module without necessary
+		header files!])])
+fi
 
 AC_CONFIG_FILES([Makefile
 	tests/Makefile
