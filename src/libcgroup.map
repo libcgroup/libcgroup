@@ -62,4 +62,5 @@ global:
 	cgroup_read_stats_begin;
 	cgroup_read_stats_next;
 	cgroup_read_stats_end;
+	cgroup_get_controller;
 } CGROUP_0.33;

@@ -331,6 +331,8 @@ int cgroup_get_value_bool(struct cgroup_controller *controller,
 						const char *name, bool *value);
 int cgroup_set_value_bool(struct cgroup_controller *controller,
 						const char *name, bool value);
+struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
+							const char *name);
 /*
  * Config related stuff
  */
