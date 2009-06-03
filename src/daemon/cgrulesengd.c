@@ -421,7 +421,6 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 int cgre_create_netlink_socket_process_msg()
 {
 	int sk_nl;
-	int err;
 	struct sockaddr_nl my_nla, kern_nla, from_nla;
 	socklen_t from_nla_len;
 	char buff[BUFF_SIZE];
@@ -453,8 +452,7 @@ int cgre_create_netlink_socket_process_msg()
 	kern_nla.nl_pid = 1;
 	kern_nla.nl_pad = 0;
 
-	err = bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla));
-	if (err == -1) {
+	if (bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla)) < 0) {
 		cgroup_dbg("binding sk_nl error");
 		goto close_and_exit;
 	}
