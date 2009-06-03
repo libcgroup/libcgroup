@@ -476,8 +476,9 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		strncpy(newrule->name, user, strlen(user));
-		strncpy(newrule->destination, destination, strlen(destination));
+		strncpy(newrule->name, user, sizeof(newrule->name) - 1);
+		strncpy(newrule->destination, destination,
+			sizeof(newrule->destination) - 1);
 		newrule->next = NULL;
 
 		/* Parse the controller list, and add that to newrule too. */
