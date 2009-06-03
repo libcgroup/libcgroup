@@ -3,13 +3,15 @@ LDADD = $(top_srcdir)/src/.libs/libcgroup.la
 
 if WITH_TOOLS
 
-bin_PROGRAMS = cgexec cgclassify
+bin_PROGRAMS = cgexec cgclassify cgcreate
 
 sbin_PROGRAMS = cgconfigparser
 
 cgexec_SOURCES = cgexec.c tools-common.c tools-common.h
 
 cgclassify_SOURCES = cgclassify.c tools-common.c tools-common.h
+
+cgcreate_SOURCES = cgcreate.c tools-common.c tools-common.h
 
 cgconfigparser_SOURCES = cgconfig.c
 
