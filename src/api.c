@@ -243,6 +243,32 @@ static void cgroup_free_rule_list(struct cgroup_rule_list *rl)
 	rl->tail = NULL;
 }
 
+static char *cg_skip_unused_charactors_in_rule(char *rule)
+{
+	char *itr;
+
+	/* We ignore anything after a # sign as comments. */
+	itr = strchr(rule, '#');
+	if (itr)
+		*itr = '\0';
+
+	/* We also need to remove the newline character. */
+	itr = strchr(rule, '\n');
+	if (itr)
+		*itr = '\0';
+
+	/* Now, skip any leading tabs and spaces. */
+	itr = rule;
+	while (itr && isblank(*itr))
+		itr++;
+
+	/* If there's nothing left, we can ignore this line. */
+	if (!strlen(itr))
+		return NULL;
+
+	return itr;
+}
+
 /**
  * Parse the configuration file that maps UID/GIDs to cgroups.  If ever the
  * configuration file is modified, applications should call this function to
@@ -334,24 +360,11 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 
 	/* Now, parse the configuration file one line at a time. */
 	cgroup_dbg("Parsing configuration file.\n");
-	while ((itr = fgets(buff, sizeof(buff), fp)) != NULL) {
+	while (fgets(buff, sizeof(buff), fp) != NULL) {
 		linenum++;
 
-		/* We ignore anything after a # sign as comments. */
-		if ((itr = strchr(buff, '#')))
-			*itr = '\0';
-
-		/* We also need to remove the newline character. */
-		if ((itr = strchr(buff, '\n')))
-			*itr = '\0';
-
-		/* Now, skip any leading tabs and spaces. */
-		itr = buff;
-		while (itr && isblank(*itr))
-			itr++;
-
-		/* If there's nothing left, we can ignore this line. */
-		if (!strlen(itr))
+		itr = cg_skip_unused_charactors_in_rule(buff);
+		if (!itr)
 			continue;
 
 		/*
