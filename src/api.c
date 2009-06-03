@@ -475,7 +475,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		strncpy(newrule->name, user, sizeof(newrule->name) - 1);
+		strncpy(newrule->username, user, sizeof(newrule->username) - 1);
 		strncpy(newrule->destination, destination,
 			sizeof(newrule->destination) - 1);
 		newrule->next = NULL;
@@ -516,7 +516,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		}
 
 		cgroup_dbg("Added rule %s (UID: %d, GID: %d) -> %s for"
-			" controllers:", lst->tail->name, lst->tail->uid,
+			" controllers:", lst->tail->username, lst->tail->uid,
 			lst->tail->gid, lst->tail->destination);
                 for (i = 0; lst->tail->controllers[i]; i++) {
 			cgroup_dbg(" %s", lst->tail->controllers[i]);
@@ -1808,9 +1808,9 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(const uid_t uid,
 		}
 
 		/* If this is a group rule, the UID might be a member. */
-		if (ret->name[0] == '@') {
+		if (ret->username[0] == '@') {
 			/* Get the group data. */
-			sp = &(ret->name[1]);
+			sp = &(ret->username[1]);
 			grp = getgrnam(sp);
 			if (!grp) {
 				continue;
@@ -1910,11 +1910,12 @@ int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
 		}
 	}
 	cgroup_dbg("Found matching rule %s for PID: %d, UID: %d, GID: %d\n",
-			tmp->name, pid, uid, gid);
+			tmp->username, pid, uid, gid);
 
 	/* If we are here, then we found a matching rule, so execute it. */
 	do {
-		cgroup_dbg("Executing rule %s for PID %d... ", tmp->name, pid);
+		cgroup_dbg("Executing rule %s for PID %d... ", tmp->username,
+								pid);
 		ret = cgroup_change_cgroup_path(tmp->destination,
 				pid, tmp->controllers);
 		if (ret) {
@@ -1928,7 +1929,7 @@ int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
 		 * we just executed.
 		 */
 		tmp = tmp->next;
-	} while (tmp && (tmp->name[0] == '%'));
+	} while (tmp && (tmp->username[0] == '%'));
 
 finished:
 	return ret;
@@ -2003,7 +2004,7 @@ void cgroup_print_rules_config(FILE *fp)
 
 	itr = rl.head;
 	while (itr) {
-		fprintf(fp, "Rule: %s\n", itr->name);
+		fprintf(fp, "Rule: %s\n", itr->username);
 
 		if (itr->uid == CGRULE_WILD)
 			fprintf(fp, "  UID: any\n");

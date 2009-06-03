@@ -74,7 +74,7 @@ struct cgroup_rules_data {
 struct cgroup_rule {
 	uid_t uid;
 	gid_t gid;
-	char name[LOGIN_NAME_MAX];
+	char username[LOGIN_NAME_MAX];
 	char destination[FILENAME_MAX];
 	char *controllers[MAX_MNT_ELEMENTS];
 	struct cgroup_rule *next;
