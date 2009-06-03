@@ -1,0 +1,43 @@
+.\" Written by Ivana Hutarova Varekova <varekova@redhat.com>
+
+.TH CGCREATE  1 2009-03-15 "Linux" "libcgroup Manual"
+.SH NAME
+cgcreate \- create new cgroup(s)
+
+.SH SYNOPSIS
+\fBcgcreate\fR [\fB-t\fR <\fItuid>:<tgid\fR>] [\fB-a\fR <\fIagid>:<auid\fR>] 
+\fB-g\fR <\fIcontrollers>:<path\fR> [-g ...]
+
+.SH DESCRIPTION
+The command creates new cgroup(s) defined by option 
+\fB-g\fR.
+
+.TP
+.B -t <tuid>:<tgid>
+defines the name of the user and the group, which owns tasks
+file of the defined control group. I.e. this user and members
+of this group have write access to the file.
+The default value is the same as has the parent cgroup.
+
+.TP
+.B -a <agid>:<auid>
+defines the name of the user and the group, which owns the
+rest of the defined control group’s files. These users are 
+allowed to set subsystem parameters and create subgroups.
+The default value is the same as has the parent cgroup.
+
+.TP
+.B -g <controllers>:<path>
+defines control groups which will be added.
+\fBcontrollers\fR is a list of controllers and
+\fBpath\fR is the relative path to control groups
+in the given controllers list. This option can be specified
+multiple times.
+
+
+.SH FILES
+
+.SH SEE ALSO
+cgrules.conf (5)
+cgexec (1)
+cgclassify (1)
