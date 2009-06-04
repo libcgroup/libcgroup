@@ -3,7 +3,7 @@ LDADD = $(top_srcdir)/src/.libs/libcgroup.la
 
 if WITH_TOOLS
 
-bin_PROGRAMS = cgexec cgclassify cgcreate
+bin_PROGRAMS = cgexec cgclassify cgcreate cgset
 
 sbin_PROGRAMS = cgconfigparser
 
