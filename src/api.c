@@ -268,7 +268,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 	FILE *fp = NULL;
 
 	/* Buffer to store the line we're working on */
-	char *buff = NULL;
+	char buff[CGROUP_RULE_MAXLINE] = { '\0' };
 
 	/* Iterator for the line we're working on */
 	char *itr = NULL;
@@ -322,14 +322,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		goto unlock;
 	}
 
-	buff = calloc(CGROUP_RULE_MAXLINE, sizeof(char));
-	if (!buff) {
-		cgroup_dbg("Out of memory?  Error: %s\n", strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto close;
-	}
-
 	/* Determine which list we're using. */
 	if (cache)
 		lst = &rl;
@@ -342,7 +334,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 
 	/* Now, parse the configuration file one line at a time. */
 	cgroup_dbg("Parsing configuration file.\n");
-	while ((itr = fgets(buff, CGROUP_RULE_MAXLINE, fp)) != NULL) {
+	while ((itr = fgets(buff, sizeof(buff), fp)) != NULL) {
 		linenum++;
 
 		/* We ignore anything after a # sign as comments. */
@@ -369,7 +361,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		if (skipped && *itr == '%') {
 			cgroup_dbg("Warning: Skipped child of invalid rule,"
 					" line %d.\n", linenum);
-			memset(buff, '\0', CGROUP_RULE_MAXLINE);
 			continue;
 		}
 
@@ -378,9 +369,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		 * there's an error in the configuration file.
 		 */
 		skipped = false;
-		memset(user, '\0', LOGIN_NAME_MAX);
-		memset(controllers, '\0', CG_CONTROLLER_MAX);
-		memset(destination, '\0', FILENAME_MAX);
 		i = sscanf(itr, "%s%s%s", user, controllers, destination);
 		if (i != 3) {
 			cgroup_dbg("Failed to parse configuration file on"
@@ -402,7 +390,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 			cgroup_dbg("Parsing of configuration file"
 				" complete.\n\n");
 			ret = -1;
-			goto cleanup;
+			goto close;
 		}
 		if (strncmp(user, "@", 1) == 0) {
 			/* New GID rule. */
@@ -414,7 +402,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 				cgroup_dbg("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", itr, linenum);
-				memset(buff, '\0', CGROUP_RULE_MAXLINE);
 				skipped = true;
 				continue;
 			}
@@ -431,7 +418,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 				cgroup_dbg("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", user, linenum);
-				memset(buff, '\0', CGROUP_RULE_MAXLINE);
 				skipped = true;
 				continue;
 			}
@@ -471,7 +457,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 				strerror(errno));
 			last_errno = errno;
 			ret = ECGOTHER;
-			goto cleanup;
+			goto close;
 		}
 
 		newrule->uid = uid;
@@ -525,7 +511,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		cgroup_dbg("\n");
 
 		/* Finally, clear the buffer. */
-		memset(buff, '\0', CGROUP_RULE_MAXLINE);
 		grp = NULL;
 		pwd = NULL;
 	}
@@ -533,16 +518,13 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 	/* If we make it here, there were no errors. */
 	cgroup_dbg("Parsing of configuration file complete.\n\n");
 	ret = (matched && !cache) ? -1 : 0;
-	goto cleanup;
+	goto close;
 
 destroyrule:
 	cgroup_free_rule(newrule);
 
 parsefail:
 	ret = ECGROUPPARSEFAIL;
-
-cleanup:
-	free(buff);
 
 close:
 	fclose(fp);
