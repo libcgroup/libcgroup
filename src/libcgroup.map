@@ -63,4 +63,5 @@ global:
 	cgroup_read_stats_next;
 	cgroup_read_stats_end;
 	cgroup_get_controller;
+	cgroup_get_uid_gid_from_procfs;
 } CGROUP_0.33;

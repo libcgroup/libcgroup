@@ -90,6 +90,8 @@ struct cgroup_rule_list {
 
 /* Internal API */
 char *cg_build_path(char *name, char *path, char *type);
+int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid);
+
 
 /*
  * config related API

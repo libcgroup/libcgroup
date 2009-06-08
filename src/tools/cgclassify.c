@@ -18,6 +18,7 @@
 #include <string.h>
 #include <errno.h>
 #include <libcgroup.h>
+#include <libcgroup-internal.h>
 #include <limits.h>
 #include <pwd.h>
 #include <unistd.h>
@@ -29,80 +30,6 @@
 #include "tools-common.h"
 
 #define TEMP_BUF	81
-
-/*
- * Go through /proc/<pid>/status file to determine the euid of the
- * process.
- * It returns 0 on success and negative values on failure.
- */
-
-int euid_of_pid(pid_t pid)
-{
-	FILE *fp;
-	char path[FILENAME_MAX];
-	char buf[TEMP_BUF];
-	uid_t ruid, euid, suid, fsuid;
-
-	sprintf(path, "/proc/%d/status", pid);
-	fp = fopen(path, "r");
-	if (!fp) {
-		cgroup_dbg("Error in opening file %s:%s\n", path,
-				strerror(errno));
-		return -1;
-	}
-
-	while (fgets(buf, TEMP_BUF, fp)) {
-		if (!strncmp(buf, "Uid:", 4)) {
-			sscanf((buf + 5), "%d%d%d%d", (int *)&ruid,
-				(int *)&euid, (int *)&suid, (int *)&fsuid);
-			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
-				ruid, euid, suid, fsuid);
-			fclose(fp);
-			return euid;
-		}
-	}
-	fclose(fp);
-
-	/* If we are here, we could not find euid. Return error. */
-	return -1;
-}
-
-/*
- * Go through /proc/<pid>/status file to determine the egid of the
- * process.
- * It returns 0 on success and negative values on failure.
- */
-
-int egid_of_pid(pid_t pid)
-{
-	FILE *fp;
-	char path[FILENAME_MAX];
-	char buf[TEMP_BUF];
-	gid_t rgid, egid, sgid, fsgid;
-
-	sprintf(path, "/proc/%d/status", pid);
-	fp = fopen(path, "r");
-	if (!fp) {
-		cgroup_dbg("Error in opening file %s:%s\n", path,
-				strerror(errno));
-		return -1;
-	}
-
-	while (fgets(buf, TEMP_BUF, fp)) {
-		if (!strncmp(buf, "Gid:", 4)) {
-			sscanf((buf + 5), "%d%d%d%d", (int *)&rgid,
-				(int *)&egid, (int *)&sgid, (int *)&fsgid);
-			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
-				rgid, egid, sgid, fsgid);
-			fclose(fp);
-			return egid;
-		}
-	}
-	fclose(fp);
-
-	/* If we are here, we could not find egid. Return error. */
-	return -1;
-}
 
 /*
  * Change process group as specified on command line.
@@ -137,16 +64,8 @@ int change_group_uid_gid(pid_t pid)
 	int ret;
 
 	/* Put pid into right cgroup as per rules in /etc/cgrules.conf */
-	euid = euid_of_pid(pid);
-	if (euid == -1) {
-		fprintf(stderr, "Error in determining euid of"
-		" pid %d\n", pid);
-		return -1;
-	}
-
-	egid = egid_of_pid(pid);
-	if (egid == -1) {
-		fprintf(stderr, "Error in determining egid of"
+	if (cgroup_get_uid_gid_from_procfs(pid, &euid, &egid)) {
+		fprintf(stderr, "Error in determining euid/egid of"
 		" pid %d\n", pid);
 		return -1;
 	}

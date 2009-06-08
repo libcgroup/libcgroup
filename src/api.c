@@ -2473,3 +2473,58 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
 
 	return ret;
 }
+
+/**
+ * Get process data (euid and egid) from /proc/<pid>/status file.
+ * @param pid: The process id
+ * @param euid: The uid of param pid
+ * @param egid: The gid of param pid
+ * @return 0 on success, > 0 on error.
+ */
+int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
+{
+	FILE *f;
+	char path[FILENAME_MAX];
+	char buf[4092];
+	uid_t ruid, suid, fsuid;
+	gid_t rgid, sgid, fsgid;
+	bool found_euid = false;
+	bool found_egid = false;
+
+	sprintf(path, "/proc/%d/status", pid);
+	f = fopen(path, "r");
+	if (!f)
+		return ECGROUPNOTEXIST;
+
+	while (fgets(buf, sizeof(buf), f)) {
+		if (!strncmp(buf, "Uid:", 4)) {
+			if (sscanf((buf + 5), "%d%d%d%d", &ruid, euid,
+					&suid, &fsuid) != 4)
+				break;
+			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
+				ruid, *euid, suid, fsuid);
+			found_euid = true;
+		} else if (!strncmp(buf, "Gid:", 4)) {
+			if (sscanf((buf + 5), "%d%d%d%d", &rgid, egid,
+					&sgid, &fsgid) != 4)
+				break;
+			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
+				rgid, *egid, sgid, fsgid);
+			found_egid = true;
+		}
+		if (found_euid && found_egid)
+			break;
+	}
+	fclose(f);
+	if (!found_euid || !found_egid) {
+		/*
+		 * This method doesn't match the file format of
+		 * /proc/<pid>/status. The format has been changed
+		 * and we should catch up the change.
+		 */
+		cgroup_dbg("The invlid file format of /proc/%d/status.\n", pid);
+		return ECGFAIL;
+	}
+	return 0;
+}
+

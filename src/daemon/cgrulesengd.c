@@ -33,6 +33,7 @@
 
 #include "libcgroup.h"
 #include "cgrulesengd.h"
+#include "../libcgroup-internal.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -138,52 +139,6 @@ void flog(int level, const char *format, ...)
 
 		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 	}
-}
-
-static int cgre_get_euid_egid_from_status(pid_t pid, uid_t *euid, gid_t *egid)
-{
-	/* Handle for the /proc/PID/status file */
-	FILE *f;
-
-	/* Path for /proc/PID/status file */
-	char path[FILENAME_MAX];
-
-	/* Temporary buffer */
-	char buf[4092];
-
-	/* UID data */
-	uid_t ruid, suid, fsuid;
-
-	/* GID data */
-	gid_t rgid, sgid, fsgid;
-
-	/*
-	 * First, we need to open the /proc/PID/status file so that we can
-	 * get the effective UID and GID for the process that we're working
-	 * on.  This process is probably not us, so we can't just call
-	 * geteuid() or getegid().
-	 */
-	sprintf(path, "/proc/%d/status", pid);
-	f = fopen(path, "r");
-	if (!f) {
-		flog(LOG_WARNING, "Failed to open %s", path);
-		return 1;
-	}
-
-	/* Have the eUID, need to find the eGID. */
-	memset(buf, '\0', sizeof(buf));
-	while (fgets(buf, sizeof(buf), f)) {
-		if (!strncmp(buf, "Uid:", 4)) {
-			sscanf((buf + 5), "%d%d%d%d", &ruid, euid,
-				&suid, &fsuid);
-		} else if (!strncmp(buf, "Gid:", 4)) {
-			sscanf((buf + 5), "%d%d%d%d", &rgid, egid,
-				&sgid, &fsgid);
-		}
-		memset(buf, '\0', sizeof(buf));
-	}
-	fclose(f);
-	return 0;
 }
 
 struct parent_info {
@@ -325,10 +280,13 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	default:
 		break;
 	}
-	if (cgre_get_euid_egid_from_status(pid, &euid, &egid))
-		/* cgre_get_euid_egid_from_status() returns 1 if it fails to
-		 * open /proc/<pid>/status file and that is not a problem. */
+	ret = cgroup_get_uid_gid_from_procfs(pid, &euid, &egid);
+	if (ret == ECGROUPNOTEXIST)
+		/* cgroup_get_uid_gid_from_procfs() returns ECGROUPNOTEXIST
+		 * if a process finished and that is not a problem. */
 		return 0;
+	else if (ret)
+		return ret;
 
 	/*
 	 * Now that we have the UID, the GID, and the PID, we can make a call
