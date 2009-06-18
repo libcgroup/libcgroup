@@ -566,6 +566,8 @@ int cgroup_init()
 	char subsys_name[FILENAME_MAX];
 	int hierarchy, num_cgroups, enabled;
 	int i=0;
+	int j;
+	int duplicate = 0;
 	char *mntopt = NULL;
 	int err;
 	char *buf = NULL;
@@ -644,6 +646,22 @@ int cgroup_init()
 				continue;
 
 			cgroup_dbg("matched %s:%s\n", mntopt, controllers[i]);
+
+			/* do not have duplicates in mount table */
+			duplicate = 0;
+			for  (j = 0; j < found_mnt; j++) {
+				if (strncmp(mntopt, cg_mount_table[j].name, FILENAME_MAX)
+					== 0) {
+					duplicate = 1;
+					break;
+				}
+			}
+			if (duplicate) {
+				cgroup_dbg("controller %s is already mounted on %s\n",
+					mntopt, cg_mount_table[j].path);
+				continue;
+			}
+
 			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
 			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
 			cgroup_dbg("Found cgroup option %s, count %d\n",
