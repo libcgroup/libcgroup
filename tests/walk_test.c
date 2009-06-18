@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	strcpy(root, info.full_path);
+	printf("Begin pre-order walk\n");
 	printf("root is %s\n", root);
 	visit_node(&info, root);
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) !=
@@ -48,6 +49,32 @@ int main(int argc, char *argv[])
 		visit_node(&info, root);
 	}
 	cgroup_walk_tree_end(&handle);
+
+	printf("pre-order walk finished\n");
+	ret = cgroup_walk_tree_begin(controller, "/", 0, &handle, &info, &lvl);
+
+	if (ret != 0) {
+		fprintf(stderr, "Walk failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	ret = cgroup_walk_tree_set_flags(&handle, CGROUP_WALK_TYPE_POST_DIR);
+
+	if (ret) {
+		fprintf(stderr, "Walk failed with %s\n", cgroup_strerror(ret));
+		exit(EXIT_FAILURE);
+	}
+
+	strcpy(root, info.full_path);
+	printf("Begin post-order walk\n");
+	printf("root is %s\n", root);
+	visit_node(&info, root);
+	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) !=
+			ECGEOF) {
+		visit_node(&info, root);
+	}
+	cgroup_walk_tree_end(&handle);
+	printf("post order walk finished\n");
 
 	ret = cgroup_walk_tree_begin(controller, "/a", 2, &handle, &info, &lvl);
 

@@ -2212,7 +2212,7 @@ int cgroup_get_last_errno()
 
 
 static int cg_walk_node(FTS *fts, FTSENT *ent, const int depth,
-			struct cgroup_file_info *info)
+			struct cgroup_file_info *info, int dir)
 {
 	int ret = 0;
 
@@ -2236,12 +2236,15 @@ static int cg_walk_node(FTS *fts, FTSENT *ent, const int depth,
 		errno = ent->fts_errno;
 		break;
 	case FTS_D:
-		info->type = CGROUP_FILE_TYPE_DIR;
+		if (dir & CGROUP_WALK_TYPE_PRE_DIR)
+			info->type = CGROUP_FILE_TYPE_DIR;
 		break;
 	case FTS_DC:
 	case FTS_NSOK:
 	case FTS_NS:
 	case FTS_DP:
+		if (dir & CGROUP_WALK_TYPE_POST_DIR)
+			info->type = CGROUP_FILE_TYPE_DIR;
 		break;
 	case FTS_F:
 		info->type = CGROUP_FILE_TYPE_FILE;
@@ -2272,7 +2275,9 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 		return ECGEOF;
 	if (!base_level && depth)
 		base_level = ent->fts_level + depth;
-	ret = cg_walk_node(entry->fts, ent, base_level, info);
+
+	ret = cg_walk_node(entry->fts, ent, base_level, info, entry->flags);
+
 	*handle = entry;
 	return ret;
 }
@@ -2326,6 +2331,8 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 		return ECGOTHER;
 	}
 
+	entry->flags |= CGROUP_WALK_TYPE_PRE_DIR;
+
 	*base_level = 0;
 	cg_path[0] = full_path;
 	cg_path[1] = NULL;
@@ -2339,7 +2346,9 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 	}
 	if (!*base_level && depth)
 		*base_level = ent->fts_level + depth;
-	ret = cg_walk_node(entry->fts, ent, *base_level, info);
+
+	ret = cg_walk_node(entry->fts, ent, base_level, info, entry->flags);
+
 	*handle = entry;
 	return ret;
 }
