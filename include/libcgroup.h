@@ -301,7 +301,7 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
  *
  * return ECGEOF when the iterator finishes getting the list of tasks.
  */
-int cgroup_get_task_next(void *handle, pid_t *pid);
+int cgroup_get_task_next(void **handle, pid_t *pid);
 int cgroup_get_task_end(void **handle);
 /* The wrappers for filling libcg structures */
 

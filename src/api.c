@@ -2487,7 +2487,7 @@ int cgroup_get_task_end(void **handle)
 	return 0;
 }
 
-int cgroup_get_task_next(void *handle, pid_t *pid)
+int cgroup_get_task_next(void **handle, pid_t *pid)
 {
 	int ret;
 
@@ -2497,7 +2497,7 @@ int cgroup_get_task_next(void *handle, pid_t *pid)
 	if (!handle)
 		return ECGINVAL;
 
-	ret = fscanf((FILE *) handle, "%u", pid);
+	ret = fscanf((FILE *) *handle, "%u", pid);
 
 	if (ret != 1) {
 		if (ret == EOF)
@@ -2536,7 +2536,7 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
 		last_errno = errno;
 		return ECGOTHER;
 	}
-	ret = cgroup_get_task_next(*handle, pid);
+	ret = cgroup_get_task_next(handle, pid);
 
 	return ret;
 }
