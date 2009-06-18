@@ -371,12 +371,9 @@ int cgroup_config_mount_fs()
 		}
 
 		if (errno == ENOENT) {
-			ret = mkdir(curr->path,
-					S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-			if (ret < 0) {
-				last_errno = errno;
-				return ECGOTHER;
-			}
+			ret = cg_mkdir_p(curr->path);
+			if (ret)
+				return ret;
 		} else if (!S_ISDIR(buff.st_mode)) {
 			errno = ENOTDIR;
 			last_errno = errno;

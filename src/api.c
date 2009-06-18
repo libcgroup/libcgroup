@@ -890,7 +890,7 @@ int cgroup_attach_task(struct cgroup *cgroup)
  * cg_mkdir_p, emulate the mkdir -p command (recursively creating paths)
  * @path: path to create
  */
-static int cg_mkdir_p(const char *path)
+int cg_mkdir_p(const char *path)
 {
 	char *real_path = NULL;
 	char *wd = NULL;
