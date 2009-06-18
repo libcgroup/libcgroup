@@ -19,8 +19,11 @@
 __BEGIN_DECLS
 
 #include "config.h"
+#include <fts.h>
 #include <libcgroup.h>
 #include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
@@ -85,6 +88,12 @@ struct cgroup_rule_list {
 	struct cgroup_rule *head;
 	struct cgroup_rule *tail;
 	int len;
+};
+
+/*The walk_tree handle */
+struct cgroup_tree_handle {
+	FTS *fts;
+	int flags;
 };
 
 

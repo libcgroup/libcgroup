@@ -256,6 +256,16 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 int cgroup_walk_tree_end(void **handle);
 
 /**
+ * This API is used to set the flags for walk_tree API. Currently availble
+ *  flags are
+ *
+ *  CGROUP_WALK_TYPE_PRE_DIR
+ *  CGROUP_WALK_TYPE_POST_DIR
+ *
+ */
+int cgroup_walk_tree_set_flags(void **handle, int flags);
+
+/**
  * Read the statistics values for the specified controller
  * @controller: Name of the controller for which stats are requested.
  * @path: cgroup path.

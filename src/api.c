@@ -2256,7 +2256,7 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 				struct cgroup_file_info *info, int base_level)
 {
 	int ret = 0;
-	FTS *fts = *(FTS **)handle;
+	struct cgroup_tree_handle *entry;
 	FTSENT *ent;
 
 	if (!cgroup_initialized)
@@ -2264,26 +2264,34 @@ int cgroup_walk_tree_next(const int depth, void **handle,
 
 	if (!handle)
 		return ECGINVAL;
-	ent = fts_read(fts);
+
+	entry = (struct cgroup_tree_handle *) *handle;
+
+	ent = fts_read(entry->fts);
 	if (!ent)
 		return ECGEOF;
 	if (!base_level && depth)
 		base_level = ent->fts_level + depth;
-	ret = cg_walk_node(fts, ent, base_level, info);
-	*handle = fts;
+	ret = cg_walk_node(entry->fts, ent, base_level, info);
+	*handle = entry;
 	return ret;
 }
 
 int cgroup_walk_tree_end(void **handle)
 {
-	FTS *fts = *(FTS **)handle;
+	struct cgroup_tree_handle *entry;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
 	if (!handle)
 		return ECGINVAL;
-	fts_close(fts);
+
+	entry = (struct cgroup_tree_handle *) *handle;
+
+	fts_close(entry->fts);
+	free(entry);
+	*handle = NULL;
 	return 0;
 }
 
@@ -2300,29 +2308,61 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 	char full_path[FILENAME_MAX];
 	FTSENT *ent;
 	FTS *fts;
+	struct cgroup_tree_handle *entry;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
+	if (!handle)
+		return ECGINVAL;
+
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
+
+	entry = calloc(sizeof(struct cgroup_tree_handle), 1);
+
+	if (!entry) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 
 	*base_level = 0;
 	cg_path[0] = full_path;
 	cg_path[1] = NULL;
 
-	fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
+	entry->fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
-	ent = fts_read(fts);
+	ent = fts_read(entry->fts);
 	if (!ent) {
 		cgroup_dbg("fts_read failed\n");
 		return ECGINVAL;
 	}
 	if (!*base_level && depth)
 		*base_level = ent->fts_level + depth;
-	ret = cg_walk_node(fts, ent, *base_level, info);
-	*handle = fts;
+	ret = cg_walk_node(entry->fts, ent, *base_level, info);
+	*handle = entry;
 	return ret;
+}
+
+int cgroup_walk_tree_set_flags(void **handle, int flags)
+{
+	struct cgroup_tree_handle *entry;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!handle)
+		return ECGINVAL;
+
+	if ((flags & CGROUP_WALK_TYPE_PRE_DIR) &&
+			(flags & CGROUP_WALK_TYPE_POST_DIR))
+		return ECGINVAL;
+
+	entry = (struct cgroup_tree_handle *) *handle;
+	entry->flags = flags;
+
+	*handle = entry;
+	return 0;
 }
 
 /*
