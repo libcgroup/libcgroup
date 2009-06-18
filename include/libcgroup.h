@@ -134,6 +134,11 @@ struct cgroup_stat {
 	char value[CG_VALUE_MAX];
 };
 
+struct cgroup_mount_point {
+	char name[FILENAME_MAX];
+	char path[FILENAME_MAX];
+};
+
 /* Functions and structures that can be used by the application*/
 struct cgroup;
 struct cgroup_controller;
@@ -303,6 +308,22 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
  */
 int cgroup_get_task_next(void **handle, pid_t *pid);
 int cgroup_get_task_end(void **handle);
+
+/**
+ * Read the mount table to give a list where each controller is
+ * mounted
+ * @handle: Handle to be used for iteration.
+ * @name: The variable where the name is stored. Should be freed by caller.
+ * @path: Te variable where the path to the controller is stored. Should be
+ * freed by the caller.
+ */
+int cgroup_get_controller_begin(void **handle, struct cgroup_mount_point *info);
+/*
+ * While walking through the mount table, the controllers will be
+ * returned in order of their mount points.
+ */
+int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info);
+int cgroup_get_controller_end(void **handle);
 /* The wrappers for filling libcg structures */
 
 struct cgroup *cgroup_new_cgroup(const char *name);

@@ -2541,6 +2541,80 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
 	return ret;
 }
 
+
+int cgroup_get_controller_end(void **handle)
+{
+	int *pos = (int *) *handle;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!pos)
+		return ECGINVAL;
+
+	free(pos);
+	*handle = NULL;
+
+	return 0;
+}
+
+int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
+{
+	int *pos = (int *) *handle;
+	int ret = 0;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!pos)
+		return ECGINVAL;
+
+	if (!info)
+		return ECGINVAL;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
+	if (cg_mount_table[*pos].name[0] == '\0') {
+		ret = ECGEOF;
+		goto out_unlock;
+	}
+
+	strncpy(info->name, cg_mount_table[*pos].name, FILENAME_MAX);
+
+	strncpy(info->path, cg_mount_table[*pos].path, FILENAME_MAX);
+
+	(*pos)++;
+	*handle = pos;
+
+out_unlock:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return ret;
+}
+
+int cgroup_get_controller_begin(void **handle, struct cgroup_mount_point *info)
+{
+	int *pos;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!info)
+		return ECGINVAL;
+
+	pos = malloc(sizeof(int));
+
+	if (!pos) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	*pos = 0;
+
+	*handle = pos;
+
+	return cgroup_get_controller_next(handle, info);
+}
+
 /**
  * Get process data (euid and egid) from /proc/<pid>/status file.
  * @param pid: The process id

@@ -2,7 +2,7 @@ INCLUDES = -I$(top_srcdir)/include
 LDADD = $(top_srcdir)/src/.libs/libcgroup.la
 
 # compile the tests, but do not install them
-noinst_PROGRAMS = libcgrouptest01 libcg_ba setuid pathtest walk_test read_stats walk_task
+noinst_PROGRAMS = libcgrouptest01 libcg_ba setuid pathtest walk_test read_stats walk_task get_controller
 
 libcgrouptest01_SOURCES=libcgrouptest01.c test_functions.c libcgrouptest.h
 libcg_ba_SOURCES=libcg_ba.cpp
@@ -11,6 +11,7 @@ pathtest_SOURCES=pathtest.c
 walk_test_SOURCES=walk_test.c
 read_stats_SOURCES=read_stats.c
 walk_task_SOURCES=walk_task.c
+get_controller_SOURCES=get_controller.c
 
 EXTRA_DIST = pathtest.sh runlibcgrouptest.sh
 
