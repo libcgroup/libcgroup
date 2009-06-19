@@ -7,14 +7,15 @@
 cgset \- set the parameters of given cgroup(s)
 
 .SH SYNOPSIS
-\fBcgset\fR [\fB-r\fR <\fIname=value\fR>] <\fBpath\fR> ...
+\fBcgset\fR [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
+\fBcgset\fR \fB--copy-from\fR <\fIsource_cgrup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 The command set the parameters of input cgroup(s).
 
 .TP
 .B <path>
-is the ame of the cgroup which should be changed.
+is the name of the cgroup which should be changed.
 This parameter can be used multiple times.
 
 .TP
@@ -22,6 +23,11 @@ This parameter can be used multiple times.
 defines name of the file to set and
 the value which should be written to that file.
 This parameter can be used multiple times.
+
+.TP
+.B -copy-from <source_cgrup_path>
+defines name of cgroup whose parameters will be
+coppied to input cgroup.
 
 .SH SEE ALSO
 cgsules.conf (1), cgcreate (1)
