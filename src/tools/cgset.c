@@ -5,8 +5,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "tools-common.h"
+
+static struct option const long_options[] =
+{
+	{"rule", required_argument, NULL, 'r'},
+	{"help", no_argument, NULL, 'h'},
+	{NULL, 0, NULL, 0}
+};
+
 
 struct cgroup *copy_name_value_from_rules(int nv_number,
 			struct control_value *name_value)
@@ -63,11 +72,24 @@ scgroup_err:
 	return NULL;
 }
 
+void usage(int status, char *program_name)
+{
+	if (status != 0)
+		fprintf(stderr, "Wrong input parameters,"
+			" try %s --help' for more information.\n",
+			program_name);
+	else {
+		printf("Usage: %s [-r <name=value>]  <cgroup_path> ...\n"
+			"   or: %s --copy-from <source_cgrup_path> "
+			    "<cgroup_path> ...\n",
+			program_name, program_name, program_name);
+	}
+}
 
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-	char c;
+	int c;
 
 	char *buf;
 	struct control_value *name_value = NULL;
@@ -86,8 +108,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt(argc, argv, "r:")) > 0) {
+	while ((c = getopt_long (argc, argv,
+		"r:h", long_options, NULL)) != -1) {
 		switch (c) {
+		case 'h':
+			usage(0, argv[0]);
+			ret = 0;
+			goto err;
+			break;
+
 		case 'r':
 			/* add name-value pair to buffer
 				(= name_value variable) */
@@ -97,8 +126,9 @@ int main(int argc, char *argv[])
 					realloc(name_value,
 					nv_max * sizeof(struct control_value));
 				if (!name_value) {
-					fprintf(stderr, "cgset: "
-						"not enough memory\n");
+					fprintf(stderr, "%s: "
+						"not enough memory\n",
+						argv[0]);
 					ret = -1;
 					goto err;
 				}
@@ -133,8 +163,7 @@ int main(int argc, char *argv[])
 			nv_number++;
 			break;
 		default:
-			fprintf(stderr, "%s: invalid command line option\n",
-				argv[0]);
+			usage(1, argv[0]);
 			ret = -1;
 			goto err;
 			break;
