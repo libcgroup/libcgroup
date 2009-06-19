@@ -9,12 +9,50 @@
 
 #include "tools-common.h"
 
+#define FL_RULES	1
+#define FL_COPY		2
+
+enum {
+	COPY_FROM_OPTION = CHAR_MAX + 1
+};
+
 static struct option const long_options[] =
 {
 	{"rule", required_argument, NULL, 'r'},
 	{"help", no_argument, NULL, 'h'},
+	{"copy-from", required_argument, NULL, COPY_FROM_OPTION},
 	{NULL, 0, NULL, 0}
 };
+
+int flags; /* used input method */
+
+struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
+{
+	int ret = 0;
+	struct cgroup *src_cgroup;
+
+	/* create source cgroup */
+	src_cgroup = cgroup_new_cgroup(src_cg_path);
+	if (!src_cgroup) {
+		fprintf(stderr, "can't create cgroup: %s\n",
+			cgroup_strerror(ECGFAIL));
+		goto scgroup_err;
+	}
+
+	/* copy the name-version values to the cgroup structure */
+	ret = cgroup_get_cgroup(src_cgroup);
+	if (ret != 0) {
+		fprintf(stderr, "cgroup %s error: %s \n",
+			src_cg_path, cgroup_strerror(ret));
+		goto scgroup_err;
+	}
+
+	return src_cgroup;
+
+scgroup_err:
+	cgroup_free(&src_cgroup);
+	return NULL;
+}
 
 
 struct cgroup *copy_name_value_from_rules(int nv_number,
@@ -118,6 +156,13 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'r':
+			if ((flags &  FL_COPY) != 0) {
+				usage(1, argv[0]);
+				ret = -1;
+				goto err;
+			}
+			flags |= FL_RULES;
+
 			/* add name-value pair to buffer
 				(= name_value variable) */
 			if (nv_number >= nv_max) {
@@ -162,6 +207,16 @@ int main(int argc, char *argv[])
 
 			nv_number++;
 			break;
+		case COPY_FROM_OPTION:
+			if (flags != 0) {
+				usage(1, argv[0]);
+				ret = -1;
+				goto err;
+			}
+			flags |= FL_COPY;
+			strncpy(src_cg_path, optarg, FILENAME_MAX);
+			src_cg_path[FILENAME_MAX-1] = '\0';
+			break;
 		default:
 			usage(1, argv[0]);
 			ret = -1;
@@ -177,7 +232,7 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	if (nv_number == 0) {
+	if (flags == 0) {
 		fprintf(stderr, "%s: no name-value pair was set\n", argv[0]);
 		ret = -1;
 		goto err;
@@ -191,12 +246,21 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	src_cgroup = copy_name_value_from_rules(nv_number, name_value);
-	if (src_cgroup == NULL)
-		goto err;
+	/* copy the name-value pairs from -r options */
+	if ((flags & FL_RULES) != 0) {
+		src_cgroup = copy_name_value_from_rules(nv_number, name_value);
+		if (src_cgroup == NULL)
+			goto err;
+	}
+
+	/* copy the name-value from the given group */
+	if ((flags & FL_COPY) != 0) {
+		src_cgroup = copy_name_value_from_cgroup(src_cg_path);
+		if (src_cgroup == NULL)
+			goto err;
+	}
 
 	while (optind < argc) {
-
 		/* create new cgroup */
 		cgroup = cgroup_new_cgroup(argv[optind]);
 		if (!cgroup) {
