@@ -8,20 +8,75 @@
 
 #include "tools-common.h"
 
+struct cgroup *copy_name_value_from_rules(int nv_number,
+			struct control_value *name_value)
+{
+	struct cgroup *src_cgroup;
+	struct cgroup_controller *cgc;
+	char con[FILENAME_MAX];
+
+	int ret;
+	int i;
+
+	/* create source cgroup */
+	src_cgroup = cgroup_new_cgroup("tmp");
+	if (!src_cgroup) {
+		fprintf(stderr, "can't create cgroup: %s\n",
+			cgroup_strerror(ECGFAIL));
+		goto scgroup_err;
+	}
+
+	/* add pairs name-value to
+	   relevant controllers of this cgroup */
+	for (i = 0; i < nv_number; i++) {
+
+		if ((strchr(name_value[i].name, '.')) == NULL) {
+		fprintf(stderr, "wrong -r  parameter (%s=%s)\n",
+				name_value[i].name, name_value[i].value);
+			goto scgroup_err;
+		}
+
+		strncpy(con, name_value[i].name, FILENAME_MAX);
+		strtok(con, ".");
+
+		/* add relevant controller */
+		cgc = cgroup_add_controller(src_cgroup, con);
+		if (!cgc) {
+			fprintf(stderr, "controller %s can't be add\n",
+					con);
+			goto scgroup_err;
+		}
+
+		/* add name-value pair to this controller */
+		ret = cgroup_add_value_string(cgc,
+			name_value[i].name, name_value[i].value);
+		if (ret) {
+			fprintf(stderr, "name-value pair %s=%s can't be set\n",
+				name_value[i].name, name_value[i].value);
+			goto scgroup_err;
+		}
+	}
+
+	return src_cgroup;
+scgroup_err:
+	cgroup_free(&src_cgroup);
+	return NULL;
+}
+
+
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-	int i;
 	char c;
 
 	char *buf;
-	char con[FILENAME_MAX];
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
 	int nv_max = 0;
 
+	char src_cg_path[FILENAME_MAX];
+	struct cgroup *src_cgroup;
 	struct cgroup *cgroup;
-	struct cgroup_controller *cgc;
 
 	/* no parametr on input */
 	if (argc < 2) {
@@ -107,6 +162,10 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
+	src_cgroup = copy_name_value_from_rules(nv_number, name_value);
+	if (src_cgroup == NULL)
+		goto err;
+
 	while (optind < argc) {
 
 		/* create new cgroup */
@@ -115,49 +174,18 @@ int main(int argc, char *argv[])
 			ret = ECGFAIL;
 			fprintf(stderr, "%s: can't add new cgroup: %s\n",
 				argv[0], cgroup_strerror(ret));
-			ret = -1;
-			goto err;
+			goto cgroup_free_err;
 		}
 
-		/* add pairs name-value to
-		   relevant controllers of this cgroup */
-		for (i = 0; i < nv_number; i++) {
-
-			if ((strchr(name_value[i].name, '.')) == NULL) {
-				fprintf(stderr, "%s: "
-					"wrong -r  parameter (%s=%s)\n",
-					argv[0], name_value[i].name,
-					name_value[i].value);
-				ret = -1;
-				goto cgroup_free_err;
-			}
-
-			strncpy(con, name_value[i].name, FILENAME_MAX);
-			strtok(con, ".");
-
-			/* add relevant controller */
-			cgc = cgroup_add_controller(cgroup, con);
-			if (!cgc) {
-				fprintf(stderr, "%s: "
-					"controller %s can't be add\n",
-					argv[0], con);
-				goto cgroup_free_err;
-			}
-
-			/* add name-value pair to this controller */
-			ret = cgroup_add_value_string(cgc,
-				name_value[i].name, name_value[i].value);
-			if (ret) {
-				fprintf(stderr, "%s: "
-					"name-value pair %s=%s "
-					"can't be set\n",
-					argv[0], name_value[i].name,
-					name_value[i].value);
-				goto cgroup_free_err;
-			}
+		/* copy the values from the source cgroup to new one */
+		ret = cgroup_copy_cgroup(cgroup, src_cgroup);
+		if (ret != 0) {
+			fprintf(stderr, "%s: cgroup %s error: %s \n",
+				argv[0], src_cg_path, cgroup_strerror(ret));
+			goto cgroup_free_err;
 		}
 
-		/* modify cgroup */
+		/* modify cgroup based on values of the new one */
 		ret = cgroup_modify_cgroup(cgroup);
 		if (ret) {
 			fprintf(stderr, "%s: "
@@ -169,9 +197,12 @@ int main(int argc, char *argv[])
 		optind++;
 		cgroup_free(&cgroup);
 	}
+
 cgroup_free_err:
-	if (ret)
+	if (cgroup)
 		cgroup_free(&cgroup);
+	cgroup_free(&src_cgroup);
+
 err:
 	free(name_value);
 	return ret;
