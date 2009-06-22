@@ -492,3 +492,177 @@ err_mnt:
 	fclose(yyin);
 	return error;
 }
+
+static int cgroup_cleanup_cgroup_controller_files(struct cgroup_file_info info,
+						char *root_path, char *ctrl)
+{
+	void *task_handle;
+	pid_t pid;
+	char *rel_path = NULL;
+	int error;
+	int ret;
+
+
+	rel_path = info.full_path + strlen(root_path) - 1;
+
+	if (!strncmp(rel_path, "/", strlen(rel_path)))
+		return 0;
+
+	error = cgroup_get_task_begin(rel_path, ctrl,
+					&task_handle, &pid);
+
+	if (error && error != ECGEOF)
+		return error;
+
+	while (error != ECGEOF) {
+		ret = cgroup_attach_task_pid(NULL, pid);
+
+		if (ret) {
+			cgroup_get_task_end(&task_handle);
+			return ret;
+		}
+		error = cgroup_get_task_next(&task_handle, &pid);
+
+		if (error && error != ECGEOF) {
+			cgroup_get_task_end(&task_handle);
+			return error;
+		}
+	}
+
+	cgroup_get_task_end(&task_handle);
+
+	error = rmdir(info.full_path);
+	if (error) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	return 0;
+}
+
+static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
+{
+	struct cgroup_file_info info;
+	void *tree_handle;
+	int lvl;
+	int ret = 0, error;
+	char *root_path = NULL;
+
+	error = cgroup_walk_tree_begin(mount_info.name, "/", 0, &tree_handle,
+							&info, &lvl);
+
+	if (error && error != ECGEOF)
+		return error;
+
+	root_path = strdup(info.full_path);
+
+	if (!root_path) {
+		cgroup_walk_tree_end(&tree_handle);
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	ret = cgroup_walk_tree_set_flags(&tree_handle,
+				CGROUP_WALK_TYPE_POST_DIR);
+
+	if (ret) {
+		cgroup_walk_tree_end(&tree_handle);
+		goto out_error;
+	}
+
+	while (error != ECGEOF) {
+		if (info.type == CGROUP_FILE_TYPE_DIR) {
+			ret = cgroup_cleanup_cgroup_controller_files(info,
+						root_path, mount_info.name);
+
+			if (ret) {
+				cgroup_walk_tree_end(&tree_handle);
+				goto out_error;
+			}
+		}
+
+		error = cgroup_walk_tree_next(0, &tree_handle, &info, lvl);
+
+		if (error && error != ECGEOF) {
+			ret = error;
+			cgroup_walk_tree_end(&tree_handle);
+		}
+	}
+	cgroup_walk_tree_end(&tree_handle);
+	error = umount(mount_info.path);
+
+	if (error) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto out_error;
+	}
+
+	error = rmdir(mount_info.path);
+
+	if (error) {
+		last_errno = errno;
+		ret = ECGOTHER;
+	}
+
+out_error:
+	free(root_path);
+	return ret;
+}
+
+int cgroup_unload_cgroups(void)
+{
+	int error = 0;
+	void *ctrl_handle;
+	int ret = 0;
+	char *curr_path = NULL;
+	struct cgroup_mount_point info;
+
+	error = cgroup_init();
+
+	if (error) {
+		ret = error;
+		goto out_error;
+	}
+
+	error = cgroup_get_controller_begin(&ctrl_handle, &info);
+
+
+	if (error && error != ECGEOF) {
+		ret = error;
+		goto out_error;
+	}
+
+	while (error != ECGEOF) {
+		if (!curr_path || strcmp(info.path, curr_path) != 0) {
+			if (curr_path)
+				free(curr_path);
+
+			curr_path = strdup(info.path);
+			if (!curr_path)
+				goto out_errno;
+
+			ret = cgroup_config_unload_controller(info);
+
+			if (ret)
+				goto out_error;
+		}
+
+		error = cgroup_get_controller_next(&ctrl_handle, &info);
+
+		if (error && error != ECGEOF) {
+			ret = error;
+			goto out_error;
+		}
+	}
+
+out_error:
+	if (curr_path)
+		free(curr_path);
+	cgroup_get_controller_end(&ctrl_handle);
+	return ret;
+
+out_errno:
+	last_errno = errno;
+	cgroup_get_controller_end(&ctrl_handle);
+	return ECGOTHER;
+}

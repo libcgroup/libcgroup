@@ -368,6 +368,7 @@ struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
  * Config related stuff
  */
 int cgroup_config_load_config(const char *pathname);
+int cgroup_unload_cgroups(void);
 
 __END_DECLS
 

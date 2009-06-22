@@ -66,6 +66,7 @@ global:
 	cgroup_get_controller_end;
 	cgroup_get_controller_next;
 	cgroup_get_controller_begin;
+	cgroup_unload_cgroups;
 	cgroup_get_controller;
 	cgroup_get_uid_gid_from_procfs;
 } CGROUP_0.33;
