@@ -586,6 +586,7 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 		if (error && error != ECGEOF) {
 			ret = error;
 			cgroup_walk_tree_end(&tree_handle);
+			goto out_error;
 		}
 	}
 	cgroup_walk_tree_end(&tree_handle);
