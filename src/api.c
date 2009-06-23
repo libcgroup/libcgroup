@@ -2312,7 +2312,6 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 	char *cg_path[2];
 	char full_path[FILENAME_MAX];
 	FTSENT *ent;
-	FTS *fts;
 	struct cgroup_tree_handle *entry;
 
 	if (!cgroup_initialized)
@@ -2347,7 +2346,7 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
 	if (!*base_level && depth)
 		*base_level = ent->fts_level + depth;
 
-	ret = cg_walk_node(entry->fts, ent, base_level, info, entry->flags);
+	ret = cg_walk_node(entry->fts, ent, *base_level, info, entry->flags);
 
 	*handle = entry;
 	return ret;
