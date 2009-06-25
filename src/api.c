@@ -2720,15 +2720,15 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 
 	while (fgets(buf, sizeof(buf), f)) {
 		if (!strncmp(buf, "Uid:", 4)) {
-			if (sscanf((buf + 5), "%d%d%d%d", &ruid, euid,
-					&suid, &fsuid) != 4)
+			if (sscanf((buf + strlen("Uid:") + 1), "%d%d%d%d",
+					&ruid, euid, &suid, &fsuid) != 4)
 				break;
 			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				ruid, *euid, suid, fsuid);
 			found_euid = true;
 		} else if (!strncmp(buf, "Gid:", 4)) {
-			if (sscanf((buf + 5), "%d%d%d%d", &rgid, egid,
-					&sgid, &fsgid) != 4)
+			if (sscanf((buf + strlen("Gid:") + 1), "%d%d%d%d",
+					&rgid, egid, &sgid, &fsgid) != 4)
 				break;
 			cgroup_dbg("Scanned proc values are %d %d %d %d\n",
 				rgid, *egid, sgid, fsgid);
