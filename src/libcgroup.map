@@ -71,5 +71,6 @@ global:
 	cgroup_get_uid_gid_from_procfs;
 	cgroup_get_subsys_mount_point;
 	cgroup_get_procname_from_procfs;
+	cgroup_register_unchanged_process;
 	cgroup_change_cgroup_flags;
 } CGROUP_0.33;

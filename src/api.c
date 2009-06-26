@@ -40,6 +40,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -48,6 +49,7 @@
 #include <pwd.h>
 #include <libgen.h>
 #include <assert.h>
+#include <linux/un.h>
 
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION 0.01
@@ -2930,6 +2932,46 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
 		*procname = pname_cmdline;
 
 	free(pname_status);
+	return ret;
+}
+
+int cgroup_register_unchanged_process(pid_t pid, int flags)
+{
+	int sk;
+	int ret = 1;
+	char buff[sizeof(CGRULE_SUCCESS_STORE_PID)];
+	struct sockaddr_un addr;
+
+	sk = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (sk < 0)
+		return 1;
+
+	bzero((char *)&addr, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, CGRULE_CGRED_TEMP_FILE);
+
+	if (connect(sk, (struct sockaddr *)&addr,
+	    sizeof(addr.sun_family) + strlen(CGRULE_CGRED_TEMP_FILE)) < 0) {
+		/* If the daemon does not work, this function returns 0
+		 * as success. */
+		ret = 0;
+		goto close;
+	}
+	if (write(sk, &pid, sizeof(pid)) < 0)
+		goto close;
+
+	if (write(sk, &flags, sizeof(flags)) < 0)
+		goto close;
+
+	if (read(sk, buff, sizeof(buff)) < 0)
+		goto close;
+
+	if (strncmp(buff, CGRULE_SUCCESS_STORE_PID, sizeof(buff)))
+		goto close;
+
+	ret = 0;
+close:
+	close(sk);
 	return ret;
 }
 

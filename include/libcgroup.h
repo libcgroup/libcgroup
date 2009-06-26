@@ -324,6 +324,15 @@ int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
 								pid_t *pid);
 
 /**
+ * Register the unchanged process to a cgrulesengd daemon.
+ * If the daemon does not work, this function returns 0 as success.
+ * @param pid: The process id
+ * @param flags Bit flags to change the behavior, as defined above
+ * @return 0 on success, > 0 on error.
+ */
+int cgroup_register_unchanged_process(pid_t pid, int flags);
+
+/**
  * Read the next task value
  * @handle: The handle used for iterating
  * @pid: The variable where the value will be stored
