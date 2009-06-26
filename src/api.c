@@ -209,7 +209,10 @@ static void cgroup_free_rule(struct cgroup_rule *r)
 		cgroup_dbg("Warning: Attempted to free NULL rule.\n");
 		return;
 	}
-
+	if (r->procname) {
+		free(r->procname);
+		r->procname = NULL;
+	}
 	/* We must free any used controller strings, too. */
 	for(i = 0; i < MAX_MNT_ELEMENTS; i++) {
 		if (r->controllers[i])
@@ -302,6 +305,9 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 	/* Iterator for the line we're working on */
 	char *itr = NULL;
 
+	/* Pointer to process name in a line of the configuration file */
+	char *procname = NULL;
+
 	/* Pointer to the list that we're using */
 	struct cgroup_rule_list *lst = NULL;
 
@@ -315,11 +321,14 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 	struct passwd *pwd = NULL;
 
 	/* Temporary storage for a configuration rule */
+	char key[CGROUP_RULE_MAXKEY] = { '\0' };
 	char user[LOGIN_NAME_MAX] = { '\0' };
 	char controllers[CG_CONTROLLER_MAX] = { '\0' };
 	char destination[FILENAME_MAX] = { '\0' };
 	uid_t uid = CGRULE_INVALID;
 	gid_t gid = CGRULE_INVALID;
+	int len_username;
+	int len_procname;
 
 	/* The current line number */
 	unsigned int linenum = 0;
@@ -385,12 +394,30 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 		 * there's an error in the configuration file.
 		 */
 		skipped = false;
-		i = sscanf(itr, "%s%s%s", user, controllers, destination);
+		i = sscanf(itr, "%s%s%s", key, controllers, destination);
 		if (i != 3) {
 			cgroup_dbg("Failed to parse configuration file on"
 					" line %d.\n", linenum);
 			goto parsefail;
 		}
+		procname = strchr(key, ':');
+		if (procname) {
+			/* <user>:<procname>  <subsystem>  <destination> */
+			procname++;	/* skip ':' */
+			len_username = procname - key - 1;
+			len_procname = strlen(procname);
+			if (len_procname < 0) {
+				cgroup_dbg("Failed to parse configuration file"
+						" on line %d.\n", linenum);
+				goto parsefail;
+			}
+		} else {
+			len_username = strlen(key);
+			len_procname = 0;
+		}
+		len_username = min(len_username, sizeof(user) - 1);
+		memset(user, '\0', sizeof(user));
+		strncpy(user, key, len_username);
 
 		/*
 		 * Next, check the user/group.  If it's a % sign, then we
@@ -478,7 +505,18 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		strncpy(newrule->username, user, sizeof(newrule->username) - 1);
+		len_username = min(len_username, sizeof(newrule->username) - 1);
+		strncpy(newrule->username, user, len_username);
+		if (len_procname) {
+			newrule->procname = strdup(procname);
+			if (!newrule->procname) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				goto close;
+			}
+		} else {
+			newrule->procname = NULL;
+		}
 		strncpy(newrule->destination, destination,
 			sizeof(newrule->destination) - 1);
 		newrule->next = NULL;
@@ -2025,7 +2063,10 @@ void cgroup_print_rules_config(FILE *fp)
 
 	itr = rl.head;
 	while (itr) {
-		fprintf(fp, "Rule: %s\n", itr->username);
+		fprintf(fp, "Rule: %s", itr->username);
+		if (itr->procname)
+			fprintf(fp, ":%s", itr->procname);
+		fprintf(fp, "\n");
 
 		if (itr->uid == CGRULE_WILD)
 			fprintf(fp, "  UID: any\n");

@@ -30,11 +30,21 @@ __BEGIN_DECLS
 
 #define CGROUP_BUFFER_LEN (5 * FILENAME_MAX)
 
+/* Maximum length of a key(<user>:<process name>) in the daemon config file */
+#define CGROUP_RULE_MAXKEY	(LOGIN_NAME_MAX + FILENAME_MAX + 1)
+
+/* Maximum length of a line in the daemon config file */
+#define CGROUP_RULE_MAXLINE	(FILENAME_MAX + CGROUP_RULE_MAXKEY + \
+	CG_CONTROLLER_MAX + 3)
+
 #ifdef CGROUP_DEBUG
 #define cgroup_dbg(x...) printf(x)
 #else
 #define cgroup_dbg(x...) do {} while (0)
 #endif
+
+#define max(x,y) ((y)<(x)?(x):(y))
+#define min(x,y) ((y)>(x)?(x):(y))
 
 struct control_value {
 	char name[FILENAME_MAX];
@@ -77,6 +87,7 @@ struct cgroup_rules_data {
 struct cgroup_rule {
 	uid_t uid;
 	gid_t gid;
+	char *procname;
 	char username[LOGIN_NAME_MAX];
 	char destination[FILENAME_MAX];
 	char *controllers[MAX_MNT_ELEMENTS];

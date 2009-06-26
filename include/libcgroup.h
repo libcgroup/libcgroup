@@ -48,11 +48,6 @@ __BEGIN_DECLS
  * would require us to use a scanner/parser that can parse beyond ASCII
  */
 
-
-/* Maximum length of a line in the daemon config file */
-#define CGROUP_RULE_MAXLINE (FILENAME_MAX + LOGIN_NAME_MAX + \
-	CG_CONTROLLER_MAX + 3)
-
 /* Definitions for the uid and gid members of a cgroup_rules */
 #define CGRULE_INVALID (-1)
 #define CGRULE_WILD (-2)

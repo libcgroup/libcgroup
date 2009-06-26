@@ -40,9 +40,6 @@ __BEGIN_DECLS
 #define SEND_MESSAGE_SIZE (NLMSG_SPACE(SEND_MESSAGE_LEN))
 #define RECV_MESSAGE_SIZE (NLMSG_SPACE(RECV_MESSAGE_LEN))
 
-#define max(x,y) ((y)<(x)?(x):(y))
-#define min(x,y) ((y)>(x)?(x):(y))
-
 #define BUFF_SIZE (max(max(SEND_MESSAGE_SIZE, RECV_MESSAGE_SIZE), 1024))
 #define MIN_RECV_SIZE (min(SEND_MESSAGE_SIZE, RECV_MESSAGE_SIZE))
 
