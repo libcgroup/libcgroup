@@ -17,4 +17,7 @@ cgconfigparser_SOURCES = cgconfig.c
 
 cgclear_SOURCES = cgclear.c
 
+install-exec-hook:
+	chmod u+s $(DESTDIR)$(bindir)/cgexec
+
 endif

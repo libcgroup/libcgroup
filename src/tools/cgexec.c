@@ -30,27 +30,33 @@
 
 #include "tools-common.h"
 
+static struct option longopts[] = {
+	{"sticky", no_argument, NULL, 's'}, 
+	{0, 0, 0, 0}
+};
+
 int main(int argc, char *argv[])
 {
 	int ret = 0, i;
 	int cg_specified = 0;
-	uid_t euid;
+	int flag_child = 0;
+	uid_t uid;
+	gid_t gid;
 	pid_t pid;
-	gid_t egid;
 	char c;
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage is %s"
 			" [-g <list of controllers>:<relative path to cgroup>]"
-			" command [arguments]  \n",
+			" [--sticky] command [arguments]  \n",
 			argv[0]);
 		exit(2);
 	}
 
 	memset(cgroup_list, 0, sizeof(cgroup_list));
 
-	while ((c = getopt(argc, argv, "+g:")) > 0) {
+	while ((c = getopt_long(argc, argv, "+g:s", longopts, NULL)) > 0) {
 		switch (c) {
 		case 'g':
 			if (parse_cgroup_spec(cgroup_list, optarg)) {
@@ -59,6 +65,9 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			cg_specified = 1;
+			break;
+		case 's':
+			flag_child |= CGROUP_DAEMON_UNCHANGE_CHILDREN;
 			break;
 		default:
 			fprintf(stderr, "Invalid command line option\n");
@@ -81,10 +90,26 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	euid = geteuid();
-	egid = getegid();
+	uid = getuid();
+	gid = getgid();
 	pid = getpid();
 
+	ret = cgroup_register_unchanged_process(pid, flag_child);
+	if (ret) {
+		fprintf(stderr, "registration of process failed\n");
+		return ret;
+	}
+
+	/*
+	 * 'cgexec' command file needs the root privilege for executing
+	 * a cgroup_register_unchanged_process() by using unix domain
+	 * socket, and an euid should be changed to the executing user
+	 * from a root user.
+	 */
+	if (seteuid(uid)) {
+		fprintf(stderr, "%s", strerror(errno));
+		return -1;
+	}
 	if (cg_specified) {
 		/*
 		 * User has specified the list of control group and
@@ -105,8 +130,9 @@ int main(int argc, char *argv[])
 		}
 	} else {
 
-		/* Change the cgroup by determining the rules based on euid */
-		ret = cgroup_change_cgroup_uid_gid(euid, egid, pid);
+		/* Change the cgroup by determining the rules based on uid */
+		ret = cgroup_change_cgroup_flags(uid, gid,
+						 argv[optind], pid, 0);
 		if (ret) {
 			fprintf(stderr, "cgroup change of group failed\n");
 			return ret;
