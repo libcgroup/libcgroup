@@ -294,7 +294,8 @@ static char *cg_skip_unused_charactors_in_rule(char *rule)
  * 	@return 0 on success, -1 if no cache and match found, > 0 on error.
  * TODO: Make this function thread safe!
  */
-static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
+static int cgroup_parse_rules(bool cache, uid_t muid,
+					  gid_t mgid, char *mprocname)
 {
 	/* File descriptor for the configuration file */
 	FILE *fp = NULL;
@@ -486,8 +487,29 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid)
 			matched = true;
 		}
 
-		if (!cache && !matched)
-			continue;
+		if (!cache) {
+			if (!matched)
+				continue;
+			if (len_procname) {
+				/*
+				 * If there is a rule based on process name,
+				 * it should be matched with mprocname.
+				 */
+				if (!mprocname) {
+					uid = CGRULE_INVALID;
+					gid = CGRULE_INVALID;
+					matched = false;
+					continue;
+				}
+				if (strcmp(mprocname, procname) &&
+					strcmp(basename(mprocname), procname)) {
+					uid = CGRULE_INVALID;
+					gid = CGRULE_INVALID;
+					matched = false;
+					continue;
+				}
+			}
+		}
 
 		/*
 		 * Now, we're either caching rules or we found a match.  Either
@@ -1821,22 +1843,9 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 	return ret;
 }
 
-/**
- * Finds the first rule in the cached list that matches the given UID or GID,
- * and returns a pointer to that rule.  This function uses rl_lock.
- *
- * This function may NOT be thread safe.
- * 	@param uid The UID to match
- * 	@param gid The GID to match
- * 	@return Pointer to the first matching rule, or NULL if no match
- * TODO: Determine thread-safeness and fix if not safe.
- */
 static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(const uid_t uid,
-				const gid_t gid)
+				const gid_t gid, struct cgroup_rule *rule)
 {
-	/* Return value */
-	struct cgroup_rule *ret = rl.head;
-
 	/* Temporary user data */
 	struct passwd *usr = NULL;
 
@@ -1849,76 +1858,96 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(const uid_t uid,
 	/* Loop variable */
 	int i = 0;
 
-	pthread_rwlock_wrlock(&rl_lock);
-	while (ret) {
-		/* The wildcard rule always matches. */
-		if ((ret->uid == CGRULE_WILD) && (ret->gid == CGRULE_WILD)) {
-			goto finished;
+	while (rule) {
+		/* Skip "%" which indicates continuation of previous rule. */
+		if (rule->username[0] == '%') {
+			rule = rule->next;
+			continue;
 		}
+		/* The wildcard rule always matches. */
+		if ((rule->uid == CGRULE_WILD) && (rule->gid == CGRULE_WILD))
+			return rule;
 
 		/* This is the simple case of the UID matching. */
-		if (ret->uid == uid) {
-			goto finished;
-		}
+		if (rule->uid == uid)
+			return rule;
 
 		/* This is the simple case of the GID matching. */
-		if (ret->gid == gid) {
-			goto finished;
-		}
+		if (rule->gid == gid)
+			return rule;
 
 		/* If this is a group rule, the UID might be a member. */
-		if (ret->username[0] == '@') {
+		if (rule->username[0] == '@') {
 			/* Get the group data. */
-			sp = &(ret->username[1]);
+			sp = &(rule->username[1]);
 			grp = getgrnam(sp);
-			if (!grp) {
+			if (!grp)
 				continue;
-			}
 
 			/* Get the data for UID. */
 			usr = getpwuid(uid);
-			if (!usr) {
+			if (!usr)
 				continue;
-			}
 
 			/* If UID is a member of group, we matched. */
 			for (i = 0; grp->gr_mem[i]; i++) {
 				if (!(strcmp(usr->pw_name, grp->gr_mem[i])))
-					goto finished;
+					return rule;
 			}
 		}
 
 		/* If we haven't matched, try the next rule. */
-		ret = ret->next;
+		rule = rule->next;
 	}
 
 	/* If we get here, no rules matched. */
-	ret = NULL;
-
-finished:
-	pthread_rwlock_unlock(&rl_lock);
-	return ret;
+	return NULL;
 }
 
 /**
- * Changes the cgroup of a program based on the rules in the config file.  If a
- * rule exists for the given UID or GID, then the given PID is placed into the
- * correct group.  By default, this function parses the configuration file each
- * time it is called.
- * 
- * The flags can alter the behavior of this function:
- * 	CGFLAG_USECACHE: Use cached rules instead of parsing the config file
+ * Finds the first rule in the cached list that matches the given UID, GID
+ * or PROCESS NAME, and returns a pointer to that rule.
+ * This function uses rl_lock.
  *
- * This function may NOT be thread safe. 
+ * This function may NOT be thread safe.
  * 	@param uid The UID to match
  * 	@param gid The GID to match
- * 	@param pid The PID of the process to move
- * 	@param flags Bit flags to change the behavior, as defined above
- * 	@return 0 on success, > 0 on error
- * TODO: Determine thread-safeness and fix of not safe.
+ * 	@param procname The PROCESS NAME to match
+ * 	@return Pointer to the first matching rule, or NULL if no match
+ * TODO: Determine thread-safeness and fix if not safe.
  */
-int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
-				const pid_t pid, const int flags)
+static struct cgroup_rule *cgroup_find_matching_rule(const uid_t uid,
+				const gid_t gid, char *procname)
+{
+	/* Return value */
+	struct cgroup_rule *ret = rl.head;
+
+	pthread_rwlock_wrlock(&rl_lock);
+	while (ret) {
+		ret = cgroup_find_matching_rule_uid_gid(uid, gid, ret);
+		if (!ret)
+			break;
+		if (!procname)
+			/* If procname is NULL, return a rule matching
+			 * UID or GID */
+			break;
+		if (!ret->procname)
+			/* If no process name in a rule, that means wildcard */
+			break;
+		if (!strcmp(ret->procname, procname))
+			break;
+		if (!strcmp(ret->procname, basename(procname)))
+			/* Check a rule of basename. */
+			break;
+		ret = ret->next;
+	}
+	pthread_rwlock_unlock(&rl_lock);
+
+	return ret;
+}
+
+int cgroup_change_cgroup_flags(const uid_t uid, const gid_t gid,
+		char *procname, const pid_t pid, const int flags)
 {
 	/* Temporary pointer to a rule */
 	struct cgroup_rule *tmp = NULL;
@@ -1940,7 +1969,7 @@ int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
 	 */
 	if (!(flags & CGFLAG_USECACHE)) {
 		cgroup_dbg("Not using cached rules for PID %d.\n", pid);
-		ret = cgroup_parse_rules(false, uid, gid);
+		ret = cgroup_parse_rules(false, uid, gid, procname);
 
 		/* The configuration file has an error!  We must exit now. */
 		if (ret != -1 && ret != 0) {
@@ -1960,7 +1989,7 @@ int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
 		tmp = trl.head;
 	} else {
 		/* Find the first matching rule in the cached list. */
-		tmp = cgroup_find_matching_rule_uid_gid(uid, gid);
+		tmp = cgroup_find_matching_rule_uid_gid(uid, gid, procname);
 		if (!tmp) {
 			cgroup_dbg("No rule found to match PID: %d, UID: %d, "
 				"GID: %d\n", pid, uid, gid);
@@ -1992,6 +2021,12 @@ int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
 
 finished:
 	return ret;
+}
+
+int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
+				const pid_t pid, const int flags)
+{
+	return cgroup_change_cgroup_flags(uid, gid, NULL, pid, flags);
 }
 
 /**
@@ -2107,7 +2142,8 @@ int cgroup_reload_cached_rules()
 	int ret = 0;
 
 	cgroup_dbg("Reloading cached rules from %s.\n", CGRULES_CONF_FILE);
-	if ((ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID))) {
+	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID, NULL);
+	if (ret) {
 		cgroup_dbg("Error parsing configuration file \"%s\": %d.\n",
 			CGRULES_CONF_FILE, ret);
 		ret = ECGROUPPARSEFAIL;
@@ -2132,7 +2168,7 @@ int cgroup_init_rules_cache()
 	int ret = 0;
 
 	/* Attempt to read the configuration file and cache the rules. */
-	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID);
+	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID, NULL);
 	if (ret) {
 		cgroup_dbg("Could not initialize rule cache, error was: %d\n",
 			ret);

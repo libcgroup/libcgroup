@@ -149,6 +149,27 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership
 int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
 
 /**
+ * Changes the cgroup of a program based on the rules in the config file.
+ * If a rule exists for the given UID, GID or PROCESS NAME, then the given
+ * PID is placed into the correct group.  By default, this function parses
+ * the configuration file each time it is called.
+ *
+ * The flags can alter the behavior of this function:
+ * 	CGFLAG_USECACHE: Use cached rules instead of parsing the config file
+ *
+ * This function may NOT be thread safe.
+ * 	@param uid The UID to match
+ * 	@param gid The GID to match
+ * 	@param procname The PROCESS NAME to match
+ * 	@param pid The PID of the process to move
+ * 	@param flags Bit flags to change the behavior, as defined above
+ * 	@return 0 on success, > 0 on error
+ * TODO: Determine thread-safeness and fix of not safe.
+ */
+int cgroup_change_cgroup_flags(const uid_t uid, const gid_t gid,
+		char *procname, const pid_t pid, const int flags);
+
+/**
  * Changes the cgroup of a program based on the rules in the config file.  If a
  * rule exists for the given UID or GID, then the given PID is placed into the
  * correct group.  By default, this function parses the configuration file each
