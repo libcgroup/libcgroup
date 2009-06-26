@@ -393,17 +393,61 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 	return ret;
 }
 
+int cgre_receive_netlink_msg(int sk_nl)
+{
+	char buff[BUFF_SIZE];
+	size_t recv_len;
+	struct sockaddr_nl from_nla;
+	socklen_t from_nla_len;
+	struct nlmsghdr *nlh;
+	struct sockaddr_nl kern_nla;
+	struct cn_msg *cn_hdr;
+
+	kern_nla.nl_family = AF_NETLINK;
+	kern_nla.nl_groups = CN_IDX_PROC;
+	kern_nla.nl_pid = 1;
+	kern_nla.nl_pad = 0;
+
+	memset(buff, 0, sizeof(buff));
+	from_nla_len = sizeof(from_nla);
+	memcpy(&from_nla, &kern_nla, sizeof(from_nla));
+	recv_len = recvfrom(sk_nl, buff, sizeof(buff), 0,
+		(struct sockaddr *)&from_nla, &from_nla_len);
+	if (recv_len == ENOBUFS) {
+		flog(LOG_ERR, "ERROR: NETLINK BUFFER FULL, MESSAGE DROPPED!");
+		return 0;
+	}
+	if (recv_len < 1)
+		return 0;
+
+	nlh = (struct nlmsghdr *)buff;
+	while (NLMSG_OK(nlh, recv_len)) {
+		cn_hdr = NLMSG_DATA(nlh);
+		if (nlh->nlmsg_type == NLMSG_NOOP) {
+			nlh = NLMSG_NEXT(nlh, recv_len);
+			continue;
+		}
+		if ((nlh->nlmsg_type == NLMSG_ERROR) ||
+				(nlh->nlmsg_type == NLMSG_OVERRUN))
+			break;
+		if (cgre_handle_msg(cn_hdr) < 0)
+			return 1;
+		if (nlh->nlmsg_type == NLMSG_DONE)
+			break;
+		nlh = NLMSG_NEXT(nlh, recv_len);
+	}
+	return 0;
+}
+
 int cgre_create_netlink_socket_process_msg()
 {
 	int sk_nl;
-	struct sockaddr_nl my_nla, kern_nla, from_nla;
-	socklen_t from_nla_len;
+	struct sockaddr_nl my_nla;
 	char buff[BUFF_SIZE];
 	int rc = -1;
 	struct nlmsghdr *nl_hdr;
 	struct cn_msg *cn_hdr;
 	enum proc_cn_mcast_op *mcop_msg;
-	size_t recv_len = 0;
 
 	/*
 	 * Create an endpoint for communication. Use the kernel user
@@ -421,11 +465,6 @@ int cgre_create_netlink_socket_process_msg()
 	my_nla.nl_groups = CN_IDX_PROC;
 	my_nla.nl_pid = getpid();
 	my_nla.nl_pad = 0;
-
-	kern_nla.nl_family = AF_NETLINK;
-	kern_nla.nl_groups = CN_IDX_PROC;
-	kern_nla.nl_pid = 1;
-	kern_nla.nl_pad = 0;
 
 	if (bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla)) < 0) {
 		cgroup_dbg("binding sk_nl error");
@@ -461,35 +500,8 @@ int cgre_create_netlink_socket_process_msg()
 	cgroup_dbg("sent\n");
 
 	for(;;) {
-		memset(buff, 0, sizeof(buff));
-		from_nla_len = sizeof(from_nla);
-		struct nlmsghdr *nlh = (struct nlmsghdr*)buff;
-		memcpy(&from_nla, &kern_nla, sizeof(from_nla));
-		recv_len = recvfrom(sk_nl, buff, BUFF_SIZE, 0,
-		(struct sockaddr*)&from_nla, &from_nla_len);
-		if (recv_len == ENOBUFS) {
-			flog(LOG_ERR, "ERROR: NETLINK BUFFER FULL, MESSAGE "
-					"DROPPED!");
-			continue;
-		}
-		if (recv_len < 1)
-			continue;
-		while (NLMSG_OK(nlh, recv_len)) {
-			cn_hdr = NLMSG_DATA(nlh);
-			if (nlh->nlmsg_type == NLMSG_NOOP) {
-				nlh = NLMSG_NEXT(nlh, recv_len);
-				continue;
-			}
-			if ((nlh->nlmsg_type == NLMSG_ERROR) ||
-					(nlh->nlmsg_type == NLMSG_OVERRUN))
-				break;
-			if(cgre_handle_msg(cn_hdr) < 0) {
-				goto close_and_exit;
-			}
-			if (nlh->nlmsg_type == NLMSG_DONE)
-				break;
-			nlh = NLMSG_NEXT(nlh, recv_len);
-		}
+		if (cgre_receive_netlink_msg(sk_nl))
+			break;
 	}
 
 close_and_exit:
