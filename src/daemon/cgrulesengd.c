@@ -226,7 +226,7 @@ static int cgre_was_parent_changed_when_forking(const struct proc_event *ev)
 	return 0;
 }
 
-static int cgre_change_cgroup_uid_gid(const uid_t uid, const gid_t gid,
+static int cgre_change_cgroup(const uid_t uid, const gid_t gid, char *procname,
 					const pid_t pid)
 {
 	int ret;
@@ -240,7 +240,7 @@ static int cgre_change_cgroup_uid_gid(const uid_t uid, const gid_t gid,
 	sigaddset(&sigset, SIGUSR2);
 	sigprocmask(SIG_BLOCK, &sigset, NULL);
 
-	ret = cgroup_change_cgroup_uid_gid_flags(uid, gid, pid,
+	ret = cgroup_change_cgroup_flags(uid, gid, procname, pid,
 						 CGFLAG_USECACHE);
 	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 
@@ -257,6 +257,7 @@ static int cgre_change_cgroup_uid_gid(const uid_t uid, const gid_t gid,
  */
 int cgre_process_event(const struct proc_event *ev, const int type)
 {
+	char *procname;
 	pid_t pid = 0, log_pid = 0;
 	uid_t euid, log_uid = 0;
 	gid_t egid, log_gid = 0;
@@ -277,6 +278,9 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 			return 0;
 		pid = ev->event_data.fork.child_pid;
 		break;
+	case PROC_EVENT_EXEC:
+		pid = ev->event_data.exec.process_pid;
+		break;
 	default:
 		break;
 	}
@@ -284,6 +288,12 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	if (ret == ECGROUPNOTEXIST)
 		/* cgroup_get_uid_gid_from_procfs() returns ECGROUPNOTEXIST
 		 * if a process finished and that is not a problem. */
+		return 0;
+	else if (ret)
+		return ret;
+
+	ret = cgroup_get_procname_from_procfs(pid, &procname);
+	if (ret == ECGROUPNOTEXIST)
 		return 0;
 	else if (ret)
 		return ret;
@@ -297,25 +307,25 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	case PROC_EVENT_UID:
 		log_uid = ev->event_data.id.e.euid;
 		log_gid = egid;
-		ret = cgre_change_cgroup_uid_gid(
-					ev->event_data.id.e.euid,
-					egid, pid);
+		euid = ev->event_data.id.e.euid;
 		break;
 	case PROC_EVENT_GID:
 		log_uid = euid;
 		log_gid = ev->event_data.id.e.egid;
-		ret = cgre_change_cgroup_uid_gid(euid,
-					ev->event_data.id.e.egid, pid);
+		egid = ev->event_data.id.e.egid;
 		break;
 	case PROC_EVENT_FORK:
 		log_uid = euid;
 		log_gid = egid;
-		ret = cgre_change_cgroup_uid_gid(euid, egid, pid);
+		break;
+	case PROC_EVENT_EXEC:
+		log_uid = euid;
+		log_gid = egid;
 		break;
 	default:
 		break;
 	}
-
+	ret = cgre_change_cgroup(euid, egid, procname, pid);
 	if (ret) {
 		/*
 		 * TODO: add some supression, do not spam log when every group
@@ -329,6 +339,7 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d OK",
 			log_pid, log_uid, log_gid);
 	}
+	free(procname);
 	return ret;
 }
 
@@ -368,6 +379,12 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 		break;
 	case PROC_EVENT_FORK:
 		ret = cgre_process_event(ev, PROC_EVENT_FORK);
+		break;
+	case PROC_EVENT_EXEC:
+		flog(LOG_DEBUG, "EXEC Event: PID = %d, tGID = %d",
+				ev->event_data.exec.process_pid,
+				ev->event_data.exec.process_tgid);
+		ret = cgre_process_event(ev, PROC_EVENT_EXEC);
 		break;
 	default:
 		break;
