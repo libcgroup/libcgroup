@@ -57,36 +57,51 @@ int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 /*
  * Change process group as specified in cgrules.conf.
  */
-int change_group_uid_gid(pid_t pid)
+int change_group_based_on_rule(pid_t pid)
 {
 	uid_t euid;
 	gid_t egid;
-	int ret;
+	char *procname = NULL;
+	int ret = -1;
 
 	/* Put pid into right cgroup as per rules in /etc/cgrules.conf */
 	if (cgroup_get_uid_gid_from_procfs(pid, &euid, &egid)) {
 		fprintf(stderr, "Error in determining euid/egid of"
 		" pid %d\n", pid);
-		return -1;
+		goto out;
+	}
+	ret = cgroup_get_procname_from_procfs(pid, &procname);
+	if (ret) {
+		fprintf(stderr, "Error in determining process name of"
+		" pid %d\n", pid);
+		goto out;
 	}
 
-	/* Change the cgroup by determining the rules based on uid */
-	ret = cgroup_change_cgroup_uid_gid(euid, egid, pid);
+	/* Change the cgroup by determining the rules */
+	ret = cgroup_change_cgroup_flags(euid, egid, procname, pid, 0);
 	if (ret) {
 		fprintf(stderr, "Error: change of cgroup failed for"
-		" pid %d: %s\n",
-		pid, cgroup_strerror(ret));
-		return -1;
+		" pid %d: %s\n", pid, cgroup_strerror(ret));
+		goto out;
 	}
-
-	return 0;
+	ret = 0;
+out:
+	if (procname)
+		free(procname);
+	return ret;
 }
+
+static struct option longopts[] = {
+	{"sticky", no_argument, NULL, 's'}, 
+	{0, 0, 0, 0}
+};
 
 int main(int argc, char *argv[])
 {
 	int ret = 0, i, exit_code = 0;
 	pid_t pid;
 	int cg_specified = 0;
+	int flag_child = 0;
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 	int c;
 
@@ -94,13 +109,13 @@ int main(int argc, char *argv[])
 	if (argc < 2) {
 		fprintf(stderr, "usage is %s "
 			"[-g <list of controllers>:<relative path to cgroup>] "
-			"<list of pids>  \n",
+			"[--sticky] <list of pids>  \n",
 			argv[0]);
 		exit(2);
 	}
 
 	memset(cgroup_list, 0, sizeof(cgroup_list));
-	while ((c = getopt(argc, argv, "+g:")) > 0) {
+	while ((c = getopt_long(argc, argv, "+g:s", longopts, NULL)) > 0) {
 		switch (c) {
 		case 'g':
 			if (parse_cgroup_spec(cgroup_list, optarg)) {
@@ -109,6 +124,9 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			cg_specified = 1;
+			break;
+		case 's':
+			flag_child |= CGROUP_DAEMON_UNCHANGE_CHILDREN;
 			break;
 		default:
 			fprintf(stderr, "Invalid command line option\n");
@@ -128,10 +146,15 @@ int main(int argc, char *argv[])
 	for (i = optind; i < argc; i++) {
 		pid = (uid_t) atoi(argv[i]);
 
+		if (flag_child)
+			ret = cgroup_register_unchanged_process(pid, flag_child);
+		if (ret)
+			exit_code = 1;
+
 		if (cg_specified)
 			ret = change_group_path(pid, cgroup_list);
 		else
-			ret = change_group_uid_gid(pid);
+			ret = change_group_based_on_rule(pid);
 
 		/* if any group change fails */
 		if (ret)
