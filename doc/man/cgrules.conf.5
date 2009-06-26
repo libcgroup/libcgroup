@@ -15,11 +15,14 @@ The file the contains list of rules which assign
 to a defined group/user a control group in a subsystem 
 (or control groups in subsystems)
 
-Rules have the form: 
+Rules have two formats: 
 
 .in +4n
 .nf
-<user>		<controllers>		<destination>
+<user>               	<controllers>		<destination>
+.fi
+.nf
+<user>:<process name>	<controllers>		<destination>
 .fi
 .in
 
@@ -34,6 +37,13 @@ can be:
     - '%', which is equivalent to "ditto" (useful for 
       multi-line rules where different cgroups need to be 
       specified for various hierarchies for a single user)
+.fi
+
+.I process name
+is optional and it can be:
+.nf
+    - a process name
+    - a full command path of a process
 .fi
 
 .I controllers
@@ -64,6 +74,13 @@ student         devices         /usergroup/students
 the processes of user 
 student
 in the subsystem 'device' belong to the control group /usergroup/students.
+
+.nf
+student:cp       devices         /usergroup/students/cp
+.fi
+the 'cp' command processes of user 
+student
+in the subsystem 'device' belong to the control group /usergroup/students/cp.
 
 .nf
 @admin           *              admingroup/
