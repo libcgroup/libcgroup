@@ -65,6 +65,9 @@ __thread int last_errno;
 /* the value have to be thread specific */
 __thread char errtext[MAXLEN];
 
+/* Task command name length */
+#define TASK_COMM_LEN 16
+
 /*
  * Remember to bump this up for major API changes.
  */
@@ -2666,6 +2669,191 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 		return ECGFAIL;
 	}
 	return 0;
+}
+
+/**
+ * Get process name from /proc/<pid>/status file.
+ * @param pid: The process id
+ * @param pname_status : The process name
+ * @return 0 on success, > 0 on error.
+ */
+static int cg_get_procname_from_proc_status(pid_t pid, char **procname_status)
+{
+	int ret = ECGFAIL;
+	int len;
+	FILE *f;
+	char path[FILENAME_MAX];
+	char buf[4092];
+
+	sprintf(path, "/proc/%d/status", pid);
+	f = fopen(path, "r");
+	if (!f)
+		return ECGROUPNOTEXIST;
+
+	while (fgets(buf, sizeof(buf), f)) {
+		if (!strncmp(buf, "Name:", 5)) {
+			len = strlen(buf);
+			if (buf[len - 1] == '\n')
+				buf[len - 1] = '\0';
+			*procname_status = strdup(buf + strlen("Name:") + 1);
+			if (*procname_status == NULL) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				break;
+			}
+			ret = 0;
+			break;
+		}
+	}
+	fclose(f);
+	return ret;
+}
+
+/**
+ * Get process name from /proc/<pid>/cmdline file.
+ * This function is mainly for getting a script name (shell, perl,
+ * etc). A script name is written into the second or later argument
+ * of /proc/<pid>/cmdline. This function gets each argument and
+ * compares it to a process name taken from /proc/<pid>/status.
+ * @param pid: The process id
+ * @param pname_status : The process name taken from /proc/<pid>/status
+ * @param pname_cmdline: The process name taken from /proc/<pid>/cmdline
+ * @return 0 on success, > 0 on error.
+ */
+static int cg_get_procname_from_proc_cmdline(pid_t pid, char *pname_status,
+							char **pname_cmdline)
+{
+	FILE *f;
+	int ret = ECGFAIL;
+	int c = 0;
+	int len = 0;
+	char path[FILENAME_MAX];
+	char buf_pname[FILENAME_MAX];
+	char buf_cwd[FILENAME_MAX];
+
+	memset(buf_cwd, '\0', sizeof(buf_cwd));
+	sprintf(path, "/proc/%d/cwd", pid);
+	if (readlink(path, buf_cwd, sizeof(buf_cwd)) < 0)
+		return ECGROUPNOTEXIST;
+
+	sprintf(path, "/proc/%d/cmdline", pid);
+	f = fopen(path, "r");
+	if (!f)
+		return ECGROUPNOTEXIST;
+
+	while (c != EOF) {
+		c = fgetc(f);
+		if ((c != EOF) && (c != '\0')) {
+			buf_pname[len] = c;
+			len++;
+			continue;
+		}
+		buf_pname[len] = '\0';
+
+		/*
+		 * The taken process name from /proc/<pid>/status is
+		 * shortened to 15 characters if it is over. So the
+		 * name should be compared by its length.
+		 */
+		if (strncmp(pname_status, basename(buf_pname),
+						TASK_COMM_LEN - 1)) {
+			len = 0;
+			continue;
+		}
+		if (buf_pname[0] == '/') {
+			*pname_cmdline = strdup(buf_pname);
+			if (*pname_cmdline == NULL) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				break;
+			}
+			ret = 0;
+			break;
+		} else {
+			strcat(buf_cwd, "/");
+			strcat(buf_cwd, buf_pname);
+			if (!realpath(buf_cwd, path)) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				break;
+			}
+			*pname_cmdline = strdup(path);
+			if (*pname_cmdline == NULL) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				break;
+			}
+			ret = 0;
+			break;
+		}
+		len = 0;
+	}
+	fclose(f);
+	return ret;
+}
+
+/**
+ * Get a process name from /proc file system.
+ * This function allocates memory for a process name, writes a process
+ * name onto it. So a caller should free the memory when unusing it.
+ * @param pid: The process id
+ * @param procname: The process name
+ * @return 0 on success, > 0 on error.
+ */
+int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
+{
+	int ret;
+	char *pname_status;
+	char *pname_cmdline;
+	char path[FILENAME_MAX];
+	char buf[FILENAME_MAX];
+
+	ret = cg_get_procname_from_proc_status(pid, &pname_status);
+	if (ret)
+		return ret;
+
+	/*
+	 * Get the full patch of process name from /proc/<pid>/exe.
+	 */
+	memset(buf, '\0', sizeof(buf));
+	sprintf(path, "/proc/%d/exe", pid);
+	if (readlink(path, buf, sizeof(buf)) < 0) {
+		/*
+		 * readlink() fails if a kernel thread, and a process
+		 * name is taken from /proc/<pid>/status.
+		 */
+		*procname = pname_status;
+		return 0;
+	}
+	if (!strncmp(pname_status, basename(buf), TASK_COMM_LEN - 1)) {
+		/*
+		 * The taken process name from /proc/<pid>/status is
+		 * shortened to 15 characters if it is over. So the
+		 * name should be compared by its length.
+		 */
+		free(pname_status);
+		*procname = strdup(buf);
+		if (*procname == NULL) {
+			last_errno = errno;
+			return ECGOTHER;
+		}
+		return 0;
+	}
+
+	/*
+	 * The above strncmp() is not 0 if a shell script, because
+	 * /proc/<pid>/exe links a shell command (/bin/bash etc.)
+	 * and the pname_status represents a shell script name.
+	 * Then the full path of a shell script is taken from
+	 * /proc/<pid>/cmdline.
+	 */
+	ret = cg_get_procname_from_proc_cmdline(pid, pname_status,
+						    &pname_cmdline);
+	if (!ret)
+		*procname = pname_cmdline;
+
+	free(pname_status);
+	return ret;
 }
 
 int cgroup_get_subsys_mount_point(char *controller, char **mount_point)

@@ -70,4 +70,5 @@ global:
 	cgroup_get_controller;
 	cgroup_get_uid_gid_from_procfs;
 	cgroup_get_subsys_mount_point;
+	cgroup_get_procname_from_procfs;
 } CGROUP_0.33;
