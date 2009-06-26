@@ -52,6 +52,10 @@ __BEGIN_DECLS
 #define CGRULE_INVALID (-1)
 #define CGRULE_WILD (-2)
 
+/* FIXME: Change the temporary file to configurable one. */
+#define CGRULE_CGRED_TEMP_FILE		"/tmp/cgred"
+#define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
+
 /* Flags for cgroup_change_cgroup_uid_gid() */
 enum cgflags {
 	CGFLAG_USECACHE = 0x01,
@@ -106,6 +110,10 @@ enum cgroup_file_type {
 	CGROUP_FILE_TYPE_FILE,		/* File */
 	CGROUP_FILE_TYPE_DIR,		/* Directory */
 	CGROUP_FILE_TYPE_OTHER,		/* Directory */
+};
+
+enum cgroup_daemon_type {
+	CGROUP_DAEMON_UNCHANGE_CHILDREN = 0x1,
 };
 
 struct cgroup_file_info {

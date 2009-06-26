@@ -49,9 +49,13 @@
 #include <getopt.h>
 
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <linux/connector.h>
 #include <linux/cn_proc.h>
+#include <linux/un.h>
+
+#define NUM_PER_REALLOCATIOM	(100)
 
 /* Log file, NULL if logging to file is disabled */
 FILE* logfile;
@@ -165,7 +169,7 @@ static int cgre_store_parent_info(pid_t pid)
 	uptime_ns = ((__u64)tp.tv_sec * 1000 * 1000 * 1000 ) + tp.tv_nsec;
 
 	if (array_pi.index >= array_pi.num_allocation) {
-		array_pi.num_allocation += 100;
+		array_pi.num_allocation += NUM_PER_REALLOCATIOM;
 		array_pi.parent_info = realloc(array_pi.parent_info,
 					sizeof(info) * array_pi.num_allocation);
 		if (!array_pi.parent_info) {
@@ -226,6 +230,90 @@ static int cgre_was_parent_changed_when_forking(const struct proc_event *ev)
 	return 0;
 }
 
+struct unchanged_pid {
+	pid_t pid;
+	int flags;
+} unchanged_pid_t;
+
+struct array_unchanged {
+	int index;
+	int num_allocation;
+	struct unchanged_pid *proc;
+};
+
+struct array_unchanged array_unch;
+
+static int cgre_store_unchanged_process(pid_t pid, int flags)
+{
+	int i;
+
+	for (i = 0; i < array_unch.index; i++) {
+		if (array_unch.proc[i].pid != pid)
+			continue;
+		/* pid is stored already. */
+		return 0;
+	}
+	if (array_unch.index >= array_unch.num_allocation) {
+		array_unch.num_allocation += NUM_PER_REALLOCATIOM;
+		array_unch.proc = realloc(array_unch.proc,
+			sizeof(unchanged_pid_t) * array_unch.num_allocation);
+		if (!array_unch.proc) {
+			flog(LOG_WARNING, "Failed to allocate memory");
+			return 1;
+		}
+	}
+	array_unch.proc[array_unch.index].pid = pid;
+	array_unch.proc[array_unch.index].flags = flags;
+	array_unch.index++;
+	flog(LOG_DEBUG, "Store the unchanged process (PID: %d, FLAGS: %d)",
+			pid, flags);
+	return 0;
+}
+
+static void cgre_remove_unchanged_process(pid_t pid)
+{
+	int i, j;
+
+	for (i = 0; i < array_unch.index; i++) {
+		if (array_unch.proc[i].pid != pid)
+			continue;
+		for (j = i; j < array_unch.index - 1; j++)
+			memcpy(&array_unch.proc[j],
+				&array_unch.proc[j + 1],
+				sizeof(struct unchanged_pid));
+		array_unch.index--;
+		flog(LOG_DEBUG, "Remove the unchanged process (PID: %d)", pid);
+		break;
+	}
+	return;
+}
+
+static int cgre_is_unchanged_process(pid_t pid)
+{
+	int i;
+
+	for (i = 0; i < array_unch.index; i++) {
+		if (array_unch.proc[i].pid != pid)
+			continue;
+		return 1;
+	}
+	return 0;
+}
+
+static int cgre_is_unchanged_child(pid_t pid)
+{
+	int i;
+
+	for (i = 0; i < array_unch.index; i++) {
+		if (array_unch.proc[i].pid != pid)
+			continue;
+		if (array_unch.proc[i].flags & CGROUP_DAEMON_UNCHANGE_CHILDREN)
+			return 1;
+		break;
+	}
+	return 0;
+}
+
 static int cgre_change_cgroup(const uid_t uid, const gid_t gid, char *procname,
 					const pid_t pid)
 {
@@ -258,6 +346,7 @@ static int cgre_change_cgroup(const uid_t uid, const gid_t gid, char *procname,
 int cgre_process_event(const struct proc_event *ev, const int type)
 {
 	char *procname;
+	pid_t ppid, cpid;
 	pid_t pid = 0, log_pid = 0;
 	uid_t euid, log_uid = 0;
 	gid_t egid, log_gid = 0;
@@ -270,6 +359,14 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 		pid = ev->event_data.id.process_pid;
 		break;
 	case PROC_EVENT_FORK:
+		ppid = ev->event_data.fork.parent_pid;
+		cpid = ev->event_data.fork.child_pid;
+		if (cgre_is_unchanged_child(ppid)) {
+			if (cgre_store_unchanged_process(cpid,
+					CGROUP_DAEMON_UNCHANGE_CHILDREN))
+				return 1;
+		}
+
 		/*
 		 * If this process was forked while changing parent's cgroup,
 		 * this process's cgroup also should be changed.
@@ -278,7 +375,16 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 			return 0;
 		pid = ev->event_data.fork.child_pid;
 		break;
+	case PROC_EVENT_EXIT:
+		cgre_remove_unchanged_process(ev->event_data.exit.process_pid);
+		return 0;
 	case PROC_EVENT_EXEC:
+		/*
+		 * If the unchanged process, the daemon should not change the
+		 * cgroup of the process.
+		 */
+		if (cgre_is_unchanged_process(ev->event_data.exec.process_pid))
+			return 0;
 		pid = ev->event_data.exec.process_pid;
 		break;
 	default:
@@ -380,6 +486,9 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 	case PROC_EVENT_FORK:
 		ret = cgre_process_event(ev, PROC_EVENT_FORK);
 		break;
+	case PROC_EVENT_EXIT:
+		ret = cgre_process_event(ev, PROC_EVENT_EXIT);
+		break;
 	case PROC_EVENT_EXEC:
 		flog(LOG_DEBUG, "EXEC Event: PID = %d, tGID = %d",
 				ev->event_data.exec.process_pid,
@@ -439,15 +548,59 @@ int cgre_receive_netlink_msg(int sk_nl)
 	return 0;
 }
 
+void cgre_receive_unix_domain_msg(int sk_unix)
+{
+	int flags;
+	int fd_client;
+	pid_t pid;
+	struct sockaddr_un caddr;
+	socklen_t caddr_len;
+	struct stat buff_stat;
+	char path[FILENAME_MAX];
+
+	caddr_len = sizeof(caddr);
+	fd_client = accept(sk_unix, (struct sockaddr *)&caddr, &caddr_len);
+	if (fd_client < 0) {
+		cgroup_dbg("accept error");
+		return;
+	}
+	if (read(fd_client, &pid, sizeof(pid)) < 0) {
+		cgroup_dbg("read error");
+		goto close;
+	}
+	sprintf(path, "/proc/%d", pid);
+	if (stat(path, &buff_stat)) {
+		cgroup_dbg("There is not such process (PID: %d)", pid);
+		goto close;
+	}
+	if (read(fd_client, &flags, sizeof(flags)) < 0) {
+		cgroup_dbg("read error");
+		goto close;
+	}
+	if (cgre_store_unchanged_process(pid, flags))
+		goto close;
+
+	if (write(fd_client, CGRULE_SUCCESS_STORE_PID,
+			sizeof(CGRULE_SUCCESS_STORE_PID)) < 0) {
+		cgroup_dbg("write error");
+		goto close;
+	}
+close:
+	close(fd_client);
+	return;
+}
+
 int cgre_create_netlink_socket_process_msg()
 {
-	int sk_nl;
+	int sk_nl = 0, sk_unix = 0, sk_max;
 	struct sockaddr_nl my_nla;
 	char buff[BUFF_SIZE];
 	int rc = -1;
 	struct nlmsghdr *nl_hdr;
 	struct cn_msg *cn_hdr;
 	enum proc_cn_mcast_op *mcop_msg;
+	struct sockaddr_un saddr;
+	fd_set fds, readfds;
 
 	/*
 	 * Create an endpoint for communication. Use the kernel user
@@ -499,13 +652,53 @@ int cgre_create_netlink_socket_process_msg()
 	}
 	cgroup_dbg("sent\n");
 
+	/*
+	 * Setup Unix domain socket.
+	 */
+	sk_unix = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (sk_unix < 0) {
+		cgroup_dbg("socket sk_unix error");
+		goto close_and_exit;
+	}
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sun_family = AF_UNIX;
+	strcpy(saddr.sun_path, CGRULE_CGRED_TEMP_FILE);
+	unlink(CGRULE_CGRED_TEMP_FILE);
+	if (bind(sk_unix, (struct sockaddr *)&saddr,
+	    sizeof(saddr.sun_family) + strlen(CGRULE_CGRED_TEMP_FILE)) < 0) {
+		cgroup_dbg("binding sk_unix error");
+		goto close_and_exit;
+	}
+	if (listen(sk_unix, 1) < 0) {
+		cgroup_dbg("listening sk_unix error");
+		goto close_and_exit;
+	}
+	FD_ZERO(&readfds);
+	FD_SET(sk_nl, &readfds);
+	FD_SET(sk_unix, &readfds);
+	if (sk_nl < sk_unix)
+		sk_max = sk_unix;
+	else
+		sk_max = sk_nl;
 	for(;;) {
-		if (cgre_receive_netlink_msg(sk_nl))
-			break;
+		memcpy(&fds, &readfds, sizeof(fd_set));
+		if (select(sk_max + 1, &fds, NULL, NULL, NULL) < 0) {
+			cgroup_dbg("selecting error");
+			goto close_and_exit;
+		}
+		if (FD_ISSET(sk_nl, &fds)) {
+			if (cgre_receive_netlink_msg(sk_nl))
+				break;
+		}
+		if (FD_ISSET(sk_unix, &fds))
+			cgre_receive_unix_domain_msg(sk_unix);
 	}
 
 close_and_exit:
-	close(sk_nl);
+	if (sk_nl)
+		close(sk_nl);
+	if (sk_unix)
+		close(sk_unix);
 	return rc;
 }
 
