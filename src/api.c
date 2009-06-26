@@ -2668,3 +2668,31 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 	return 0;
 }
 
+int cgroup_get_subsys_mount_point(char *controller, char **mount_point)
+{
+	int i;
+	int ret = ECGROUPNOTEXIST;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, controller, FILENAME_MAX))
+			continue;
+
+		*mount_point = strdup(cg_mount_table[i].path);
+
+		if (!*mount_point) {
+			last_errno = errno;
+			ret = ECGOTHER;
+			goto out_exit;
+		}
+
+		ret = 0;
+		break;
+	}
+out_exit:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return ret;
+}

@@ -324,6 +324,15 @@ int cgroup_get_controller_begin(void **handle, struct cgroup_mount_point *info);
  */
 int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info);
 int cgroup_get_controller_end(void **handle);
+
+/*
+ * Reads the mount to table to give the mount point of a controller
+ * @controller: Name of the controller
+ * @mount_point: The string where the mount point is stored. Please note,
+ * the caller must free mount_point.
+ */
+int cgroup_get_subsys_mount_point(char *controller, char **mount_point);
+
 /* The wrappers for filling libcg structures */
 
 struct cgroup *cgroup_new_cgroup(const char *name);
