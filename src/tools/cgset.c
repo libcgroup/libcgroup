@@ -120,7 +120,7 @@ void usage(int status, char *program_name)
 		printf("Usage: %s [-r <name=value>]  <cgroup_path> ...\n"
 			"   or: %s --copy-from <source_cgrup_path> "
 			    "<cgroup_path> ...\n",
-			program_name, program_name, program_name);
+			program_name, program_name);
 	}
 }
 
