@@ -76,6 +76,20 @@ AC_ARG_ENABLE([daemon],
 	[with_daemon=true])
 AM_CONDITIONAL([WITH_DAEMON], [test x$with_daemon = xtrue])
 
+socket_path="/var/run/cgred.socket"
+AC_ARG_ENABLE([cgred-socket],
+	[AC_HELP_STRING([--enable-cgred-socket=PATH],
+		specify location of cgrulesengd communication socket
+		(default=/var/run/cgred.socket))],
+	[
+		if test "x$enableval" = xno -o "x$enableval" = xyes; then
+			AC_MSG_ERROR([Provide valid path with --enable-cgred-socket option.])
+		else
+			socket_path="$enableval"
+		fi
+	], [])
+AC_DEFINE_UNQUOTED([CGRULE_CGRED_SOCKET_PATH],"$socket_path", [Cgrulesengd socket path])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC

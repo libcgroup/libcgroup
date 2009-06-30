@@ -52,8 +52,6 @@ __BEGIN_DECLS
 #define CGRULE_INVALID (-1)
 #define CGRULE_WILD (-2)
 
-/* FIXME: Change the temporary file to configurable one. */
-#define CGRULE_CGRED_SOCKET_PATH	"/tmp/cgred"
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 
 /* Flags for cgroup_change_cgroup_uid_gid() */
