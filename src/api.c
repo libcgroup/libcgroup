@@ -1991,7 +1991,7 @@ int cgroup_change_cgroup_flags(const uid_t uid, const gid_t gid,
 		tmp = trl.head;
 	} else {
 		/* Find the first matching rule in the cached list. */
-		tmp = cgroup_find_matching_rule_uid_gid(uid, gid, procname);
+		tmp = cgroup_find_matching_rule(uid, gid, procname);
 		if (!tmp) {
 			cgroup_dbg("No rule found to match PID: %d, UID: %d, "
 				"GID: %d\n", pid, uid, gid);
