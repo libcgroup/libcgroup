@@ -662,10 +662,10 @@ int cgre_create_netlink_socket_process_msg()
 	}
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sun_family = AF_UNIX;
-	strcpy(saddr.sun_path, CGRULE_CGRED_TEMP_FILE);
-	unlink(CGRULE_CGRED_TEMP_FILE);
+	strcpy(saddr.sun_path, CGRULE_CGRED_SOCKET_PATH);
+	unlink(CGRULE_CGRED_SOCKET_PATH);
 	if (bind(sk_unix, (struct sockaddr *)&saddr,
-	    sizeof(saddr.sun_family) + strlen(CGRULE_CGRED_TEMP_FILE)) < 0) {
+	    sizeof(saddr.sun_family) + strlen(CGRULE_CGRED_SOCKET_PATH)) < 0) {
 		cgroup_dbg("binding sk_unix error");
 		goto close_and_exit;
 	}

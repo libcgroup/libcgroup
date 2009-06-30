@@ -2948,10 +2948,10 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 
 	bzero((char *)&addr, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, CGRULE_CGRED_TEMP_FILE);
+	strcpy(addr.sun_path, CGRULE_CGRED_SOCKET_PATH);
 
 	if (connect(sk, (struct sockaddr *)&addr,
-	    sizeof(addr.sun_family) + strlen(CGRULE_CGRED_TEMP_FILE)) < 0) {
+	    sizeof(addr.sun_family) + strlen(CGRULE_CGRED_SOCKET_PATH)) < 0) {
 		/* If the daemon does not work, this function returns 0
 		 * as success. */
 		ret = 0;
