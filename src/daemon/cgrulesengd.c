@@ -432,11 +432,10 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 		break;
 	}
 	ret = cgre_change_cgroup(euid, egid, procname, pid);
-	if (ret) {
-		/*
-		 * TODO: add some supression, do not spam log when every group
-		 * change fails
-		 */
+	if ((ret == ECGOTHER) && (errno == ESRCH)) {
+		/* A process finished already and that is not a problem. */
+		ret = 0;
+	} else if (ret) {
 		flog(LOG_WARNING, "Cgroup change for PID: %d, UID: %d, GID: %d"
 			" FAILED! (Error Code: %d)", log_pid, log_uid, log_gid,
 			ret);
