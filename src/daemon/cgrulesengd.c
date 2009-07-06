@@ -436,13 +436,14 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 		/* A process finished already and that is not a problem. */
 		ret = 0;
 	} else if (ret) {
-		flog(LOG_WARNING, "Cgroup change for PID: %d, UID: %d, GID: %d"
-			" FAILED! (Error Code: %d)", log_pid, log_uid, log_gid,
-			ret);
+		flog(LOG_WARNING, "Cgroup change for PID: %d, UID: %d, GID: %d,"
+			" PROCNAME: %s FAILED! (Error Code: %d)",
+			log_pid, log_uid, log_gid, procname, ret);
 	} else {
+		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d,"
+			" PROCNAME: %s OK",
+			log_pid, log_uid, log_gid, procname);
 		ret = cgre_store_parent_info(pid);
-		flog(LOG_INFO, "Cgroup change for PID: %d, UID: %d, GID: %d OK",
-			log_pid, log_uid, log_gid);
 	}
 	free(procname);
 	return ret;
