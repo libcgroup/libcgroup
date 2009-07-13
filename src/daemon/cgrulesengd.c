@@ -131,17 +131,9 @@ void flog(int level, const char *format, ...)
 	}
 
 	if (logfacility) {
-		sigset_t sigset;
-
-		sigemptyset(&sigset);
-		sigaddset(&sigset, SIGUSR2);
-		sigprocmask(SIG_BLOCK, &sigset, NULL);
-
 		va_start(ap, format);
 		vsyslog(LOG_MAKEPRI(logfacility, level), format, ap);
 		va_end(ap);
-
-		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
 	}
 }
 
@@ -314,27 +306,6 @@ static int cgre_is_unchanged_child(pid_t pid)
 	return 0;
 }
 
-static int cgre_change_cgroup(const uid_t uid, const gid_t gid, char *procname,
-					const pid_t pid)
-{
-	int ret;
-	sigset_t sigset;
-
-	/*
-	 * For avoiding the deadlock, protect cdgroup_change_cgroup_
-	 * ~uid_gid_flags() by blocking SIGUSR2 signal.
-	 */
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGUSR2);
-	sigprocmask(SIG_BLOCK, &sigset, NULL);
-
-	ret = cgroup_change_cgroup_flags(uid, gid, procname, pid,
-						 CGFLAG_USECACHE);
-	sigprocmask(SIG_UNBLOCK, &sigset, NULL);
-
-	return ret;
-}
-
 /**
  * Process an event from the kernel, and determine the correct UID/GID/PID to
  * pass to libcgroup.  Then, libcgroup will decide the cgroup to move the PID
@@ -431,7 +402,8 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	default:
 		break;
 	}
-	ret = cgre_change_cgroup(euid, egid, procname, pid);
+	ret = cgroup_change_cgroup_flags(euid, egid, procname, pid,
+						 CGFLAG_USECACHE);
 	if ((ret == ECGOTHER) && (errno == ESRCH)) {
 		/* A process finished already and that is not a problem. */
 		ret = 0;
@@ -601,6 +573,7 @@ int cgre_create_netlink_socket_process_msg()
 	enum proc_cn_mcast_op *mcop_msg;
 	struct sockaddr_un saddr;
 	fd_set fds, readfds;
+	sigset_t sigset;
 
 	/*
 	 * Create an endpoint for communication. Use the kernel user
@@ -681,7 +654,17 @@ int cgre_create_netlink_socket_process_msg()
 		sk_max = sk_unix;
 	else
 		sk_max = sk_nl;
+
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGUSR2);
 	for(;;) {
+		/*
+		 * For avoiding the deadlock and "Interrupted system call"
+		 * error, restrict the effective range of SIGUSR2 signal.
+		 */
+		sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+		sigprocmask(SIG_BLOCK, &sigset, NULL);
+
 		memcpy(&fds, &readfds, sizeof(fd_set));
 		if (select(sk_max + 1, &fds, NULL, NULL, NULL) < 0) {
 			cgroup_dbg("selecting error: %s\n", strerror(errno));
