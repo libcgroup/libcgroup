@@ -557,3 +557,58 @@ int cgroup_set_value_bool(struct cgroup_controller *controller,
 
 	return cgroup_add_value_bool(controller, name, value);
 }
+
+struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
+		struct control_value *name_value, int nv_number)
+{
+	struct cgroup *src_cgroup;
+	struct cgroup_controller *cgc;
+	char con[FILENAME_MAX];
+
+	int ret;
+	int i;
+
+	/* create source cgroup */
+	src_cgroup = cgroup_new_cgroup(name);
+	if (!src_cgroup) {
+		fprintf(stderr, "can't create cgroup: %s\n",
+			cgroup_strerror(ECGFAIL));
+		goto scgroup_err;
+	}
+
+	/* add pairs name-value to
+	   relevant controllers of this cgroup */
+	for (i = 0; i < nv_number; i++) {
+
+		if ((strchr(name_value[i].name, '.')) == NULL) {
+		fprintf(stderr, "wrong -r  parameter (%s=%s)\n",
+				name_value[i].name, name_value[i].value);
+			goto scgroup_err;
+		}
+
+		strncpy(con, name_value[i].name, FILENAME_MAX);
+		strtok(con, ".");
+
+		/* add relevant controller */
+		cgc = cgroup_add_controller(src_cgroup, con);
+		if (!cgc) {
+			fprintf(stderr, "controller %s can't be add\n",
+					con);
+			goto scgroup_err;
+		}
+
+		/* add name-value pair to this controller */
+		ret = cgroup_add_value_string(cgc,
+			name_value[i].name, name_value[i].value);
+		if (ret) {
+			fprintf(stderr, "name-value pair %s=%s can't be set\n",
+				name_value[i].name, name_value[i].value);
+			goto scgroup_err;
+		}
+	}
+
+	return src_cgroup;
+scgroup_err:
+	cgroup_free(&src_cgroup);
+	return NULL;
+}

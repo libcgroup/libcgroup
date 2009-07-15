@@ -113,6 +113,8 @@ char *cg_build_path(char *name, char *path, char *type);
 int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid);
 int cgroup_get_procname_from_procfs(pid_t pid, char **procname);
 int cg_mkdir_p(const char *path);
+struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
+		struct control_value *name_value, int nv_number);
 
 
 /*
