@@ -79,4 +79,7 @@ CGROUP_0.35 {
 global:
 	create_cgroup_from_name_value_pairs;
 	cgroup_delete_cgroup_ext;
+	cgroup_get_all_controller_begin;
+	cgroup_get_all_controller_next;
+	cgroup_get_all_controller_end;
 } CGROUP_0.34;

@@ -3232,3 +3232,79 @@ out_exit:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }
+
+
+int cgroup_get_all_controller_end(void **handle)
+{
+	FILE *proc_cgroup = (FILE *) *handle;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!proc_cgroup)
+		return ECGINVAL;
+
+	fclose(proc_cgroup);
+	*handle = NULL;
+
+	return 0;
+}
+
+
+int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
+{
+	FILE *proc_cgroup = (FILE *) *handle;
+	int err = 0;
+	int hierarchy, num_cgroups, enabled;
+	char subsys_name[FILENAME_MAX];
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!proc_cgroup)
+		return ECGINVAL;
+
+	if (!info)
+		return ECGINVAL;
+
+	err = fscanf(proc_cgroup, "%s %d %d %d\n", subsys_name,
+			&hierarchy, &num_cgroups, &enabled);
+
+	if (err != 4)
+		return ECGEOF;
+
+	strncpy(info->name, subsys_name, FILENAME_MAX);
+	info->name[FILENAME_MAX-1] = '\0';
+	info->hierarchy = hierarchy;
+	info->num_cgroups = num_cgroups;
+	info->enabled = enabled;
+
+	return 0;
+}
+
+
+int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
+{
+	FILE *proc_cgroup = NULL;
+	char buf[FILENAME_MAX];
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!info)
+		return ECGINVAL;
+
+	proc_cgroup = fopen("/proc/cgroups", "r");
+	if (!proc_cgroup) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	if (!fgets(buf, FILENAME_MAX, proc_cgroup)) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	*handle = proc_cgroup;
+
+	return cgroup_get_all_controller_next(handle, info);
+}

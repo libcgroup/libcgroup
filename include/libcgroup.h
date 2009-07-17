@@ -155,6 +155,25 @@ struct cgroup_mount_point {
 	char path[FILENAME_MAX];
 };
 
+/*
+ * Detailed information about available controller.
+ */
+
+struct controller_data {
+/** Controller name. */
+	char name[FILENAME_MAX];
+/**
+ * Hierarchy ID. Controllers with the same hierarchy ID
+ * are mounted together as one hierarchy. Controllers with
+ * ID 0 are not currently used.
+ */
+	int hierarchy;
+/** Number of groups. */
+	int num_cgroups;
+/** Enabled flag */
+	int enabled;
+};
+
 /* Functions and structures that can be used by the application*/
 struct cgroup;
 struct cgroup_controller;
@@ -385,6 +404,20 @@ int cgroup_get_controller_begin(void **handle, struct cgroup_mount_point *info);
  */
 int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info);
 int cgroup_get_controller_end(void **handle);
+
+/**
+ * Read the list of controllers from /proc/cgroups (not mounted included)
+ * @param handle: Handle to be used for iteration.
+ * @param info: The structure which contains all controller data
+ */
+int cgroup_get_all_controller_begin(void **handle,
+	struct controller_data *info);
+/*
+ * While walking through the mount table, the controllers will be
+ * returned in the same order as is in /proc/cgroups file
+ */
+int cgroup_get_all_controller_next(void **handle, struct controller_data *info);
+int cgroup_get_all_controller_end(void **handle);
 
 /*
  * Reads the mount to table to give the mount point of a controller
