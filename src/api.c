@@ -1356,60 +1356,78 @@ err:
 /**
  * Find the parent of the specified directory. It returns the parent (the
  * parent is usually name/.. unless name is a mount point.
+ *
+ * @param cgroup The cgroup
+ * @param parent Output, name of parent's group (if the group has parent) or
+ *	NULL, if the provided cgroup is the root group and has no parent.
+ *	Caller is responsible to free the returned string!
+ * @return 0 on success, >0 on error.
  */
-char *cgroup_find_parent(char *name)
+int cgroup_find_parent(struct cgroup *cgroup, char **parent)
 {
-	char child[FILENAME_MAX];
-	char *parent = NULL;
+	char child_path[FILENAME_MAX];
+	char *parent_path = NULL;
 	struct stat stat_child, stat_parent;
-	char *type = NULL;
-	char *dir = NULL;
+	char *controller = NULL;
+	char *dir = NULL, *parent_dir = NULL;
+	int ret = 0;
+
+	*parent = NULL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	type = cg_mount_table[0].name;
-	if (!cg_build_path_locked(name, child, type)) {
+	controller = cgroup->controller[0]->name;
+	if (!cg_build_path_locked(cgroup->name, child_path, controller)) {
 		pthread_rwlock_unlock(&cg_mount_table_lock);
-		return NULL;
+		return ECGFAIL;
 	}
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 
-	cgroup_dbg("path is %s\n", child);
-	dir = dirname(child);
-	cgroup_dbg("directory name is %s\n", dir);
+	cgroup_dbg("path is %s\n", child_path);
 
-	if (asprintf(&parent, "%s/..", dir) < 0)
-		return NULL;
+	if (asprintf(&parent_path, "%s/..", child_path) < 0)
+		return ECGFAIL;
 
-	cgroup_dbg("parent's name is %s\n", parent);
+	cgroup_dbg("parent's name is %s\n", parent_path);
 
-	if (stat(dir, &stat_child) < 0)
+	if (stat(child_path, &stat_child) < 0) {
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto free_parent;
+	}
 
-	if (stat(parent, &stat_parent) < 0)
+	if (stat(parent_path, &stat_parent) < 0) {
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto free_parent;
+	}
 
 	/*
 	 * Is the specified "name" a mount point?
 	 */
 	if (stat_parent.st_dev != stat_child.st_dev) {
-		cgroup_dbg("parent is a mount point\n");
-		strcpy(parent, ".");
+		*parent = NULL;
+		ret = 0;
+		cgroup_dbg("Parent is on different device\n");
 	} else {
-		dir = strdup(name);
-		if (!dir)
+		dir = strdup(cgroup->name);
+		cgroup_dbg("group name is %s\n", dir);
+		if (!dir) {
+			ret = ECGFAIL;
 			goto free_parent;
-		dir = dirname(dir);
-		if (strcmp(dir, ".") == 0)
-			strcpy(parent, "..");
-		else
-			strcpy(parent, dir);
+		}
+
+		parent_dir = dirname(dir);
+		cgroup_dbg("parent's group name is %s\n", parent_dir);
+		*parent = strdup(parent_dir);
+		free(dir);
+
+		if (*parent == NULL)
+			ret = ECGFAIL;
 	}
 
-	return parent;
-
 free_parent:
-	free(parent);
-	return NULL;
+	free(parent_path);
+	return ret;
 }
 
 /**
@@ -1427,9 +1445,17 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	parent = cgroup_find_parent(cgroup->name);
-	if (!parent)
+	ret = cgroup_find_parent(cgroup, &parent);
+	if (ret)
 		return ret;
+
+	if (parent == NULL) {
+		/*
+		 * The group to create is root group!
+		 * TODO: find better error code?
+		 */
+		return ECGFAIL;
+	}
 
 	cgroup_dbg("parent is %s\n", parent);
 	parent_cgroup = cgroup_new_cgroup(parent);
