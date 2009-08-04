@@ -1533,12 +1533,12 @@ static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
  * @param controller  Name of the controller.
  * @param target_tasks Opened tasks file of the target group, where all
  *	processes should be moved.
- * @param ignore_migration Flag indicating whether the errors from task
- * 	migration should be ignored (1) or not (0).
+ * @param flags Flag indicating whether the errors from task
+ * 	migration should be ignored (CGROUP_DELETE_IGNORE_MIGRATION) or not (0).
  * @returns 0 on success, >0 on error.
  */
 static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
-		FILE *target_tasks, int ignore_migration)
+		FILE *target_tasks, int flags)
 {
 	FILE *delete_tasks;
 	char path[FILENAME_MAX];
@@ -1568,7 +1568,7 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		}
 	}
 
-	if (ret != 0 && !ignore_migration)
+	if (ret != 0 && !(flags & CGFLAG_DELETE_IGNORE_MIGRATION))
 		return ret;
 
 	/*
@@ -1586,6 +1586,78 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 	return 0;
 }
 
+/**
+ * Recursively delete one control group. Moves all tasks from the group and
+ * its subgroups to given task file.
+ *
+ * @param cgroup_name The group to delete.
+ * @param controller The controller, where to delete.
+ * @param target_tasks Opened file, where all tasks should be moved.
+ * @param flags Combination of CGFLAG_DELETE_* flags. The function assumes
+ *	that CGFLAG_DELETE_RECURSIVE is set.
+ * @param delete_root Whether the group itself should be removed(1) or not(0).
+ */
+static int cg_delete_cgroup_controller_recursive(char *cgroup_name,
+		char *controller, FILE *target_tasks, int flags,
+		int delete_root)
+{
+	int ret;
+	void *handle;
+	struct cgroup_file_info info;
+	int level, group_len;
+	char child_name[FILENAME_MAX];
+
+	cgroup_dbg("Recursively removing %s:%s\n", controller, cgroup_name);
+
+	ret = cgroup_walk_tree_begin(controller, cgroup_name, 0, &handle,
+			&info, &level);
+
+	if (ret == 0)
+		ret = cgroup_walk_tree_set_flags(&handle,
+				CGROUP_WALK_TYPE_POST_DIR);
+
+	if (ret != 0) {
+		cgroup_walk_tree_end(&handle);
+		return ret;
+	}
+
+	group_len = strlen(info.full_path);
+
+	/*
+	 * Skip the root group, it will be handled explicitly at the end.
+	 */
+	ret = cgroup_walk_tree_next(0, &handle, &info, level);
+
+	while (ret == 0) {
+		if (info.type == CGROUP_FILE_TYPE_DIR && info.depth > 0) {
+			snprintf(child_name, sizeof(child_name), "%s/%s",
+					cgroup_name,
+					info.full_path + group_len);
+
+			ret = cg_delete_cgroup_controller(child_name,
+					controller, target_tasks,
+					flags);
+			if (ret != 0)
+				break;
+		}
+
+		ret = cgroup_walk_tree_next(0, &handle, &info, level);
+	}
+	if (ret == ECGEOF) {
+		/*
+		 * Iteration finished successfully, remove the root group.
+		 */
+		ret = 0;
+		if (delete_root)
+			ret = cg_delete_cgroup_controller(cgroup_name,
+					controller, target_tasks,
+					flags);
+	}
+
+	cgroup_walk_tree_end(&handle);
+	return ret;
+}
+
 /** cgroup_delete cgroup deletes a control group.
  *  struct cgroup *cgroup takes the group which is to be deleted.
  *
@@ -1593,11 +1665,18 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
  */
 int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
-	FILE *base_tasks = NULL;
-	char path[FILENAME_MAX];
+	int flags = ignore_migration ? CGFLAG_DELETE_IGNORE_MIGRATION : 0;
+	return cgroup_delete_cgroup_ext(cgroup, flags);
+}
+
+int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
+{
+	FILE *parent_tasks = NULL;
+	char parent_path[FILENAME_MAX];
 	int first_error = 0, first_errno = 0;
 	int i, ret;
-	char *parent_path = NULL;
+	char *parent_name = NULL;
+	int delete_group = 1;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1610,16 +1689,28 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	ret = cgroup_find_parent(cgroup, &parent_path);
+	ret = cgroup_find_parent(cgroup, &parent_name);
 	if (ret)
 		return ret;
 
-	if (parent_path == NULL) {
+	if (parent_name == NULL) {
 		/*
 		 * Root group is being deleted.
-		 * TODO: should it succeed?
 		 */
-		return 0;
+		if (flags & CGFLAG_DELETE_RECURSIVE) {
+			/*
+			 * Move all tasks to the root group and do not delete
+			 * it afterwards.
+			 */
+			parent_name = strdup(".");
+			if (parent_name == NULL)
+				return ECGFAIL;
+			delete_group = 0;
+		} else
+			/*
+			 *  TODO: should it succeed?
+			 */
+			return 0;
 	}
 
 	/*
@@ -1628,29 +1719,36 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 	for (i = 0; i < cgroup->index; i++) {
 		ret = 0;
 
-		if (!cg_build_path(parent_path, path,
+		if (!cg_build_path(parent_name, parent_path,
 					cgroup->controller[i]->name))
 			continue;
-		strncat(path, "/tasks", sizeof(path) - strlen(path));
 
-		base_tasks = fopen(path, "w");
-		if (!base_tasks) {
-			if (!ignore_migration) {
-				last_errno = errno;
-				ret = ECGOTHER;
-			} else
-				ret = 0;
+		strncat(parent_path, "/tasks", sizeof(parent_path)
+				- strlen(parent_path));
+
+		parent_tasks = fopen(parent_path, "w");
+		if (!parent_tasks) {
+			last_errno = errno;
+			ret = ECGOTHER;
 		} else {
-			ret = cg_delete_cgroup_controller(cgroup->name,
-				cgroup->controller[i]->name, base_tasks,
-				ignore_migration);
-			fclose(base_tasks);
+			if (flags & CGFLAG_DELETE_RECURSIVE) {
+				ret = cg_delete_cgroup_controller_recursive(
+						cgroup->name,
+						cgroup->controller[i]->name,
+						parent_tasks, flags,
+						delete_group);
+			} else {
+				ret = cg_delete_cgroup_controller(cgroup->name,
+						cgroup->controller[i]->name,
+						parent_tasks, flags);
+			}
+			fclose(parent_tasks);
 		}
 
 		/*
 		 * If any of the controller delete fails, remember the first
-		 * error code, but continue with next controller
-		 * and try remove the group from all of them.
+		 * error code, but continue with next controller and try remove
+		 * the group from all of them.
 		 */
 		if (ret != 0 && first_error == 0) {
 			first_errno = last_errno;

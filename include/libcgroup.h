@@ -114,6 +114,21 @@ enum cgroup_daemon_type {
 	CGROUP_DAEMON_UNCHANGE_CHILDREN = 0x1,
 };
 
+/**
+ * Flags for cgroup_delete_cgroup_ext
+ */
+enum cgroup_delete_flag {
+	/**
+	 * Ignore errors caused by migration of tasks to parent group.
+	 */
+	CGFLAG_DELETE_IGNORE_MIGRATION = 1,
+
+	/**
+	 * Recursively delete all child groups.
+	 */
+	CGFLAG_DELETE_RECURSIVE	= 2,
+};
+
 struct cgroup_file_info {
 	enum cgroup_file_type type;
 	const char *path;
@@ -153,6 +168,21 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
 int cgroup_get_cgroup(struct cgroup *cgroup);
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership);
 int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
+
+/**
+ * Delete control group.
+ * All tasks are automatically moved to parent group.
+ * If CGFLAG_DELETE_IGNORE_MIGRATION flag is used, the errors that occurred
+ * during the task movement are ignored.
+ * CGFLAG_DELETE_RECURSIVE flag specifies that all subgroups should be removed
+ * too. If root group is being removed with this flag specified, all subgroups
+ * are removed but the root group itself is left undeleted.
+ *
+ * @param cgroup Group to delete.
+ * @param flags  Combination of CGFLAG_DELETE_* flags, which indicate what and
+ *	how to delete.
+ */
+int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
 
 /**
  * Changes the cgroup of a program based on the rules in the config file.
