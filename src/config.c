@@ -493,105 +493,27 @@ err_mnt:
 	return error;
 }
 
-static int cgroup_cleanup_cgroup_controller_files(struct cgroup_file_info info,
-						char *root_path, char *ctrl)
-{
-	void *task_handle;
-	pid_t pid;
-	char *rel_path = NULL;
-	int error;
-	int ret;
-
-
-	rel_path = info.full_path + strlen(root_path) - 1;
-
-	if (!strncmp(rel_path, "/", strlen(rel_path)))
-		return 0;
-
-	error = cgroup_get_task_begin(rel_path, ctrl,
-					&task_handle, &pid);
-
-	if (error && error != ECGEOF)
-		return error;
-
-	while (error != ECGEOF) {
-		ret = cgroup_attach_task_pid(NULL, pid);
-
-		if (ret) {
-			cgroup_get_task_end(&task_handle);
-			return ret;
-		}
-		error = cgroup_get_task_next(&task_handle, &pid);
-
-		if (error && error != ECGEOF) {
-			cgroup_get_task_end(&task_handle);
-			return error;
-		}
-	}
-
-	cgroup_get_task_end(&task_handle);
-
-	error = rmdir(info.full_path);
-	if (error) {
-		last_errno = errno;
-		return ECGOTHER;
-	}
-
-	return 0;
-}
-
 static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 {
-	struct cgroup_file_info info;
-	void *tree_handle;
-	int lvl;
-	int ret = 0, error;
-	char *root_path = NULL;
+	int ret, error;
+	struct cgroup *cgroup = NULL;
+	struct cgroup_controller *cgc = NULL;
 
-	error = cgroup_walk_tree_begin(mount_info.name, "/", 0, &tree_handle,
-							&info, &lvl);
+	cgroup = cgroup_new_cgroup(".");
+	if (cgroup == NULL)
+		return ECGFAIL;
 
-	if (error && error != ECGEOF)
-		return error;
-
-	root_path = strdup(info.full_path);
-
-	if (!root_path) {
-		cgroup_walk_tree_end(&tree_handle);
-		last_errno = errno;
-		return ECGOTHER;
-	}
-
-	ret = cgroup_walk_tree_set_flags(&tree_handle,
-				CGROUP_WALK_TYPE_POST_DIR);
-
-	if (ret) {
-		cgroup_walk_tree_end(&tree_handle);
+	cgc = cgroup_add_controller(cgroup, mount_info.name);
+	if (cgc == NULL) {
+		ret = ECGFAIL;
 		goto out_error;
 	}
 
-	while (error != ECGEOF) {
-		if (info.type == CGROUP_FILE_TYPE_DIR) {
-			ret = cgroup_cleanup_cgroup_controller_files(info,
-						root_path, mount_info.name);
+	ret = cgroup_delete_cgroup_ext(cgroup, CGFLAG_DELETE_RECURSIVE);
+	if (ret != 0)
+		goto out_error;
 
-			if (ret) {
-				cgroup_walk_tree_end(&tree_handle);
-				goto out_error;
-			}
-		}
-
-		error = cgroup_walk_tree_next(0, &tree_handle, &info, lvl);
-
-		if (error && error != ECGEOF) {
-			ret = error;
-			cgroup_walk_tree_end(&tree_handle);
-			goto out_error;
-		}
-	}
-	cgroup_walk_tree_end(&tree_handle);
 	error = umount(mount_info.path);
-
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -599,14 +521,14 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 	}
 
 	error = rmdir(mount_info.path);
-
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
 	}
 
 out_error:
-	free(root_path);
+	if (cgroup)
+		cgroup_free(&cgroup);
 	return ret;
 }
 
