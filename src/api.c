@@ -1481,6 +1481,111 @@ err_nomem:
 	return ret;
 }
 
+/**
+ * Move all processes from one task file to another.
+ * @param input_tasks Pre-opened file to read tasks from.
+ * @param output_tasks Pre-opened file to write tasks to.
+ * @return 0 on succes, >0 on error.
+ */
+static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
+{
+	int tids;
+	int ret = 0;
+
+	while (!feof(input_tasks)) {
+		ret = fscanf(input_tasks, "%d", &tids);
+		if (ret == EOF || ret == 0) {
+			ret = 0;
+			break;
+		}
+		if (ret < 0)
+			break;
+
+		ret = fprintf(output_tasks, "%d", tids);
+		if (ret < 0)
+			break;
+
+		/*
+		 * Flush the file, we need only one process per write() call.
+		 */
+		ret = fflush(output_tasks);
+		if (ret < 0)
+			break;
+	}
+
+	if (ret < 0) {
+		last_errno = errno;
+		return CGOTHER;
+	}
+	return 0;
+}
+
+/**
+ * Remove one cgroup from specific controller. The function  moves all
+ * processes from it to given target group.
+ *
+ * The function succeeds if the group to remove is already removed - when
+ * cgroup_delete_cgroup is called with group with two controllers mounted
+ * to the same hierarchy, this function is called once for each of these
+ * controllers. And during the second call the group is already removed...
+ *
+ * @param cgroup_name Name of the group to remove.
+ * @param controller  Name of the controller.
+ * @param target_tasks Opened tasks file of the target group, where all
+ *	processes should be moved.
+ * @param ignore_migration Flag indicating whether the errors from task
+ * 	migration should be ignored (1) or not (0).
+ * @returns 0 on success, >0 on error.
+ */
+static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
+		FILE *target_tasks, int ignore_migration)
+{
+	FILE *delete_tasks;
+	char path[FILENAME_MAX];
+	int ret = 0;
+
+	cgroup_dbg("Removing group %s:%s\n", controller, cgroup_name);
+
+	/*
+	 * Open tasks file of the group to delete.
+	 */
+	if (!cg_build_path(cgroup_name, path, controller))
+		return ECGROUPSUBSYSNOTMOUNTED;
+	strncat(path, "tasks", sizeof(path) - strlen(path));
+
+	delete_tasks = fopen(path, "r");
+	if (delete_tasks) {
+		ret = cg_move_task_files(delete_tasks, target_tasks);
+		fclose(delete_tasks);
+	} else {
+		/*
+		 * Can't open the tasks file. If the file does not exist, ignore
+		 * it - the group has been already removed.
+		 */
+		if (errno != ENOENT) {
+			last_errno = errno;
+			ret = ECGOTHER;
+		}
+	}
+
+	if (ret != 0 && !ignore_migration)
+		return ret;
+
+	/*
+	 * Remove the group.
+	 */
+	if (!cg_build_path(cgroup_name, path, controller))
+		return ECGROUPSUBSYSNOTMOUNTED;
+
+	ret = rmdir(path);
+	if (ret != 0 && errno != ENOENT) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	return 0;
+}
+
 /** cgroup_delete cgroup deletes a control group.
  *  struct cgroup *cgroup takes the group which is to be deleted.
  *
@@ -1488,11 +1593,11 @@ err_nomem:
  */
 int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 {
-	FILE *delete_tasks = NULL, *base_tasks = NULL;
-	int tids;
+	FILE *base_tasks = NULL;
 	char path[FILENAME_MAX];
-	int error = ECGROUPNOTALLOWED;
+	int first_error = 0, first_errno = 0;
 	int i, ret;
+	char *parent_path = NULL;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1505,63 +1610,63 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
+	ret = cgroup_find_parent(cgroup, &parent_path);
+	if (ret)
+		return ret;
+
+	if (parent_path == NULL) {
+		/*
+		 * Root group is being deleted.
+		 * TODO: should it succeed?
+		 */
+		return 0;
+	}
+
+	/*
+	 * Remove the group from all controllers.
+	 */
 	for (i = 0; i < cgroup->index; i++) {
-		if (!cg_build_path(cgroup->name, path,
+		ret = 0;
+
+		if (!cg_build_path(parent_path, path,
 					cgroup->controller[i]->name))
 			continue;
-		strncat(path, "../tasks", sizeof(path) - strlen(path));
+		strncat(path, "/tasks", sizeof(path) - strlen(path));
 
 		base_tasks = fopen(path, "w");
-		if (!base_tasks)
-			goto open_err;
-
-		if (!cg_build_path(cgroup->name, path,
-					cgroup->controller[i]->name)) {
-			fclose(base_tasks);
-			continue;
-		}
-
-		strncat(path, "tasks", sizeof(path) - strlen(path));
-
-		delete_tasks = fopen(path, "r");
-		if (!delete_tasks) {
-			fclose(base_tasks);
-			goto open_err;
-		}
-
-		while (!feof(delete_tasks)) {
-			ret = fscanf(delete_tasks, "%d", &tids);
-			if (ret == EOF || ret < 1)
-				break;
-			fprintf(base_tasks, "%d", tids);
-		}
-
-		fclose(delete_tasks);
-		fclose(base_tasks);
-
-		if (!cg_build_path(cgroup->name, path,
-					cgroup->controller[i]->name))
-			continue;
-		error = rmdir(path);
-		last_errno = errno;
-	}
-open_err:
-	if (ignore_migration) {
-		for (i = 0; i < cgroup->index; i++) {
-			if (!cg_build_path(cgroup->name, path,
-						cgroup->controller[i]->name))
-				continue;
-			error = rmdir(path);
-			if (error < 0 && errno == ENOENT) {
+		if (!base_tasks) {
+			if (!ignore_migration) {
 				last_errno = errno;
-				error = 0;
-			}
+				ret = ECGOTHER;
+			} else
+				ret = 0;
+		} else {
+			ret = cg_delete_cgroup_controller(cgroup->name,
+				cgroup->controller[i]->name, base_tasks,
+				ignore_migration);
+			fclose(base_tasks);
+		}
+
+		/*
+		 * If any of the controller delete fails, remember the first
+		 * error code, but continue with next controller
+		 * and try remove the group from all of them.
+		 */
+		if (ret != 0 && first_error == 0) {
+			first_errno = last_errno;
+			first_error = ret;
 		}
 	}
-	if (error)
-		return ECGOTHER;
 
-	return error;
+	/*
+	 * Restore the last_errno to the first errno from
+	 * cg_delete_cgroup_controller[_ext].
+	 */
+	if (first_errno != 0)
+		last_errno = first_errno;
+
+	free(parent_name);
+	return first_error;
 }
 
 /*
