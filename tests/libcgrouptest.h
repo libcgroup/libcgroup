@@ -26,9 +26,10 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
 #include <libcgroup.h>
 #include "../config.h"
+#include <unistd.h>
 
 #define SIZE 100	/* Max size of a message to be printed */
 #define NUM_MSGS 20	/* Number of such messsages */

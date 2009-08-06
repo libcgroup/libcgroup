@@ -21,13 +21,9 @@
 __BEGIN_DECLS
 
 #include <grp.h>
-#include <linux/types.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <limits.h>
 #include <linux/cn_proc.h>
 
 #ifndef _GNU_SOURCE

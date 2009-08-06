@@ -22,6 +22,7 @@ __BEGIN_DECLS
 #include "config.h"
 #include "libcgroup.h"
 #include <linux/connector.h>
+#include <linux/cn_proc.h>
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
