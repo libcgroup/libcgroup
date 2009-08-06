@@ -2505,10 +2505,7 @@ char *cgroup_strerror(int code)
 {
 	assert((code >= ECGROUPNOTCOMPILED) && (code < ECGSENTINEL));
 	if (code == ECGOTHER) {
-		snprintf(errtext, MAXLEN, "%s, error message: %s",
-			cgroup_strerror_codes[code % ECGROUPNOTCOMPILED],
-			strerror(cgroup_get_last_errno()));
-		return errtext;
+		return strerror_r(cgroup_get_last_errno(), errtext, MAXLEN);
 	}
 	return cgroup_strerror_codes[code % ECGROUPNOTCOMPILED];
 }
