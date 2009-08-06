@@ -51,12 +51,6 @@
 #include <assert.h>
 #include <linux/un.h>
 
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION 0.01
-#endif
-
-#define VERSION(ver)	#ver
-
 /*
  * The errno which happend the last time (have to be thread specific)
  */
@@ -69,11 +63,6 @@ __thread char errtext[MAXLEN];
 
 /* Task command name length */
 #define TASK_COMM_LEN 16
-
-/*
- * Remember to bump this up for major API changes.
- */
-const static char cg_version[] = VERSION(PACKAGE_VERSION);
 
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
