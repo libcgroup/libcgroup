@@ -30,6 +30,7 @@
 #include <libcgroup.h>
 #include "../config.h"
 #include <unistd.h>
+#include <inttypes.h>
 
 #define SIZE 100	/* Max size of a message to be printed */
 #define NUM_MSGS 20	/* Number of such messsages */

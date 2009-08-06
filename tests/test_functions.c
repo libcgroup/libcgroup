@@ -421,6 +421,7 @@ int group_modified(char *path_control_file, int value_type,
 	char string_val[100];
 	FILE *fd;
 	int error = 1;
+	int aux;
 
 	fd = fopen(path_control_file, "r");
 	if (!fd) {
@@ -432,17 +433,18 @@ int group_modified(char *path_control_file, int value_type,
 	switch (value_type) {
 
 	case BOOL:
-		fscanf(fd, "%d", &bool_val);
+		fscanf(fd, "%d", &aux);
+		bool_val = aux;
 		if (bool_val == cval.val_bool)
 			error = 0;
 		break;
 	case INT64:
-		fscanf(fd, "%lld", &int64_val);
+		fscanf(fd, "%" SCNi64, &int64_val);
 		if (int64_val == cval.val_int64)
 			error = 0;
 		break;
 	case UINT64:
-		fscanf(fd, "%llu", &uint64_val);
+		fscanf(fd, "%" SCNu64, &uint64_val);
 		if (uint64_val == cval.val_uint64)
 			error = 0;
 		break;
