@@ -3,7 +3,7 @@ LDADD = $(top_srcdir)/src/.libs/libcgroup.la
 
 if WITH_TOOLS
 
-bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgdelete
+bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgdelete lssubsys
 
 sbin_PROGRAMS = cgconfigparser cgclear
 
@@ -20,6 +20,8 @@ cgconfigparser_SOURCES = cgconfig.c
 cgclear_SOURCES = cgclear.c
 
 cgdelete_SOURCES = cgdelete.c tools-common.c tools-common.h
+
+lssubsys_SOURCES = lssubsys.c
 
 install-exec-hook:
 	chmod u+s $(DESTDIR)$(bindir)/cgexec
