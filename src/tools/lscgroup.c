@@ -28,6 +28,16 @@ enum flag{
 	FL_LIST = 1
 };
 
+static inline void trim_filepath(char *path)
+{
+	int len;
+	len = strlen(path) - 1;
+	while (path[len] == '/')
+		len--;
+
+	path[len + 1] = '\0';
+}
+
 void usage(int status, char *program_name)
 {
 	if (status != 0) {
@@ -86,22 +96,13 @@ int display_controller_data(char *input_path, char *controller, char *name)
 
 	strncpy(cgroup_dir_path, info.full_path, FILENAME_MAX);
 	/* remove problematic  '/' characters from cgroup directory path*/
-	len = strlen(cgroup_dir_path)-1;
-	while (cgroup_dir_path[len] == '/')
-		len--;
-
-	cgroup_dir_path[len+1] = '\0';
+	trim_filepath(cgroup_dir_path);
 
 	strncpy(input_dir_path, input_path, FILENAME_MAX);
 	/* remove problematic  '/' characters from input path*/
-	len = strlen(input_dir_path)-1;
-	while (input_dir_path[len] == '/')
-		len--;
+	trim_filepath(cgroup_dir_path);
 
-	input_dir_path[len+1] = '\0';
-
-	len  = strlen(cgroup_dir_path) - strlen(input_dir_path);
-
+	len  = strlen(cgroup_dir_path) - strlen(input_dir_path) + 1;
 	print_info(&info, name, len);
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0)
 		print_info(&info, name, len);
