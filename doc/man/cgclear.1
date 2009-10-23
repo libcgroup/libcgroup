@@ -1,0 +1,19 @@
+.\" Copyright IBM Corporation. 2009.
+.\" Written by Dhaval Giani <dhaval@linux.vnet.ibm.com>.
+
+.TH CGCLEAR  1 2009-10-23 "Linux" "libcgroup Manual"
+.SH NAME
+cgclear \- unload the cgroup filesystem
+
+.SH SYNOPSIS
+\fBcgclear\fR
+
+.SH DESCRIPTION
+
+This command moves all the tasks inside various cgroups
+to the root cgroup, deletes all the cgroups and finally
+unmounts the cgroup filesystem from the system.
+
+.SH SEE ALSO
+cgconfigparser(1)
+
