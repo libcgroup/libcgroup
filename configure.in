@@ -131,7 +131,11 @@ if test x$with_pam = xtrue; then
 	AC_CHECK_LIB(
 		[pam],
 		[pam_syslog],
-		[],
+		[
+			dnl Override the default behavior of AC_CHECK_LIB,
+			dnl we don't want -lpam in LIBS.
+			:
+		],
 		[AC_MSG_ERROR([Cannot compile PAM module without libpam!])])
 
 	AC_CHECK_HEADERS(
