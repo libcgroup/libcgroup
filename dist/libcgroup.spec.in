@@ -2,7 +2,7 @@
 
 Name: libcgroup
 Summary: Tools and libraries to control and monitor control groups
-Group: Development/Libraries
+Group: System Environment/Libraries
 Version: @PACKAGE_VERSION@
 Release:        1%{?dist}
 License: LGPLv2+
