@@ -20,6 +20,15 @@ Requires(preun): /sbin/chkconfig
 Control groups infrastructure. The tools and library help manipulate, control,
 administrate and monitor control groups and the associated controllers.
 
+%package pam
+Summary: A Pluggable Authentication Module for libcgroup
+Group: System Environment/Base
+Requires: libcgroup = %{version}-%{release}
+
+%description pam
+Linux-PAM module, which allows administrators to classify the user's login
+processes to pre-configured control group.
+
 %package devel
 Summary: Development libraries to develop applications that utilize control groups
 Group: Development/Libraries
@@ -104,9 +113,13 @@ fi
 %attr(0644, root, root) %{_mandir}/man8/*
 %attr(0755,root,root) %{_initrddir}/cgconfig
 %attr(0755,root,root) %{_initrddir}/cgred
-%attr(0755,root,root) /%{_lib}/security/pam_cgroup.so
 
 %doc COPYING INSTALL README_daemon
+
+%files pam
+%defattr(-,root,root,-)
+%attr(0755,root,root) /%{_lib}/security/pam_cgroup.so
+%doc COPYING INSTALL
 
 %files devel
 %defattr(-,root,root,-)
@@ -118,6 +131,7 @@ fi
 %changelog
 * Thu Oct 22 2009 Jan Safranek <jsafrane@redhat.com> 0.34-1
 - Update to latest upstream
+- Split PAM module to separate subpackage
 * Tue Feb 24 2009 Balbir Singh <balbir@linux.vnet.ibm.com> 0.33-1
 - Update to 0.33, spec file changes to add Makefiles and pam_cgroup module
 * Fri Oct 10 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.32-1
