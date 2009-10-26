@@ -91,8 +91,14 @@ fi
 /%{_lib}/libcgroup.so.*
 /bin/cgexec
 /bin/cgclassify
+/bin/cgcreate
+/bin/cgset
+/bin/cgdelete
+/bin/lscgroup
+/bin/lssubsys
 /sbin/cgconfigparser
 /sbin/cgrulesengd
+/sbin/cgclear
 %attr(0644, root, root) %{_mandir}/man1/*
 %attr(0644, root, root) %{_mandir}/man5/*
 %attr(0644, root, root) %{_mandir}/man8/*
@@ -110,6 +116,8 @@ fi
 
 
 %changelog
+* Thu Oct 22 2009 Jan Safranek <jsafrane@redhat.com> 0.34-1
+- Update to latest upstream
 * Tue Feb 24 2009 Balbir Singh <balbir@linux.vnet.ibm.com> 0.33-1
 - Update to 0.33, spec file changes to add Makefiles and pam_cgroup module
 * Fri Oct 10 2008 Dhaval Giani <dhaval@linux.vnet.ibm.com> 0.32-1
