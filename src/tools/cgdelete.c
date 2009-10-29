@@ -31,8 +31,9 @@ int main(int argc, char *argv[])
 	char c;
 	int flags = 0;
 	int final_ret = 0;
+	int capacity = 0;
 
-	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+	struct cgroup_group_spec **cgroup_list = NULL;
 	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
 
@@ -43,8 +44,6 @@ int main(int argc, char *argv[])
 			argv[0]);
 		return -1;
 	}
-
-	memset(cgroup_list, 0, sizeof(cgroup_list));
 
 	/*
 	 * Parse arguments
@@ -80,9 +79,17 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
+	capacity = argc - optind;
+	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
+	if (cgroup_list == NULL) {
+		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		ret = -1;
+		goto err;
+	}
+
 	/* parse groups on command line */
 	for (i = optind; i < argc; i++) {
-		ret = parse_cgroup_spec(cgroup_list, argv[i], CG_HIER_MAX);
+		ret = parse_cgroup_spec(cgroup_list, argv[i], capacity);
 		if (ret != 0) {
 			fprintf(stderr, "%s: error parsing cgroup '%s'\n",
 					argv[0], argv[i]);
@@ -92,7 +99,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* for each cgroup to delete */
-	for (i = 0; i < CG_HIER_MAX; i++) {
+	for (i = 0; i < capacity; i++) {
 		if (!cgroup_list[i])
 			break;
 
@@ -137,9 +144,12 @@ int main(int argc, char *argv[])
 
 	ret = final_ret;
 err:
-	for (i = 0; i < CG_HIER_MAX; i++) {
-		if (cgroup_list[i])
-			cgroup_free_group_spec(cgroup_list[i]);
+	if (cgroup_list) {
+		for (i = 0; i < capacity; i++) {
+			if (cgroup_list[i])
+				cgroup_free_group_spec(cgroup_list[i]);
+		}
+		free(cgroup_list);
 	}
 	return ret;
 }
