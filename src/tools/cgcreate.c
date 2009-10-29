@@ -28,9 +28,12 @@ int main(int argc, char *argv[])
 	uid_t tuid = CGRULE_INVALID, auid = CGRULE_INVALID;
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
 
-	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+	struct cgroup_group_spec **cgroup_list;
 	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
+
+	/* approximation of max. numbers of groups that will be created */
+	int capacity = argc;
 
 	/* no parametr on input */
 	if (argc < 2) {
@@ -40,8 +43,12 @@ int main(int argc, char *argv[])
 			argv[0]);
 		return -1;
 	}
+	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
+	if (cgroup_list == NULL) {
+		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		return -1;
+	}
 
-	memset(cgroup_list, 0, sizeof(cgroup_list));
 	/* parse arguments */
 	while ((c = getopt(argc, argv, "a:t:g:")) > 0) {
 		switch (c) {
@@ -113,8 +120,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg,
-					CG_HIER_MAX);
+			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
 			if (ret) {
 				fprintf(stderr, "%s: "
 					"cgroup controller and path"
@@ -151,7 +157,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* for each new cgroup */
-	for (i = 0; i < CG_HIER_MAX; i++) {
+	for (i = 0; i < capacity; i++) {
 		if (!cgroup_list[i])
 			break;
 
@@ -198,9 +204,12 @@ int main(int argc, char *argv[])
 		cgroup_free(&cgroup);
 	}
 err:
-	for (i = 0; i < CG_HIER_MAX; i++) {
-		if (cgroup_list[i])
-			cgroup_free_group_spec(cgroup_list[i]);
+	if (cgroup_list) {
+		for (i = 0; i < capacity; i++) {
+			if (cgroup_list[i])
+				cgroup_free_group_spec(cgroup_list[i]);
+		}
+		free(cgroup_list);
 	}
 	return ret;
 }
