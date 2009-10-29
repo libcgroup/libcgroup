@@ -22,7 +22,8 @@
 #include <libcgroup.h>
 #include "tools-common.h"
 
-int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg)
+int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
+		int capacity)
 {
 	struct cgroup_group_spec *ptr;
 	int i, j;
@@ -31,15 +32,15 @@ int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg)
 	ptr = *cdptr;
 
 	/* Find first free entry inside the cgroup data array */
-	for (i = 0; i < CG_HIER_MAX; i++, ptr++) {
+	for (i = 0; i < capacity; i++, ptr++) {
 		if (!cdptr[i])
 			break;
 	}
 
-	if (i == CG_HIER_MAX) {
+	if (i == capacity) {
 		/* No free slot found */
 		fprintf(stderr, "Max allowed hierarchies %d reached\n",
-				CG_HIER_MAX);
+				capacity);
 		return -1;
 	}
 

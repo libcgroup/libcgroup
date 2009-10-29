@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
 	while ((c = getopt_long(argc, argv, "+g:s", longopts, NULL)) > 0) {
 		switch (c) {
 		case 'g':
-			if (parse_cgroup_spec(cgroup_list, optarg)) {
+			ret = parse_cgroup_spec(cgroup_list, optarg,
+					CG_HIER_MAX);
+			if (ret) {
 				fprintf(stderr, "cgroup controller and path"
 						"parsing failed\n");
 				return -1;

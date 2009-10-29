@@ -41,14 +41,16 @@ struct cgroup_group_spec {
  * The option must have form of 'controller1,controller2,..:group_name'.
  *
  * The parsed list of controllers and group name is added at the end of
- * provided cdptr.
+ * provided cdptr, i.e. on place of first NULL cgroup_group_spec*.
  *
  * @param cdptr Target data structure to fill. New item is allocated and added
  * 		at the end.
  * @param optarg Argument to parse.
+ * @param capacity Capacity of the cdptr array.
  * @return 0 on success, != 0 on error.
  */
-int parse_cgroup_spec(struct cgroup_group_spec *cdptr[], char *optarg);
+int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
+		int capacity);
 
 /**
  * Free a single cgroup_group_spec structure.

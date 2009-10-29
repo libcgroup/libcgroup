@@ -280,7 +280,9 @@ int main(int argc, char *argv[])
 
 	/* read the list of controllers */
 	while (optind < argc) {
-		if (parse_cgroup_spec(cgroup_list, argv[optind])) {
+		ret = parse_cgroup_spec(cgroup_list, optarg,
+				CG_HIER_MAX);
+		if (ret) {
 			fprintf(stderr, "%s: cgroup controller"
 				" and path parsing failed (%s)\n",
 				argv[0], argv[optind]);

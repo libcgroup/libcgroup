@@ -113,7 +113,9 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'g':
-			if (parse_cgroup_spec(cgroup_list, optarg)) {
+			ret = parse_cgroup_spec(cgroup_list, optarg,
+					CG_HIER_MAX);
+			if (ret) {
 				fprintf(stderr, "%s: "
 					"cgroup controller and path"
 					"parsing failed (%s)\n",

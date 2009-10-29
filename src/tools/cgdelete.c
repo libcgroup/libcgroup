@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	/* parse groups on command line */
 	for (i = optind; i < argc; i++) {
-		ret = parse_cgroup_spec(cgroup_list, argv[i]);
+		ret = parse_cgroup_spec(cgroup_list, argv[i], CG_HIER_MAX);
 		if (ret != 0) {
 			fprintf(stderr, "%s: error parsing cgroup '%s'\n",
 					argv[0], argv[i]);
