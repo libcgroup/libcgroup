@@ -1,0 +1,26 @@
+.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved.
+.\" Written by Jan Safranek <jsafrane@redhat.com>
+
+.TH CGEXEC  1 2009-10-26 "Linux" "libcgroup Manual"
+.SH NAME
+
+cgdelete \- remove control group(s)
+
+.SH SYNOPSIS
+\fBcgdelete\fR [\fB-r\fR] [<\fIcontrollers\fR>:\fI<path\fR>] ...
+
+.SH DESCRIPTION
+The \fBcgdelete\fR
+program removes all specified control groups.
+
+.TP
+.B <controllers>:<path>
+Defines control group to delete. There can be multiple control
+groups specified.
+
+.TP
+.B -r
+Recursively remove all subgroups.
+
+.SH SEE ALSO
+cgcreate (1), lscgroup(1), cgclear(1)
