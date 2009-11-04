@@ -591,7 +591,7 @@ destroyrule:
 	cgroup_free_rule(newrule);
 
 parsefail:
-	ret = ECGROUPPARSEFAIL;
+	ret = ECGRULESPARSEFAIL;
 
 close:
 	fclose(fp);
@@ -2366,7 +2366,7 @@ int cgroup_reload_cached_rules()
 	if (ret) {
 		cgroup_dbg("Error parsing configuration file \"%s\": %d.\n",
 			CGRULES_CONF_FILE, ret);
-		ret = ECGROUPPARSEFAIL;
+		ret = ECGRULESPARSEFAIL;
 		goto finished;
 	}
 		

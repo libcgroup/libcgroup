@@ -90,6 +90,8 @@ enum cgroup_errors {
 	ECGEOF,		/* End of file, iterator */
 };
 
+#define ECGRULESPARSEFAIL	ECGROUPPARSEFAIL
+
 /*
  * Don't use CGROUP_WALK_TYPE_FILE right now. It is added here for
  * later refactoring and better implementation. Most users *should*
