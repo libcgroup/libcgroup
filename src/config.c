@@ -467,7 +467,7 @@ int cgroup_config_load_config(const char *pathname)
 	if (yyparse() != 0) {
 		cgroup_dbg("Failed to parse file %s\n", pathname);
 		fclose(yyin);
-		return ECGROUPPARSEFAIL;
+		return ECGCONFIGPARSEFAIL;
 	}
 
 	error = cgroup_config_mount_fs();

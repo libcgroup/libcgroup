@@ -72,7 +72,7 @@ group   :       GROUP ID '{' group_conf '}'
 		else {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -85,7 +85,7 @@ group_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -95,7 +95,7 @@ group_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -105,7 +105,7 @@ group_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -146,7 +146,7 @@ task_namevalue_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -156,7 +156,7 @@ task_namevalue_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -169,7 +169,7 @@ admin_namevalue_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -179,7 +179,7 @@ admin_namevalue_conf
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -192,7 +192,7 @@ task_or_admin
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -202,7 +202,7 @@ task_or_admin
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -214,7 +214,7 @@ admin_conf:	ADMIN '{' admin_namevalue_conf '}'
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -226,7 +226,7 @@ task_conf:	TASK '{' task_namevalue_conf '}'
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
@@ -259,7 +259,7 @@ mount   :       MOUNT '{' mountvalue_conf '}'
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
