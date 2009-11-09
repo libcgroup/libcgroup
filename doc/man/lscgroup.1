@@ -1,0 +1,25 @@
+.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Hutarova Varekova <varekova@redhat.com>
+
+.TH LSCGROUP  1 2009-11-05 "Linux" "libcgroup Manual"
+.SH NAME
+
+lscgroup \- list all cgroups
+
+.SH SYNOPSIS
+\fBlscgroup\fR [<\fIcontrollers>:<path\fR>] [...]
+.br
+\fBlscgroup\fR [\fB-h|--help\fR]
+
+.SH DESCRIPTION
+The command list all/chosen cgroups.
+
+.TP
+.B <controllers>:<path>
+defines control groups which subgroups will be shown.
+If this parameter is not used then the command
+list all cgroups which are present.
+
+.SH SEE ALSO
+lssubsys (1), cgcreate (1), cgdelete (1),
+cgconfig.conf(5)
