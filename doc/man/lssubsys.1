@@ -1,0 +1,35 @@
+.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Hutarova Varekova <varekova@redhat.com>
+
+.TH LSSUBSYS  1 2009-11-05 "Linux" "libcgroup Manual"
+.SH NAME
+
+lssubsys \- list hierarchies containing given subsystem
+
+.SH SYNOPSIS
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fIcontroller\fR] [...]
+.br
+\fBlssubsys\fR  [\fB-h|--help\fR]
+
+.SH DESCRIPTION
+
+The command list hierarchies containing all subsystems
+or only given subsystem(s).
+
+.TP
+.B controller
+defines subsystem which hierarchy will be shown.
+If this parameter is not used then the command
+list all subsystems which are present.
+
+.TP
+.B -m, --mount-points
+Display mount points.
+
+.TP
+.B -h, --help
+Display help and exit.
+
+.SH SEE ALSO
+lscgroup (1), cgcreate (1), cgdelete (1),
+cgconfig.conf(5)
