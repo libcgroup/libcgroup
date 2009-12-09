@@ -130,6 +130,7 @@ namevalue_conf
 		if ($1) {
 			$2 = strncat($2, ":", strlen(":"));
 			$$ = strncat($2, $1, strlen($1));
+			free($1);
 		}
 		free($4);
 	}
