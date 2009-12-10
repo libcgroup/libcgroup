@@ -22,7 +22,7 @@ int main()
 			info.hierarchy, info.num_cgroups, info.enabled);
 		error = cgroup_get_all_controller_next(&handle, &info);
 		if (error && error != ECGEOF) {
-			printf("cgroup_get_contrller_next failed with %s\n",
+			printf("cgroup_get_controller_next failed with %s\n",
 							cgroup_strerror(error));
 			exit(1);
 		}
