@@ -19,8 +19,9 @@
 #include <libcgroup.h>
 
 enum flag{
-    FL_MOUNT = 1,
-    FL_LIST = 2
+    FL_MOUNT = 1,	/* show the mount points */
+    FL_LIST = 2,
+    FL_ALL = 4		/* show all subsystems - not mounted too */
 };
 
 typedef char cont_name_t[FILENAME_MAX];
@@ -37,6 +38,8 @@ void usage(int status, char *program_name)
 		fprintf(stdout, "list all sybsystems of given controller\n");
 		fprintf(stdout, "  -h, --help		Display this help\n");
 		fprintf(stdout, "  -m, --mount-points	Display mount points\n");
+		fprintf(stdout, "  -a, --all		");
+		fprintf(stdout, "Display all not mounted subsystems\n");
 	}
 }
 
@@ -119,10 +122,13 @@ int cgroup_list_controllers(char *tname,
 
 	/* initialize libcgroup */
 	ret = cgroup_init();
+
 	if (ret) {
-		fprintf(stderr, "controllers can't be listed: %s\n",
-			cgroup_strerror(ret));
-		return ret;
+		if (flags & FL_ALL) {
+			return 0;
+		} else {
+			return ret;
+		}
 	}
 
 	if ((flags & FL_LIST) == 0) {
@@ -156,6 +162,32 @@ int cgroup_list_controllers(char *tname,
 	return final_ret;
 }
 
+int cgroup_list_all_controllers(char *tname)
+{
+	int ret = 0;
+	void *handle;
+	struct controller_data info;
+
+	ret = cgroup_get_all_controller_begin(&handle, &info);
+
+	while (ret != ECGEOF) {
+		if (info.hierarchy == 0)
+			printf("%s\n", info.name);
+		ret = cgroup_get_all_controller_next(&handle, &info);
+		if (ret && ret != ECGEOF) {
+			fprintf(stderr,
+				"%s: cgroup_get_controller_next failed (%s)\n",
+				tname, cgroup_strerror(ret));
+			return ret;
+		}
+	}
+
+	ret = cgroup_get_all_controller_end(&handle);
+
+	return ret;
+
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -171,6 +203,7 @@ int main(int argc, char *argv[])
 	static struct option options[] = {
 		{"help", 0, 0, 'h'},
 		{"mount-points", 0, 0, 'm'},
+		{"all", 0, 0, 'a'},
 		{0, 0, 0, 0}
 	};
 
@@ -178,13 +211,16 @@ int main(int argc, char *argv[])
 		cont_name[i][0] = '\0';
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "mh", options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "mha", options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
 			return 0;
 		case 'm':
 			flags |= FL_MOUNT;
+			break;
+		case 'a':
+			flags |= FL_ALL;
 			break;
 		default:
 			usage(1, argv[0]);
@@ -211,6 +247,11 @@ int main(int argc, char *argv[])
 	 * based on list of input controllers and flags
 	 */
 	ret = cgroup_list_controllers(argv[0], cont_name, flags);
+	if (ret)
+		return ret;
+
+	if (flags & FL_ALL)
+		ret = cgroup_list_all_controllers(argv[0]);
 
 	return ret;
 }
