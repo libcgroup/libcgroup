@@ -3224,9 +3224,6 @@ int cgroup_get_all_controller_end(void **handle)
 {
 	FILE *proc_cgroup = (FILE *) *handle;
 
-	if (!cgroup_initialized)
-		return ECGROUPNOTINITIALIZED;
-
 	if (!proc_cgroup)
 		return ECGINVAL;
 
@@ -3243,9 +3240,6 @@ int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
 	int err = 0;
 	int hierarchy, num_cgroups, enabled;
 	char subsys_name[FILENAME_MAX];
-
-	if (!cgroup_initialized)
-		return ECGROUPNOTINITIALIZED;
 
 	if (!proc_cgroup)
 		return ECGINVAL;
@@ -3273,9 +3267,6 @@ int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
 {
 	FILE *proc_cgroup = NULL;
 	char buf[FILENAME_MAX];
-
-	if (!cgroup_initialized)
-		return ECGROUPNOTINITIALIZED;
 
 	if (!info)
 		return ECGINVAL;
