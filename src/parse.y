@@ -26,7 +26,7 @@ extern char *yytext;
 
 void yyerror(char *s)
 {
-	fprintf(stderr, "error at line number %d at %c:%s", line_no, *yytext,
+	fprintf(stderr, "error at line number %d at %s:%s\n", line_no, yytext,
 		s);
 }
 
