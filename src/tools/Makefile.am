@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/include
-LDADD = $(top_srcdir)/src/.libs/libcgroup.la
+LDADD = $(top_builddir)/src/.libs/libcgroup.la
 
 if WITH_TOOLS
 
