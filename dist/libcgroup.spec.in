@@ -52,11 +52,6 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make DESTDIR=$RPM_BUILD_ROOT install
 
-# install init scripts
-mkdir -p $RPM_BUILD_ROOT/%{_initrddir}
-cp scripts/init.d/cgconfig $RPM_BUILD_ROOT/%{_initrddir}/cgconfig
-cp scripts/init.d/cgred $RPM_BUILD_ROOT/%{_initrddir}/cgred
-
 # install config files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
 cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
