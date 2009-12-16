@@ -105,7 +105,7 @@ char *cgroup_strerror_codes[] = {
 	"Cgroup parsing failed",
 	"Cgroup, rules file does not exist",
 	"Cgroup mounting failed",
-	"The config file can not be opend",
+	"The config file can not be opened",
 	"End of File or iterator",
 };
 
