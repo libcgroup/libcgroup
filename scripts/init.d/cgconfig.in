@@ -48,6 +48,12 @@ servicename=cgconfig
 #
 . /lib/lsb/init-functions
 
+# read the config
+CREATE_DEFAULT=yes
+if [ -e /etc/sysconfig/cgconfig ]; then
+        . /etc/sysconfig/cgconfig
+fi
+
 parse_mounts() {
     while read name mountpt fs opts other
     do
@@ -140,7 +146,9 @@ start() {
                 fi
         fi
 
-	create_default_groups
+        if [ $CREATE_DEFAULT == "yes" ]; then
+                create_default_groups
+        fi
 
         touch /var/lock/subsys/$servicename
         retval=$?
