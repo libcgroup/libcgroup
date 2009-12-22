@@ -74,7 +74,7 @@ int print_controller(cont_name_t cont_name, int flags)
 				if ((flags &  FL_MOUNT) != 0)
 					printf("%s %s\n", name, path);
 				else
-					printf("%s \n", name);
+					printf("%s\n", name);
 				if ((flags & FL_LIST) != 0) {
 					/* we succesfully finish printing */
 					output = 0;
@@ -102,7 +102,7 @@ int print_controller(cont_name_t cont_name, int flags)
 		if ((flags &  FL_MOUNT) != 0)
 			printf("%s %s\n", name, path);
 		else
-			printf("%s \n", name);
+			printf("%s\n", name);
 		if ((flags & FL_LIST) != 0)
 			ret = 0;
 	}
