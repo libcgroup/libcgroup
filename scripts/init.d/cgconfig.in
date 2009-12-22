@@ -68,14 +68,6 @@ parse_mounts() {
     return 0;
 }
 
-umount_fs() {
-        for i in `seq 1 $maxindex`
-        do
-                umount ${MOUNTPOINT[$i]}
-                rmdir ${MOUNTPOINT[$i]}
-        done
-}
-
 create_default_groups() {
         declare defaultcgroup
 
@@ -161,39 +153,9 @@ start() {
         return 0
 }
 
-move_all_to_init_class() {
-    for i in `seq 1 $maxindex`
-    do
-        cd ${MOUNTPOINT[$i]}
-        cat /proc/mounts | grep -wq ${MOUNTPOINT[$i]}
-        if [ $? -ne 0 ]
-        then
-            log_failure_msg "resource control filesystem not mounted"
-            exit 1
-        fi
-
-        for i in `find . -depth -type d`
-        do
-            case $i in
-            '.')
-                ;;
-            *)
-                class=${i#./*}
-                #log_progress_msg "Removing class $class"
-                sed -nu p < ./$i/tasks > tasks
-                rmdir $i
-                ;;
-            esac
-        done
-        cd - > /dev/null
-    done
-}
-
-
 stop() {
     echo -n "Stopping cgconfig service: "
-    move_all_to_init_class
-    umount_fs
+    cgclear
     rm -f /var/lock/subsys/$servicename
     log_success_msg
 }
