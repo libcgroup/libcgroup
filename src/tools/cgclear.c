@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
 	int error;
 
 	error = cgroup_unload_cgroups();
+	/* Don't spit an error when there is nothing to clear. */
+	if (error == ECGROUPNOTMOUNTED)
+		error = 0;
 
 	if (error) {
 		printf("%s failed with %s\n", argv[0], cgroup_strerror(error));
