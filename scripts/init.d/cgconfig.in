@@ -70,25 +70,7 @@ umount_fs() {
         done
 }
 
-start() {
-        echo -n "Starting cgconfig service: "
-	if [ -f /var/lock/subsys/$servicename ]
-        then
-            log_warning_msg "lock file already exists"
-            return
-        fi
-
-        if [ $? -eq 0 ]
-        then
-                $CGCONFIGPARSER_BIN -l $CONFIG_FILE
-                retval=$?
-                if [ $retval -ne 0 ]
-                then
-                    log_failure_msg "Failed to parse " $CONFIG_FILE
-                    return $retval
-                fi
-        fi
-
+create_default_groups() {
         declare defaultcgroup
 
         if [ -f /etc/cgrules.conf ]
@@ -137,7 +119,29 @@ start() {
                 echo $j > ${MOUNTPOINT[$i]}/$defaultcgroup/tasks 2>/dev/null
             done
         done
-	
+}
+
+start() {
+        echo -n "Starting cgconfig service: "
+	if [ -f /var/lock/subsys/$servicename ]
+        then
+            log_warning_msg "lock file already exists"
+            return
+        fi
+
+        if [ $? -eq 0 ]
+        then
+                $CGCONFIGPARSER_BIN -l $CONFIG_FILE
+                retval=$?
+                if [ $retval -ne 0 ]
+                then
+                    log_failure_msg "Failed to parse " $CONFIG_FILE
+                    return $retval
+                fi
+        fi
+
+	create_default_groups
+
         touch /var/lock/subsys/$servicename
         retval=$?
         if [ $retval -ne 0 ]
