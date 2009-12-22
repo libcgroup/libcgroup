@@ -32,8 +32,6 @@
 # get correct location of binaries from configure
 prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
 CGCONFIGPARSER_BIN=$sbindir/cgconfigparser
-MOUNTS_FILE=/proc/mounts
-PROC_CGROUPS_FILE=/proc/cgroups
 CGROUP_FS=cgroup
 CONFIG_FILE=/etc/cgconfig.conf
 
@@ -53,20 +51,6 @@ CREATE_DEFAULT=yes
 if [ -e /etc/sysconfig/cgconfig ]; then
         . /etc/sysconfig/cgconfig
 fi
-
-parse_mounts() {
-    while read name mountpt fs opts other
-    do
-        if echo $name | grep -q $CGROUP_FS
-        then
-            maxindex=$(($maxindex+1))
-            MOUNTPOINT[$maxindex]=$mountpt
-            MOUNTOPTS[$maxindex]=$opts
-        fi
-    done < $MOUNTS_FILE
-
-    return 0;
-}
 
 create_default_groups() {
         declare defaultcgroup
@@ -179,8 +163,6 @@ common() {
     trap "trapped QUIT" QUIT
     trap "trapped TERM" TERM
     trap "trapped INT"   INT
-
-    parse_mounts
 }
 
 case $1 in
