@@ -98,7 +98,7 @@ char *cgroup_strerror_codes[] = {
 	"Cgroup, creation of controller failed",
 	"Cgroup operation failed",
 	"Cgroup not initialized",
-	"Cgroup trying to set value for control that does not exist",
+	"Cgroup, requested group parameter does not exist",
 	"Cgroup generic error",
 	"Cgroup values are not equal",
 	"Cgroup controllers are different",
