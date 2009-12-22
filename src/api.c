@@ -1775,7 +1775,7 @@ static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
 
-	*value = malloc(CG_VALUE_MAX);
+	*value = calloc(CG_VALUE_MAX, 1);
 	if (!*value) {
 		last_errno = errno;
 		return ECGOTHER;
@@ -1785,10 +1785,14 @@ static int cg_rd_ctrl_file(char *subsys, char *cgroup, char *file, char **value)
 	 * using %as crashes when we try to read from files like
 	 * memory.stat
 	 */
-	ret = fscanf(ctrl_file, "%s", *value);
-	if (ret == 0 || ret == EOF) {
+	ret = fread(*value, 1, CG_VALUE_MAX-1, ctrl_file);
+	if (ret < 0) {
 		free(*value);
 		*value = NULL;
+	} else {
+		/* remove trailing \n */
+		if (ret > 0 && (*value)[ret-1] == '\n')
+			(*value)[ret-1] = '\0';
 	}
 
 	fclose(ctrl_file);
