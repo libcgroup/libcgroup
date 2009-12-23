@@ -32,8 +32,6 @@
 # get correct location of binaries from configure
 prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
 CGCONFIGPARSER_BIN=$sbindir/cgconfigparser
-MOUNTS_FILE=/proc/mounts
-PROC_CGROUPS_FILE=/proc/cgroups
 CGROUP_FS=cgroup
 CONFIG_FILE=/etc/cgconfig.conf
 
@@ -48,26 +46,60 @@ servicename=cgconfig
 #
 . /lib/lsb/init-functions
 
-parse_mounts() {
-    while read name mountpt fs opts other
-    do
-        if echo $name | grep -q $CGROUP_FS
+# read the config
+CREATE_DEFAULT=yes
+if [ -e /etc/sysconfig/cgconfig ]; then
+        . /etc/sysconfig/cgconfig
+fi
+
+create_default_groups() {
+        declare defaultcgroup
+
+        if [ -f /etc/cgrules.conf ]
         then
-            maxindex=$(($maxindex+1))
-            MOUNTPOINT[$maxindex]=$mountpt
-            MOUNTOPTS[$maxindex]=$opts
+            read user ctrl defaultcgroup <<< \
+                `grep -m1 ^\* /etc/cgrules.conf`
+            if [[ -n $defaultcgroup && $defaultcgroup = "*" ]]
+            then
+                log_warning_msg "/etc/cgrules.conf incorrect"
+                log_warning_msg "Overriding it"
+                defaultcgroup=
+            fi
         fi
-    done < $MOUNTS_FILE
 
-    return 0;
-}
+        if [ -z $defaultcgroup ]
+        then
+            defaultcgroup=sysdefault/
+        fi
 
-umount_fs() {
-        for i in `seq 1 $maxindex`
-        do
-                umount ${MOUNTPOINT[$i]}
-                rmdir ${MOUNTPOINT[$i]}
-        done
+        #
+        # Find all mounted subsystems and create comma-separated list
+        # of controllers.
+        #
+        controllers=`lssubsys 2>/dev/null | tr '\n' ',' | sed s/.$//`
+
+        #
+        # Create the default group, ignore errors when the default group
+        # already exists.
+        #
+        cgcreate -g $controllers:$defaultcgroup 2>/dev/null
+
+        #
+        # special rule for cpusets
+        #
+        if echo $controllers | grep -q -w cpuset; then
+                cpus=`cgget -nv -r cpuset.cpus /`
+                cgset -r cpuset.cpus=$cpus $defaultcgroup
+                mems=`cgget -nv -r cpuset.mems /`
+                cgset -r cpuset.mems=$mems $defaultcgroup
+        fi
+
+        #
+        # Classify everything to default cgroup. Ignore errors, some processes
+        # may exit after ps is run and before cgclassify moves them.
+        #
+        cgclassify -g $controllers:$defaultcgroup `ps --no-headers -eL o tid` \
+                 2>/dev/null || :
 }
 
 start() {
@@ -89,55 +121,10 @@ start() {
                 fi
         fi
 
-        declare defaultcgroup
-
-        if [ -f /etc/cgrules.conf ]
-        then
-            read user ctrl defaultcgroup <<< \
-                `grep -m1 ^\* /etc/cgrules.conf`
-            if [[ -n $defaultcgroup && $defaultcgroup = "*" ]]
-            then
-                log_warning_msg "/etc/cgrules.conf incorrect"
-                log_warning_msg "Overriding it"
-                defaultcgroup=
-            fi
+        if [ $CREATE_DEFAULT == "yes" ]; then
+                create_default_groups
         fi
 
-        if [ -z $defaultcgroup ]
-        then
-            defaultcgroup=sysdefault/
-        fi
-        #
-        # Create a default class for tasks to return back to
-        #
-        parse_mounts
-        for i in `seq 1 $maxindex`
-        do
-            #
-            # Ignore if directory already exists
-            #
-            mkdir ${MOUNTPOINT[$i]}/$defaultcgroup 2> /dev/null
-            chmod a+rw ${MOUNTPOINT[$i]}/$defaultcgroup/tasks
-            #
-            # special rule for cpusets
-            #
-            echo ${MOUNTOPTS[$i]} | grep -q -w cpuset
-            if [ $? -eq 0 ]
-            then
-                cat ${MOUNTPOINT[$i]}/cpuset.cpus > \
-                    ${MOUNTPOINT[$i]}/$defaultcgroup/cpuset.cpus
-                cat ${MOUNTPOINT[$i]}/cpuset.mems > \
-                    ${MOUNTPOINT[$i]}/$defaultcgroup/cpuset.mems
-            fi
-            #
-            # classify everything to default cgroup
-            #
-            for j in `ps --no-headers -eL o tid`
-            do
-                echo $j > ${MOUNTPOINT[$i]}/$defaultcgroup/tasks 2>/dev/null
-            done
-        done
-	
         touch /var/lock/subsys/$servicename
         retval=$?
         if [ $retval -ne 0 ]
@@ -149,39 +136,9 @@ start() {
         return 0
 }
 
-move_all_to_init_class() {
-    for i in `seq 1 $maxindex`
-    do
-        cd ${MOUNTPOINT[$i]}
-        cat /proc/mounts | grep -wq ${MOUNTPOINT[$i]}
-        if [ $? -ne 0 ]
-        then
-            log_failure_msg "resource control filesystem not mounted"
-            exit 1
-        fi
-
-        for i in `find . -depth -type d`
-        do
-            case $i in
-            '.')
-                ;;
-            *)
-                class=${i#./*}
-                #log_progress_msg "Removing class $class"
-                sed -nu p < ./$i/tasks > tasks
-                rmdir $i
-                ;;
-            esac
-        done
-        cd - > /dev/null
-    done
-}
-
-
 stop() {
     echo -n "Stopping cgconfig service: "
-    move_all_to_init_class
-    umount_fs
+    cgclear
     rm -f /var/lock/subsys/$servicename
     log_success_msg
 }
@@ -206,8 +163,6 @@ common() {
     trap "trapped QUIT" QUIT
     trap "trapped TERM" TERM
     trap "trapped INT"   INT
-
-    parse_mounts
 }
 
 case $1 in
