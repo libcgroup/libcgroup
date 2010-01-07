@@ -59,8 +59,11 @@ extern int yyparse(void);
  * cgroup_table_index -> Where in the cgroup_table we are.
  */
 static struct cg_mount_table_s config_mount_table[CG_CONTROLLER_MAX];
+static struct cg_mount_table_s config_namespace_table[CG_CONTROLLER_MAX];
 static int config_table_index;
+static int namespace_table_index;
 static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
+static pthread_rwlock_t namespace_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static struct cgroup config_cgroup_table[MAX_CGROUPS];
 int cgroup_table_index;
 
@@ -348,6 +351,36 @@ done:
 void cgroup_config_cleanup_mount_table(void)
 {
 	memset(&config_mount_table, 0,
+			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
+}
+
+/*
+ * The moment we have found the controller's information
+ * insert it into the config_mount_table.
+ */
+int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
+{
+	if (namespace_table_index >= CG_CONTROLLER_MAX)
+		return 0;
+
+	pthread_rwlock_wrlock(&namespace_table_lock);
+
+	strcpy(config_namespace_table[namespace_table_index].name, name);
+	strcpy(config_namespace_table[namespace_table_index].path, nspath);
+	namespace_table_index++;
+
+	pthread_rwlock_unlock(&namespace_table_lock);
+	free(name);
+	free(nspath);
+	return 1;
+}
+
+/*
+ * Cleanup all the data from the config_mount_table
+ */
+void cgroup_config_cleanup_namespace_table(void)
+{
+	memset(&config_namespace_table, 0,
 			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
 }
 

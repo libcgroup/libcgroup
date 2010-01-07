@@ -37,7 +37,7 @@ int yywrap(void)
 
 %}
 
-%token ID MOUNT GROUP PERM TASK ADMIN
+%token ID MOUNT GROUP PERM TASK ADMIN NAMESPACE
 
 %union {
 	char *name;
@@ -47,6 +47,7 @@ int yywrap(void)
 %type <name> ID namevalue_conf
 %type <val> mountvalue_conf mount task_namevalue_conf admin_namevalue_conf
 %type <val> admin_conf task_conf task_or_admin group_conf group start
+%type <val> namespace namespace_conf
 %start start
 %%
 
@@ -58,7 +59,11 @@ start   : start group
 	{
 		$$ = $1;
 	}
-        |
+        | start namespace
+	{
+		$$ = $1;
+	}
+	|
 	{
 		$$ = 1;
 	}
@@ -266,5 +271,37 @@ mount   :       MOUNT '{' mountvalue_conf '}'
 	}
         ;
 
+namespace_conf
+        :       ID '=' ID ';'
+	{
+		if (!cgroup_config_insert_into_namespace_table($1, $3)) {
+			cgroup_config_cleanup_namespace_table();
+			$$ = 0;
+			return $$;
+		}
+		$$ = 1;
+	}
+        |       namespace_conf ID '=' ID ';'
+	{
+		if (!cgroup_config_insert_into_namespace_table($2, $4)) {
+			cgroup_config_cleanup_namespace_table();
+			$$ = 0;
+			return $$;
+		}
+		$$ = 1;
+	}
+        ;
+
+namespace   :       NAMESPACE '{' namespace_conf '}'
+	{
+		$$ = $3;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = 0;
+			return $$;
+		}
+	}
+        ;
 
 %%

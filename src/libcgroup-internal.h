@@ -125,6 +125,7 @@ int cgroup_config_parse_controller_options(char *controller, char *name_value);
 int cgroup_config_group_task_perm(char *perm_type, char *value);
 int cgroup_config_group_admin_perm(char *perm_type, char *value);
 int cgroup_config_insert_into_mount_table(char *name, char *mount_point);
+int cgroup_config_insert_into_namespace_table(char *name, char *mount_point);
 void cgroup_config_cleanup_mount_table(void);
 __END_DECLS
 

@@ -23,11 +23,12 @@ int line_no = 1;
 [ \t]	{/* DO NOTHING */}
 ^#.*[ \t]*  {/* Comments */}
 ^\*.*[ \t]* {/* Comments */}
-"mount"	{return MOUNT;}
-"task"	{return TASK;}
-"admin"	{return ADMIN;}
-"perm"	{return PERM;}
-"group"	{return GROUP;}
+"mount"		{return MOUNT;}
+"task"		{return TASK;}
+"admin"		{return ADMIN;}
+"perm"		{return PERM;}
+"group"		{return GROUP;}
+"namespace"	{return NAMESPACE;}
 [a-zA-Z0-9_\-\/\.]+ {yylval.name = strdup(yytext); return ID;}
 .	{return yytext[0];}
 %%
