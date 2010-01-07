@@ -64,9 +64,6 @@ __thread char errtext[MAXLEN];
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
-static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
-
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
 
@@ -81,6 +78,9 @@ static struct cgroup_rule_list trl;
 
 /* Lock for the list of rules (rl) */
 static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
+
+/* Namespace */
+__thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
 char *cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
@@ -108,6 +108,10 @@ char *cgroup_strerror_codes[] = {
 	"The config file can not be opened",
 	"Sentinel"
 	"End of File or iterator",
+	"Failed to parse config file",
+	"Have multiple paths for the same namespace",
+	"Controller in namespace does not exist",
+	"Cannot have mount and namespace keyword in the same configuration file",
 };
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)

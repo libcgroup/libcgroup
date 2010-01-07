@@ -22,6 +22,7 @@ __BEGIN_DECLS
 #include <fts.h>
 #include <libcgroup.h>
 #include <limits.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -116,6 +117,17 @@ int cg_mkdir_p(const char *path);
 struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 		struct control_value *name_value, int nv_number);
 
+/*
+ * Main mounting structures
+ */
+struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
+static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
+
+/*
+ * config related structures
+ */
+
+extern __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
 /*
  * config related API

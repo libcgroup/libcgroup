@@ -482,6 +482,169 @@ int cgroup_config_unmount_controllers(void)
 	return 0;
 }
 
+static int config_validate_namespaces(void)
+{
+	int i;
+	char *namespace = NULL;
+	char *mount_path = NULL;
+	int j, subsys_count;
+	int error = 0;
+
+	pthread_rwlock_wrlock(&cg_mount_table_lock);
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		/*
+		 * If we get the path in the first run, then we
+		 * are good, else we will need to go for two
+		 * loops. This should be optimized in the future
+		 */
+		mount_path = cg_mount_table[i].path;
+
+		if (!mount_path) {
+			last_errno = errno;
+			error = ECGOTHER;
+			goto out_error;
+		}
+
+		/*
+		 * Setup the namespace for the subsystems having the same
+		 * mount point.
+		 */
+		if (!cg_namespace_table[i]) {
+			namespace = NULL;
+		} else {
+			namespace = cg_namespace_table[i];
+			if (!namespace) {
+				last_errno = errno;
+				error = ECGOTHER;
+				goto out_error;
+			}
+		}
+
+		/*
+		 * We want to handle all the subsytems that are mounted
+		 * together. So initialize j to start from the next point in
+		 * the mount table.
+		 */
+
+		j = i + 1;
+
+		/*
+		 * Search through the mount table to locate which subsystems
+		 * are mounted together.
+		 */
+		while (!strncmp(cg_mount_table[j].path, mount_path, FILENAME_MAX)) {
+			if (!namespace && cg_namespace_table[j]) {
+				/* In case namespace is not setup, set it up */
+				namespace = cg_namespace_table[j];
+				if (!namespace) {
+					last_errno = errno;
+					error = ECGOTHER;
+					goto out_error;
+				}
+			}
+			j++;
+		}
+		subsys_count = j;
+
+		/*
+		 * If there is no namespace, then continue on :)
+		 */
+
+		if (!namespace) {
+			i = subsys_count -  1;
+			continue;
+		}
+
+		/*
+		 * Validate/setup the namespace
+		 * If no namespace is specified, copy the namespace we have
+		 * stored. If a namespace is specified, confirm if it is
+		 * the same as we have stored. If not, we fail.
+		 */
+		for (j = i; j < subsys_count; j++) {
+			if (!cg_namespace_table[j]) {
+				cg_namespace_table[j] = strdup(namespace);
+				if (!cg_namespace_table[j]) {
+					last_errno = errno;
+					error = ECGOTHER;
+					goto out_error;
+				}
+			}
+			else if (strcmp(namespace, cg_namespace_table[j])) {
+				error = ECGNAMESPACEPATHS;
+				goto out_error;
+			}
+		}
+		/* i++ in the for loop will increment it */
+		i = subsys_count - 1;
+	}
+out_error:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return error;
+}
+
+/*
+ * Should always be called after cgroup_init() has been called
+ *
+ * NOT to be called outside the library. Is handled internally
+ * when we are looking to  load namespace configurations.
+ *
+ * This function will order the namespace table in the same
+ * fashion as how the mou table is setup.
+ *
+ * Also it will setup namespaces for all the controllers mounted.
+ * In case a controller does not have a namespace assigned to it, it
+ * will set it to null.
+ */
+static int config_order_namespace_table(void)
+{
+	int i = 0;
+	int error = 0;
+
+	pthread_rwlock_wrlock(&cg_mount_table_lock);
+	/*
+	 * Set everything to NULL
+	 */
+	for (i = 0; i < CG_CONTROLLER_MAX; i++)
+		cg_namespace_table[i] = NULL;
+
+	memset(cg_namespace_table, 0, CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
+
+	/*
+	 * Now fill up the namespace table looking at the table we have
+	 * otherwise.
+	 */
+
+	for (i = 0; i < namespace_table_index; i++) {
+		int j;
+		int flag = 0;
+		for (j = 0; cg_mount_table[j].name[0] != '\0'; j++) {
+			if (strncmp(config_namespace_table[i].name,
+				cg_mount_table[j].name, FILENAME_MAX) == 0) {
+
+				flag = 1;
+
+				if (cg_namespace_table[j]) {
+					error = ECGNAMESPACEPATHS;
+					goto error_out;
+				}
+
+				cg_namespace_table[j] = strdup(config_namespace_table[i].path);
+				if (!cg_namespace_table[j]) {
+					last_errno = errno;
+					error = ECGOTHER;
+					goto error_out;
+				}
+			}
+		}
+		if (!flag)
+			return ECGNAMESPACECONTROLLER;
+	}
+error_out:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return error;
+}
+
 /*
  * The main function which does all the setup of the data structures
  * and finally creates the cgroups
@@ -489,6 +652,8 @@ int cgroup_config_unmount_controllers(void)
 int cgroup_config_load_config(const char *pathname)
 {
 	int error;
+	int namespace_enabled = 0;
+	int mount_enabled = 0;
 	yyin = fopen(pathname, "r");
 
 	if (!yyin) {
@@ -503,11 +668,39 @@ int cgroup_config_load_config(const char *pathname)
 		return ECGCONFIGPARSEFAIL;
 	}
 
+	namespace_enabled = (config_namespace_table[0].name[0] != '\0');
+	mount_enabled = (config_mount_table[0].name[0] != '\0');
+
+	/*
+	 * The configuration should have either namespace or mount.
+	 * Not both and not none.
+	 */
+	if (namespace_enabled == mount_enabled)
+		return ECGMOUNTNAMESPACE;
+
+	/*
+	 * We do not allow both mount and namespace sections in the
+	 * same configuration file. So test for that
+	 */
+
 	error = cgroup_config_mount_fs();
 	if (error)
 		goto err_mnt;
 
 	error = cgroup_init();
+	if (error)
+		goto err_mnt;
+
+	/*
+	 * The very first thing is to sort the namespace table. If we fail
+	 * we unmount everything and get out.
+	 */
+
+	error = config_order_namespace_table();
+	if (error)
+		goto err_mnt;
+
+	error = config_validate_namespaces();
 	if (error)
 		goto err_mnt;
 

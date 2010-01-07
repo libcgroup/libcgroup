@@ -89,6 +89,9 @@ enum cgroup_errors {
 	ECGSENTINEL,	/* Please insert further error codes above this */
 	ECGEOF,		/* End of file, iterator */
 	ECGCONFIGPARSEFAIL,/* Failed to parse config file (cgconfig.conf). */
+	ECGNAMESPACEPATHS,
+	ECGNAMESPACECONTROLLER,
+	ECGMOUNTNAMESPACE,
 };
 
 #define ECGRULESPARSEFAIL	ECGROUPPARSEFAIL
