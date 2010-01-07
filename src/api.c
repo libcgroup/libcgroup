@@ -816,7 +816,13 @@ static char *cg_build_path_locked(char *name, char *path, char *type)
 		 * XX: Change to snprintf once you figure what n should be
 		 */
 		if (strcmp(cg_mount_table[i].name, type) == 0) {
-			sprintf(path, "%s/", cg_mount_table[i].path);
+			if (cg_namespace_table[i]) {
+				sprintf(path, "%s/%s/", cg_mount_table[i].path,
+							cg_namespace_table[i]);
+			} else {
+				sprintf(path, "%s/", cg_mount_table[i].path);
+			}
+
 			if (name) {
 				char *tmp;
 				tmp = strdup(path);
