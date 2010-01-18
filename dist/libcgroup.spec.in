@@ -96,6 +96,7 @@ fi
 /bin/cgexec
 /bin/cgclassify
 /bin/cgcreate
+/bin/cgget
 /bin/cgset
 /bin/cgdelete
 /bin/lscgroup
