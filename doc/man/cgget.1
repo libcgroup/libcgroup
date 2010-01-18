@@ -1,0 +1,59 @@
+.\" Copyright (C) 2010 Red Hat, Inc. All Rights Reserved.
+.\" Written by Jan Safranek <jsafrane@redhat.com>
+
+.TH CGGET  1 2010-01-18 "Linux" "libcgroup Manual"
+.SH NAME
+
+cgget \- print parameter(s) of given group(s)
+
+.SH SYNOPSIS
+\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>] <\fBcgroup_path\fR> ...
+
+.SH DESCRIPTION
+The command prints the parameter(s) of input cgroup(s).
+
+.TP
+.B <path>
+is the name of the cgroup which should be read.
+This parameter can be used multiple times.
+
+.TP
+.B -r <name>
+defines parameter to display.
+This option can be used multiple times.
+
+.TP
+.B -n
+do not print headers, i.e. name of groups.
+
+.TP
+.B -v
+print only values, not parameter names.
+
+.SH EXAMPLES
+.nf
+$ cgget -r cpuset.cpus -r cpuset.mems first second
+first:
+cpuset.cpus=0-1
+cpuset.mems=0
+
+second:
+cpuset.cpus=0
+cpuset.mems=0
+
+$ cgget -n -r cpuset.cpus -r cpuset.mems first second
+cpuset.cpus=0-1
+cpuset.mems=0
+cpuset.cpus=0
+cpuset.mems=0
+
+$ cgget -nv -r cpuset.cpus -r cpuset.mems first second
+0-1
+0
+0
+0
+.fi
+
+.SH SEE ALSO
+cgsules.conf (1), cgcreate (1), cgget (1)
+
