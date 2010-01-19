@@ -125,6 +125,8 @@ fi
 
 
 %changelog
+* Tue Jan 19 2010 Balbir Singh <balbir@linux.vnet.ibm.com> 0.35.1
+- Integrate Jan's fixes for distributing cgget and initscripts
 * Thu Oct 22 2009 Jan Safranek <jsafrane@redhat.com> 0.34-1
 - Update to latest upstream
 - Split PAM module to separate subpackage
