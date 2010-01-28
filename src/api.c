@@ -1089,8 +1089,15 @@ static int cg_set_control_value(char *path, char *val)
 		return ECGROUPVALUENOTEXIST;
 	}
 
-	fprintf(control_file, "%s", val);
-	fclose(control_file);
+	if (fprintf(control_file, "%s", val) < 0) {
+		last_errno = errno;
+		fclose(control_file);
+		return ECGOTHER;
+	}
+	if (fclose(control_file) < 0) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	return 0;
 }
 
