@@ -7,7 +7,8 @@
 cgget \- print parameter(s) of given group(s)
 
 .SH SYNOPSIS
-\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>] <\fBcgroup_path\fR> ...
+\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
+[\fB-g\fR <\fIcontroller\fR>] <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 The command prints the parameter(s) of input cgroup(s).
@@ -20,6 +21,11 @@ This parameter can be used multiple times.
 .TP
 .B -r <name>
 defines parameter to display.
+This option can be used multiple times.
+
+.TP
+.B -g <contoller>
+defines controller which values should be displaied.
 This option can be used multiple times.
 
 .TP
@@ -52,6 +58,12 @@ $ cgget -nv -r cpuset.cpus -r cpuset.mems first second
 0
 0
 0
+
+$ cgget -n -g cpu /
+cpu.rt_period_us=1000000
+cpu.rt_runtime_us=950000
+cpu.shares=1024
+
 .fi
 
 .SH SEE ALSO
