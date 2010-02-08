@@ -612,3 +612,27 @@ scgroup_err:
 	cgroup_free(&src_cgroup);
 	return NULL;
 }
+
+int cgroup_get_value_name_count(struct cgroup_controller *controller)
+{
+	int ret;
+
+	if (!controller)
+		return -1;
+
+	return controller->index;
+}
+
+
+char *cgroup_get_value_name(struct cgroup_controller *controller, int index)
+{
+
+	if (!controller)
+		return NULL;
+
+	if (index < controller->index)
+		return (controller->values[index])->name;
+	else
+		return NULL;
+}
+

@@ -469,6 +469,22 @@ int cgroup_set_value_bool(struct cgroup_controller *controller,
 						const char *name, bool value);
 struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
 							const char *name);
+
+/**
+ * Return the number of variables for the specified controller, if the
+ * structure does not exist -1 is returned
+ * @param controller Name of the controller for which stats are requested.
+ */
+int cgroup_get_value_name_count(struct cgroup_controller *controller);
+
+/**
+ * Return the "index" variable for the specified controller,
+ * the return value is the pointer to the internal structure so
+ * don't dealocate it, or change the content of the memory space.
+ * @param controller Name of the controller for which stats are requested.
+ * @param index number of the variable.
+ */
+char *cgroup_get_value_name(struct cgroup_controller *controller, int index);
 /*
  * Config related stuff
  */

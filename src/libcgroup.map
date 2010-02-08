@@ -82,4 +82,6 @@ global:
 	cgroup_get_all_controller_begin;
 	cgroup_get_all_controller_next;
 	cgroup_get_all_controller_end;
+	cgroup_get_value_name_count;
+	cgroup_get_value_name;
 } CGROUP_0.34;
