@@ -9,8 +9,10 @@
 
 #include "tools-common.h"
 
-#define MODE_SHOW_HEADERS	1
-#define MODE_SHOW_NAMES		2
+#define MODE_SHOW_HEADERS		1
+#define MODE_SHOW_NAMES			2
+#define MODE_SHOW_ALL_CONTROLLERS	4
+
 
 void usage(int status, char *program_name)
 {
@@ -19,7 +21,7 @@ void usage(int status, char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	else {
-		printf("Usage: %s [-nv] [-r <name>] [-g <controller>]..."\
+		printf("Usage: %s [-nv] [-r<name>] [-g<controller>] [-a] ..."\
 			"<path> ...\n", program_name);
 	}
 }
@@ -134,8 +136,9 @@ int display_controller_values(char **controllers, int count,
 
 	ret = cgroup_get_cgroup(group);
 	if (ret != 0) {
-		fprintf(stderr, "%s: cannot read group '%s': %s\n",
-			program_name, group_name, cgroup_strerror(ret));
+		if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+			fprintf(stderr, "%s: cannot read group '%s': %s\n",
+				program_name, group_name, cgroup_strerror(ret));
 	}
 
 	/* for all wanted controllers */
@@ -144,10 +147,16 @@ int display_controller_values(char **controllers, int count,
 		/* read the controller group data */
 		group_controller = cgroup_get_controller(group, controllers[j]);
 		if (group_controller == NULL) {
-			fprintf(stderr, "%s: cannot find controller "\
-				"'%s' in group '%s'\n", program_name,
-				controllers[j], group_name);
-			result = -1;
+			if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+				fprintf(stderr, "%s: cannot find controller "\
+					"'%s' in group '%s'\n", program_name,
+					controllers[j], group_name);
+			if (!(mode & MODE_SHOW_ALL_CONTROLLERS)) {
+				fprintf(stderr, "%s: cannot find controller "\
+					"'%s' in group '%s'\n", program_name,
+					controllers[j], group_name);
+				result = -1;
+			}
 		}
 
 		/* for each variable of given group print the statistic */
@@ -157,15 +166,41 @@ int display_controller_values(char **controllers, int count,
 			if (name != NULL) {
 				ret = display_one_record(name, group_controller,
 					program_name, mode);
-				if (ret)
-					return ret;
+				if (ret) {
+					result = ret;
+					goto err;
+				}
 			}
 		}
 	}
 
+err:
 	cgroup_free(&group);
 	return result;
 
+}
+
+int display_all_controllers(const char *group_name,
+	const char *program_name, int mode)
+{
+	void *handle;
+	int ret;
+	struct cgroup_mount_point controller;
+	char *name;
+	int succ = 0;
+
+	ret = cgroup_get_controller_begin(&handle, &controller);
+
+	/* go through the list of controllers/mount point pairs */
+	while (ret == 0) {
+		name = controller.name;
+		succ |= display_controller_values(&name, 1,
+			group_name, program_name, mode);
+		ret = cgroup_get_controller_next(&handle, &controller);
+	}
+
+	cgroup_get_controller_end(&handle);
+	return succ;
 }
 
 int add_record_to_buffer(int *p_number,
@@ -211,7 +246,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Parse arguments. */
-	while ((c = getopt(argc, argv, "r:hnvg:")) != -1) {
+	while ((c = getopt(argc, argv, "r:hnvg:a")) != -1) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -246,6 +281,10 @@ int main(int argc, char *argv[])
 				result = ret;
 				goto err;
 			}
+			break;
+		case 'a':
+			/* go through cgroups for all possible controllers */
+			mode |=  MODE_SHOW_ALL_CONTROLLERS;
 			break;
 		default:
 			usage(1, argv[0]);
@@ -288,8 +327,13 @@ int main(int argc, char *argv[])
 		if (ret)
 			result = ret;
 
-		ret = display_controller_values(controllers,
-			c_number, argv[i], argv[0], mode);
+		ret = display_controller_values(controllers, c_number, argv[i],
+			argv[0], mode - (mode & MODE_SHOW_ALL_CONTROLLERS));
+		if (ret)
+			goto err;
+
+		if (mode & MODE_SHOW_ALL_CONTROLLERS)
+			display_all_controllers(argv[i], argv[0], mode);
 		if (ret)
 			result = ret;
 

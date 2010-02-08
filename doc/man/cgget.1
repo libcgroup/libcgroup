@@ -8,7 +8,7 @@ cgget \- print parameter(s) of given group(s)
 
 .SH SYNOPSIS
 \fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
-[\fB-g\fR <\fIcontroller\fR>] <\fBcgroup_path\fR> ...
+[\fB-g\fR <\fIcontroller\fR>] [-a] <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 The command prints the parameter(s) of input cgroup(s).
@@ -27,6 +27,10 @@ This option can be used multiple times.
 .B -g <contoller>
 defines controller which values should be displaied.
 This option can be used multiple times.
+
+.TP
+.B -a
+print the variables for all controllers which consists given cgroup
 
 .TP
 .B -n
