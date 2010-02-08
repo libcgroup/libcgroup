@@ -1,20 +1,3 @@
-Please follow the following steps (TODO: Automate these steps)
-
-0. Update package version in AC_INIT (configure.in)
-1. Tag the current sources in trunk to the specified version
-1. Run autoreconf -i to generate the configure file again
-   (on changing any of the automake files)
-2. Run configure with --prefix=<desired prefix> default is /usr/local
-3. This step should generate
-	a. Makefile
-	b. libcgroup.spec
-4. To build the RPM, carry out the following steps (obsolete, will be revised)
-	a. Create a tag with the same version as specified in step 0
-	a. Run mktarball
-	b. copy tarball and spec file to correct place in the RPMBUILD
-	c. Build an rpm of the spec file
-
-
 Design
 ========
 

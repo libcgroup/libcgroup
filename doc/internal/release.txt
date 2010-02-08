@@ -1,0 +1,32 @@
+Libcgroup release procedure
+===========================
+Please follow the following steps (TODO: Automate these steps)
+1. Check, that every new or changed feature since last release is reflected in
+   README and/or man pages.
+2. Bump soname of libcgroup shared objects if needed - LIBRARY_VERSION_MAJOR,
+   _MINOR and _RELEASE in configure.in.
+3. Prepare release candidate (X.YY-rcZ - X.YY = version, Z - prerelease
+umber):
+	a. Update AC_INIT(X.YY.rcZ) in configure.in.
+	b. Run 'autoreconf -i' to generate the configure file again, with the
+	   new release number.
+	c. Run './configure' to generate Makefile and dist/libcgroup.spec with
+	   correct version numbers.
+	d. Run 'make dist' to create tarball. Fix Makefile.am files if
+	   something goes wrong.
+	   The tarball should contain everything needed for compilation with
+	   simple sh, make and (optionally) rpmbuild, among others:
+	   	libcgroup-X.YY.rcZ/configure
+		libcgroup-X.YY.rcZ/dist/libcgroup.spec
+	e. Try to build rpms ('rpmbuild -ta libcgroup-X.YY.rcZ.tar.gz'), fix
+	   errors in dist/libcgroup.spec.in file if something goes wrong.
+	f. Tag the pre-release in git.
+	g. Publish the pre-release libcgroup-X.YY.rcZ.tar.gz and announce it on
+	   the libgroup-devel list.
+	h. Test the pre-release and go to a) if new one is needed.
+	During this period, ABI of newly introduced shared symbols is *not*
+	stable and may change, if there is very good reason to break it.
+
+5. Finally release official version using the same procedure as in step 3.,
+   only without the .rcZ version number suffix.
+6. Update topic on #libcgroup IRC channel.
