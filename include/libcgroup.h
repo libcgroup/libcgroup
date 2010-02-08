@@ -141,6 +141,7 @@ struct cgroup_file_info {
 
 #define CG_NV_MAX 100
 #define CG_CONTROLLER_MAX 100
+/* this is NOT ENOUGH for stat variables */
 #define CG_VALUE_MAX 100
 /* Max number of mounted hierarchies. Event if one controller is mounted per
  * hier, it can not exceed CG_CONTROLLER_MAX
