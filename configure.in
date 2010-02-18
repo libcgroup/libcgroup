@@ -158,7 +158,8 @@ AC_CONFIG_FILES([Makefile
 	include/Makefile
 	doc/Makefile
 	doc/man/Makefile
-	dist/Makefile])
+	dist/Makefile
+	libcgroup.pc])
 AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
