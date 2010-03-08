@@ -47,11 +47,6 @@ enum cgflags {
 	CGFLAG_USECACHE = 0x01,
 };
 
-/**
- * per thread errno variable, to be used when return code is ECGOTHER
- */
-extern __thread int last_errno;
-
 enum cgroup_errors {
 	ECGROUPNOTCOMPILED=50000,
 	ECGROUPNOTMOUNTED,

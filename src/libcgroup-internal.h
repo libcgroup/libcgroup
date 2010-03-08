@@ -108,6 +108,10 @@ struct cgroup_tree_handle {
 	int flags;
 };
 
+/**
+ * per thread errno variable, to be used when return code is ECGOTHER
+ */
+extern __thread int last_errno;
 
 /* Internal API */
 char *cg_build_path(char *name, char *path, char *type);
