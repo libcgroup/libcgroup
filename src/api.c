@@ -82,7 +82,7 @@ static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
 /* Namespace */
 __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
-char *cgroup_strerror_codes[] = {
+const char const *cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
 	"Cgroup is not mounted",
 	"Cgroup does not exist",
@@ -2512,7 +2512,7 @@ cleanup_path:
 	return ret;
 }
 
-char *cgroup_strerror(int code)
+const char *cgroup_strerror(int code)
 {
 	if (code == ECGOTHER) {
 		return strerror_r(cgroup_get_last_errno(), errtext, MAXLEN);

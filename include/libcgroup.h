@@ -288,7 +288,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
  * @code: error code for which the corresponding error string is to be
  * returned
  */
-char *cgroup_strerror(int code);
+const char *cgroup_strerror(int code);
 
 /**
  * Return last errno, which caused ECGOTHER error.
