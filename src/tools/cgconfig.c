@@ -19,9 +19,16 @@
 
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
+
+/* For basename() */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <string.h>
+#include <libgen.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <getopt.h>
 

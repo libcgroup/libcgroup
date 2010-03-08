@@ -26,14 +26,6 @@ __BEGIN_DECLS
 #include <sys/types.h>
 #include <linux/cn_proc.h>
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#ifndef __USE_GNU
-#define __USE_GNU
-#endif
-
 /* Maximum number of mount points/controllers */
 #define MAX_MNT_ELEMENTS	8
 /* Estimated number of groups created */
