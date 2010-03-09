@@ -58,7 +58,7 @@ create_default_groups() {
         if [ -f /etc/cgrules.conf ]
         then
             read user ctrl defaultcgroup <<< \
-                `grep -m1 ^\* /etc/cgrules.conf`
+		`grep -m1 '^\*[[:space:]]\+' /etc/cgrules.conf`
             if [[ -n $defaultcgroup && $defaultcgroup = "*" ]]
             then
                 log_warning_msg "/etc/cgrules.conf incorrect"
