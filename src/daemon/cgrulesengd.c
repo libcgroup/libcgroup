@@ -1034,9 +1034,8 @@ int main(int argc, char *argv[])
 	 * Set up the signal handler to reload the cached rules upon reception
 	 * of a SIGUSR2 signal.
 	 */
+	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = &cgre_flash_rules;
-	sa.sa_flags = 0;
-	sa.sa_restorer = NULL;
 	sigemptyset(&sa.sa_mask);
 	if ((ret = sigaction(SIGUSR2, &sa, NULL))) {
 		flog(LOG_ERR, "Failed to set up signal handler for SIGUSR2."
