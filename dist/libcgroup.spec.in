@@ -55,6 +55,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 # install config files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
 cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
+cp samples/cgconfig.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgconfig
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
 
@@ -90,6 +91,7 @@ fi
 %files 
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/sysconfig/cgred.conf
+%config(noreplace) %{_sysconfdir}/sysconfig/cgconfig
 %config(noreplace) %{_sysconfdir}/cgconfig.conf
 %config(noreplace) %{_sysconfdir}/cgrules.conf
 /%{_lib}/libcgroup.so.*
