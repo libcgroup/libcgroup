@@ -122,6 +122,7 @@ fi
 %files devel
 %defattr(-,root,root,-)
 %{_includedir}/libcgroup.h
+%{_includedir}/libcgroup/*.h
 %{_libdir}/libcgroup.*
 %doc COPYING INSTALL 
 

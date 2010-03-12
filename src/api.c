@@ -50,6 +50,7 @@
 #include <libgen.h>
 #include <assert.h>
 #include <linux/un.h>
+#include <grp.h>
 
 /*
  * The errno which happend the last time (have to be thread specific)

@@ -24,6 +24,7 @@ using namespace std;
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <grp.h>
 
 #include "../config.h"
 

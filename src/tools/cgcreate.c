@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <unistd.h>
+#include <grp.h>
 
 #include "tools-common.h"
 
