@@ -26,21 +26,10 @@ __BEGIN_DECLS
 #include <sys/types.h>
 #include <linux/cn_proc.h>
 
-/* Maximum number of mount points/controllers */
-#define MAX_MNT_ELEMENTS	8
-/* Estimated number of groups created */
-#define MAX_GROUP_ELEMENTS	128
-
 /*
  * NOTE: Wide characters are not supported at the moment. Wide character support
  * would require us to use a scanner/parser that can parse beyond ASCII
  */
-
-/* Definitions for the uid and gid members of a cgroup_rules */
-#define CGRULE_INVALID (-1)
-#define CGRULE_WILD (-2)
-
-#define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 
 /* Flags for cgroup_change_cgroup_uid_gid() */
 enum cgflags {
@@ -126,15 +115,7 @@ struct cgroup_file_info {
 	short depth;
 };
 
-#define CG_NV_MAX 100
-#define CG_CONTROLLER_MAX 100
-/* this is NOT ENOUGH for stat variables */
 #define CG_VALUE_MAX 100
-/* Max number of mounted hierarchies. Event if one controller is mounted per
- * hier, it can not exceed CG_CONTROLLER_MAX
- */
-#define CG_HIER_MAX  CG_CONTROLLER_MAX
-
 struct cgroup_stat {
 	char name[FILENAME_MAX];
 	char value[CG_VALUE_MAX];

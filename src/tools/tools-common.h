@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <libcgroup.h>
+#include <libcgroup-internal.h>
 
 #ifdef CGROUP_DEBUG
 #define cgroup_dbg(x...) printf(x)

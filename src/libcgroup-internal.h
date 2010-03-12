@@ -26,6 +26,25 @@ __BEGIN_DECLS
 #include <sys/stat.h>
 #include <sys/types.h>
 
+/* Maximum number of mount points/controllers */
+#define MAX_MNT_ELEMENTS	8
+/* Estimated number of groups created */
+#define MAX_GROUP_ELEMENTS	128
+
+#define CG_NV_MAX 100
+#define CG_CONTROLLER_MAX 100
+/* Max number of mounted hierarchies. Event if one controller is mounted per
+ * hier, it can not exceed CG_CONTROLLER_MAX
+ */
+#define CG_HIER_MAX  CG_CONTROLLER_MAX
+
+/* Definitions for the uid and gid members of a cgroup_rules */
+#define CGRULE_INVALID (-1)
+#define CGRULE_WILD (-2)
+
+#define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
+
+
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
 

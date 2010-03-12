@@ -17,6 +17,7 @@
 #include <getopt.h>
 
 #include <libcgroup.h>
+#include <libcgroup-internal.h>
 
 enum flag{
     FL_MOUNT = 1,	/* show the mount points */
