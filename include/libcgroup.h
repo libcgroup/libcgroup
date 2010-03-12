@@ -47,7 +47,7 @@ enum cgflags {
 	CGFLAG_USECACHE = 0x01,
 };
 
-enum cgroup_errors {
+enum {
 	ECGROUPNOTCOMPILED=50000,
 	ECGROUPNOTMOUNTED,
 	ECGROUPNOTEXIST,
