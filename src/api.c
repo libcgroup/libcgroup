@@ -3192,7 +3192,7 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 	if (sk < 0)
 		return 1;
 
-	bzero((char *)&addr, sizeof(addr));
+	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, CGRULE_CGRED_SOCKET_PATH);
 
