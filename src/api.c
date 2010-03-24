@@ -498,6 +498,9 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 					matched = false;
 					continue;
 				}
+
+                                /* FIXME: basename() modifies the string and really shouldn't! */
+
 				if (strcmp(mprocname, procname) &&
 					strcmp(basename(mprocname), procname)) {
 					uid = CGRULE_INVALID;
@@ -827,6 +830,9 @@ static char *cg_build_path_locked(const char *name, char *path, const char *type
 			if (name) {
 				char *tmp;
 				tmp = strdup(path);
+
+                                /* FIXME: missing OOM check here! */
+
 				sprintf(path, "%s%s/", tmp, name);
 				free(tmp);
 			}
@@ -2179,6 +2185,9 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 			break;
 		if (!strcmp(ret->procname, procname))
 			break;
+
+                /* FIXME: basename() modifies the string and really shouldn't! */
+
 		if (!strcmp(ret->procname, basename(procname)))
 			/* Check a rule of basename. */
 			break;
