@@ -65,7 +65,7 @@ static int namespace_table_index;
 static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static pthread_rwlock_t namespace_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static struct cgroup config_cgroup_table[MAX_CGROUPS];
-int cgroup_table_index;
+static int cgroup_table_index;
 
 /*
  * Needed for the type while mounting cgroupfs.

@@ -60,7 +60,7 @@ __thread int last_errno;
 #define MAXLEN 256
 
 /* the value have to be thread specific */
-__thread char errtext[MAXLEN];
+static __thread char errtext[MAXLEN];
 
 /* Task command name length */
 #define TASK_COMM_LEN 16
