@@ -157,7 +157,7 @@ int display_controller_values(char **controllers, int count,
 
 	ret = cgroup_get_cgroup(group);
 	if (ret != 0) {
-		if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+		if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
 			fprintf(stderr, "%s: cannot read group '%s': %s\n",
 				program_name, group_name, cgroup_strerror(ret));
 	}
@@ -168,7 +168,7 @@ int display_controller_values(char **controllers, int count,
 		/* read the controller group data */
 		group_controller = cgroup_get_controller(group, controllers[j]);
 		if (group_controller == NULL) {
-			if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+			if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
 				fprintf(stderr, "%s: cannot find controller "\
 					"'%s' in group '%s'\n", program_name,
 					controllers[j], group_name);
