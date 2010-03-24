@@ -1180,7 +1180,7 @@ err:
  *
  * Create a duplicate copy of values under the specified controller
  */
-int cgroup_copy_controller_values(struct cgroup_controller *dst,
+static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 					struct cgroup_controller *src)
 {
 	int i, ret = 0;
@@ -1380,7 +1380,7 @@ err:
  *	Caller is responsible to free the returned string!
  * @return 0 on success, >0 on error.
  */
-int cgroup_find_parent(struct cgroup *cgroup, char **parent)
+static int cgroup_find_parent(struct cgroup *cgroup, char **parent)
 {
 	char child_path[FILENAME_MAX];
 	char *parent_path = NULL;
@@ -2708,7 +2708,7 @@ int cgroup_walk_tree_set_flags(void **handle, int flags)
  * This parses a stat line which is in the form of (name value) pair
  * separated by a space.
  */
-int cg_read_stat(FILE *fp, struct cgroup_stat *stat)
+static int cg_read_stat(FILE *fp, struct cgroup_stat *stat)
 {
 	int ret = 0;
 	char *line = NULL;

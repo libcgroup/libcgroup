@@ -387,7 +387,7 @@ void cgroup_config_cleanup_namespace_table(void)
 /*
  * Start mounting the mount table.
  */
-int cgroup_config_mount_fs(void)
+static int cgroup_config_mount_fs(void)
 {
 	int ret;
 	struct stat buff;
@@ -425,7 +425,7 @@ int cgroup_config_mount_fs(void)
 /*
  * Actually create the groups once the parsing has been finished.
  */
-int cgroup_config_create_groups(void)
+static int cgroup_config_create_groups(void)
 {
 	int error = 0;
 	int i;
@@ -444,7 +444,7 @@ int cgroup_config_create_groups(void)
 /*
  * Destroy the cgroups
  */
-int cgroup_config_destroy_groups(void)
+static int cgroup_config_destroy_groups(void)
 {
 	int error = 0;
 	int i;
@@ -461,7 +461,7 @@ int cgroup_config_destroy_groups(void)
 /*
  * Unmount the controllers
  */
-int cgroup_config_unmount_controllers(void)
+static int cgroup_config_unmount_controllers(void)
 {
 	int i;
 	int error;

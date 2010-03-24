@@ -73,7 +73,7 @@ int loglevel;
  * 	@param msg The error message to print (printf style)
  * 	@param ... Any args to msg (printf style)
  */
-void usage(FILE* fd, const char* msg, ...)
+static void usage(FILE* fd, const char* msg, ...)
 {
 	/* List of args to msg */
 	va_list ap;
@@ -428,7 +428,7 @@ int cgre_process_event(const struct proc_event *ev, const int type)
  * 	@param cn_hdr The netlink message
  * 	@return 0 on success, > 0 on error
  */
-int cgre_handle_msg(struct cn_msg *cn_hdr)
+static int cgre_handle_msg(struct cn_msg *cn_hdr)
 {
 	/* The event to consider */
 	struct proc_event *ev;
@@ -474,7 +474,7 @@ int cgre_handle_msg(struct cn_msg *cn_hdr)
 	return ret;
 }
 
-int cgre_receive_netlink_msg(int sk_nl)
+static int cgre_receive_netlink_msg(int sk_nl)
 {
 	char buff[BUFF_SIZE];
 	size_t recv_len;
@@ -520,7 +520,7 @@ int cgre_receive_netlink_msg(int sk_nl)
 	return 0;
 }
 
-void cgre_receive_unix_domain_msg(int sk_unix)
+static void cgre_receive_unix_domain_msg(int sk_unix)
 {
 	int flags;
 	int fd_client;
@@ -562,7 +562,7 @@ close:
 	return;
 }
 
-int cgre_create_netlink_socket_process_msg()
+static int cgre_create_netlink_socket_process_msg(void)
 {
 	int sk_nl = 0, sk_unix = 0, sk_max;
 	struct sockaddr_nl my_nla;
