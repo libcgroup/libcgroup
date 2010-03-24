@@ -1,6 +1,10 @@
 #ifndef _LIBCGROUP_ERROR_H
 #define _LIBCGROUP_ERROR_H
 
+#ifndef _LIBCGROUP_H_INSIDE
+#error "Only <libcgroup.h> should be included directly."
+#endif
+
 #include <features.h>
 
 __BEGIN_DECLS

@@ -1,6 +1,10 @@
 #ifndef _LIBCGROUP_TASKS_H
 #define _LIBCGROUP_TASKS_H
 
+#ifndef _LIBCGROUP_H_INSIDE
+#error "Only <libcgroup.h> should be included directly."
+#endif
+
 #include <libcgroup/groups.h>
 
 #include <features.h>
@@ -122,5 +126,3 @@ int cgroup_register_unchanged_process(pid_t pid, int flags);
 __END_DECLS
 
 #endif /* _LIBCGROUP_TASKS_H */
-
-

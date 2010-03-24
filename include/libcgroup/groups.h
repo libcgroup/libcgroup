@@ -1,6 +1,10 @@
 #ifndef _LIBCGROUP_GROUPS_H
 #define _LIBCGROUP_GROUPS_H
 
+#ifndef _LIBCGROUP_H_INSIDE
+#error "Only <libcgroup.h> should be included directly."
+#endif
+
 #include <features.h>
 #include <sys/types.h>
 #include <stdbool.h>

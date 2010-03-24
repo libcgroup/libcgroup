@@ -1,6 +1,10 @@
 #ifndef _LIBCGROUP_ITERATORS_H
 #define _LIBCGROUP_ITERATORS_H
 
+#ifndef _LIBCGROUP_H_INSIDE
+#error "Only <libcgroup.h> should be included directly."
+#endif
+
 #include <sys/types.h>
 #include <stdio.h>
 #include <features.h>
