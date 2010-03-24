@@ -74,7 +74,7 @@ struct controller_data {
  * @handle: Handle to be used during iteration
  * @info: info filled and returned about directory information
  */
-int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
+int cgroup_walk_tree_begin(const char *controller, const char *base_path, int depth,
 				void **handle, struct cgroup_file_info *info,
 				int *base_level);
 /**
@@ -86,7 +86,7 @@ int cgroup_walk_tree_begin(char *controller, char *base_path, const int depth,
  *
  * Returns ECGEOF when we are done walking through the nodes.
  */
-int cgroup_walk_tree_next(const int depth, void **handle,
+int cgroup_walk_tree_next(int depth, void **handle,
 				struct cgroup_file_info *info, int base_level);
 int cgroup_walk_tree_end(void **handle);
 
@@ -107,7 +107,7 @@ int cgroup_walk_tree_set_flags(void **handle, int flags);
  * @handle: Handle to be used during iteration.
  * @stat: Stats values will be filled and returned here.
  */
-int cgroup_read_stats_begin(char *controller, char *path, void **handle,
+int cgroup_read_stats_begin(const char *controller, const char *path, void **handle,
 				struct cgroup_stat *stat);
 
 /**
@@ -126,7 +126,7 @@ int cgroup_read_stats_end(void **handle);
  * @handle: Handle to be used in the iteration
  * @pid: The pid read from the tasks file. Will be filled in by the API
  */
-int cgroup_get_task_begin(char *cgroup, char *controller, void **handle,
+int cgroup_get_task_begin(const char *cgroup, const char *controller, void **handle,
 								pid_t *pid);
 
 /**

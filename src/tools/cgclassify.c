@@ -44,7 +44,7 @@ int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 			break;
 
 		ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
-			cgroup_list[i]->controllers);
+                                                (const char*const*) cgroup_list[i]->controllers);
 		if (ret)
 			fprintf(stderr, "Error changing group of pid %d: %s\n",
 				pid, cgroup_strerror(ret));

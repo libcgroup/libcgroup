@@ -42,8 +42,8 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
  * 	@return 0 on success, > 0 on error
  * TODO: Determine thread-safeness and fix of not safe.
  */
-int cgroup_change_cgroup_flags(const uid_t uid, const gid_t gid,
-		char *procname, const pid_t pid, const int flags);
+int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
+		const char *procname, pid_t pid, int flags);
 
 /**
  * Changes the cgroup of a program based on the rules in the config file.  If a
@@ -62,8 +62,8 @@ int cgroup_change_cgroup_flags(const uid_t uid, const gid_t gid,
  * 	@return 0 on success, > 0 on error
  * TODO: Determine thread-safeness and fix if not safe.
  */
-int cgroup_change_cgroup_uid_gid_flags(const uid_t uid, const gid_t gid,
-				const pid_t pid, const int flags);
+int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid,
+				pid_t pid, int flags);
 
 /**
  * Provides backwards-compatibility with older versions of the API.  This
@@ -84,7 +84,7 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
  *
  *  returns 0 on success.
  */
-int cgroup_change_cgroup_path(char *path, pid_t pid, char *controllers[]);
+int cgroup_change_cgroup_path(const char *path, pid_t pid, const char * const controllers[]);
 
 /**
  * Print the cached rules table.  This function should be called only after

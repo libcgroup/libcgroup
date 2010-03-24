@@ -18,7 +18,7 @@ int cgroup_init(void);
  * @mount_point: The string where the mount point is stored. Please note,
  * the caller must free mount_point.
  */
-int cgroup_get_subsys_mount_point(char *controller, char **mount_point);
+int cgroup_get_subsys_mount_point(const char *controller, char **mount_point);
 
 __END_DECLS
 
