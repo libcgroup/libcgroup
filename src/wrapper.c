@@ -333,7 +333,7 @@ int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
 	*tasks_uid = cgroup->tasks_uid;
 	*tasks_gid = cgroup->tasks_gid;
 	*control_uid = cgroup->control_uid;
-	*control_gid = cgroup->control_uid;
+	*control_gid = cgroup->control_gid;
 
 	return 0;
 }
