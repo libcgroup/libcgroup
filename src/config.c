@@ -719,7 +719,7 @@ err_mnt:
 	return error;
 }
 
-static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
+static int cgroup_config_unload_controller(const struct cgroup_mount_point *mount_info)
 {
 	int ret, error;
 	struct cgroup *cgroup = NULL;
@@ -729,7 +729,7 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 	if (cgroup == NULL)
 		return ECGFAIL;
 
-	cgc = cgroup_add_controller(cgroup, mount_info.name);
+	cgc = cgroup_add_controller(cgroup, mount_info->name);
 	if (cgc == NULL) {
 		ret = ECGFAIL;
 		goto out_error;
@@ -739,14 +739,14 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 	if (ret != 0)
 		goto out_error;
 
-	error = umount(mount_info.path);
+	error = umount(mount_info->path);
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto out_error;
 	}
 
-	error = rmdir(mount_info.path);
+	error = rmdir(mount_info->path);
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -790,7 +790,7 @@ int cgroup_unload_cgroups(void)
 			if (!curr_path)
 				goto out_errno;
 
-			ret = cgroup_config_unload_controller(info);
+			ret = cgroup_config_unload_controller(&info);
 
 			if (ret)
 				goto out_error;
