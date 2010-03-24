@@ -55,7 +55,7 @@ const char *cgroup_strerror(int code);
 /**
  * Return last errno, which caused ECGOTHER error.
  */
-int cgroup_get_last_errno();
+int cgroup_get_last_errno(void);
 
 __END_DECLS
 

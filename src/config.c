@@ -387,7 +387,7 @@ void cgroup_config_cleanup_namespace_table(void)
 /*
  * Start mounting the mount table.
  */
-int cgroup_config_mount_fs()
+int cgroup_config_mount_fs(void)
 {
 	int ret;
 	struct stat buff;
@@ -397,7 +397,7 @@ int cgroup_config_mount_fs()
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
 
 		ret = stat(curr->path, &buff);
-		
+
 		if (ret < 0 && errno != ENOENT) {
 			last_errno = errno;
 			return ECGOTHER;
@@ -425,7 +425,7 @@ int cgroup_config_mount_fs()
 /*
  * Actually create the groups once the parsing has been finished.
  */
-int cgroup_config_create_groups()
+int cgroup_config_create_groups(void)
 {
 	int error = 0;
 	int i;

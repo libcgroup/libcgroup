@@ -617,7 +617,7 @@ unlock:
  * test case and we can really make it thread safe.
  *
  */
-int cgroup_init()
+int cgroup_init(void)
 {
 	FILE *proc_mount = NULL;
 	struct mntent *ent = NULL;
@@ -686,7 +686,7 @@ int cgroup_init()
 	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
 
 	if (!temp_ent) {
-		last_errno = errno; 
+		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
 	}
@@ -763,7 +763,7 @@ unlock_exit:
 	return ret;
 }
 
-static int cg_test_mounted_fs()
+static int cg_test_mounted_fs(void)
 {
 	FILE *proc_mount = NULL;
 	struct mntent *ent = NULL;
@@ -2388,7 +2388,7 @@ void cgroup_print_rules_config(FILE *fp)
  * is probably NOT thread safe (calls cgroup_parse_rules()).
  * 	@return 0 on success, > 0 on failure
  */
-int cgroup_reload_cached_rules()
+int cgroup_reload_cached_rules(void)
 {
 	/* Return codes */
 	int ret = 0;
@@ -2414,7 +2414,7 @@ finished:
  * Initializes the rules cache.
  * 	@return 0 on success, > 0 on error
  */
-int cgroup_init_rules_cache()
+int cgroup_init_rules_cache(void)
 {
 	/* Return codes */
 	int ret = 0;
@@ -2533,7 +2533,7 @@ const char *cgroup_strerror(int code)
 /**
  * Return last errno, which caused ECGOTHER error.
  */
-int cgroup_get_last_errno()
+int cgroup_get_last_errno(void)
 {
     return last_errno;
 }
