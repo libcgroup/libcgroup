@@ -143,8 +143,8 @@ struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 /*
  * Main mounting structures
  */
-struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
-static pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
+extern struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
+extern pthread_rwlock_t cg_mount_table_lock;
 
 /*
  * config related structures
