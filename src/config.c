@@ -70,7 +70,7 @@ int cgroup_table_index;
 /*
  * Needed for the type while mounting cgroupfs.
  */
-static const char cgroup_filesystem[] = "cgroup";
+#define CGROUP_FILESYSTEM "cgroup"
 
 /*
  * NOTE: All these functions return 1 on success
@@ -413,7 +413,7 @@ int cgroup_config_mount_fs(void)
 			return ECGOTHER;
 		}
 
-		ret = mount(cgroup_filesystem, curr->path, cgroup_filesystem,
+		ret = mount(CGROUP_FILESYSTEM, curr->path, CGROUP_FILESYSTEM,
 								0, curr->name);
 
 		if (ret < 0)
