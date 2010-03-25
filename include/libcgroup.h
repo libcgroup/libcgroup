@@ -16,11 +16,15 @@
 #ifndef _LIBCGROUP_H
 #define _LIBCGROUP_H
 
+#define _LIBCGROUP_H_INSIDE
+
 #include <libcgroup/error.h>
 #include <libcgroup/init.h>
 #include <libcgroup/iterators.h>
 #include <libcgroup/groups.h>
 #include <libcgroup/tasks.h>
 #include <libcgroup/config.h>
+
+#undef _LIBCGROUP_H_INSIDE
 
 #endif /* _LIBCGROUP_H  */

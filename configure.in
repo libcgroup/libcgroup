@@ -1,13 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-# 
+#
 #  Copyright International Business Machines Corp. 2008
-# 
+#
 #  Authors:	Balbir Singh <balbir@linux.vnet.ibm.com>
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of version 2.1 of the GNU Lesser General Public License
 #  as published by the Free Software Foundation.
-# 
+#
 #  This program is distributed in the hope that it would be useful, but
 #  WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -15,13 +15,16 @@
 AC_PREREQ(2.61)
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup], 0.35,
+AC_INIT([libcgroup], 0.36.rc1,
 	[http://sourceforge.net/tracker/?group_id=218421&atid=1043649])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 # set library version, soname is libcgroup.so.MAJOR
 AC_SUBST(LIBRARY_VERSION_MAJOR, 1)
 AC_SUBST(LIBRARY_VERSION_MINOR, 0)
-AC_SUBST(LIBRARY_VERSION_RELEASE, 35)
+AC_SUBST(LIBRARY_VERSION_RELEASE, 36)
 
 # we do not want static libraries
 AC_DISABLE_STATIC
@@ -158,7 +161,8 @@ AC_CONFIG_FILES([Makefile
 	include/Makefile
 	doc/Makefile
 	doc/man/Makefile
-	dist/Makefile])
+	dist/Makefile
+	libcgroup.pc])
 AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT

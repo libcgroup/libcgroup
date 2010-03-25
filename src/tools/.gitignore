@@ -1,0 +1,10 @@
+cgclassify
+cgclear
+cgconfigparser
+cgcreate
+cgdelete
+cgexec
+cgget
+cgset
+lscgroup
+lssubsys
