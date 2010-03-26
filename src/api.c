@@ -439,7 +439,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 		if (strncmp(user, "@", 1) == 0) {
 			/* New GID rule. */
 			itr = &(user[1]);
-			if ((grp = getgrnam(itr))) {
+			grp = getgrnam(itr);
+			if (grp) {
 				uid = CGRULE_INVALID;
 				gid = grp->gr_gid;
 			} else {
@@ -455,7 +456,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 			gid = CGRULE_WILD;
 		} else if (*itr != '%') {
 			/* New UID rule. */
-			if ((pwd = getpwnam(user))) {
+			pwd = getpwnam(user);
+			if (pwd) {
 				uid = pwd->pw_uid;
 				gid = CGRULE_INVALID;
 			} else {
