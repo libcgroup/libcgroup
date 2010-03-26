@@ -13,10 +13,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * TODOs:
- * 	1. Implement our own hashing scheme
- * 	2. Add namespace support
- * 	3. Add support for parsing cgroup filesystem and creating a
- * 	   config out of it.
+ *	1. Implement our own hashing scheme
+ *	2. Add namespace support
+ *	3. Add support for parsing cgroup filesystem and creating a
+ *	   config out of it.
  *
  * Code initiated and designed by Balbir Singh. All faults are most likely
  * his mistake.
@@ -532,7 +532,8 @@ static int config_validate_namespaces(void)
 		 * Search through the mount table to locate which subsystems
 		 * are mounted together.
 		 */
-		while (!strncmp(cg_mount_table[j].path, mount_path, FILENAME_MAX)) {
+		while (!strncmp(cg_mount_table[j].path, mount_path,
+							FILENAME_MAX)) {
 			if (!namespace && cg_namespace_table[j]) {
 				/* In case namespace is not setup, set it up */
 				namespace = cg_namespace_table[j];
@@ -569,8 +570,7 @@ static int config_validate_namespaces(void)
 					error = ECGOTHER;
 					goto out_error;
 				}
-			}
-			else if (strcmp(namespace, cg_namespace_table[j])) {
+			} else if (strcmp(namespace, cg_namespace_table[j])) {
 				error = ECGNAMESPACEPATHS;
 				goto out_error;
 			}
@@ -608,7 +608,8 @@ static int config_order_namespace_table(void)
 	for (i = 0; i < CG_CONTROLLER_MAX; i++)
 		cg_namespace_table[i] = NULL;
 
-	memset(cg_namespace_table, 0, CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
+	memset(cg_namespace_table, 0,
+			CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
 
 	/*
 	 * Now fill up the namespace table looking at the table we have
