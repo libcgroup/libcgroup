@@ -27,4 +27,22 @@
 
 #undef _LIBCGROUP_H_INSIDE
 
+/*! \mainpage libcgroup
+ *
+ * \section intro_sec Introduction
+ *
+ * @c libcgroup is a library that abstracts the control group file system in Linux.
+ * It comes with various command-line tools and configuration files, see
+ * their man pages for details.
+ *
+ * This documentation provides description of @c libcgroup API. Read following
+ * sections, preferably in this order:
+ * -# @ref group_init "Initialization"
+ * -# @ref group_groups "Control Groups"
+ * -# @ref group_iterators "Iterators"
+ * -# @ref group_tasks "Manipulation with tasks"
+ * -# @ref group_config "Configuration"
+ * -# @ref group_errors "Error Handling"
+ */
+
 #endif /* _LIBCGROUP_H  */
