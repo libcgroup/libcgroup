@@ -14,7 +14,7 @@
 #define MODE_SHOW_ALL_CONTROLLERS	4
 
 
-void usage(int status, char *program_name)
+static void usage(int status, const char *program_name)
 {
 	if (status != 0)
 		fprintf(stderr, "Wrong input parameters,"
@@ -26,7 +26,7 @@ void usage(int status, char *program_name)
 	}
 }
 
-int display_one_record(char *name, struct cgroup_controller *group_controller,
+static int display_one_record(char *name, struct cgroup_controller *group_controller,
 	const char *program_name, int mode)
 {
 	int ret;
@@ -71,7 +71,7 @@ int display_one_record(char *name, struct cgroup_controller *group_controller,
 }
 
 
-int display_name_values(char **names, int count, const char* group_name,
+static int display_name_values(char **names, int count, const char* group_name,
 		const char *program_name, int mode)
 {
 	int i;
@@ -136,7 +136,7 @@ err:
 	return ret;
 }
 
-int display_controller_values(char **controllers, int count,
+static int display_controller_values(char **controllers, int count,
 		const char *group_name, const char *program_name, int mode)
 {
 	struct cgroup *group = NULL;
@@ -157,7 +157,7 @@ int display_controller_values(char **controllers, int count,
 
 	ret = cgroup_get_cgroup(group);
 	if (ret != 0) {
-		if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+		if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
 			fprintf(stderr, "%s: cannot read group '%s': %s\n",
 				program_name, group_name, cgroup_strerror(ret));
 	}
@@ -168,7 +168,7 @@ int display_controller_values(char **controllers, int count,
 		/* read the controller group data */
 		group_controller = cgroup_get_controller(group, controllers[j]);
 		if (group_controller == NULL) {
-			if (!(mode && MODE_SHOW_ALL_CONTROLLERS))
+			if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
 				fprintf(stderr, "%s: cannot find controller "\
 					"'%s' in group '%s'\n", program_name,
 					controllers[j], group_name);
@@ -201,7 +201,7 @@ err:
 
 }
 
-int display_all_controllers(const char *group_name,
+static int display_all_controllers(const char *group_name,
 	const char *program_name, int mode)
 {
 	void *handle;
@@ -224,7 +224,7 @@ int display_all_controllers(const char *group_name,
 	return succ;
 }
 
-int add_record_to_buffer(int *p_number,
+static int add_record_to_buffer(int *p_number,
 	int *p_max, char ***p_records, char *new_rec)
 {
 

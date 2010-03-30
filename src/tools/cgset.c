@@ -26,7 +26,7 @@ static struct option const long_options[] =
 
 int flags; /* used input method */
 
-struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
+static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
 {
 	int ret = 0;
 	struct cgroup *src_cgroup;
@@ -55,7 +55,7 @@ scgroup_err:
 }
 
 
-void usage(int status, char *program_name)
+static void usage(int status, const char *program_name)
 {
 	if (status != 0)
 		fprintf(stderr, "Wrong input parameters,"

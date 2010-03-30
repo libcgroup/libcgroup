@@ -38,7 +38,7 @@ static inline void trim_filepath(char *path)
 	path[len + 1] = '\0';
 }
 
-void usage(int status, char *program_name)
+static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters,"
@@ -55,8 +55,8 @@ void usage(int status, char *program_name)
  * if the info about controller "name" should be printed,
  *  then the function returns nonzero value
  */
-int is_ctlr_on_list(struct cgroup_group_spec *cgroup_list,
-			char name[FILENAME_MAX])
+static int is_ctlr_on_list(struct cgroup_group_spec *cgroup_list,
+			const char *name)
 {
 	int j;
 
@@ -67,7 +67,7 @@ int is_ctlr_on_list(struct cgroup_group_spec *cgroup_list,
 	return 0;
 }
 
-void print_info(struct cgroup_file_info *info, char *name, int pref)
+static void print_info(struct cgroup_file_info *info, char *name, int pref)
 {
 	if (info->type == CGROUP_FILE_TYPE_DIR) {
 		if (info->full_path[pref] ==  '/')
@@ -78,7 +78,7 @@ void print_info(struct cgroup_file_info *info, char *name, int pref)
 }
 
 /* display controller:/input_path cgroups */
-int display_controller_data(char *input_path, char *controller, char *name)
+static int display_controller_data(char *input_path, char *controller, char *name)
 {
 	int ret;
 	void *handle;
@@ -120,7 +120,7 @@ int display_controller_data(char *input_path, char *controller, char *name)
  * the cgroup it returns ECGEOF
  */
 
-int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
+static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 {
 	int ret = 0;
 	void *handle;
@@ -191,7 +191,7 @@ int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 }
 
 
-int cgroup_list_cgroups(char *tname,
+static int cgroup_list_cgroups(char *tname,
 	struct cgroup_group_spec *cgroup_list[],
 	int flags)
 {

@@ -34,7 +34,7 @@
 /*
  * Change process group as specified on command line.
  */
-int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
+static int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 {
 	int i;
 	int ret = 0;
@@ -44,7 +44,7 @@ int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 			break;
 
 		ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
-			cgroup_list[i]->controllers);
+                                                (const char*const*) cgroup_list[i]->controllers);
 		if (ret)
 			fprintf(stderr, "Error changing group of pid %d: %s\n",
 				pid, cgroup_strerror(ret));
@@ -57,7 +57,7 @@ int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 /*
  * Change process group as specified in cgrules.conf.
  */
-int change_group_based_on_rule(pid_t pid)
+static int change_group_based_on_rule(pid_t pid)
 {
 	uid_t euid;
 	gid_t egid;
@@ -92,7 +92,7 @@ out:
 }
 
 static struct option longopts[] = {
-	{"sticky", no_argument, NULL, 's'}, 
+	{"sticky", no_argument, NULL, 's'},
 	{0, 0, 0, 0}
 };
 

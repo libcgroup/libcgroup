@@ -27,7 +27,7 @@ enum flag{
 
 typedef char cont_name_t[FILENAME_MAX];
 
-void usage(int status, char *program_name)
+static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters,"
@@ -45,7 +45,7 @@ void usage(int status, char *program_name)
 }
 
 /* print data about input cont_name controller */
-int print_controller(cont_name_t cont_name, int flags)
+static int print_controller(cont_name_t cont_name, int flags)
 {
 	int ret = 0;
 	char name[FILENAME_MAX];
@@ -114,7 +114,7 @@ int print_controller(cont_name_t cont_name, int flags)
 }
 
 /* list the controllers */
-int cgroup_list_controllers(char *tname,
+static int cgroup_list_controllers(const char *tname,
 	cont_name_t cont_name[CG_CONTROLLER_MAX], int flags)
 {
 	int ret = 0;
@@ -163,7 +163,7 @@ int cgroup_list_controllers(char *tname,
 	return final_ret;
 }
 
-int cgroup_list_all_controllers(char *tname)
+static int cgroup_list_all_controllers(const char *tname)
 {
 	int ret = 0;
 	void *handle;

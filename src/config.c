@@ -13,10 +13,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * TODOs:
- * 	1. Implement our own hashing scheme
- * 	2. Add namespace support
- * 	3. Add support for parsing cgroup filesystem and creating a
- * 	   config out of it.
+ *	1. Implement our own hashing scheme
+ *	2. Add namespace support
+ *	3. Add support for parsing cgroup filesystem and creating a
+ *	   config out of it.
  *
  * Code initiated and designed by Balbir Singh. All faults are most likely
  * his mistake.
@@ -65,12 +65,12 @@ static int namespace_table_index;
 static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static pthread_rwlock_t namespace_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static struct cgroup config_cgroup_table[MAX_CGROUPS];
-int cgroup_table_index;
+static int cgroup_table_index;
 
 /*
  * Needed for the type while mounting cgroupfs.
  */
-static const char cgroup_filesystem[] = "cgroup";
+#define CGROUP_FILESYSTEM "cgroup"
 
 /*
  * NOTE: All these functions return 1 on success
@@ -387,7 +387,7 @@ void cgroup_config_cleanup_namespace_table(void)
 /*
  * Start mounting the mount table.
  */
-int cgroup_config_mount_fs()
+static int cgroup_config_mount_fs(void)
 {
 	int ret;
 	struct stat buff;
@@ -397,7 +397,7 @@ int cgroup_config_mount_fs()
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
 
 		ret = stat(curr->path, &buff);
-		
+
 		if (ret < 0 && errno != ENOENT) {
 			last_errno = errno;
 			return ECGOTHER;
@@ -413,7 +413,7 @@ int cgroup_config_mount_fs()
 			return ECGOTHER;
 		}
 
-		ret = mount(cgroup_filesystem, curr->path, cgroup_filesystem,
+		ret = mount(CGROUP_FILESYSTEM, curr->path, CGROUP_FILESYSTEM,
 								0, curr->name);
 
 		if (ret < 0)
@@ -425,7 +425,7 @@ int cgroup_config_mount_fs()
 /*
  * Actually create the groups once the parsing has been finished.
  */
-int cgroup_config_create_groups()
+static int cgroup_config_create_groups(void)
 {
 	int error = 0;
 	int i;
@@ -444,7 +444,7 @@ int cgroup_config_create_groups()
 /*
  * Destroy the cgroups
  */
-int cgroup_config_destroy_groups(void)
+static int cgroup_config_destroy_groups(void)
 {
 	int error = 0;
 	int i;
@@ -461,7 +461,7 @@ int cgroup_config_destroy_groups(void)
 /*
  * Unmount the controllers
  */
-int cgroup_config_unmount_controllers(void)
+static int cgroup_config_unmount_controllers(void)
 {
 	int i;
 	int error;
@@ -532,7 +532,8 @@ static int config_validate_namespaces(void)
 		 * Search through the mount table to locate which subsystems
 		 * are mounted together.
 		 */
-		while (!strncmp(cg_mount_table[j].path, mount_path, FILENAME_MAX)) {
+		while (!strncmp(cg_mount_table[j].path, mount_path,
+							FILENAME_MAX)) {
 			if (!namespace && cg_namespace_table[j]) {
 				/* In case namespace is not setup, set it up */
 				namespace = cg_namespace_table[j];
@@ -569,8 +570,7 @@ static int config_validate_namespaces(void)
 					error = ECGOTHER;
 					goto out_error;
 				}
-			}
-			else if (strcmp(namespace, cg_namespace_table[j])) {
+			} else if (strcmp(namespace, cg_namespace_table[j])) {
 				error = ECGNAMESPACEPATHS;
 				goto out_error;
 			}
@@ -608,7 +608,8 @@ static int config_order_namespace_table(void)
 	for (i = 0; i < CG_CONTROLLER_MAX; i++)
 		cg_namespace_table[i] = NULL;
 
-	memset(cg_namespace_table, 0, CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
+	memset(cg_namespace_table, 0,
+			CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
 
 	/*
 	 * Now fill up the namespace table looking at the table we have
@@ -719,7 +720,7 @@ err_mnt:
 	return error;
 }
 
-static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
+static int cgroup_config_unload_controller(const struct cgroup_mount_point *mount_info)
 {
 	int ret, error;
 	struct cgroup *cgroup = NULL;
@@ -729,7 +730,7 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 	if (cgroup == NULL)
 		return ECGFAIL;
 
-	cgc = cgroup_add_controller(cgroup, mount_info.name);
+	cgc = cgroup_add_controller(cgroup, mount_info->name);
 	if (cgc == NULL) {
 		ret = ECGFAIL;
 		goto out_error;
@@ -739,14 +740,14 @@ static int cgroup_config_unload_controller(struct cgroup_mount_point mount_info)
 	if (ret != 0)
 		goto out_error;
 
-	error = umount(mount_info.path);
+	error = umount(mount_info->path);
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto out_error;
 	}
 
-	error = rmdir(mount_info.path);
+	error = rmdir(mount_info->path);
 	if (error) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -790,7 +791,7 @@ int cgroup_unload_cgroups(void)
 			if (!curr_path)
 				goto out_errno;
 
-			ret = cgroup_config_unload_controller(info);
+			ret = cgroup_config_unload_controller(&info);
 
 			if (ret)
 				goto out_error;

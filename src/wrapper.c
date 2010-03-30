@@ -235,9 +235,11 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 
 	if (value)
-		ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "1");
+		ret = snprintf(cntl_value->value,
+				sizeof(cntl_value->value), "1");
 	else
-		ret = snprintf(cntl_value->value, sizeof(cntl_value->value), "0");
+		ret = snprintf(cntl_value->value,
+				sizeof(cntl_value->value), "0");
 
 	if (ret >= sizeof(cntl_value->value))
 		return ECGINVAL;
@@ -581,7 +583,7 @@ struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 	for (i = 0; i < nv_number; i++) {
 
 		if ((strchr(name_value[i].name, '.')) == NULL) {
-		fprintf(stderr, "wrong -r  parameter (%s=%s)\n",
+			fprintf(stderr, "wrong -r  parameter (%s=%s)\n",
 				name_value[i].name, name_value[i].value);
 			goto scgroup_err;
 		}
