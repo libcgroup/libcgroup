@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int i, j;
-	char c;
+	int c;
 
 	/* Structure to get GID from group name */
 	struct group *grp = NULL;
