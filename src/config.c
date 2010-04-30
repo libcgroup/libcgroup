@@ -44,7 +44,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define MAX_CGROUPS 1024
+unsigned int MAX_CGROUPS = 64;	/* NOTE: This value changes dynamically */
 
 extern FILE *yyin;
 extern int yyparse(void);
@@ -64,7 +64,7 @@ static int config_table_index;
 static int namespace_table_index;
 static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static pthread_rwlock_t namespace_table_lock = PTHREAD_RWLOCK_INITIALIZER;
-static struct cgroup config_cgroup_table[MAX_CGROUPS];
+static struct cgroup *config_cgroup_table;
 static int cgroup_table_index;
 
 /*
@@ -84,10 +84,29 @@ static int cgroup_table_index;
  */
 int cgroup_config_insert_cgroup(char *cg_name)
 {
-	struct cgroup *config_cgroup =
-			&config_cgroup_table[cgroup_table_index];
+	struct cgroup *config_cgroup;
 
+	if (cgroup_table_index >= MAX_CGROUPS - 1) {
+		struct cgroup *newblk;
+		if (MAX_CGROUPS >= INT_MAX) {
+			last_errno = ENOMEM;
+			return 0;
+		}
+		MAX_CGROUPS *= 2;
+		newblk = realloc(config_cgroup_table, (MAX_CGROUPS *
+					sizeof(struct cgroup)));
+		if (!newblk) {
+			last_errno = ENOMEM;
+			return 0;
+		}
+		config_cgroup_table = newblk;
+		cgroup_dbg("MAX_CGROUPS %d\n", MAX_CGROUPS);
+		cgroup_dbg("reallocated config_cgroup_table to %p\n", config_cgroup_table);
+	}
+
+	config_cgroup = &config_cgroup_table[cgroup_table_index];
 	strncpy(config_cgroup->name, cg_name, FILENAME_MAX);
+
 	/*
 	 * Since this will be the last part to be parsed.
 	 */
@@ -663,9 +682,11 @@ int cgroup_config_load_config(const char *pathname)
 		return ECGOTHER;
 	}
 
+	config_cgroup_table = malloc(MAX_CGROUPS * sizeof(struct cgroup));
 	if (yyparse() != 0) {
 		cgroup_dbg("Failed to parse file %s\n", pathname);
 		fclose(yyin);
+		free(config_cgroup_table);
 		return ECGCONFIGPARSEFAIL;
 	}
 
@@ -676,8 +697,10 @@ int cgroup_config_load_config(const char *pathname)
 	 * The configuration should have either namespace or mount.
 	 * Not both and not none.
 	 */
-	if (namespace_enabled == mount_enabled)
+	if (namespace_enabled == mount_enabled) {
+		free(config_cgroup_table);
 		return ECGMOUNTNAMESPACE;
+	}
 
 	/*
 	 * We do not allow both mount and namespace sections in the
@@ -716,6 +739,7 @@ err_grp:
 	cgroup_config_destroy_groups();
 err_mnt:
 	cgroup_config_unmount_controllers();
+	free(config_cgroup_table);
 	fclose(yyin);
 	return error;
 }
