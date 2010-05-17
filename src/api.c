@@ -180,6 +180,26 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	return ret;
 }
 
+static char *cgroup_basename(const char *path)
+{
+	char *base;
+	char *tmp_string;
+
+	tmp_string = strdup(path);
+
+	if (!tmp_string)
+		return NULL;
+
+	base = strdup(basename(tmp_string));
+
+	if (!base)
+		return NULL;
+
+	free(tmp_string);
+
+	return base;
+}
+
 static int cgroup_test_subsys_mounted(const char *name)
 {
 	int i;
@@ -494,6 +514,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 			if (!matched)
 				continue;
 			if (len_procname) {
+				char *mproc_base;
 				/*
 				 * If there is a rule based on process name,
 				 * it should be matched with mprocname.
@@ -505,18 +526,16 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 					continue;
 				}
 
-				/*
-				 * FIXME: basename() modifies the
-				 * string and really shouldn't!
-				 **/
-
+				mproc_base = cgroup_basename(mprocname);
 				if (strcmp(mprocname, procname) &&
-					strcmp(basename(mprocname), procname)) {
+					strcmp(mproc_base, procname)) {
 					uid = CGRULE_INVALID;
 					gid = CGRULE_INVALID;
 					matched = false;
+					free(mproc_base);
 					continue;
 				}
+				free(mproc_base);
 			}
 		}
 
@@ -2179,6 +2198,7 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 {
 	/* Return value */
 	struct cgroup_rule *ret = rl.head;
+	char *base = NULL;
 
 	pthread_rwlock_wrlock(&rl_lock);
 	while (ret) {
@@ -2194,16 +2214,19 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 			break;
 		if (!strcmp(ret->procname, procname))
 			break;
-		/*
-		 * FIXME: basename() modifies the string and really shouldn't!
-		 **/
 
-		if (!strcmp(ret->procname, basename(procname)))
+		base = cgroup_basename(procname);
+		if (!strcmp(ret->procname, base))
 			/* Check a rule of basename. */
 			break;
 		ret = ret->next;
+		free(base);
+		base = NULL;
 	}
 	pthread_rwlock_unlock(&rl_lock);
+
+	if (base)
+		free(base);
 
 	return ret;
 }
