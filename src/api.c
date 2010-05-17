@@ -759,6 +759,39 @@ int cgroup_init(void)
 				ent->mnt_opts, found_mnt);
 			found_mnt++;
 		}
+
+		/*
+		 * Doesn't match the controller.
+		 * Check if it is a named hierarchy.
+		 */
+		mntopt = hasmntopt(ent, "name");
+
+		if (mntopt) {
+			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+			/*
+			 * Check if it is a duplicate
+			 */
+			duplicate = 0;
+			for (j = 0; j < found_mnt; j++) {
+				if (strncmp(mntopt, cg_mount_table[j].name,
+							FILENAME_MAX) == 0) {
+					duplicate = 1;
+					break;
+				}
+			}
+
+			if (duplicate) {
+				cgroup_dbg("controller %s is already mounted on %s\n",
+					mntopt, cg_mount_table[j].path);
+				continue;
+			}
+
+			strcpy(cg_mount_table[found_mnt].name, mntopt);
+			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
+			cgroup_dbg("Found cgroup option %s, count %d\n",
+				ent->mnt_opts, found_mnt);
+			found_mnt++;
+		}
 	}
 
 	free(temp_ent);
