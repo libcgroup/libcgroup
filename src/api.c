@@ -162,8 +162,10 @@ fail_chown:
 static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 {
 	int ret = 0;
+	FTS *fts;
+
 	cgroup_dbg("path is %s\n", *path);
-	FTS *fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
+	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
 		FTSENT *ent;
@@ -2643,7 +2645,6 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 							int *base_level)
 {
 	int ret = 0;
-	cgroup_dbg("path is %s\n", base_path);
 	char *cg_path[2];
 	char full_path[FILENAME_MAX];
 	FTSENT *ent;
@@ -2654,6 +2655,8 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	if (!handle)
 		return ECGINVAL;
+
+	cgroup_dbg("path is %s\n", base_path);
 
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
