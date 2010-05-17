@@ -330,7 +330,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	char destination[FILENAME_MAX] = { '\0' };
 	uid_t uid = CGRULE_INVALID;
 	gid_t gid = CGRULE_INVALID;
-	int len_username;
+	size_t len_username;
 	int len_procname;
 
 	/* The current line number */
@@ -536,7 +536,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		len_username = min(len_username, sizeof(newrule->username) - 1);
+		len_username = min(len_username,
+					sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
 		if (len_procname) {
 			newrule->procname = strdup(procname);
