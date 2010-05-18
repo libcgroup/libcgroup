@@ -34,12 +34,6 @@ int main(int argc, char *argv[])
 	/* UID of user */
 	uid_t uid;
 
-	/* Group data */
-	struct group *grp;
-
-	/* GID of group */
-	gid_t gid;
-
 	/* Return codes */
 	int ret;
 
