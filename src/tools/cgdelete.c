@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int i, j;
-	char c;
+	int c;
 	int flags = 0;
 	int final_ret = 0;
 	int capacity = 0;

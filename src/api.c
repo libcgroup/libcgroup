@@ -162,8 +162,10 @@ fail_chown:
 static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 {
 	int ret = 0;
+	FTS *fts;
+
 	cgroup_dbg("path is %s\n", *path);
-	FTS *fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
+	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
 		FTSENT *ent;
@@ -176,6 +178,26 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	}
 	fts_close(fts);
 	return ret;
+}
+
+static char *cgroup_basename(const char *path)
+{
+	char *base;
+	char *tmp_string;
+
+	tmp_string = strdup(path);
+
+	if (!tmp_string)
+		return NULL;
+
+	base = strdup(basename(tmp_string));
+
+	if (!base)
+		return NULL;
+
+	free(tmp_string);
+
+	return base;
 }
 
 static int cgroup_test_subsys_mounted(const char *name)
@@ -227,26 +249,26 @@ static void cgroup_free_rule(struct cgroup_rule *r)
  * the lock must be taken for writing before calling this function!
  *	@param rl Pointer to the list of rules to free from memory
  */
-static void cgroup_free_rule_list(struct cgroup_rule_list *rl)
+static void cgroup_free_rule_list(struct cgroup_rule_list *cg_rl)
 {
 	/* Temporary pointer */
 	struct cgroup_rule *tmp = NULL;
 
 	/* Make sure we're not freeing NULL memory! */
-	if (!(rl->head)) {
+	if (!(cg_rl->head)) {
 		cgroup_dbg("Warning: Attempted to free NULL list.\n");
 		return;
 	}
 
-	while (rl->head) {
-		tmp = rl->head;
-		rl->head = tmp->next;
+	while (cg_rl->head) {
+		tmp = cg_rl->head;
+		cg_rl->head = tmp->next;
 		cgroup_free_rule(tmp);
 	}
 
 	/* Don't leave wild pointers around! */
-	rl->head = NULL;
-	rl->tail = NULL;
+	cg_rl->head = NULL;
+	cg_rl->tail = NULL;
 }
 
 static char *cg_skip_unused_charactors_in_rule(char *rule)
@@ -328,7 +350,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	char destination[FILENAME_MAX] = { '\0' };
 	uid_t uid = CGRULE_INVALID;
 	gid_t gid = CGRULE_INVALID;
-	int len_username;
+	size_t len_username;
 	int len_procname;
 
 	/* The current line number */
@@ -492,6 +514,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 			if (!matched)
 				continue;
 			if (len_procname) {
+				char *mproc_base;
 				/*
 				 * If there is a rule based on process name,
 				 * it should be matched with mprocname.
@@ -503,18 +526,16 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 					continue;
 				}
 
-				/*
-				 * FIXME: basename() modifies the
-				 * string and really shouldn't!
-				 **/
-
+				mproc_base = cgroup_basename(mprocname);
 				if (strcmp(mprocname, procname) &&
-					strcmp(basename(mprocname), procname)) {
+					strcmp(mproc_base, procname)) {
 					uid = CGRULE_INVALID;
 					gid = CGRULE_INVALID;
 					matched = false;
+					free(mproc_base);
 					continue;
 				}
+				free(mproc_base);
 			}
 		}
 
@@ -534,7 +555,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		len_username = min(len_username, sizeof(newrule->username) - 1);
+		len_username = min(len_username,
+					sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
 		if (len_procname) {
 			newrule->procname = strdup(procname);
@@ -732,6 +754,39 @@ int cgroup_init(void)
 			}
 
 			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
+			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
+			cgroup_dbg("Found cgroup option %s, count %d\n",
+				ent->mnt_opts, found_mnt);
+			found_mnt++;
+		}
+
+		/*
+		 * Doesn't match the controller.
+		 * Check if it is a named hierarchy.
+		 */
+		mntopt = hasmntopt(ent, "name");
+
+		if (mntopt) {
+			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+			/*
+			 * Check if it is a duplicate
+			 */
+			duplicate = 0;
+			for (j = 0; j < found_mnt; j++) {
+				if (strncmp(mntopt, cg_mount_table[j].name,
+							FILENAME_MAX) == 0) {
+					duplicate = 1;
+					break;
+				}
+			}
+
+			if (duplicate) {
+				cgroup_dbg("controller %s is already mounted on %s\n",
+					mntopt, cg_mount_table[j].path);
+				continue;
+			}
+
+			strcpy(cg_mount_table[found_mnt].name, mntopt);
 			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
 			cgroup_dbg("Found cgroup option %s, count %d\n",
 				ent->mnt_opts, found_mnt);
@@ -1835,7 +1890,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
  * Call this function with required locks taken.
  */
 static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
-			struct cgroup_controller *cgc, int index)
+			struct cgroup_controller *cgc, int cg_index)
 {
 	char *ctrl_name = NULL;
 	char *ctrl_file = NULL;
@@ -1859,7 +1914,7 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	 * some sort of a flag, but this is fine for now.
 	 */
 
-	cg_build_path_locked(cgroup->name, path, cg_mount_table[index].name);
+	cg_build_path_locked(cgroup->name, path, cg_mount_table[cg_index].name);
 	strncat(path, d_name, sizeof(path) - strlen(path));
 
 	error = stat(path, &stat_buffer);
@@ -1886,8 +1941,8 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 		goto fill_error;
 	}
 
-	if (strcmp(ctrl_name, cg_mount_table[index].name) == 0) {
-		error = cg_rd_ctrl_file(cg_mount_table[index].name,
+	if (strcmp(ctrl_name, cg_mount_table[cg_index].name) == 0) {
+		error = cg_rd_ctrl_file(cg_mount_table[cg_index].name,
 				cgroup->name, ctrl_dir->d_name, &ctrl_value);
 		if (error || !ctrl_value)
 			goto fill_error;
@@ -2176,6 +2231,7 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 {
 	/* Return value */
 	struct cgroup_rule *ret = rl.head;
+	char *base = NULL;
 
 	pthread_rwlock_wrlock(&rl_lock);
 	while (ret) {
@@ -2191,16 +2247,19 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 			break;
 		if (!strcmp(ret->procname, procname))
 			break;
-		/*
-		 * FIXME: basename() modifies the string and really shouldn't!
-		 **/
 
-		if (!strcmp(ret->procname, basename(procname)))
+		base = cgroup_basename(procname);
+		if (!strcmp(ret->procname, base))
 			/* Check a rule of basename. */
 			break;
 		ret = ret->next;
+		free(base);
+		base = NULL;
 	}
 	pthread_rwlock_unlock(&rl_lock);
+
+	if (base)
+		free(base);
 
 	return ret;
 }
@@ -2643,7 +2702,6 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 							int *base_level)
 {
 	int ret = 0;
-	cgroup_dbg("path is %s\n", base_path);
 	char *cg_path[2];
 	char full_path[FILENAME_MAX];
 	FTSENT *ent;
@@ -2654,6 +2712,10 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	if (!handle)
 		return ECGINVAL;
+
+	cgroup_dbg("path is %s\n", base_path);
+
+	cgroup_dbg("path is %s\n", base_path);
 
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
@@ -2712,16 +2774,17 @@ int cgroup_walk_tree_set_flags(void **handle, int flags)
  * This parses a stat line which is in the form of (name value) pair
  * separated by a space.
  */
-static int cg_read_stat(FILE *fp, struct cgroup_stat *stat)
+static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 {
 	int ret = 0;
 	char *line = NULL;
 	size_t len = 0;
-	ssize_t read;
-	char *token, *saveptr;
+	ssize_t read_bytes;
+	char *token;
+	char *saveptr = NULL;
 
-	read = getline(&line, &len, fp);
-	if (read == -1)
+	read_bytes = getline(&line, &len, fp);
+	if (read_bytes == -1)
 		return ECGEOF;
 
 	token = strtok_r(line, " ", &saveptr);
@@ -2729,14 +2792,14 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *stat)
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(stat->name, token, FILENAME_MAX);
+	strncpy(cgroup_stat->name, token, FILENAME_MAX);
 
 	token = strtok_r(NULL, " ", &saveptr);
 	if (!token) {
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(stat->value, token, CG_VALUE_MAX);
+	strncpy(cgroup_stat->value, token, CG_VALUE_MAX);
 
 out_free:
 	free(line);
@@ -2758,7 +2821,7 @@ int cgroup_read_stats_end(void **handle)
 	return 0;
 }
 
-int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat)
+int cgroup_read_stats_next(void **handle, struct cgroup_stat *cgroup_stat)
 {
 	int ret = 0;
 	FILE *fp;
@@ -2766,11 +2829,11 @@ int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!handle || !stat)
+	if (!handle || !cgroup_stat)
 		return ECGINVAL;
 
 	fp = (FILE *)*handle;
-	ret = cg_read_stat(fp, stat);
+	ret = cg_read_stat(fp, cgroup_stat);
 	*handle = fp;
 	return ret;
 }
@@ -2779,7 +2842,7 @@ int cgroup_read_stats_next(void **handle, struct cgroup_stat *stat)
  * TODO: Need to decide a better place to put this function.
  */
 int cgroup_read_stats_begin(const char *controller, const char *path,
-				void **handle, struct cgroup_stat *stat)
+				void **handle, struct cgroup_stat *cgroup_stat)
 {
 	int ret = 0;
 	char stat_file[FILENAME_MAX];
@@ -2788,7 +2851,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!stat || !handle)
+	if (!cgroup_stat || !handle)
 		return ECGINVAL;
 
 	if (!cg_build_path(path, stat_file, controller))
@@ -2802,7 +2865,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 		return ECGINVAL;
 	}
 
-	ret = cg_read_stat(fp, stat);
+	ret = cg_read_stat(fp, cgroup_stat);
 	*handle = fp;
 	return ret;
 }

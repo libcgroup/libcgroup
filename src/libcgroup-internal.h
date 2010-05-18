@@ -39,8 +39,9 @@ __BEGIN_DECLS
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
 /* Definitions for the uid and gid members of a cgroup_rules */
-#define CGRULE_INVALID (-1)
-#define CGRULE_WILD (-2)
+/* FIXME: These really should not be negative values */
+#define CGRULE_INVALID ((uid_t) -1)
+#define CGRULE_WILD ((uid_t) -2)
 
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 

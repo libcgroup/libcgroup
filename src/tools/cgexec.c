@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	uid_t uid;
 	gid_t gid;
 	pid_t pid;
-	char c;
+	int c;
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 
 	if (argc < 2) {
