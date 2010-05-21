@@ -15,7 +15,7 @@
 AC_PREREQ(2.61)
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup], 0.36.1.rc1,
+AC_INIT([libcgroup], 0.36.1,
 	[http://sourceforge.net/tracker/?group_id=218421&atid=1043649])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
