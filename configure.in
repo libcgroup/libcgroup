@@ -79,6 +79,19 @@ AC_ARG_ENABLE([daemon],
 	[with_daemon=true])
 AM_CONDITIONAL([WITH_DAEMON], [test x$with_daemon = xtrue])
 
+AC_ARG_ENABLE([initscript-install],
+	[AC_HELP_STRING([--enable-initscript-install],
+		[install init scripts [default=no]])],
+	[
+		if test "x$enableval" = xno; then
+			with_initscript_install=false
+		else
+			with_initscript_install=true
+		fi
+	],
+	[with_initscript_install=false])
+AM_CONDITIONAL([WITH_INITSCRIPT_INSTALL], [test x$with_initscript_install = xtrue])
+
 socket_path="/var/run/cgred.socket"
 AC_ARG_ENABLE([cgred-socket],
 	[AC_HELP_STRING([--enable-cgred-socket=PATH],

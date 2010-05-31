@@ -44,7 +44,7 @@ provide scripts to manage that configuration.
 %setup -q
 
 %build
-%configure --bindir=/bin --sbindir=/sbin --libdir=%{_libdir}
+%configure --bindir=/bin --sbindir=/sbin --libdir=%{_libdir} --enable-initscript-install
 
 make %{?_smp_mflags}
 
