@@ -44,7 +44,7 @@ provide scripts to manage that configuration.
 %setup -q
 
 %build
-%configure --bindir=/bin --sbindir=/sbin --libdir=%{_libdir} --enable-initscript-install
+%configure --bindir=/bin --sbindir=/sbin --libdir=%{_libdir} --enable-initscript-install --enable-pam-module-dir=/%{_lib}/security
 
 make %{?_smp_mflags}
 
@@ -60,10 +60,9 @@ cp samples/cgconfig.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgconfig
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
 
-# sanitize pam module, we need only pam_cgroup.so in the right directory
-mkdir -p $RPM_BUILD_ROOT/%{_lib}/security
-mv -f $RPM_BUILD_ROOT/%{_libdir}/pam_cgroup.so.*.*.* $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
-rm -f $RPM_BUILD_ROOT/%{_libdir}/pam_cgroup*
+# sanitize pam module, we need only pam_cgroup.so
+mv -f $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so.*.*.* $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
+rm -f $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.la $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so.*
 
 # move the libraries  to /
 mkdir -p $RPM_BUILD_ROOT/%{_lib}
