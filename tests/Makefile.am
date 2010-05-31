@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/include
-LDADD = $(top_srcdir)/src/.libs/libcgroup.la
+LDADD = $(top_builddir)/src/.libs/libcgroup.la
 
 # compile the tests, but do not install them
 noinst_PROGRAMS = libcgrouptest01 libcg_ba setuid pathtest walk_test read_stats walk_task get_controller get_mount_point proctest get_all_controller get_variable_names test_named_hierarchy
