@@ -249,7 +249,7 @@ mountvalue_conf
 	{
 		if (!cgroup_config_insert_into_mount_table($1, $3)) {
 			cgroup_config_cleanup_mount_table();
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 		$$ = 1;
@@ -258,7 +258,7 @@ mountvalue_conf
 	{
 		if (!cgroup_config_insert_into_mount_table($2, $4)) {
 			cgroup_config_cleanup_mount_table();
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 		$$ = 1;
@@ -282,7 +282,7 @@ namespace_conf
 	{
 		if (!cgroup_config_insert_into_namespace_table($1, $3)) {
 			cgroup_config_cleanup_namespace_table();
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 		$$ = 1;
@@ -291,7 +291,7 @@ namespace_conf
 	{
 		if (!cgroup_config_insert_into_namespace_table($2, $4)) {
 			cgroup_config_cleanup_namespace_table();
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 		$$ = 1;
@@ -304,7 +304,7 @@ namespace   :       NAMESPACE '{' namespace_conf '}'
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
-			$$ = 0;
+			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
 	}
