@@ -674,7 +674,7 @@ int cgroup_config_load_config(const char *pathname)
 	int error;
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
-	yyin = fopen(pathname, "r");
+	yyin = fopen(pathname, "re");
 
 	if (!yyin) {
 		cgroup_dbg("Failed to open file %s\n", pathname);
