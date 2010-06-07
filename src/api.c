@@ -373,7 +373,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 
 	/* Open the configuration file. */
 	pthread_rwlock_wrlock(&rl_lock);
-	fp = fopen(CGRULES_CONF_FILE, "r");
+	fp = fopen(CGRULES_CONF_FILE, "re");
 	if (!fp) {
 		cgroup_dbg("Failed to open configuration file %s with"
 				" error: %s\n", CGRULES_CONF_FILE,
@@ -667,7 +667,7 @@ int cgroup_init(void)
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 
-	proc_cgroup = fopen("/proc/cgroups", "r");
+	proc_cgroup = fopen("/proc/cgroups", "re");
 
 	if (!proc_cgroup) {
 		last_errno = errno;
@@ -705,7 +705,7 @@ int cgroup_init(void)
 	}
 	controllers[i] = NULL;
 
-	proc_mount = fopen("/proc/mounts", "r");
+	proc_mount = fopen("/proc/mounts", "re");
 	if (proc_mount == NULL) {
 		ret = ECGFAIL;
 		goto unlock_exit;
@@ -832,7 +832,7 @@ static int cg_test_mounted_fs(void)
 	char mntent_buff[4 * FILENAME_MAX];
 	int ret = 1;
 
-	proc_mount = fopen("/proc/mounts", "r");
+	proc_mount = fopen("/proc/mounts", "re");
 	if (proc_mount == NULL)
 		return 0;
 
@@ -917,7 +917,7 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 	int ret = 0;
 	FILE *tasks = NULL;
 
-	tasks = fopen(path, "w");
+	tasks = fopen(path, "we");
 	if (!tasks) {
 		switch (errno) {
 		case EPERM:
@@ -1128,7 +1128,7 @@ static int cg_set_control_value(char *path, const char *val)
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
 
-	control_file = fopen(path, "r+");
+	control_file = fopen(path, "r+e");
 
 	if (!control_file) {
 		if (errno == EPERM) {
@@ -1145,7 +1145,7 @@ static int cg_set_control_value(char *path, const char *val)
 				len--;
 			*(path+len+1) = '\0';
 			strncat(path, "tasks", sizeof(path) - strlen(path));
-			control_file = fopen(path, "r");
+			control_file = fopen(path, "re");
 			if (!control_file) {
 				if (errno == ENOENT)
 					return ECGROUPSUBSYSNOTMOUNTED;
@@ -1627,7 +1627,7 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		return ECGROUPSUBSYSNOTMOUNTED;
 	strncat(path, "tasks", sizeof(path) - strlen(path));
 
-	delete_tasks = fopen(path, "r");
+	delete_tasks = fopen(path, "re");
 	if (delete_tasks) {
 		ret = cg_move_task_files(delete_tasks, target_tasks);
 		fclose(delete_tasks);
@@ -1800,7 +1800,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 		strncat(parent_path, "/tasks", sizeof(parent_path)
 				- strlen(parent_path));
 
-		parent_tasks = fopen(parent_path, "w");
+		parent_tasks = fopen(parent_path, "we");
 		if (!parent_tasks) {
 			last_errno = errno;
 			ret = ECGOTHER;
@@ -1857,7 +1857,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 		return ECGFAIL;
 
 	strncat(path, file, sizeof(path) - strlen(path));
-	ctrl_file = fopen(path, "r");
+	ctrl_file = fopen(path, "re");
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
 
@@ -2528,7 +2528,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 	}
 
 	ret = ECGROUPNOTEXIST;
-	pid_cgroup_fd = fopen(path, "r");
+	pid_cgroup_fd = fopen(path, "re");
 	if (!pid_cgroup_fd)
 		goto cleanup_path;
 
@@ -2859,7 +2859,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 
 	sprintf(stat_file, "%s/%s.stat", stat_file, controller);
 
-	fp = fopen(stat_file, "r");
+	fp = fopen(stat_file, "re");
 	if (!fp) {
 		cgroup_dbg("fopen failed\n");
 		return ECGINVAL;
@@ -2926,7 +2926,7 @@ int cgroup_get_task_begin(const char *cgroup, const char *controller,
 		return ECGOTHER;
 	}
 
-	*handle = (void *) fopen(fullpath, "r");
+	*handle = (void *) fopen(fullpath, "re");
 	free(fullpath);
 
 	if (!*handle) {
@@ -3030,7 +3030,7 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 	bool found_egid = false;
 
 	sprintf(path, "/proc/%d/status", pid);
-	f = fopen(path, "r");
+	f = fopen(path, "re");
 	if (!f)
 		return ECGROUPNOTEXIST;
 
@@ -3081,7 +3081,7 @@ static int cg_get_procname_from_proc_status(pid_t pid, char **procname_status)
 	char buf[4092];
 
 	sprintf(path, "/proc/%d/status", pid);
-	f = fopen(path, "r");
+	f = fopen(path, "re");
 	if (!f)
 		return ECGROUPNOTEXIST;
 
@@ -3132,7 +3132,7 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid,
 		return ECGROUPNOTEXIST;
 
 	sprintf(path, "/proc/%d/cmdline", pid);
-	f = fopen(path, "r");
+	f = fopen(path, "re");
 	if (!f)
 		return ECGROUPNOTEXIST;
 
@@ -3372,7 +3372,7 @@ int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
 	if (!info)
 		return ECGINVAL;
 
-	proc_cgroup = fopen("/proc/cgroups", "r");
+	proc_cgroup = fopen("/proc/cgroups", "re");
 	if (!proc_cgroup) {
 		last_errno = errno;
 		return ECGOTHER;

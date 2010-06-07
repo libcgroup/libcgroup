@@ -13,9 +13,12 @@
 
 %{
 #include <string.h>
+#include <libcgroup.h>
+#include <libcgroup-internal.h>
 #include "parse.h"
 int line_no = 1;
 
+#define YY_FATAL_ERROR(msg) cgroup_dbg(%s)
 %}
 
 %%
