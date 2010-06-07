@@ -2784,8 +2784,10 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 	char *saveptr = NULL;
 
 	read_bytes = getline(&line, &len, fp);
-	if (read_bytes == -1)
-		return ECGEOF;
+	if (read_bytes == -1) {
+		ret = ECGEOF;
+		goto out_free;
+	}
 
 	token = strtok_r(line, " ", &saveptr);
 	if (!token) {
