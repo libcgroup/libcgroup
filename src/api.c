@@ -2803,7 +2803,7 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 
 out_free:
 	free(line);
-	return 0;
+	return ret;
 }
 
 int cgroup_read_stats_end(void **handle)
