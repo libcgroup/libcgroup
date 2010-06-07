@@ -50,7 +50,7 @@ static int display_one_record(char *name, struct cgroup_controller *group_contro
 		void *handle;
 		struct cgroup_stat stat;
 
-		cgroup_read_stats_begin(group_controller->name,
+		ret = cgroup_read_stats_begin(group_controller->name,
 			"/", &handle, &stat);
 		if (ret != 0) {
 			fprintf(stderr, "stats read failed\n");
