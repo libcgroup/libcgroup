@@ -2848,6 +2848,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 {
 	int ret = 0;
 	char stat_file[FILENAME_MAX];
+	char stat_path[FILENAME_MAX];
 	FILE *fp;
 
 	if (!cgroup_initialized)
@@ -2856,10 +2857,11 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 	if (!cgroup_stat || !handle)
 		return ECGINVAL;
 
-	if (!cg_build_path(path, stat_file, controller))
+	if (!cg_build_path(path, stat_path, controller))
 		return ECGOTHER;
 
-	sprintf(stat_file, "%s/%s.stat", stat_file, controller);
+	snprintf(stat_file, sizeof(stat_file), "%s/%s.stat", stat_path,
+			controller);
 
 	fp = fopen(stat_file, "re");
 	if (!fp) {
