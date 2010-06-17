@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 
 	/* read the list of controllers */
 	while (optind < argc) {
-		ret = parse_cgroup_spec(cgroup_list, optarg,
+		ret = parse_cgroup_spec(cgroup_list, argv[optind],
 				CG_HIER_MAX);
 		if (ret) {
 			fprintf(stderr, "%s: cgroup controller"
