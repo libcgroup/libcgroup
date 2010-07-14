@@ -112,6 +112,12 @@ start() {
 
         if [ $? -eq 0 ]
         then
+                if [ ! -s $CONFIG_FILE ]
+                then
+                    log_failure_msg $CONFIG_FILE "is not configured"
+                    return 6
+                fi
+
                 $CGCONFIGPARSER_BIN -l $CONFIG_FILE
                 retval=$?
                 if [ $retval -ne 0 ]
@@ -193,8 +199,10 @@ case $1 in
     'status')
         if [ -f /var/lock/subsys/$servicename ] ; then
             echo "Running"
+            exit 0
         else
             echo "Stopped"
+            exit 3
         fi
 	;;
     *)

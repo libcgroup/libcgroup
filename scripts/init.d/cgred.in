@@ -34,6 +34,7 @@
 
 prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
 CGRED_BIN=$sbindir/cgrulesengd
+CGRED_CONF=/etc/cgrules.conf
 
 # Sanity checks
 [ -x $CGRED_BIN ] || exit 1
@@ -62,14 +63,21 @@ RETVAL=0
 
 start()
 {
-	echo $"Starting CGroup Rules Engine Daemon..."
+	echo -n $"Starting CGroup Rules Engine Daemon: "
 	if [ -f "/var/lock/subsys/$servicename" ] ; then
 		log_failure_msg "$servicename is already running with PID `cat ${pidfile}`"
-		return 1
+		return 0
+	fi
+	if [ ! -s $CGRED_CONF ]; then
+		log_failure_msg "not configured"
+		return 6
 	fi
 	daemon --check $servicename --pidfile $pidfile $CGRED_BIN $OPTIONS
 	RETVAL=$?
 	echo
+	if [ $RETVAL -ne 0 ]; then
+		return 7
+	fi
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/$servicename
 	echo "`pidof $processname`" > $pidfile
 }
@@ -77,6 +85,10 @@ start()
 stop()
 {
 	echo -n $"Stopping CGroup Rules Engine Daemon..."
+	if [ ! -f $pidfile ]; then
+		log_success_msg
+		return 0
+	fi
 	killproc -p $pidfile $processname -TERM
 	RETVAL=$?
 	echo
@@ -84,19 +96,20 @@ stop()
 		rm -f /var/lock/subsys/$servicename
 		rm -f $pidfile
 	fi
-	log_success_msg
 }
 
 # See how we are called
 case "$1" in
 	start)
 		start
+		RETVAL=$?
 		;;
 	stop)
 		stop
+		RETVAL=$?
 		;;
 	status)
-		status -p $pidfile $processname
+		status -p $pidfile $servicename
 		RETVAL=$?
 		;;
 	restart)
