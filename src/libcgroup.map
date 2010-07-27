@@ -85,3 +85,10 @@ global:
 	cgroup_get_value_name_count;
 	cgroup_get_value_name;
 } CGROUP_0.34;
+
+CGROUP_0.36 {
+} CGROUP_0.35;
+
+CGROUP_0.37 {
+	cgroup_get_procs;
+} CGROUP_0.36;

@@ -116,6 +116,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Have multiple paths for the same namespace",
 	"Controller in namespace does not exist",
 	"Cannot have mount and namespace keyword in the same configuration file",
+	"This kernel does not support this feature",
 };
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
@@ -3444,4 +3445,86 @@ int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
 	*handle = proc_cgroup;
 
 	return cgroup_get_all_controller_next(handle, info);
+}
+
+static int pid_compare(const void *a, const void *b)
+{
+	const pid_t *pid1, *pid2;
+
+	pid1 = (pid_t *) a;
+	pid2 = (pid_t *) b;
+
+	return (*pid1 - *pid2);
+}
+
+/*
+ *pids needs to be completely uninitialized so that we can set it up
+ *
+ * Caller must free up pids.
+ */
+int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
+{
+	char cgroup_path[FILENAME_MAX];
+	FILE *procs;
+	pid_t *tmp_list;
+	int tot_procs = 16;
+	int n = 0;
+	int err;
+
+	cg_build_path(name, cgroup_path, controller);
+	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX-strlen(cgroup_path));
+
+	/*
+	 * This kernel does have support for cgroup.procs
+	 */
+	if (access(cgroup_path, F_OK))
+		return ECGROUPUNSUPP;
+
+	/*
+	 * Read all the procs and then sort them up.
+	 */
+
+	tmp_list = *pids;
+
+	/*
+	 * Keep doubling the memory allocated if needed
+	 */
+	tmp_list= malloc(sizeof(pid_t) * tot_procs);
+	if (!tmp_list) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	procs = fopen(cgroup_path, "r");
+	if (!procs) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	while (!feof(procs)) {
+		while (!feof(procs) && n < tot_procs) {
+			pid_t pid;
+			err = fscanf(procs, "%u", &pid);
+			if (err == EOF)
+				break;
+			tmp_list[n] = pid;
+			n++;
+		}
+		if (!feof(procs)) {
+			tot_procs *= 2;
+			tmp_list = realloc(tmp_list, sizeof(pid_t) * tot_procs);
+			if (!tmp_list) {
+				last_errno = errno;
+				return ECGOTHER;
+			}
+		}
+	}
+
+	*size = n;
+
+	qsort(tmp_list, n, sizeof(pid_t), &pid_compare);
+
+	*pids = tmp_list;
+
+	return 0;
 }
