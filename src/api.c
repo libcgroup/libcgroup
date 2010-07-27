@@ -1435,8 +1435,56 @@ err:
 }
 
 /**
+ * Obtain the calculated parent name of specified cgroup; no validation
+ * of the existence of the child or parent group is performed.
+ *
+ * Given the path-like hierarchy of cgroup names, this function returns
+ * the dirname() of the cgroup name as the likely parent name; the caller
+ * is responsible for validating parent as appropriate.
+ *
+ * @param cgroup The cgroup to query for parent's name
+ * @param parent Output, name of parent's group, or NULL if the
+ * 	provided cgroup is the root group.
+ *	Caller is responsible to free the returned string.
+ * @return 0 on success, > 0 on error
+ */
+static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
+{
+	int ret = 0;
+	char *dir = NULL;
+	char *pdir = NULL;
+
+	dir = strdup(cgroup->name);
+	if (!dir) {
+		return ECGFAIL;
+	}
+	cgroup_dbg("group name is %s\n", dir);
+
+	pdir = dirname(dir);
+	cgroup_dbg("parent's group name is %s\n", pdir);
+
+	/* check for root group */
+	if (strlen(cgroup->name) == 0 || !strcmp(cgroup->name, pdir)) {
+		cgroup_dbg("specified cgroup \"%s\" is root group\n",
+			cgroup->name);
+		*parent = NULL;
+	}
+	else {
+		*parent = strdup(pdir);
+	}
+	free(dir);
+
+	if (*parent == NULL)
+		ret = ECGFAIL;
+
+	return ret;
+}
+
+/**
  * Find the parent of the specified directory. It returns the parent (the
- * parent is usually name/.. unless name is a mount point.
+ * parent is usually name/.. unless name is a mount point.  It is assumed
+ * both the cgroup (and, therefore, parent) already exist, and will fail
+ * otherwise.
  *
  * @param cgroup The cgroup
  * @param parent Output, name of parent's group (if the group has parent) or
@@ -1450,7 +1498,6 @@ static int cgroup_find_parent(struct cgroup *cgroup, char **parent)
 	char *parent_path = NULL;
 	struct stat stat_child, stat_parent;
 	char *controller = NULL;
-	char *dir = NULL, *parent_dir = NULL;
 	int ret = 0;
 
 	*parent = NULL;
@@ -1490,20 +1537,7 @@ static int cgroup_find_parent(struct cgroup *cgroup, char **parent)
 		ret = 0;
 		cgroup_dbg("Parent is on different device\n");
 	} else {
-		dir = strdup(cgroup->name);
-		cgroup_dbg("group name is %s\n", dir);
-		if (!dir) {
-			ret = ECGFAIL;
-			goto free_parent;
-		}
-
-		parent_dir = dirname(dir);
-		cgroup_dbg("parent's group name is %s\n", parent_dir);
-		*parent = strdup(parent_dir);
-		free(dir);
-
-		if (*parent == NULL)
-			ret = ECGFAIL;
+		ret = cgroup_get_parent_name(cgroup, parent);
 	}
 
 free_parent:
@@ -1529,7 +1563,7 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	ret = cgroup_find_parent(cgroup, &parent);
+	ret = cgroup_get_parent_name(cgroup, &parent);
 	if (ret)
 		return ret;
 
@@ -1543,16 +1577,21 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 
 	cgroup_dbg("parent is %s\n", parent);
 	parent_cgroup = cgroup_new_cgroup(parent);
-	if (!parent_cgroup)
+	if (!parent_cgroup) {
+		ret = ECGFAIL;
 		goto err_nomem;
+	}
 
-	if (cgroup_get_cgroup(parent_cgroup))
+	if (cgroup_get_cgroup(parent_cgroup)) {
+		ret = ECGFAIL;
 		goto err_parent;
+	}
 
 	cgroup_dbg("got parent group for %s\n", parent_cgroup->name);
 	ret = cgroup_copy_cgroup(cgroup, parent_cgroup);
-	if (ret)
+	if (ret) {
 		goto err_parent;
+	}
 
 	cgroup_dbg("copied parent group %s to %s\n", parent_cgroup->name,
 							cgroup->name);
