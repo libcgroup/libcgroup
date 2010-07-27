@@ -175,6 +175,8 @@ void cgroup_free_controllers(struct cgroup *cgroup);
  * @param ignore_ownership When nozero, all errors are ignored when setting
  * 	owner of the group and/or its tasks file.
  * 	@todo what is ignore_ownership good for?
+ * @retval #ECGROUPNOTEQUAL if not all specified controller parameters
+ *      were successfully set.
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
 
@@ -196,6 +198,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
  * @param ignore_ownership When nozero, all errors are ignored when setting
  * 	owner of the group and/or its tasks file.
  * 	@todo what is ignore_ownership good for?
+ * @retval #ECGROUPNOTEQUAL if not all inherited controller parameters
+ *      were successfully set (this is expected).
  */
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 		int ignore_ownership);
