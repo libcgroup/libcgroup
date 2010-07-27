@@ -1310,6 +1310,8 @@ err:
  *
  * returns 0 on success. We recommend calling cg_delete_cgroup
  * if this routine fails. That should do the cleanup operation.
+ * If ECGROUPNOTEQUAL is returned, the group was created successfully
+ * but not all controller parameters were successfully set.
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
@@ -1374,8 +1376,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		for (j = 0; j < cgroup->controller[k]->index; j++) {
 			ret = snprintf(path, FILENAME_MAX, "%s%s", base,
 					cgroup->controller[k]->values[j]->name);
-			cgroup_dbg("setting %s to %s, error %d\n", path,
-				cgroup->controller[k]->values[j]->name, ret);
+			cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
+				cgroup->controller[k]->values[j]->value, ret);
 			if (ret < 0 || ret >= FILENAME_MAX) {
 				last_errno = errno;
 				error = ECGOTHER;
@@ -1390,10 +1392,15 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			 * are only conditionally created in the child.
 			 *
 			 * A middle ground would be to track that there
-			 * was an error and return that value.
+			 * was an error and return a diagnostic value--
+			 * callers don't get context for the error, but can
+			 * ignore it specifically if they wish.
 			 */
 			if (error) {
-				retval = error;
+				cgroup_dbg("failed to set %s: %s (%d)\n",
+					path,
+					cgroup_strerror(error), error);
+				retval = ECGROUPNOTEQUAL;
 				continue;
 			}
 		}
@@ -1508,6 +1515,9 @@ free_parent:
  * @cgroup: cgroup data structure to be filled with parent values and then
  *	  passed down for creation
  * @ignore_ownership: Ignore doing a chown on the newly created cgroup
+ * @return 0 on success, > 0 on failure.  If ECGROUPNOTEQUAL is returned,
+ * the group was created successfully, but not all controller parameters
+ * were copied from the parent successfully; unfortunately, this is expected...
  */
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 					int ignore_ownership)
