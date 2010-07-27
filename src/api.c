@@ -1502,6 +1502,12 @@ static int cgroup_find_parent(struct cgroup *cgroup, char **parent)
 
 	*parent = NULL;
 
+	/* if cgroup has no controllers attached, consider it unconfigured */
+	if (cgroup->controller[0] == NULL) {
+		cgroup_dbg("cgroup_find_parent called on unconfigured group\n");
+		return ECGFAIL;
+	}
+
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	controller = cgroup->controller[0]->name;
 	if (!cg_build_path_locked(cgroup->name, child_path, controller)) {
