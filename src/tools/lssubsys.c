@@ -195,6 +195,11 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 	}
 
 	ret = cgroup_get_all_controller_begin(&handle, &info);
+	if ((ret != 0) && (ret != ECGEOF)) {
+		fprintf(stderr, "cannot read controller data: %s\n",
+			cgroup_strerror(ret));
+		return ret;
+	}
 
 	while (ret != ECGEOF) {
 		/* controller is in the hierrachy */
