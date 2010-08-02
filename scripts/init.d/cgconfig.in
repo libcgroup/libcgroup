@@ -52,6 +52,8 @@ if [ -e /etc/sysconfig/cgconfig ]; then
         . /etc/sysconfig/cgconfig
 fi
 
+RETVAL=0
+
 create_default_groups() {
         declare defaultcgroup
 
@@ -107,7 +109,7 @@ start() {
 	if [ -f /var/lock/subsys/$servicename ]
         then
             log_warning_msg "lock file already exists"
-            return
+            return 0
         fi
 
         if [ $? -eq 0 ]
@@ -123,7 +125,7 @@ start() {
                 if [ $retval -ne 0 ]
                 then
                     log_failure_msg "Failed to parse " $CONFIG_FILE
-                    return $retval
+                    return 1
                 fi
         fi
 
@@ -136,7 +138,7 @@ start() {
         if [ $retval -ne 0 ]
         then
             log_failure_msg "Failed to touch " /var/lock/subsys/$servicename
-            return $retval
+            return 1
         fi
         log_success_msg
         return 0
@@ -147,6 +149,7 @@ stop() {
     cgclear
     rm -f /var/lock/subsys/$servicename
     log_success_msg
+    return 0
 }
 
 trapped() {
@@ -158,7 +161,7 @@ trapped() {
 
 usage() {
     echo "$0 <start|stop|restart|condrestart|status>"
-    exit 1
+    exit 2
 }
 
 common() {
@@ -175,25 +178,30 @@ case $1 in
     'stop')
         common
         stop;
+        RETVAL=$?
         ;;
     'start')
         common
         start;
+        RETVAL=$?
         ;;
     'restart')
         common
 	stop
         start
+        RETVAL=$?
         ;;
     'reload')
         common
 	stop
         start
+        RETVAL=$?
         ;;
     'condrestart')
         if [ -f /var/lock/subsys/$servicename ] ; then
             stop
             start
+            RETVAL=$?
         fi
         ;;
     'status')
@@ -209,3 +217,5 @@ case $1 in
         usage
         ;;
 esac
+
+exit $RETVAL
