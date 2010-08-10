@@ -60,6 +60,11 @@ static int print_controller(cont_name_t cont_name, int flags)
 	int output = 0;
 
 	ret = cgroup_get_controller_begin(&handle, &controller);
+	if (ret != 0) {
+		fprintf(stderr, "cannot read controller data: %s\n",
+			cgroup_strerror(ret));
+		return ret;
+	}
 
 	path[0] = '\0';
 	name[0] = '\0';
