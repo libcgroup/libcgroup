@@ -169,7 +169,8 @@ parameters.
 .TP
 .B param value
 Value, which should be written to the file when the control group is
-created.
+created. Optionally it can be enclosed in double quotes `"', it can
+contain spaces then.
 .RE
 
 .\"********************************************"
@@ -233,7 +234,7 @@ gid = root;
 }
 cpu {
 .RS
-cpu.shares = 1000;
+cpu.shares = "1000";
 .RE
 }
 .RE
@@ -259,7 +260,7 @@ gid = root;
 }
 cpu {
 .RS
-cpu.shares = 500;
+cpu.shares = "500";
 .RE
 }
 .RE
@@ -379,7 +380,7 @@ group daemons/www {
 .RS
 cpu {
 .RS
-cpu.shares = 1000;
+cpu.shares = "1000";
 .RE
 }
 .RE
@@ -389,7 +390,7 @@ group daemons/ftp {
 .RS
 cpu {
 .RS
-cpu.shares = 500;
+cpu.shares = "500";
 .RE
 }
 .RE
