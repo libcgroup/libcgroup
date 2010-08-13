@@ -22,7 +22,8 @@
 enum flag{
     FL_MOUNT = 1,	/* show the mount points */
     FL_LIST = 2,
-    FL_ALL = 4		/* show all subsystems - not mounted too */
+    FL_ALL = 4,		/* show all subsystems - not mounted too */
+    FL_HIERARCHY = 8	/* show info about hierarchies */
 };
 
 typedef char cont_name_t[FILENAME_MAX];
@@ -46,6 +47,8 @@ static void usage(int status, const char *program_name)
 		fprintf(stdout, "  -a, --all		"\
 			"Display information about all controllers "\
 			"(including not mounted ones) \n");
+		fprintf(stdout, "  -i, --hierarchies	Display information "\
+			"about hierarchies\n");
 	}
 }
 
@@ -246,7 +249,10 @@ next:
 	}
 
 	cgroup_get_all_controller_end(&handle);
-	printf("\n");
+	if (flags & FL_HIERARCHY)
+		printf(" %d\n", hierarchy);
+	else
+		printf("\n");
 
 	if (ret == ECGEOF)
 		ret = 0;
@@ -323,6 +329,7 @@ int main(int argc, char *argv[])
 		{"help", 0, 0, 'h'},
 		{"mount-points", 0, 0, 'm'},
 		{"all", 0, 0, 'a'},
+		{"hierarchies", 0, 0, 'i'},
 		{0, 0, 0, 0}
 	};
 
@@ -330,7 +337,7 @@ int main(int argc, char *argv[])
 		cont_name[i][0] = '\0';
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "mha", options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "mhai", options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -340,6 +347,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'a':
 			flags |= FL_ALL;
+			break;
+		case 'i':
+			flags |= FL_HIERARCHY;
 			break;
 		default:
 			usage(1, argv[0]);
