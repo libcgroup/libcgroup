@@ -9,7 +9,7 @@ lssubsys \- list hierarchies containing given subsystem
 .SH SYNOPSIS
 \fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fIcontroller\fR] [...]
 .br
-\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-a|--all\fR]
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-i|--hierarchies\fR] [\fB-a|--all\fR]
 .br
 \fBlssubsys\fR  [\fB-h|--help\fR]
 
@@ -34,6 +34,13 @@ Display mount points.
 Display all subsystems (including not mounted ones).
 
 .TP
+.B -i, --hierarchies
+Display attached hierarchy number, if the subsystem is in a hierarchy.
+If the option
+.B -m
+is used too, then the hierarchy number is shown only for not mounted hierarchies.
+
+.TP
 .B -h, --help
 Display help and exit.
 
@@ -53,6 +60,26 @@ memory /cgroup/memory
 freezer /cgroup/freezer
 net_cls /cgroup/net_cls
 .fi
+.RE
+.LP
+Command
+.B lssubsys -ami
+lists all subsystems which are present on the system,
+mounted subsystems have attached the mount point,
+not mounted ones which are in some hierarchy have attached the hierarchy number:
+.RS
+.nf
+$ lssubsys -ami
+ns
+cpuset 5
+cpu,devices 6
+cpuacct /cgroup/cpuacct
+memory /cgroup/memory
+freezer /cgroup/freezer
+net_cls /cgroup/net_cls
+.fi
+
+
 .RE
 .SH SEE ALSO
 lscgroup (1), cgcreate (1), cgdelete (1),
