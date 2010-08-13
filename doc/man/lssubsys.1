@@ -7,20 +7,23 @@
 lssubsys \- list hierarchies containing given subsystem
 
 .SH SYNOPSIS
-\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-a|--all\fR] [\fIcontroller\fR] [...]
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fIcontroller\fR] [...]
+.br
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-a|--all\fR]
 .br
 \fBlssubsys\fR  [\fB-h|--help\fR]
 
 .SH DESCRIPTION
 
-The command list hierarchies containing all subsystems
-or only given subsystem(s).
+The command list hierarchies containing
+the given subsystem(s) if no subsystem is defined then it
+displays all mounted hierarchies.
 
 .TP
 .B controller
-defines subsystem which hierarchy will be shown.
+defines subsystem whose hierarchy is shown.
 If this parameter is not used then the command
-list all subsystems which are present.
+list all mounted subsystems.
 
 .TP
 .B -m, --mount-points
@@ -28,12 +31,29 @@ Display mount points.
 
 .TP
 .B -a, --all
-Display not mounted subsystems.
+Display all subsystems (including not mounted ones).
 
 .TP
 .B -h, --help
 Display help and exit.
 
+.SH EXAMPLE
+Command
+.B lssubsys -am
+lists all subsystems which are present on the system,
+mounted ones have attached the mount point:
+.RS
+.nf
+$ lssubsys -am
+ns
+cpuset
+cpu,devices
+cpuacct /cgroup/cpuacct
+memory /cgroup/memory
+freezer /cgroup/freezer
+net_cls /cgroup/net_cls
+.fi
+.RE
 .SH SEE ALSO
 lscgroup (1), cgcreate (1), cgdelete (1),
 cgconfig.conf(5)
