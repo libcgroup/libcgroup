@@ -117,6 +117,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Controller in namespace does not exist",
 	"Cannot have mount and namespace keyword in the same configuration file",
 	"This kernel does not support this feature",
+	"Value setting does not succeed",
 };
 
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
@@ -1311,7 +1312,7 @@ err:
  *
  * returns 0 on success. We recommend calling cg_delete_cgroup
  * if this routine fails. That should do the cleanup operation.
- * If ECGROUPNOTEQUAL is returned, the group was created successfully
+ * If ECGCANTSETVALUE is returned, the group was created successfully
  * but not all controller parameters were successfully set.
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
@@ -1401,7 +1402,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup_dbg("failed to set %s: %s (%d)\n",
 					path,
 					cgroup_strerror(error), error);
-				retval = ECGROUPNOTEQUAL;
+				retval = ECGCANTSETVALUE;
 				continue;
 			}
 		}
@@ -1556,7 +1557,7 @@ free_parent:
  * @cgroup: cgroup data structure to be filled with parent values and then
  *	  passed down for creation
  * @ignore_ownership: Ignore doing a chown on the newly created cgroup
- * @return 0 on success, > 0 on failure.  If ECGROUPNOTEQUAL is returned,
+ * @return 0 on success, > 0 on failure.  If  ECGCANTSETVALUE is returned,
  * the group was created successfully, but not all controller parameters
  * were copied from the parent successfully; unfortunately, this is expected...
  */
