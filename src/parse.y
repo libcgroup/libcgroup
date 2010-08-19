@@ -43,11 +43,13 @@ int yywrap(void)
 	char *name;
 	char chr;
 	int val;
+	struct cgroup_dictionary *values;
 }
-%type <name> ID namevalue_conf
+%type <name> ID
 %type <val> mountvalue_conf mount task_namevalue_conf admin_namevalue_conf
 %type <val> admin_conf task_conf task_or_admin group_conf group start
 %type <val> namespace namespace_conf
+%type <values> namevalue_conf
 %start start
 %%
 
@@ -93,6 +95,7 @@ group_conf
         :       ID '{' namevalue_conf '}'
 	{
 		$$ = cgroup_config_parse_controller_options($1, $3);
+		cgroup_dictionary_free($3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -103,6 +106,7 @@ group_conf
         |       group_conf ID '{' namevalue_conf '}'
 	{
 		$$ = cgroup_config_parse_controller_options($2, $4);
+		cgroup_dictionary_free($4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n",
 				line_no);
@@ -125,25 +129,30 @@ group_conf
 namevalue_conf
         :       ID '=' ID ';'
 	{
-		$1 = realloc($1, strlen($1) + strlen($3) + 2);
-		$1 = strncat($1, " ", strlen(" "));
-		$$ = strncat($1, $3, strlen($3));
-		free($3);
+		struct cgroup_dictionary *dict;
+		int ret;
+		ret = cgroup_dictionary_create(&dict, 0);
+		if (ret == 0)
+			ret = cgroup_dictionary_add(dict, $1, $3);
+		if (ret) {
+			fprintf(stderr, "parsing failed at line number %d:%s\n",
+				line_no, cgroup_strerror(ret));
+			$$ = NULL;
+			return ECGCONFIGPARSEFAIL;
+		}
+		$$ = dict;
 	}
         |       namevalue_conf ID '=' ID ';'
 	{
-		int len = 0;
-		if ($1)
-			len = strlen($1);
-		$2 = realloc($2, len + strlen($2) + strlen($4) + 3);
-		$2 = strncat($2, " ", strlen(" "));
-		$$ = strncat($2, $4, strlen($4));
-		if ($1) {
-			$2 = strncat($2, ":", strlen(":"));
-			$$ = strncat($2, $1, strlen($1));
-			free($1);
+		int ret = 0;
+		ret = cgroup_dictionary_add($1, $2, $4);
+		if (ret != 0) {
+			fprintf(stderr, "parsing failed at line number %d: %s\n",
+				line_no, cgroup_strerror(ret));
+			$$ = NULL;
+			return ECGCONFIGPARSEFAIL;
 		}
-		free($4);
+		$$ = $1;
 	}
 	|
 	{

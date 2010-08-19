@@ -33,6 +33,7 @@ int line_no = 1;
 "group"		{return GROUP;}
 "namespace"	{return NAMESPACE;}
 [a-zA-Z0-9_\-\/\.]+ {yylval.name = strdup(yytext); return ID;}
+\"[^"]+\" {yylval.name = strdup(yytext+1); yylval.name[strlen(yylval.name)-1] = '\0'; return ID; }
 .	{return yytext[0];}
 %%
 

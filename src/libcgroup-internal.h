@@ -129,6 +129,47 @@ struct cgroup_tree_handle {
 };
 
 /**
+ * Internal item of dictionary. Linked list is sufficient for now - we need
+ * only 'add' operation and simple iterator. In future, this might be easily
+ * rewritten to dynamic array when random access is needed,
+ * just keep in mind that the order is important and the iterator should
+ * return the items in the order they were added there.
+ */
+struct cgroup_dictionary_item {
+	const char *name;
+	const char *value;
+	struct cgroup_dictionary_item *next;
+};
+
+/* Flags for cgroup_dictionary_create */
+/**
+ * All items (i.e. both name and value strings) stored in the dictionary
+ * should *NOT* be free()d on cgroup_dictionary_free(),
+ * only the  dictionary helper structures (i.e. underlying linked list)
+ * should be freed.
+ */
+#define CG_DICT_DONT_FREE_ITEMS		1
+
+/**
+ * Dictionary of (name, value) items.
+ * The dictionary keeps its order, iterator iterates in the same order
+ * as the items were added there. It is *not* hash-style structure,
+ * it does not provide random access to its items nor quick search.
+ * This structure should be opaque to users of the dictionary, underlying data
+ * structure might change anytime and without warnings.
+ */
+struct cgroup_dictionary {
+	struct cgroup_dictionary_item *head;
+	struct cgroup_dictionary_item *tail;
+	int flags;
+};
+
+/** Opaque iterator of an dictionary. */
+struct cgroup_dictionary_iterator {
+	struct cgroup_dictionary_item *item;
+};
+
+/**
  * per thread errno variable, to be used when return code is ECGOTHER
  */
 extern __thread int last_errno;
@@ -157,13 +198,47 @@ extern __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
  * config related API
  */
 int cgroup_config_insert_cgroup(char *cg_name);
-int cgroup_config_parse_controller_options(char *controller, char *name_value);
+int cgroup_config_parse_controller_options(char *controller,
+		struct cgroup_dictionary *values);
 int cgroup_config_group_task_perm(char *perm_type, char *value);
 int cgroup_config_group_admin_perm(char *perm_type, char *value);
 int cgroup_config_insert_into_mount_table(char *name, char *mount_point);
 int cgroup_config_insert_into_namespace_table(char *name, char *mount_point);
 void cgroup_config_cleanup_mount_table(void);
 void cgroup_config_cleanup_namespace_table(void);
+
+/**
+ * Create an empty dictionary.
+ */
+extern int cgroup_dictionary_create(struct cgroup_dictionary **dict,
+		int flags);
+/**
+ * Add an item to existing dictionary.
+ */
+extern int cgroup_dictionary_add(struct cgroup_dictionary *dict,
+		const char *name, const char *value);
+/**
+ * Fully destroy existing dictionary. Depending on flags passed to
+ * cgroup_dictionary_create(), names and values might get destroyed too.
+ */
+extern int cgroup_dictionary_free(struct cgroup_dictionary *dict);
+
+/**
+ * Start iterating through a dictionary. The items are returned in the same
+ * order as they were added using cgroup_dictionary_add().
+ */
+extern int cgroup_dictionary_iterator_begin(struct cgroup_dictionary *dict,
+		void **handle, const char **name, const char **value);
+/**
+ * Continue iterating through the dictionary.
+ */
+extern int cgroup_dictionary_iterator_next(void **handle,
+		const char **name, const char **value);
+/**
+ * Finish iteration through the dictionary.
+ */
+extern void cgroup_dictionary_iterator_end(void **handle);
+
 __END_DECLS
 
 #endif

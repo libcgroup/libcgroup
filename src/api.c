@@ -3528,3 +3528,115 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 
 	return 0;
 }
+
+
+int cgroup_dictionary_create(struct cgroup_dictionary **dict,
+		int flags)
+{
+	*dict = (struct cgroup_dictionary *) calloc(
+			1, sizeof(struct cgroup_dictionary));
+
+	if (!dict)
+		return ECGFAIL;
+	(*dict)->flags = flags;
+	return 0;
+}
+
+
+int cgroup_dictionary_add(struct cgroup_dictionary *dict,
+		const char *name, const char *value)
+{
+	struct cgroup_dictionary_item *it;
+
+	if (!dict)
+		return ECGINVAL;
+
+	it = (struct cgroup_dictionary_item *) malloc(
+			sizeof(struct cgroup_dictionary_item));
+	if (!it)
+		return ECGFAIL;
+
+	it->next = NULL;
+	it->name = name;
+	it->value = value;
+
+	if (dict->tail) {
+		dict->tail->next = it;
+		dict->tail = it;
+	} else {
+		/* it is the first item */
+		dict->tail = it;
+		dict->head = it;
+	}
+	return 0;
+}
+
+int cgroup_dictionary_free(struct cgroup_dictionary *dict)
+{
+	struct cgroup_dictionary_item *it;
+
+	if (!dict)
+		return ECGINVAL;
+
+	it = dict->head;
+	while (it) {
+		struct cgroup_dictionary_item *del = it;
+		it = it->next;
+		if (!(dict->flags & CG_DICT_DONT_FREE_ITEMS)) {
+			free((void *)del->value);
+			free((void *)del->name);
+		}
+		free(del);
+	}
+
+	free(dict);
+	return 0;
+}
+
+int cgroup_dictionary_iterator_begin(struct cgroup_dictionary *dict,
+		void **handle, const char **name, const char **value)
+{
+	struct cgroup_dictionary_iterator *iter;
+
+	*handle = NULL;
+
+	if (!dict)
+		return ECGINVAL;
+
+	iter = (struct cgroup_dictionary_iterator *) malloc(
+			sizeof(struct cgroup_dictionary_iterator));
+	if (!iter)
+		return ECGFAIL;
+
+	iter->item = dict->head;
+	*handle = iter;
+	return cgroup_dictionary_iterator_next(handle, name, value);
+}
+
+int cgroup_dictionary_iterator_next(void **handle,
+		const char **name, const char **value)
+{
+	struct cgroup_dictionary_iterator *iter;
+
+	if (!handle)
+		return ECGINVAL;
+
+	iter = *handle;
+	if (!iter->item)
+		return ECGEOF;
+
+	*name = iter->item->name;
+	*value = iter->item->value;
+	iter->item = iter->item->next;
+	return 0;
+}
+
+void cgroup_dictionary_iterator_end(void **handle)
+{
+	if (!handle)
+		return;
+
+	free(*handle);
+	*handle = NULL;
+}
+
