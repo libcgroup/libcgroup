@@ -18,7 +18,7 @@
 #include "parse.h"
 int line_no = 1;
 
-#define YY_FATAL_ERROR(msg) cgroup_dbg(%s)
+#define YY_FATAL_ERROR(msg) fprintf(stderr, "%s\n", msg)
 %}
 
 %%
