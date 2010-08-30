@@ -131,7 +131,7 @@ int cgroup_config_parse_controller_options(char *controller,
 		&config_cgroup_table[cgroup_table_index];
 	void *iter = NULL;
 
-	cgroup_dbg("Adding controller %s, value %s\n", controller, name_value);
+	cgroup_dbg("Adding controller %s\n", controller);
 	cgc = cgroup_add_controller(config_cgroup, controller);
 
 	if (!cgc)
