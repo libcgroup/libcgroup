@@ -321,6 +321,13 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
+	/*
+	 * if no controller or variable is set
+	 * then show values of all possible variables
+	 */
+	if ((c_number == 0) && (n_number == 0))
+		mode |=  MODE_SHOW_ALL_CONTROLLERS;
+
 	/* Initialize libcgroup. */
 	ret = cgroup_init();
 	if (ret) {
