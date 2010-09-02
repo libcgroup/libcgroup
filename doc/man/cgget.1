@@ -21,7 +21,7 @@ is the name of the cgroup which should be read.
 This parameter can be used multiple times.
 
 .TP
-.B -r <name>
+.B -r, --variable <name>
 defines parameter to display.
 This option can be used multiple times.
 
@@ -31,7 +31,7 @@ defines controller which values should be displaied.
 This option can be used multiple times.
 
 .TP
-.B -a
+.B -a, --all
 print the variables for all controllers which consists given cgroup
 
 .TP
@@ -39,8 +39,12 @@ print the variables for all controllers which consists given cgroup
 do not print headers, i.e. name of groups.
 
 .TP
-.B -v
+.B -v, --values-only
 print only values, not parameter names.
+
+.TP
+.B -h, --help
+display help and exit
 
 .SH EXAMPLES
 .nf

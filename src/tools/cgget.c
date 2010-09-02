@@ -15,6 +15,16 @@
 
 #define LL_MAX				100
 
+static struct option const long_options[] =
+{
+	{"variable", required_argument, NULL, 'r'},
+	{"help", no_argument, NULL, 'h'},
+	{"all",  no_argument, NULL, 'a'},
+	{"values-only", no_argument, NULL, 'v'},
+	{NULL, 0, NULL, 0}
+};
+
+
 static void usage(int status, const char *program_name)
 {
 	if (status != 0)
@@ -22,7 +32,7 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	else {
-		printf("Usage: %s [-nv] [-r<name>] [-g<controller>] [-a] ..."\
+		printf("Usage: %s [-nv] [-r<name>] [-g<controller>] [-a] ... "\
 			"<path> ...\n", program_name);
 	}
 }
@@ -279,7 +289,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* Parse arguments. */
-	while ((c = getopt(argc, argv, "r:hnvg:a")) != -1) {
+	while ((c = getopt_long(argc, argv, "r:hnvg:a", long_options, NULL))
+		> 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
