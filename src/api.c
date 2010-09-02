@@ -2830,6 +2830,81 @@ out_free:
 	return ret;
 }
 
+
+int cgroup_read_value_end(void **handle)
+{
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!handle)
+		return ECGINVAL;
+
+	fp = (FILE *)*handle;
+	fclose(fp);
+
+	return 0;
+}
+
+int cgroup_read_value_next(void **handle, char *buffer, int max)
+{
+	int ret = 0;
+	char *ret_c;
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!buffer || !handle)
+		return ECGINVAL;
+
+	fp = (FILE *)*handle;
+	ret_c = fgets(buffer, max, fp);
+	if (ret_c == NULL)
+		ret = ECGEOF;
+
+	return ret;
+}
+
+int cgroup_read_value_begin(const char *controller, const char *path,
+	char *name, void **handle, char *buffer, int max)
+{
+	int ret = 0;
+	char *ret_c = NULL;
+	char stat_file[FILENAME_MAX];
+	char stat_path[FILENAME_MAX];
+	FILE *fp;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (!buffer || !handle)
+		return ECGINVAL;
+
+	if (!cg_build_path(path, stat_path, controller))
+		return ECGOTHER;
+
+	snprintf(stat_file, sizeof(stat_file), "%s/%s", stat_path,
+		name);
+	fp = fopen(stat_file, "re");
+	if (!fp) {
+		cgroup_dbg("fopen failed\n");
+		last_errno = errno;
+		*handle = NULL;
+		return ECGOTHER;
+	}
+
+	ret_c = fgets(buffer, max, fp);
+	if (ret_c == NULL)
+		ret = ECGEOF;
+
+	*handle = fp;
+	return 0;
+}
+
+
+
 int cgroup_read_stats_end(void **handle)
 {
 	FILE *fp;
