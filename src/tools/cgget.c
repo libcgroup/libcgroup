@@ -168,10 +168,6 @@ static int display_controller_values(char **controllers, int count,
 		/* read the controller group data */
 		group_controller = cgroup_get_controller(group, controllers[j]);
 		if (group_controller == NULL) {
-			if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
-				fprintf(stderr, "%s: cannot find controller "\
-					"'%s' in group '%s'\n", program_name,
-					controllers[j], group_name);
 			if (!(mode & MODE_SHOW_ALL_CONTROLLERS)) {
 				fprintf(stderr, "%s: cannot find controller "\
 					"'%s' in group '%s'\n", program_name,
