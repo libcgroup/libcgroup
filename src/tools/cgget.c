@@ -13,6 +13,7 @@
 #define MODE_SHOW_NAMES			2
 #define MODE_SHOW_ALL_CONTROLLERS	4
 
+#define LL_MAX				100
 
 static void usage(int status, const char *program_name)
 {
@@ -27,48 +28,63 @@ static void usage(int status, const char *program_name)
 }
 
 static int display_one_record(char *name, struct cgroup_controller *group_controller,
-	const char *program_name, int mode)
+	const char *group_name, const char *program_name, int mode)
 {
-	int ret;
-	char *value = NULL;
+	int ret = 0;
+	void *handle;
+	char line[LL_MAX];
+	int ind = 0;
 
-	ret = cgroup_get_value_string(group_controller, name, &value);
+	if (mode & MODE_SHOW_NAMES)
+		printf("%s: ", name);
+
+	/* start the reading of the variable value */
+	ret = cgroup_read_value_begin(group_controller->name,
+		group_name, name, &handle, line, LL_MAX);
+
+	if (ret == ECGEOF) {
+		ret = 0;
+		goto read_end;
+	}
+
 	if (ret != 0) {
-		fprintf(stderr, "%s: cannot read parameter '%s' "\
-			"from group '%s': %s\n", program_name, name,
-			group_controller->name, cgroup_strerror(ret));
+		fprintf(stderr, "variable file read failed %d\n", ret);
 		return ret;
 	}
 
-	if (mode & MODE_SHOW_NAMES)
-		printf("%s=", name);
-
-	if (strcmp(strchr(name, '.')+1, "stat"))
-		printf("%s\n", value);
-
-	else {
-		void *handle;
-		struct cgroup_stat stat;
-
-		ret = cgroup_read_stats_begin(group_controller->name,
-			"/", &handle, &stat);
-		if (ret != 0) {
-			fprintf(stderr, "stats read failed\n");
-			return ret;
-		}
-		printf("%s %s", stat.name, stat.value);
-
-		while ((ret = cgroup_read_stats_next(&handle, &stat)) !=
-				ECGEOF) {
-			printf("\t%s %s", stat.name, stat.value);
-		}
-
-		cgroup_read_stats_end(&handle);
+	printf("%s", line);
+	if (line[strlen(line)-1] == '\n') {
+		/* if the value continue on the net row,
+		 * indent the next row
+		 */
+		ind = 1;
 	}
 
-	free(value);
+	/* read iteratively the whole value  */
+	while ((ret = cgroup_read_value_next(&handle, line, LL_MAX)) == 0) {
+		if (ind == 1) {
+			printf("\t");
+			ind = 0;
+		}
+
+		printf("%s", line);
+
+		if (line[strlen(line)-1] == '\n') {
+			/* if the value continue on the net row,
+			 * indent the next row
+			 */
+			ind = 1;
+		}
+	}
+
+	if (ret == ECGEOF)
+		ret = 0;
+read_end:
+
+	cgroup_read_value_end(&handle);
 	return ret;
 }
+
 
 
 static int display_name_values(char **names, int count, const char* group_name,
@@ -124,7 +140,7 @@ static int display_name_values(char **names, int count, const char* group_name,
 
 		/* Finally read the parameter value.*/
 		ret = display_one_record(names[i], group_controller,
-			program_name, mode);
+			group_name, program_name, mode);
 		if (ret != 0)
 			goto err;
 	}
@@ -182,7 +198,7 @@ static int display_controller_values(char **controllers, int count,
 			name = cgroup_get_value_name(group_controller, i);
 			if (name != NULL) {
 				ret = display_one_record(name, group_controller,
-					program_name, mode);
+					group_name, program_name, mode);
 				if (ret) {
 					result = ret;
 					goto err;
