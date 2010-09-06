@@ -12,7 +12,6 @@
  */
 int main()
 {
-	int test;
 	int size;
 	pid_t *pids;
 	int ret;

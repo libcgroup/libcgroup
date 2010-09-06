@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	uid_t uid;
 
 	/* Return codes */
-	int ret;
+	int ret = 0;
 
 	if (argc < 2) {
 		printf("Usage: %s <uid_value> \n", argv[0]);
