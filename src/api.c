@@ -1027,20 +1027,9 @@ int cgroup_attach_task(struct cgroup *cgroup)
 int cg_mkdir_p(const char *path)
 {
 	char *real_path = NULL;
-	char *wd = NULL;
-	int i = 0, j = 0;
+	int i = 0;
 	char pos;
-	char *str = NULL;
 	int ret = 0;
-	char cwd[FILENAME_MAX];
-	char *buf = NULL;
-
-	buf = getcwd(cwd, FILENAME_MAX);
-
-	if (!buf) {
-		last_errno = errno;
-		return ECGOTHER;
-	}
 
 	real_path = strdup(path);
 	if (!real_path) {
@@ -1049,23 +1038,16 @@ int cg_mkdir_p(const char *path)
 	}
 
 	do {
-		while (real_path[j] != '\0' && real_path[j] != '/')
-			j++;
-		while (real_path[j] != '\0' && real_path[j] == '/')
-			j++;
-		if (i == j)
-			continue;
-		pos = real_path[j];
-		real_path[j] = '\0';		/* Temporarily overwrite "/" */
-		str = &real_path[i];
-		ret = mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-		wd = strdup(str);
-		if (!wd) {
-			last_errno = errno;
-			ret = ECGOTHER;
-			break;
-		}
-		real_path[j] = pos;
+		while (real_path[i] != '\0' && real_path[i] == '/')
+			i++;
+		if (real_path[i] == '\0')
+			break; /* The path ends with '/', ignore it. */
+		while (real_path[i] != '\0' && real_path[i] != '/')
+			i++;
+		pos = real_path[i];
+		real_path[i] = '\0';		/* Temporarily overwrite "/" */
+		ret = mkdir(real_path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		real_path[i] = pos;
 		if (ret) {
 			switch (errno) {
 			case EEXIST:
@@ -1073,30 +1055,13 @@ int cg_mkdir_p(const char *path)
 				break;
 			case EPERM:
 				ret = ECGROUPNOTOWNER;
-				free(wd);
 				goto done;
 			default:
 				ret = ECGROUPNOTALLOWED;
-				free(wd);
 				goto done;
 			}
 		}
-		i = j;
-		ret = chdir(wd);
-		if (ret) {
-			cgroup_dbg("could not chdir to child directory (%s)\n",
-				wd);
-			break;
-		}
-		free(wd);
 	} while (real_path[i]);
-
-	ret = chdir(buf);
-	if (ret) {
-		last_errno = errno;
-		ret = ECGOTHER;
-		cgroup_dbg("could not go back to old directory (%s)\n", cwd);
-	}
 
 done:
 	free(real_path);
