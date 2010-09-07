@@ -2841,6 +2841,9 @@ int cgroup_read_stats_end(void **handle)
 		return ECGINVAL;
 
 	fp = (FILE *)*handle;
+	if (fp == NULL)
+		return ECGINVAL;
+
 	fclose(fp);
 	return 0;
 }
