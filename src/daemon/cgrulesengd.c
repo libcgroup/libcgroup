@@ -549,9 +549,12 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 		cgroup_dbg("read error: %s\n", strerror(errno));
 		goto close;
 	}
-	if (cgre_store_unchanged_process(pid, flags))
-		goto close;
-
+	if (flags == CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS) {
+		cgre_remove_unchanged_process(pid);
+	} else {
+		if (cgre_store_unchanged_process(pid, flags))
+			goto close;
+	}
 	if (write(fd_client, CGRULE_SUCCESS_STORE_PID,
 			sizeof(CGRULE_SUCCESS_STORE_PID)) < 0) {
 		cgroup_dbg("write error: %s\n", strerror(errno));

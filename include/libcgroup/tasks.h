@@ -24,7 +24,8 @@ enum cgroup_daemon_type {
 	 * The daemon must not touch the given task, i.e. it never moves it
 	 * to any controlgroup.
 	 */
-	CGROUP_DAEMON_UNCHANGE_CHILDREN = 0x1,
+	CGROUP_DAEMON_UNCHANGE_CHILDREN       = 0x1,
+	CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS = 0x2,
 };
 
 /**
