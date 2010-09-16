@@ -93,6 +93,7 @@ out:
 
 static struct option longopts[] = {
 	{"sticky", no_argument, NULL, 's'},
+	{"cancel-sticky", no_argument, NULL, 'u'},
 	{0, 0, 0, 0}
 };
 
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
 	int ret = 0, i, exit_code = 0;
 	pid_t pid;
 	int cg_specified = 0;
-	int flag_child = 0;
+	int flag = 0;
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 	int c;
 
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
 	if (argc < 2) {
 		fprintf(stderr, "usage is %s "
 			"[-g <list of controllers>:<relative path to cgroup>] "
-			"[--sticky] <list of pids>  \n",
+			"[--sticky | --cancel-sticky] <list of pids>  \n",
 			argv[0]);
 		exit(2);
 	}
@@ -128,7 +129,10 @@ int main(int argc, char *argv[])
 			cg_specified = 1;
 			break;
 		case 's':
-			flag_child |= CGROUP_DAEMON_UNCHANGE_CHILDREN;
+			flag |= CGROUP_DAEMON_UNCHANGE_CHILDREN;
+			break;
+		case 'u':
+			flag |= CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS;
 			break;
 		default:
 			fprintf(stderr, "Invalid command line option\n");
@@ -148,8 +152,8 @@ int main(int argc, char *argv[])
 	for (i = optind; i < argc; i++) {
 		pid = (uid_t) atoi(argv[i]);
 
-		if (flag_child)
-			ret = cgroup_register_unchanged_process(pid, flag_child);
+		if (flag)
+			ret = cgroup_register_unchanged_process(pid, flag);
 		if (ret)
 			exit_code = 1;
 
