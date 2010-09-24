@@ -733,12 +733,7 @@ int cgroup_init(void)
 			if (!mntopt)
 				continue;
 
-			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
-
-			if (strcmp(mntopt, controllers[i]))
-				continue;
-
-			cgroup_dbg("matched %s:%s\n", mntopt, controllers[i]);
+			cgroup_dbg("found %s in %s\n", controllers[i], ent->mnt_opts);
 
 			/* do not have duplicates in mount table */
 			duplicate = 0;
