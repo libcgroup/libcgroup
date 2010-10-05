@@ -442,16 +442,20 @@ static int cgroup_config_create_groups(void)
  */
 static int cgroup_config_destroy_groups(void)
 {
-	int error = 0;
+	int error = 0, ret = 0;
 	int i;
 
 	for (i = 0; i < cgroup_table_index; i++) {
 		struct cgroup *cgroup = &config_cgroup_table[i];
-		error = cgroup_delete_cgroup(cgroup, 0);
-		if (error)
-			return error;
+		error = cgroup_delete_cgroup_ext(cgroup,
+				CGFLAG_DELETE_RECURSIVE
+				| CGFLAG_DELETE_IGNORE_MIGRATION);
+		if (error) {
+			/* store the error, but continue deleting the rest */
+			ret = error;
+		}
 	}
-	return error;
+	return ret;
 }
 
 /*
