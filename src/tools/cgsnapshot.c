@@ -280,6 +280,7 @@ static int display_cgroup_data(struct cgroup *group,
 	int bl, wl = 0; /* is on the blacklist/whitelist flag */
 	int nr_var = 0;
 	char *name;
+	char *output_name;
 	struct cgroup_controller *group_controller = NULL;
 	char *value = NULL;
 	char var_path[FILENAME_MAX];
@@ -325,8 +326,11 @@ static int display_cgroup_data(struct cgroup *group,
 			ret = stat(var_path, &sb);
 			/* freezer.state is not in root group so ret != 0,
 			 * but it should be listed
+			 * device.list should be read to create
+			 * device.allow input
 			 */
-			if ((ret == 0) && ((sb.st_mode & S_IWUSR) == 0)) {
+			if ((ret == 0) && ((sb.st_mode & S_IWUSR) == 0) &&
+			    (strcmp("devices.list", name) != 0)) {
 				/* variable is not writable */
 				continue;
 			}
@@ -352,6 +356,23 @@ static int display_cgroup_data(struct cgroup *group,
 					"neither blacklisted nor "\
 					"whitelisted\n", name);
 
+			output_name = name;
+
+			/* deal with devices variables:
+			 * - omit devices.deny and device.allow,
+			 * - generate devices.{deny,allow} from
+			 * device.list variable (deny all and then
+			 * all device.list devices */
+			if ((strcmp("devices.deny", name) == 0) ||
+				(strcmp("devices.allow", name) == 0)) {
+				continue;
+			}
+			if (strcmp("devices.list", name) == 0) {
+				output_name = "devices.allow";
+				fprintf(of,
+					"\t\tdevices.deny=\"a *:* rwm\";\n");
+			}
+
 			ret = cgroup_get_value_string(group_controller,
 				name, &value);
 
@@ -363,7 +384,7 @@ static int display_cgroup_data(struct cgroup *group,
 					name);
 				goto err;
 			}
-			fprintf(of, "\t\t%s=\"%s\";\n", name, value);
+			fprintf(of, "\t\t%s=\"%s\";\n", output_name, value);
 		}
 		fprintf(of, "\t}\n");
 	}
