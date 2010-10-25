@@ -273,7 +273,7 @@ static int display_permissions(const char *path,
 
 static int display_cgroup_data(struct cgroup *group,
 		char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
-		const char *group_path, int first,
+		const char *group_path, int root_path_len, int first,
 		const char *program_name)
 {
 	int i = 0, j;
@@ -315,8 +315,14 @@ static int display_cgroup_data(struct cgroup *group,
 		for (j = 0; j < nr_var; j++) {
 			name = cgroup_get_value_name(group_controller, j);
 
-			/* test whether the variable file is writable */
-			strncpy(var_path, group_path, FILENAME_MAX);
+			/* For the non-root groups cgconfigparser set
+			   permissions of variable files to 777. Thus
+			   It is necessary to test the permissions of
+			   variable files in the root group to find out
+			   whether the variable is writable.
+			 */
+			strncpy(var_path, group_path, root_path_len);
+			var_path[root_path_len] = '\0';
 			strncat(var_path, "/", FILENAME_MAX);
 			var_path[FILENAME_MAX-1] = '\0';
 			strncat(var_path, name, FILENAME_MAX);
@@ -450,7 +456,7 @@ static int display_controller_data(
 			}
 
 			display_cgroup_data(group, controller, info.full_path,
-				first, program_name);
+				prefix_len, first, program_name);
 			first = 0;
 		}
 	}
