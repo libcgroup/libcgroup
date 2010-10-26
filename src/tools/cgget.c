@@ -53,6 +53,7 @@ static int display_one_record(char *name, struct cgroup_controller *group_contro
 		group_name, name, &handle, line, LL_MAX);
 
 	if (ret == ECGEOF) {
+		printf("\n");
 		ret = 0;
 		goto read_end;
 	}
