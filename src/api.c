@@ -2895,7 +2895,7 @@ int cgroup_read_value_begin(const char *controller, const char *path,
 		ret = ECGEOF;
 
 	*handle = fp;
-	return 0;
+	return ret;
 }
 
 
