@@ -84,7 +84,7 @@ create_default_groups() {
         # Create the default group, ignore errors when the default group
         # already exists.
         #
-        cgcreate -g $controllers:$defaultcgroup 2>/dev/null
+        cgcreate -f 664 -d 775 -g $controllers:$defaultcgroup 2>/dev/null
 
         #
         # special rule for cpusets
