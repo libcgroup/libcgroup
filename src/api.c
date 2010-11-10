@@ -124,7 +124,7 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
 	const char *filename = fts->fts_path;
-	cgroup_dbg("seeing file %s\n", filename);
+	cgroup_dbg("chown: seeing file %s\n", filename);
 	switch (ent->fts_info) {
 	case FTS_ERR:
 		errno = ent->fts_errno;
@@ -135,22 +135,11 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 	case FTS_NS:
 	case FTS_DNR:
 	case FTS_DP:
-		ret = chown(filename, owner, group);
-		if (ret)
-			goto fail_chown;
-		ret = chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP |
-					S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
-		break;
 	case FTS_F:
 	case FTS_DEFAULT:
 		ret = chown(filename, owner, group);
-		if (ret)
-			goto fail_chown;
-		ret = chmod(filename, S_IRUSR | S_IWUSR |  S_IRGRP |
-						S_IWGRP | S_IROTH);
 		break;
 	}
-fail_chown:
 	if (ret < 0) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -166,7 +155,7 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	int ret = 0;
 	FTS *fts;
 
-	cgroup_dbg("path is %s\n", *path);
+	cgroup_dbg("chown: path is %s\n", *path);
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
