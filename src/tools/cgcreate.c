@@ -24,14 +24,47 @@
 #include <errno.h>
 #include <unistd.h>
 #include <grp.h>
+#include <getopt.h>
 
 #include "tools-common.h"
+/*
+ * Display the usage
+ */
+static void usage(int status, const char *program_name)
+{
+	if (status != 0) {
+		fprintf(stderr, "Wrong input parameters,"
+			" try %s -h' for more information.\n",
+			program_name);
+	} else {
+		fprintf(stdout, "Usage: %s [-h] [-t <tuid>:<tgid>] "\
+			"[-a <agid>:<auid>] -g <controllers>:<path> [-g ...]\n",
+			program_name);
+		fprintf(stdout, "  -t <tuid>:<tgid>		Set "\
+			"the task permission\n");
+		fprintf(stdout, "  -a <tuid>:<tgid>		Set "\
+			"the admin permission\n");
+		fprintf(stdout, "  -g <controllers>:<path>	Control "\
+			"group which should be added\n");
+		fprintf(stdout, "  -h,--help			Display "\
+			"this help\n");
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int i, j;
 	int c;
+
+	static struct option long_opts[] = {
+		{"help", no_argument, NULL, 'h'},
+		{"task", required_argument, NULL, 't'},
+		{"admin", required_argument, NULL, 'a'},
+		{"", required_argument, NULL, 'g'},
+		{0, 0, 0, 0},
+	};
 
 	/* Structure to get GID from group name */
 	struct group *grp = NULL;
@@ -53,10 +86,7 @@ int main(int argc, char *argv[])
 
 	/* no parametr on input */
 	if (argc < 2) {
-		fprintf(stderr, "Usage is %s "
-			"-t <tuid>:<tgid> -a <agid>:<auid> "
-			"-g <list of controllers>:<relative path to cgroup>\n",
-			argv[0]);
+		usage(1, argv[0]);
 		return -1;
 	}
 	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
@@ -66,8 +96,11 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt(argc, argv, "a:t:g:")) > 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:h", long_opts, NULL)) > 0) {
 		switch (c) {
+		case 'h':
+			usage(0, argv[0]);
+			return 0;
 		case 'a':
 			/* set admin uid/gid */
 			if (optarg[0] == ':')
@@ -146,9 +179,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		default:
-			fprintf(stderr, "%s: "
-				"invalid command line option\n",
-				argv[0]);
+			usage(1, argv[0]);
 			return -1;
 			break;
 		}
