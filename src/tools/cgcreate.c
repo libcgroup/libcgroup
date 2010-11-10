@@ -27,6 +27,7 @@
 #include <getopt.h>
 
 #include "tools-common.h"
+
 /*
  * Display the usage
  */
@@ -37,8 +38,9 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	} else {
-		fprintf(stdout, "Usage: %s [-h] [-t <tuid>:<tgid>] "\
-			"[-a <agid>:<auid>] -g <controllers>:<path> [-g ...]\n",
+		fprintf(stdout, "Usage: %s [-h] [-f mode] [-d mode] "\
+			"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
+			"-g <controllers>:<path> [-g ...]\n",
 			program_name);
 		fprintf(stdout, "  -t <tuid>:<tgid>		Set "\
 			"the task permission\n");
@@ -48,9 +50,45 @@ static void usage(int status, const char *program_name)
 			"group which should be added\n");
 		fprintf(stdout, "  -h,--help			Display "\
 			"this help\n");
+		fprintf(stdout, "  -f, --fperm mode		Group "\
+			"file permissions\n");
+		fprintf(stdout, "  -d, --dperm mode		Group "\
+			"direrory permissions\n");
 	}
 }
 
+/* allowed mode strings are octal version: "755" */
+
+int parse_mode(char *string, mode_t *pmode, const char *program_name)
+{
+	mode_t mode = 0;
+	int pos = 0; /* position of the number iin string */
+	int i;
+	int j = 64;
+
+	while (pos < 3) {
+		if ('0' <= string[pos] && string[pos] < '8') {
+			i = (int)string[pos] - (int)'0';
+			/* parse the permission triple*/
+			mode = mode + i*j;
+			j = j / 8;
+		} else {
+			fprintf(stdout, "%s wrong mode format %s",
+				program_name, string);
+			return -1;
+		}
+		pos++;
+	}
+
+	/* the string have contains three characters */
+	if (string[pos] != '\0') {
+		fprintf(stdout, "%s wrong mode format %s",
+			program_name, string);
+		return -1;
+	}
+	*pmode = mode;
+	return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -63,6 +101,8 @@ int main(int argc, char *argv[])
 		{"task", required_argument, NULL, 't'},
 		{"admin", required_argument, NULL, 'a'},
 		{"", required_argument, NULL, 'g'},
+		{"dperm", required_argument, NULL, 'd'},
+		{"fperm", required_argument, NULL, 'f' },
 		{0, 0, 0, 0},
 	};
 
@@ -84,6 +124,12 @@ int main(int argc, char *argv[])
 	/* approximation of max. numbers of groups that will be created */
 	int capacity = argc;
 
+	/* permission variables */
+	mode_t dir_mode = 0;
+	mode_t file_mode = 0;
+	int dirm_change = 0;
+	int filem_change = 0;
+
 	/* no parametr on input */
 	if (argc < 2) {
 		usage(1, argv[0]);
@@ -96,7 +142,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:h", long_opts, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:", long_opts, NULL))
+		> 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -178,6 +225,14 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			break;
+		case 'd':
+			dirm_change = 1;
+			ret = parse_mode(optarg, &dir_mode, argv[0]);
+			break;
+		case 'f':
+			filem_change = 1;
+			ret = parse_mode(optarg, &file_mode, argv[0]);
+			break;
 		default:
 			usage(1, argv[0]);
 			return -1;
@@ -247,6 +302,17 @@ int main(int argc, char *argv[])
 				argv[0], cgroup->name, cgroup_strerror(ret));
 			cgroup_free(&cgroup);
 			goto err;
+		}
+		if (dirm_change + filem_change > 0) {
+			ret = cg_chmod_recursive(cgroup, dir_mode, dirm_change,
+				file_mode, filem_change);
+			if (ret) {
+				fprintf(stderr, "%s: can't change permission " \
+					"of cgroup %s: %s\n", argv[0],
+					cgroup->name, cgroup_strerror(ret));
+				cgroup_free(&cgroup);
+				goto err;
+			}
 		}
 		cgroup_free(&cgroup);
 	}
