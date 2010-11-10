@@ -72,6 +72,11 @@ start()
 		log_failure_msg "not configured"
 		return 6
 	fi
+	if ! grep "^cgroup" /proc/mounts &>/dev/null; then
+		echo
+		log_failure_msg $"Cannot find cgroups, is cgconfig service running?"
+		return 1
+	fi
 	daemon --check $servicename --pidfile $pidfile $CGRED_BIN $OPTIONS
 	RETVAL=$?
 	echo
