@@ -519,6 +519,17 @@ char *cgroup_get_value_name(struct cgroup_controller *controller, int index);
 int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size);
 
 /**
+ * Change permission of files and directories of given group
+ * @param cgroup The cgroup which permissions should be changed
+ * @param dir_mode The permission mode of group directory
+ * @param dirm_change Denotes whether the directory change should be done
+ * @param file_mode The permission mode of group files
+ * @param filem_change Denotes whether the directory change should be done
+ */
+int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
+	int dirm_change, mode_t file_mode, int filem_change);
+
+/**
  * @}
  * @}
  */

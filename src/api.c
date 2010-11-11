@@ -124,7 +124,7 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
 	const char *filename = fts->fts_path;
-	cgroup_dbg("seeing file %s\n", filename);
+	cgroup_dbg("chown: seeing file %s\n", filename);
 	switch (ent->fts_info) {
 	case FTS_ERR:
 		errno = ent->fts_errno;
@@ -135,22 +135,11 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 	case FTS_NS:
 	case FTS_DNR:
 	case FTS_DP:
-		ret = chown(filename, owner, group);
-		if (ret)
-			goto fail_chown;
-		ret = chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP |
-					S_IWGRP | S_IXGRP | S_IROTH | S_IXOTH);
-		break;
 	case FTS_F:
 	case FTS_DEFAULT:
 		ret = chown(filename, owner, group);
-		if (ret)
-			goto fail_chown;
-		ret = chmod(filename, S_IRUSR | S_IWUSR |  S_IRGRP |
-						S_IWGRP | S_IROTH);
 		break;
 	}
-fail_chown:
 	if (ret < 0) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -166,7 +155,7 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	int ret = 0;
 	FTS *fts;
 
-	cgroup_dbg("path is %s\n", *path);
+	cgroup_dbg("chown: path is %s\n", *path);
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	while (1) {
@@ -181,6 +170,95 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	fts_close(fts);
 	return ret;
 }
+
+int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
+	int dirm_change, mode_t file_mode, int filem_change)
+{
+	int ret = 0;
+	const char *filename = fts->fts_path;
+	cgroup_dbg("chmod: seeing file %s\n", filename);
+	switch (ent->fts_info) {
+	case FTS_ERR:
+		errno = ent->fts_errno;
+		break;
+	case FTS_D:
+	case FTS_DC:
+	case FTS_DNR:
+	case FTS_DP:
+		if (dirm_change)
+			ret = chmod(filename, dir_mode);
+		break;
+	case FTS_F:
+	case FTS_NSOK:
+	case FTS_NS:
+	case FTS_DEFAULT:
+		if (filem_change)
+			ret = chmod(filename, file_mode);
+		break;
+	}
+	if (ret < 0) {
+		last_errno = errno;
+		ret = ECGOTHER;
+	}
+	return ret;
+}
+
+
+/*
+ * TODO: Need to decide a better place to put this function.
+ */
+int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
+       int dirm_change, mode_t file_mode, int filem_change)
+{
+	int ret = 0;
+	int final_ret =0;
+	FTS *fts;
+	char *fts_path[2];
+	char *path = NULL;
+
+	fts_path[0] = (char *)malloc(FILENAME_MAX);
+	if (!fts_path[0]) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	fts_path[1] = NULL;
+	path = fts_path[0];
+	cgroup_dbg("chmod: path is %s\n", path);
+
+	if (!cg_build_path(cgroup->name, path,
+			cgroup->controller[0]->name)) {
+		final_ret = ECGFAIL;
+		goto err;
+	}
+
+	fts = fts_open(fts_path, FTS_PHYSICAL | FTS_NOCHDIR |
+			FTS_NOSTAT, NULL);
+	if (fts == NULL) {
+		last_errno = errno;
+		final_ret = ECGOTHER;
+		goto err;
+	}
+	while (1) {
+		FTSENT *ent;
+		ent = fts_read(fts);
+		if (!ent) {
+			cgroup_dbg("fts_read failed\n");
+			break;
+		}
+		ret = cg_chmod_file(fts, ent, dir_mode, dirm_change,
+			file_mode, filem_change);
+		if (ret) {
+			last_errno = errno;
+			final_ret = ECGOTHER;
+		}
+	}
+	fts_close(fts);
+
+err:
+	free(fts_path[0]);
+	return final_ret;
+}
+
 
 static char *cgroup_basename(const char *path)
 {

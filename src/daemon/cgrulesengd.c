@@ -1013,23 +1013,24 @@ int main(int argc, char *argv[])
 
 	/* Initialize libcgroup. */
 	if ((ret = cgroup_init()) != 0) {
-		fprintf(stderr, "Error: libcgroup initialization failed, %d\n",
-				ret);
+		fprintf(stderr, "Error: libcgroup initialization failed, %s\n",
+				cgroup_strerror(ret));
 		goto finished;
 	}
 
 	/* Ask libcgroup to load the configuration rules. */
 	if ((ret = cgroup_init_rules_cache()) != 0) {
 		fprintf(stderr, "Error: libcgroup failed to initialize rules"
-				"cache, %d\n", ret);
+				"cache from %s. %s\n", CGRULES_CONF_FILE,
+				cgroup_strerror(ret));
 		goto finished;
 	}
 
 	/* Now, start the daemon. */
 	ret = cgre_start_daemon(logp, facility, daemon, verbosity);
 	if (ret < 0) {
-		fprintf(stderr, "Error: Failed to launch the daemon, %d\n",
-			ret);
+		fprintf(stderr, "Error: Failed to launch the daemon, %s\n",
+			cgroup_strerror(ret));
 		goto finished;
 	}
 

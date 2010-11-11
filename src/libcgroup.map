@@ -94,4 +94,5 @@ CGROUP_0.37 {
 	cgroup_read_value_begin;
 	cgroup_read_value_next;
 	cgroup_read_value_end;
+	cg_chmod_recursive;
 } CGROUP_0.36;
