@@ -158,6 +158,10 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	cgroup_dbg("chown: path is %s\n", *path);
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
+	if (fts == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	while (1) {
 		FTSENT *ent;
 		ent = fts_read(fts);
@@ -2830,6 +2834,10 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	entry->fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
+	if (entry->fts == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	ent = fts_read(entry->fts);
 	if (!ent) {
 		cgroup_dbg("fts_read failed\n");
