@@ -14,6 +14,7 @@ BuildRequires: pam-devel
 BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: coreutils
+Requires(pre): shadow-utils
 Requires(post): chkconfig, /sbin/service
 Requires(preun): /sbin/chkconfig
 
@@ -71,10 +72,14 @@ rm -f $RPM_BUILD_ROOT/%{_libdir}/libcgroup.so.%{soversion_major}
 ln -sf libcgroup.so.%{soversion} $RPM_BUILD_ROOT/%{_lib}/libcgroup.so.%{soversion_major}
 ln -sf ../../%{_lib}/libcgroup.so.%{soversion} $RPM_BUILD_ROOT/%{_libdir}/libcgroup.so
 rm -f $RPM_BUILD_ROOT/%{_libdir}/*.la
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post 
+%pre
+getent group cgred >/dev/null || groupadd cgred
+
+%post
 /sbin/ldconfig
 /sbin/chkconfig --add cgred
 /sbin/chkconfig --add cgconfig
@@ -96,7 +101,7 @@ fi
 %config(noreplace) %{_sysconfdir}/cgconfig.conf
 %config(noreplace) %{_sysconfdir}/cgrules.conf
 /%{_lib}/libcgroup.so.*
-/bin/cgexec
+%attr(2755, root, cgred) /bin/cgexec
 /bin/cgclassify
 /bin/cgcreate
 /bin/cgget
