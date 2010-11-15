@@ -16,6 +16,9 @@ the appropriate control group.
 The list of rules is read during the daemon startup and are cached in daemon's memory.
 The daemon reloads the list of rules when it receives SIGUSR2 signal.
 
+The daemon opens a standard unix socket to receive 'sticky' requests from
+cgexec tool.
+
 .SH OPTIONS
 .TP
 .B -h|--help
@@ -47,7 +50,11 @@ Disable logging.
 .B -d|--debug
 Equivalent to '-nvvf -', i.e. don't fork the daemon, display all log messages and
 write them to the standard output.
-
+.TP
+.B -u <user>|--socket-user=<user>
+.B -g <group>|--socket-group=<group>
+Set owner of cgrulesengd socket. It assumes that cgexec tool runs with proper
+suid permissions so it can write to the socket when cgexec --sticky is used.
 .SH FILES
 .LP
 .PD .1v

@@ -54,6 +54,8 @@
 #include <linux/connector.h>
 #include <linux/cn_proc.h>
 #include <linux/un.h>
+#include <pwd.h>
+#include <grp.h>
 
 #define NUM_PER_REALLOCATIOM	(100)
 
@@ -65,6 +67,12 @@ int logfacility;
 
 /* Current log level */
 int loglevel;
+
+/* Owner of the socket, -1 means no change */
+uid_t socket_user = -1;
+
+/* Owner of the socket, -1 means no change */
+gid_t socket_group = -1;
 
 /**
  * Prints the usage information for this program and, optionally, an error
@@ -94,6 +102,10 @@ static void usage(FILE* fd, const char* msg, ...)
 		"    -n           | --nodaemom          don't fork daemon\n"
 		"    -d           | --debug             same as -v -v -n -f -\n"
 		"    -Q           | --nolog             disable logging\n"
+		"    -u <user>    | --socket-user=<user> set "
+			CGRULE_CGRED_SOCKET_PATH " socket user\n"
+		"    -g <group>   | --socket-group=<group> set "
+			CGRULE_CGRED_SOCKET_PATH " socket group\n"
 		"    -h           | --help              show this help\n\n"
 		);
 	va_end(ap);
@@ -650,6 +662,23 @@ static int cgre_create_netlink_socket_process_msg(void)
 		cgroup_dbg("listening sk_unix error: %s\n", strerror(errno));
 		goto close_and_exit;
 	}
+
+	/* change the owner */
+	if (chown(CGRULE_CGRED_SOCKET_PATH, socket_user, socket_group) < 0) {
+		cgroup_dbg("Error changing socket owner: %s\n",
+				strerror(errno));
+		goto close_and_exit;
+	}
+	cgroup_dbg("Socket %s owner successfully set to %d:%d\n",
+			CGRULE_CGRED_SOCKET_PATH, (int) socket_user,
+			(int) socket_group);
+
+	if (chmod(CGRULE_CGRED_SOCKET_PATH, 0660) < 0) {
+		cgroup_dbg("Error changing socket owner: %s\n",
+				strerror(errno));
+		goto close_and_exit;
+	}
+
 	FD_ZERO(&readfds);
 	FD_SET(sk_nl, &readfds);
 	FD_SET(sk_unix, &readfds);
@@ -927,8 +956,11 @@ int main(int argc, char *argv[])
 	/* Return codes */
 	int ret = 0;
 
+	struct passwd *pw;
+	struct group *gr;
+
 	/* Command line arguments */
-	const char *short_options = "hvqf:s::ndQ";
+	const char *short_options = "hvqf:s::ndQu:g:";
 	struct option long_options[] = {
 		{"help", no_argument, NULL, 'h'},
 		{"verbose", no_argument, NULL, 'v'},
@@ -938,6 +970,8 @@ int main(int argc, char *argv[])
 		{"nodaemon", no_argument, NULL, 'n'},
 		{"debug", no_argument, NULL, 'd'},
 		{"nolog", no_argument, NULL, 'Q'},
+		{"socket-user", required_argument, NULL, 'u'},
+		{"socket-group", required_argument, NULL, 'g'},
 		{NULL, 0, NULL, 0}
 	};
 
@@ -1003,7 +1037,28 @@ int main(int argc, char *argv[])
 			verbosity = 4;
 			logp = "-";
 			break;
-
+		case 'u': /* --socket-user */
+			pw = getpwnam(optarg);
+			if (pw == NULL) {
+				usage(stderr, "Cannot find user %s", optarg);
+				ret = 3;
+				goto finished;
+			}
+			socket_user = pw->pw_uid;
+			cgroup_dbg("Using socket user %s id %d\n",
+					optarg, (int)socket_user);
+			break;
+		case 'g': /* --socket-group */
+			gr = getgrnam(optarg);
+			if (gr == NULL) {
+				usage(stderr, "Cannot find group %s", optarg);
+				ret = 3;
+				goto finished;
+			}
+			socket_group = gr->gr_gid;
+			cgroup_dbg("Using socket group %s id %d\n",
+					optarg, (int)socket_group);
+			break;
 		default:
 			usage(stderr, "");
 			ret = 2;
