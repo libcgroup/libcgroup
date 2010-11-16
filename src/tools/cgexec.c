@@ -13,6 +13,10 @@
  *
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <errno.h>
 #include <grp.h>
 #include <libcgroup.h>
@@ -113,11 +117,11 @@ int main(int argc, char *argv[])
 	 * socket, and an euid/egid should be changed to the executing user
 	 * from a root user.
 	 */
-	if (seteuid(uid)) {
+	if (setresuid(uid, uid, uid)) {
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
-	if (setegid(gid)) {
+	if (setresgid(gid, gid, gid)) {
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
