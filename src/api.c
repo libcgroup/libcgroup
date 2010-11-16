@@ -2208,6 +2208,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 
 	/* Scan all the controllers */
 	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
+		int j = 0;
 		if (!controllers[i])
 			return 0;
 		controller = controllers[i];
@@ -2216,16 +2217,16 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 		 * controllers. */
 		if (strcmp(controller, "*") == 0) {
 			pthread_rwlock_rdlock(&cg_mount_table_lock);
-			for (i = 0; i < CG_CONTROLLER_MAX &&
-				cg_mount_table[i].name[0] != '\0'; i++) {
+			for (j = 0; j < CG_CONTROLLER_MAX &&
+				cg_mount_table[j].name[0] != '\0'; j++) {
 				cgroup_dbg("Adding controller %s\n",
-					cg_mount_table[i].name);
+					cg_mount_table[j].name);
 				cptr = cgroup_add_controller(cgroup,
-						cg_mount_table[i].name);
+						cg_mount_table[j].name);
 				if (!cptr) {
 					cgroup_dbg("Adding controller '%s'"
 						" failed\n",
-						cg_mount_table[i].name);
+						cg_mount_table[j].name);
 					pthread_rwlock_unlock(&cg_mount_table_lock);
 					cgroup_free_controllers(cgroup);
 					return ECGROUPNOTALLOWED;
