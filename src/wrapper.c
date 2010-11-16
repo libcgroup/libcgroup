@@ -162,8 +162,10 @@ int cgroup_add_value_int64(struct cgroup_controller *controller,
 	ret = snprintf(cntl_value->value,
 	  sizeof(cntl_value->value), "%" PRId64, value);
 
-	if (ret >= sizeof(cntl_value->value))
+	if (ret >= sizeof(cntl_value->value)) {
+		free(cntl_value);
 		return ECGINVAL;
+	}
 
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
@@ -199,8 +201,10 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
 	ret = snprintf(cntl_value->value, sizeof(cntl_value->value),
 						"%" PRIu64, value);
 
-	if (ret >= sizeof(cntl_value->value))
+	if (ret >= sizeof(cntl_value->value)) {
+		free(cntl_value);
 		return ECGINVAL;
+	}
 
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
@@ -241,8 +245,10 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 		ret = snprintf(cntl_value->value,
 				sizeof(cntl_value->value), "0");
 
-	if (ret >= sizeof(cntl_value->value))
+	if (ret >= sizeof(cntl_value->value)) {
+		free(cntl_value);
 		return ECGINVAL;
+	}
 
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
