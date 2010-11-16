@@ -2652,7 +2652,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		 * my daily life, I need some magic to help make them
 		 * disappear :)
 		 */
-		if (ret != 3 || ret == EOF) {
+		if (ret != 3) {
 			cgroup_dbg("read failed for pid_cgroup_fd ret %d\n",
 				ret);
 			last_errno = errno;
