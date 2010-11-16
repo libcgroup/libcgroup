@@ -384,10 +384,12 @@ int main(int argc, char *argv[])
 		if (ret)
 			goto err;
 
-		if (mode & MODE_SHOW_ALL_CONTROLLERS)
-			display_all_controllers(argv[i], argv[0], mode);
-		if (ret)
-			result = ret;
+		if (mode & MODE_SHOW_ALL_CONTROLLERS) {
+			ret = display_all_controllers(argv[i], argv[0], mode);
+			/* remember the error but continue showing the rest */
+			if (ret)
+				result = ret;
+		}
 
 		/* Separate each group with empty line. */
 		if (mode & MODE_SHOW_HEADERS && i != argc-1)
