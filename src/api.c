@@ -276,9 +276,6 @@ static char *cgroup_basename(const char *path)
 
 	base = strdup(basename(tmp_string));
 
-	if (!base)
-		return NULL;
-
 	free(tmp_string);
 
 	return base;
