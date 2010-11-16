@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
 	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
 	if (cgroup_list == NULL) {
 		fprintf(stderr, "%s: out of memory\n", argv[0]);
-		return -1;
+		ret = -1;
+		goto err;
 	}
 
 	/* parse arguments */
@@ -147,7 +148,8 @@ int main(int argc, char *argv[])
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
-			return 0;
+			ret = 0;
+			goto err;
 		case 'a':
 			/* set admin uid/gid */
 			if (optarg[0] == ':')
@@ -166,7 +168,8 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "%s: "
 						"can't find uid of user %s.\n",
 						argv[0], pwd_string);
-					return -1;
+					ret = -1;
+					goto err;
 				}
 			}
 			if (grp_string != NULL) {
@@ -177,7 +180,8 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "%s: "
 						"can't find gid of group %s.\n",
 						argv[0], grp_string);
-					return -1;
+					ret = -1;
+					goto err;
 				}
 			}
 
@@ -200,7 +204,8 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "%s: "
 						"can't find uid of user %s.\n",
 						argv[0], pwd_string);
-					return -1;
+					ret = -1;
+					goto err;
 				}
 			}
 			if (grp_string != NULL) {
@@ -211,7 +216,8 @@ int main(int argc, char *argv[])
 					fprintf(stderr, "%s: "
 						"can't find gid of group %s.\n",
 						argv[0], grp_string);
-					return -1;
+					ret = -1;
+					goto err;
 				}
 			}
 			break;
@@ -222,7 +228,8 @@ int main(int argc, char *argv[])
 					"cgroup controller and path"
 					"parsing failed (%s)\n",
 					argv[0], argv[optind]);
-				return -1;
+				ret = -1;
+				goto err;
 			}
 			break;
 		case 'd':
@@ -235,8 +242,8 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			return -1;
-			break;
+			ret = -1;
+			goto err;
 		}
 	}
 
