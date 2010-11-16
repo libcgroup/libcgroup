@@ -2839,6 +2839,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 	ent = fts_read(entry->fts);
 	if (!ent) {
 		cgroup_dbg("fts_read failed\n");
+		free(entry);
 		return ECGINVAL;
 	}
 	if (!*base_level && depth)
