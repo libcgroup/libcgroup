@@ -89,8 +89,12 @@ start()
 	if [ $RETVAL -ne 0 ]; then
 		return 7
 	fi
-	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/$servicename
+	touch /var/lock/subsys/$servicename
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
 	echo "`pidof $processname`" > $pidfile
+	return 0
 }
 
 stop()
@@ -103,10 +107,12 @@ stop()
 	killproc -p $pidfile $processname -TERM
 	RETVAL=$?
 	echo
-	if [ $RETVAL -eq 0 ] ; then
-		rm -f /var/lock/subsys/$servicename
-		rm -f $pidfile
+	if [ $RETVAL -ne 0 ] ; then
+		return 1
 	fi
+	rm -f /var/lock/subsys/$servicename
+	rm -f $pidfile
+	return 0
 }
 
 # See how we are called
