@@ -381,13 +381,17 @@ int main(int argc, char *argv[])
 
 		ret = display_controller_values(controllers, c_number, argv[i],
 			argv[0], mode - (mode & MODE_SHOW_ALL_CONTROLLERS));
-		if (ret)
-			goto err;
-
-		if (mode & MODE_SHOW_ALL_CONTROLLERS)
-			display_all_controllers(argv[i], argv[0], mode);
-		if (ret)
+		if (ret) {
 			result = ret;
+			goto err;
+		}
+
+		if (mode & MODE_SHOW_ALL_CONTROLLERS) {
+			ret = display_all_controllers(argv[i], argv[0], mode);
+			/* remember the error but continue showing the rest */
+			if (ret)
+				result = ret;
+		}
 
 		/* Separate each group with empty line. */
 		if (mode & MODE_SHOW_HEADERS && i != argc-1)

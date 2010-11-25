@@ -158,6 +158,10 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	cgroup_dbg("chown: path is %s\n", *path);
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
+	if (fts == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	while (1) {
 		FTSENT *ent;
 		ent = fts_read(fts);
@@ -271,9 +275,6 @@ static char *cgroup_basename(const char *path)
 		return NULL;
 
 	base = strdup(basename(tmp_string));
-
-	if (!base)
-		return NULL;
 
 	free(tmp_string);
 
@@ -2207,6 +2208,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 
 	/* Scan all the controllers */
 	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
+		int j = 0;
 		if (!controllers[i])
 			return 0;
 		controller = controllers[i];
@@ -2215,16 +2217,16 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 		 * controllers. */
 		if (strcmp(controller, "*") == 0) {
 			pthread_rwlock_rdlock(&cg_mount_table_lock);
-			for (i = 0; i < CG_CONTROLLER_MAX &&
-				cg_mount_table[i].name[0] != '\0'; i++) {
+			for (j = 0; j < CG_CONTROLLER_MAX &&
+				cg_mount_table[j].name[0] != '\0'; j++) {
 				cgroup_dbg("Adding controller %s\n",
-					cg_mount_table[i].name);
+					cg_mount_table[j].name);
 				cptr = cgroup_add_controller(cgroup,
-						cg_mount_table[i].name);
+						cg_mount_table[j].name);
 				if (!cptr) {
 					cgroup_dbg("Adding controller '%s'"
 						" failed\n",
-						cg_mount_table[i].name);
+						cg_mount_table[j].name);
 					pthread_rwlock_unlock(&cg_mount_table_lock);
 					cgroup_free_controllers(cgroup);
 					return ECGROUPNOTALLOWED;
@@ -2650,7 +2652,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		 * my daily life, I need some magic to help make them
 		 * disappear :)
 		 */
-		if (ret != 3 || ret == EOF) {
+		if (ret != 3) {
 			cgroup_dbg("read failed for pid_cgroup_fd ret %d\n",
 				ret);
 			last_errno = errno;
@@ -2830,9 +2832,14 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	entry->fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
+	if (entry->fts == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	ent = fts_read(entry->fts);
 	if (!ent) {
 		cgroup_dbg("fts_read failed\n");
+		free(entry);
 		return ECGINVAL;
 	}
 	if (!*base_level && depth)

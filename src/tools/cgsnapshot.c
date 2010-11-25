@@ -190,41 +190,20 @@ static int display_permissions(const char *path,
 		const char *program_name)
 {
 	int ret;
-	struct stat sb;
+	struct stat sba;
+	struct stat sbt;
 	struct passwd *pw;
 	struct group *gr;
 	char tasks_path[FILENAME_MAX];
 
-	/* print the header */
-	fprintf(of, "\tperm {\n");
-
 	/* admin permissions record */
 	/* get the directory statistic */
-	ret = stat(path, &sb);
+	ret = stat(path, &sba);
 	if (ret) {
 		fprintf(stderr, "ERROR: can't read statistics about %s\n",
 			path);
 		return -1;
 	}
-
-	/* find out the user and group name */
-	pw = getpwuid(sb.st_uid);
-	if (pw == NULL) {
-		fprintf(stderr, "ERROR: can't get %d user name\n", sb.st_uid);
-		return -1;
-	}
-
-	gr = getgrgid(sb.st_gid);
-	if (gr == NULL) {
-		fprintf(stderr, "ERROR: can't get %d group name\n", sb.st_gid);
-		return -1;
-	}
-
-	/* print the admin record */
-	fprintf(of, "\t\tadmin {\n"\
-		"\t\t\tuid = %s;\n"\
-		"\t\t\tgid = %s;\n"\
-		"\t\t}\n", pw->pw_name, gr->gr_name);
 
 	/* tasks permissions record */
 	/* get tasks file statistic */
@@ -232,34 +211,65 @@ static int display_permissions(const char *path,
 	tasks_path[FILENAME_MAX-1] = '\0';
 	strncat(tasks_path, "/tasks", FILENAME_MAX);
 	tasks_path[FILENAME_MAX-1] = '\0';
-
-	ret = stat(tasks_path, &sb);
+	ret = stat(tasks_path, &sbt);
 	if (ret) {
 		fprintf(stderr, "ERROR: can't read statistics about %s\n",
 			tasks_path);
 		return -1;
 	}
 
-	/* find out the user and group name */
-	pw = getpwuid(sb.st_uid);
-	if (pw == NULL) {
-		fprintf(stderr, "ERROR: can't get %d user name\n", sb.st_uid);
-		return -1;
+	if ((sba.st_uid) || (sba.st_gid) ||
+		(sbt.st_uid) || (sbt.st_gid)) {
+		/* some uid or gid is nonroot, admin permission
+		   tag is necessery */
+
+		/* print the header */
+		fprintf(of, "\tperm {\n");
+
+		/* find out the user and group name */
+		pw = getpwuid(sba.st_uid);
+		if (pw == NULL) {
+			fprintf(stderr, "ERROR: can't get %d user name\n",
+				sba.st_uid);
+			return -1;
+		}
+
+		gr = getgrgid(sba.st_gid);
+		if (gr == NULL) {
+			fprintf(stderr, "ERROR: can't get %d group name\n",
+				sba.st_gid);
+			return -1;
+		}
+
+		/* print the admin record */
+		fprintf(of, "\t\tadmin {\n"\
+			"\t\t\tuid = %s;\n"\
+			"\t\t\tgid = %s;\n"\
+			"\t\t}\n", pw->pw_name, gr->gr_name);
+
+		/* find out the user and group name */
+		pw = getpwuid(sbt.st_uid);
+		if (pw == NULL) {
+			fprintf(stderr, "ERROR: can't get %d user name\n",
+				sbt.st_uid);
+			return -1;
+		}
+
+		gr = getgrgid(sbt.st_gid);
+		if (gr == NULL) {
+			fprintf(stderr, "ERROR: can't get %d group name\n",
+				sbt.st_gid);
+			return -1;
+		}
+
+		/* print the task record */
+		fprintf(of, "\t\ttask {\n"\
+			"\t\t\tuid = %s;\n"\
+			"\t\t\tgid = %s;\n"\
+			"\t\t}\n", pw->pw_name, gr->gr_name);
+
+		fprintf(of, "\t}\n");
 	}
-
-	gr = getgrgid(sb.st_gid);
-	if (gr == NULL) {
-		fprintf(stderr, "ERROR: can't get %d group name\n", sb.st_gid);
-		return -1;
-	}
-
-	/* print the task record */
-	fprintf(of, "\t\ttask {\n"\
-		"\t\t\tuid = %s;\n"\
-		"\t\t\tgid = %s;\n"\
-		"\t\t}\n", pw->pw_name, gr->gr_name);
-
-	fprintf(of, "\t}\n");
 
 	return 0;
 }

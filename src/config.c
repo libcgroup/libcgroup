@@ -752,12 +752,6 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 		goto out_error;
 	}
 
-	error = rmdir(mount_info->path);
-	if (error) {
-		last_errno = errno;
-		ret = ECGOTHER;
-	}
-
 out_error:
 	if (cgroup)
 		cgroup_free(&cgroup);

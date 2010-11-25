@@ -13,6 +13,10 @@
  *
  */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <errno.h>
 #include <grp.h>
 #include <libcgroup.h>
@@ -92,6 +96,11 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
+	/* Just for debugging purposes. */
+	uid = geteuid();
+	gid = getegid();
+	cgroup_dbg("My euid and eguid is: %d,%d\n", (int) uid, (int) gid);
+
 	uid = getuid();
 	gid = getgid();
 	pid = getpid();
@@ -105,10 +114,14 @@ int main(int argc, char *argv[])
 	/*
 	 * 'cgexec' command file needs the root privilege for executing
 	 * a cgroup_register_unchanged_process() by using unix domain
-	 * socket, and an euid should be changed to the executing user
+	 * socket, and an euid/egid should be changed to the executing user
 	 * from a root user.
 	 */
-	if (seteuid(uid)) {
+	if (setresuid(uid, uid, uid)) {
+		fprintf(stderr, "%s", strerror(errno));
+		return -1;
+	}
+	if (setresgid(gid, gid, gid)) {
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
