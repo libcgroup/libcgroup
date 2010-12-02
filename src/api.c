@@ -1512,11 +1512,10 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 	}
 	else {
 		*parent = strdup(pdir);
+		if (*parent == NULL)
+			ret = ECGFAIL;
 	}
 	free(dir);
-
-	if (*parent == NULL)
-		ret = ECGFAIL;
 
 	return ret;
 }
