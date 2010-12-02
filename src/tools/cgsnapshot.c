@@ -464,6 +464,7 @@ static int display_controller_data(
 			if (ret != 0) {
 				printf("cannot read group '%s': %s\n",
 				cgroup_name, cgroup_strerror(ret));
+				goto err;
 			}
 
 			display_cgroup_data(group, controller, info.full_path,
@@ -474,6 +475,7 @@ static int display_controller_data(
 
 	cgroup_free(&group);
 
+err:
 	cgroup_walk_tree_end(&handle);
 	if (ret == ECGEOF)
 		ret = 0;
