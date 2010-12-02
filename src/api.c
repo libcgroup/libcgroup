@@ -826,7 +826,7 @@ int cgroup_init(void)
 			if (duplicate) {
 				cgroup_dbg("controller %s is already mounted on %s\n",
 					mntopt, cg_mount_table[j].path);
-				continue;
+				break;
 			}
 
 			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
