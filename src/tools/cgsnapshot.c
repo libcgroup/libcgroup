@@ -313,6 +313,7 @@ static int display_cgroup_data(struct cgroup *group,
 			printf("cannot find controller "\
 				"'%s' in group '%s'\n",
 				controller[i], group->name);
+			i++;
 			ret = -1;
 			continue;
 		}
