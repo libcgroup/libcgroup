@@ -470,10 +470,9 @@ static int display_controller_data(
 			display_cgroup_data(group, controller, info.full_path,
 				prefix_len, first, program_name);
 			first = 0;
+			cgroup_free(&group);
 		}
 	}
-
-	cgroup_free(&group);
 
 err:
 	cgroup_walk_tree_end(&handle);
