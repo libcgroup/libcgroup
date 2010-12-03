@@ -60,6 +60,7 @@ cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
 cp samples/cgconfig.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgconfig
 cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
 cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
+cp samples/cgsnapshot_blacklist.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgsnapshot_blacklist.conf
 
 # sanitize pam module, we need only pam_cgroup.so
 mv -f $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so.*.*.* $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
@@ -100,6 +101,7 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/cgconfig
 %config(noreplace) %{_sysconfdir}/cgconfig.conf
 %config(noreplace) %{_sysconfdir}/cgrules.conf
+%config(noreplace) %{_sysconfdir}/cgsnapshot_blacklist.conf
 /%{_lib}/libcgroup.so.*
 %attr(2755, root, cgred) /bin/cgexec
 /bin/cgclassify
