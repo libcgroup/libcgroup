@@ -313,6 +313,7 @@ static int display_cgroup_data(struct cgroup *group,
 			printf("cannot find controller "\
 				"'%s' in group '%s'\n",
 				controller[i], group->name);
+			i++;
 			ret = -1;
 			continue;
 		}
@@ -463,16 +464,17 @@ static int display_controller_data(
 			if (ret != 0) {
 				printf("cannot read group '%s': %s\n",
 				cgroup_name, cgroup_strerror(ret));
+				goto err;
 			}
 
 			display_cgroup_data(group, controller, info.full_path,
 				prefix_len, first, program_name);
 			first = 0;
+			cgroup_free(&group);
 		}
 	}
 
-	cgroup_free(&group);
-
+err:
 	cgroup_walk_tree_end(&handle);
 	if (ret == ECGEOF)
 		ret = 0;
@@ -550,9 +552,11 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		ret = cgroup_get_controller_next(&handle, &controller);
 	}
 
-	if (max != 0)
+	if (max != 0) {
+		(controllers[max])[0] = '\0';
 		ret = display_controller_data(
 			controllers, program_name);
+	}
 
 	cgroup_get_controller_end(&handle);
 	if (ret != ECGEOF)

@@ -48,7 +48,7 @@ if [ -f "/etc/sysconfig/cgred.conf" ] ; then
 	. /etc/sysconfig/cgred.conf
 	OPTIONS="$NODAEMON $LOG"
 	if [ -n "$LOG_FILE" ]; then
-		OPTIONS="$OPTIONS --log-file=$LOG_FILE"
+		OPTIONS="$OPTIONS --logfile=$LOG_FILE"
 	fi
 	if [ -n "$SOCKET_USER" ]; then
 		OPTIONS="$OPTIONS -u $SOCKET_USER"
