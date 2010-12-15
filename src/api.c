@@ -1991,6 +1991,8 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	char *ctrl_file = NULL;
 	char *ctrl_value = NULL;
 	char *d_name = NULL;
+	char *tmp_path = NULL;
+	int tmp_len = 0;
 	char path[FILENAME_MAX+1];
 	char *buffer = NULL;
 	int error = 0;
@@ -2019,8 +2021,33 @@ static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 		goto fill_error;
 	}
 
-	cgroup->control_uid = stat_buffer.st_uid;
-	cgroup->control_gid = stat_buffer.st_gid;
+	/*
+	 * We have already stored the tasks_uid & tasks_gid.
+	 * This check is to avoid the overwriting of the values
+	 * stored in control_uid & cotrol_gid. tasks file will
+	 * have the uid and gid of the user who is capable of
+	 * putting a task to this cgroup. control_uid and control_gid
+	 * is meant for the users who are capable of managing the
+	 * cgroup shares.
+	 *
+	 * The strstr() function will return the pointer to the
+	 * beginning of the sub string "/tasks".
+	 */
+	tmp_len = strlen(path) - strlen("/tasks");
+
+	/*
+	 * tmp_path would be pointing to the last six characters
+	 */
+	tmp_path = (char *)path + tmp_len;
+
+	/*
+	 * Checking to see, if this is actually a 'tasks' file
+	 * We need to compare the last 6 bytes
+	 */
+	if (strcmp(tmp_path, "/tasks")){
+		cgroup->control_uid = stat_buffer.st_uid;
+		cgroup->control_gid = stat_buffer.st_gid;
+	}
 
 	ctrl_name = strtok_r(d_name, ".", &buffer);
 
