@@ -57,7 +57,16 @@ can be:
 can be:
 .nf
     - path relative to the controller hierarchy (ex. pgrp1/gid1/uid1)
-    
+    - following strings will get expanded
+
+          %u     username, uid if name resolving fails
+          %U     uid
+          %g     group name, gid if name resolving fails
+          %G     gid
+          %p     process name, pid if name not available
+          %P     pid
+
+          '\\' can be used to escape '%'
 .fi
 
 First rule which matches the criteria  will be executed.

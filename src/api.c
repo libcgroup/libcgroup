@@ -2393,6 +2393,14 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 	/* Temporary pointer to a rule */
 	struct cgroup_rule *tmp = NULL;
 
+	/* Temporary variables for destination substitution */
+	char newdest[FILENAME_MAX];
+	int i, j;
+	int written;
+	int available;
+	struct passwd *user_info;
+	struct group *group_info;
+
 	/* Return codes */
 	int ret = 0;
 
@@ -2445,7 +2453,92 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 	do {
 		cgroup_dbg("Executing rule %s for PID %d... ", tmp->username,
 								pid);
-		ret = cgroup_change_cgroup_path(tmp->destination,
+		/* Destination substitutions */
+		for(j = i = 0; i < strlen(tmp->destination) &&
+			(j < FILENAME_MAX - 2); ++i, ++j) {
+			if(tmp->destination[i] == '%') {
+				/* How many bytes did we write / error check */
+				written = 0;
+				/* How many bytes can we write */
+				available = FILENAME_MAX - j - 2;
+				/* Substitution */
+				switch(tmp->destination[++i]) {
+				case 'u':
+					written = snprintf(newdest+j, available,
+						"%d", uid);
+					break;
+				case 'U':
+					user_info = getpwuid(uid);
+					if(user_info) {
+						written = snprintf(newdest + j,
+							available, "%s",
+							user_info -> pw_name);
+					} else {
+						written = snprintf(newdest + j,
+							available, "%d", uid);
+					}
+					break;
+				case 'g':
+					written = snprintf(newdest + j,
+						available, "%d", gid);
+					break;
+				case 'G':
+					group_info = getgrgid(gid);
+					if(group_info) {
+						written = snprintf(newdest + j,
+							available, "%s",
+							group_info -> gr_name);
+					} else {
+						written = snprintf(newdest + j,
+							available, "%d", gid);
+					}
+					break;
+				case 'p':
+					written = snprintf(newdest + j,
+						available, "%d", pid);
+					break;
+				case 'P':
+					if(procname) {
+						written = snprintf(newdest + j,
+							available, "%s",
+							procname);
+					} else {
+						written = snprintf(newdest + j,
+							available, "%d", pid);
+					}
+					break;
+				}
+				written = min(written, available);
+				/*
+				 * written<1 only when either error occurred
+				 * during snprintf or if no substitution was
+				 * made at all. In both cases, we want to just
+				 * copy input string.
+				 */
+				if(written<1) {
+					newdest[j] = '%';
+					if(available>1)
+						newdest[++j] =
+							tmp->destination[i];
+				} else {
+					/*
+					 * In next iteration, we will write
+					 * just after the substitution, but j
+					 * will get incremented in the
+					 * meantime.
+					 */
+					j += written - 1;
+				}
+			} else {
+				if(tmp->destination[i] == '\\')
+					++i;
+				newdest[j] = tmp->destination[i];
+			}
+		}
+		newdest[j] = 0;
+
+		/* Apply the rule */
+		ret = cgroup_change_cgroup_path(newdest,
 				pid, (const char * const *)tmp->controllers);
 		if (ret) {
 			cgroup_dbg("FAILED! (Error Code: %d)\n", ret);
