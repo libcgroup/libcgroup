@@ -7,8 +7,10 @@
 
 #include <libcgroup/groups.h>
 
+#ifndef SWIG
 #include <features.h>
 #include <stdbool.h>
+#endif
 
 __BEGIN_DECLS
 

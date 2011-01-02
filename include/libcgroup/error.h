@@ -5,7 +5,9 @@
 #error "Only <libcgroup.h> should be included directly."
 #endif
 
+#ifndef SWIG
 #include <features.h>
+#endif
 
 __BEGIN_DECLS
 
