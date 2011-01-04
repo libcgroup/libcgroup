@@ -115,7 +115,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Failed to parse config file",
 	"Have multiple paths for the same namespace",
 	"Controller in namespace does not exist",
-	"Cannot have mount and namespace keyword in the same configuration file",
+	"Either mount or namespace keyword has to be specified in the configuration file",
 	"This kernel does not support this feature",
 	"Value setting does not succeed",
 };
