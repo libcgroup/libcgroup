@@ -209,7 +209,7 @@ static int display_permissions(const char *path,
 	/* get tasks file statistic */
 	strncpy(tasks_path, path, FILENAME_MAX);
 	tasks_path[FILENAME_MAX-1] = '\0';
-	strncat(tasks_path, "/tasks", FILENAME_MAX);
+	strncat(tasks_path, "/tasks", FILENAME_MAX - strlen(tasks_path) - 1);
 	tasks_path[FILENAME_MAX-1] = '\0';
 	ret = stat(tasks_path, &sbt);
 	if (ret) {
@@ -332,11 +332,15 @@ static int display_cgroup_data(struct cgroup *group,
 			   variable files in the root group to find out
 			   whether the variable is writable.
 			 */
+			if (root_path_len >= FILENAME_MAX)
+				root_path_len = FILENAME_MAX - 1;
 			strncpy(var_path, group_path, root_path_len);
 			var_path[root_path_len] = '\0';
-			strncat(var_path, "/", FILENAME_MAX);
+			strncat(var_path, "/", FILENAME_MAX -
+					strlen(var_path) - 1);
 			var_path[FILENAME_MAX-1] = '\0';
-			strncat(var_path, name, FILENAME_MAX);
+			strncat(var_path, name, FILENAME_MAX -
+					strlen(var_path) - 1);
 			var_path[FILENAME_MAX-1] = '\0';
 
 			/* test whether the  write permissions */
