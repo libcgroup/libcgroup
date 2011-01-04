@@ -88,10 +88,13 @@ int cgroup_config_insert_cgroup(char *cg_name)
 
 	if (cgroup_table_index >= MAX_CGROUPS - 1) {
 		struct cgroup *newblk;
+		unsigned int oldlen;
+
 		if (MAX_CGROUPS >= INT_MAX) {
 			last_errno = ENOMEM;
 			return 0;
 		}
+		oldlen = MAX_CGROUPS;
 		MAX_CGROUPS *= 2;
 		newblk = realloc(config_cgroup_table, (MAX_CGROUPS *
 					sizeof(struct cgroup)));
@@ -99,6 +102,9 @@ int cgroup_config_insert_cgroup(char *cg_name)
 			last_errno = ENOMEM;
 			return 0;
 		}
+
+		memset(newblk + oldlen, 0, (MAX_CGROUPS - oldlen) *
+				sizeof(struct cgroup));
 		config_cgroup_table = newblk;
 		cgroup_dbg("MAX_CGROUPS %d\n", MAX_CGROUPS);
 		cgroup_dbg("reallocated config_cgroup_table to %p\n", config_cgroup_table);
@@ -663,7 +669,7 @@ int cgroup_config_load_config(const char *pathname)
 		return ECGOTHER;
 	}
 
-	config_cgroup_table = malloc(MAX_CGROUPS * sizeof(struct cgroup));
+	config_cgroup_table = calloc(MAX_CGROUPS, sizeof(struct cgroup));
 	if (yyparse() != 0) {
 		cgroup_dbg("Failed to parse file %s\n", pathname);
 		fclose(yyin);
