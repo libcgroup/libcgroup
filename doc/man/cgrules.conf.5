@@ -8,12 +8,11 @@ cgrules.conf \- libcgroup configuration file
 .B "cgrules.conf"
 configuration file is used by
 .B libcgroups
-to define the control groups to which the process belongs to.
+to define control groups to which a process belongs.
 
 
-The file the contains list of rules which assign
-to a defined group/user a control group in a subsystem 
-(or control groups in subsystems)
+The file contains a list of rules which assign to a defined group/user a control
+group in a subsystem (or control groups in subsystems).
 
 Rules have two formats: 
 
@@ -31,8 +30,8 @@ Where:
 .I user
 can be:
 .nf
-    - an user name
-    - a group name, with @group syntax
+    - a user name
+    - a group name with @group syntax
     - the wildcard '*', for any user or group
     - '%', which is equivalent to "ditto" (useful for 
       multi-line rules where different cgroups need to be 
@@ -69,7 +68,7 @@ can be:
           '\\' can be used to escape '%'
 .fi
 
-First rule which matches the criteria  will be executed.
+First rule which matches the criteria will be executed.
 
 
 Any text starting with '#' is considered as a start of comment line and is
@@ -80,41 +79,36 @@ ignored.
 .nf
 student         devices         /usergroup/students
 .fi
-the processes of user 
-student
-in the subsystem 'device' belong to the control group /usergroup/students.
+Student's processes in the 'devices' subsystem belong to the control
+group /usergroup/students.
 
 .nf
 student:cp       devices         /usergroup/students/cp
 .fi
-the 'cp' command processes of user 
-student
-in the subsystem 'device' belong to the control group /usergroup/students/cp.
+When student executes 'cp' command, the processes in the 'devices' subsystem
+belong to the control group /usergroup/students/cp.
 
 .nf
 @admin           *              admingroup/
 .fi
-the processes which belong to group
-admin
-in all subsystems belongs to the control group /admingroup.
+Processes started by anybody from admin group no matter in what subsystem belong
+to the control group admingroup/.
 
 .nf
 peter           cpu             test1/
 %               memory          test2/
 .fi
-First line says Peter's task for cpu controller
-belongs to test1 control group
-second line says put Peter's tasks for memory controller
-belongs to test2/ control group
+The first line says Peter's task for cpu controller belongs to test1 control
+group. The second one says Peter's tasks for memory controller belong to test2/
+control group.
 
 .nf 
 *               *               default/ 
 .fi
-all processes belong in all subsystems
-to the control group default/.  Because there is applied the first task which is find -
-it has a sense to have this row at the end of list to put the
-tasks which was not mentioned in the previous rules
-to the default/ control group.
+All processes in any subsystem belong to the control group default/. Since
+the earliest matched rule is applied, it makes sense to have this line
+at the end of the list. It will put a task which was not mentioned in the
+previous rules to default/ control group.
 
 
 

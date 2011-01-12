@@ -5,20 +5,18 @@ cgconfig.conf \- libcgroup configuration file
 .\"***********************************
 .SH DESCRIPTION
 .B "cgconfig.conf"
-is the configuration file used by
+is a configuration file used by
 .B libcgroup
 to define control groups, their parameters and also mount points.
 The file consists of
 .I mount
 and
 .I group
-sections.
-These sections can be in arbitrary order.
-Any line starting with '#' is considered as comment line and is
-ignored.
+sections. These sections can be in arbitrary order. Any line starting with
+'#' is considered as a comment line and is ignored.
 .LP
 .I mount
-section has the form:
+section has this form:
 .RS
 .nf
 .ft B
@@ -53,7 +51,7 @@ automatically on cgconfig service startup if it does not exist and
 is deleted on service shutdown.
 .LP
 .I group
-section has the form:
+section has this form:
 .RS
 .nf
 .ft B
