@@ -1,6 +1,7 @@
 get_all_controller
 get_controller
 get_mount_point
+get_procs
 get_variable_names
 libcg_ba
 libcgrouptest01
@@ -8,5 +9,6 @@ pathtest
 proctest
 read_stats
 setuid
+test_named_hierarchy
 walk_task
 walk_test

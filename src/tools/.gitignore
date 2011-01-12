@@ -6,5 +6,6 @@ cgdelete
 cgexec
 cgget
 cgset
+cgsnapshot
 lscgroup
 lssubsys
