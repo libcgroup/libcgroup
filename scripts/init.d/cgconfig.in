@@ -32,13 +32,7 @@
 # get correct location of binaries from configure
 prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
 CGCONFIGPARSER_BIN=$sbindir/cgconfigparser
-CGROUP_FS=cgroup
 CONFIG_FILE=/etc/cgconfig.conf
-
-# support multiple mount points
-declare -a MOUNTPOINT
-declare -a MOUNTOPTS
-maxindex=0
 servicename=cgconfig
 
 #
@@ -55,14 +49,12 @@ fi
 RETVAL=0
 
 create_default_groups() {
-        declare defaultcgroup
+	defaultcgroup=
 
-        if [ -f /etc/cgrules.conf ]
-        then
-            read user ctrl defaultcgroup <<< \
-		`grep -m1 '^\*[[:space:]]\+' /etc/cgrules.conf`
-            if [[ -n $defaultcgroup && $defaultcgroup = "*" ]]
-            then
+        if [ -f /etc/cgrules.conf ]; then
+	    grep -m1 '^\*[[:space:]]\+' /etc/cgrules.conf | \
+		    read user ctrl defaultcgroup
+            if [ -n "$defaultcgroup" -a "$defaultcgroup" = "*" ]; then
                 log_warning_msg "/etc/cgrules.conf incorrect"
                 log_warning_msg "Overriding it"
                 defaultcgroup=
@@ -129,7 +121,7 @@ start() {
                 fi
         fi
 
-        if [ $CREATE_DEFAULT == "yes" ]; then
+        if [ $CREATE_DEFAULT = "yes" ]; then
                 create_default_groups
         fi
 
