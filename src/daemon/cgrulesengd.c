@@ -339,6 +339,12 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	switch (type) {
 	case PROC_EVENT_UID:
 	case PROC_EVENT_GID:
+		/*
+		 * If the unchanged process, the daemon should not change the
+		 * cgroup of the process.
+		 */
+		if (cgre_is_unchanged_process(ev->event_data.id.process_pid))
+			return 0;
 		pid = ev->event_data.id.process_pid;
 		break;
 	case PROC_EVENT_FORK:
