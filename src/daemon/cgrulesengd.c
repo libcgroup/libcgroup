@@ -173,13 +173,15 @@ static int cgre_store_parent_info(pid_t pid)
 	uptime_ns = ((__u64)tp.tv_sec * 1000 * 1000 * 1000 ) + tp.tv_nsec;
 
 	if (array_pi.index >= array_pi.num_allocation) {
-		array_pi.num_allocation += NUM_PER_REALLOCATIOM;
-		array_pi.parent_info = realloc(array_pi.parent_info,
-					sizeof(info) * array_pi.num_allocation);
-		if (!array_pi.parent_info) {
+		int alloc = array_pi.num_allocation + NUM_PER_REALLOCATIOM;
+		void *new_array = realloc(array_pi.parent_info,
+					  sizeof(info) * alloc);
+		if (!new_array) {
 			flog(LOG_WARNING, "Failed to allocate memory");
 			return 1;
 		}
+		array_pi.parent_info = new_array;
+		array_pi.num_allocation = alloc;
 	}
 	info = calloc(1, sizeof(struct parent_info));
 	if (!info) {
@@ -258,13 +260,15 @@ static int cgre_store_unchanged_process(pid_t pid, int flags)
 		return 0;
 	}
 	if (array_unch.index >= array_unch.num_allocation) {
-		array_unch.num_allocation += NUM_PER_REALLOCATIOM;
-		array_unch.proc = realloc(array_unch.proc,
-			sizeof(unchanged_pid_t) * array_unch.num_allocation);
-		if (!array_unch.proc) {
+		int alloc = array_unch.num_allocation + NUM_PER_REALLOCATIOM;
+		void *new_array = realloc(array_unch.proc,
+					  sizeof(unchanged_pid_t) * alloc);
+		if (!new_array) {
 			flog(LOG_WARNING, "Failed to allocate memory");
 			return 1;
 		}
+		array_unch.proc = new_array;
+		array_unch.num_allocation = alloc;
 	}
 	array_unch.proc[array_unch.index].pid = pid;
 	array_unch.proc[array_unch.index].flags = flags;
