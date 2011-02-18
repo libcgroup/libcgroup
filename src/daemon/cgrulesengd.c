@@ -503,17 +503,10 @@ static int cgre_receive_netlink_msg(int sk_nl)
 	struct sockaddr_nl from_nla;
 	socklen_t from_nla_len;
 	struct nlmsghdr *nlh;
-	struct sockaddr_nl kern_nla;
 	struct cn_msg *cn_hdr;
-
-	kern_nla.nl_family = AF_NETLINK;
-	kern_nla.nl_groups = CN_IDX_PROC;
-	kern_nla.nl_pid = 1;
-	kern_nla.nl_pad = 0;
 
 	memset(buff, 0, sizeof(buff));
 	from_nla_len = sizeof(from_nla);
-	memcpy(&from_nla, &kern_nla, sizeof(from_nla));
 	recv_len = recvfrom(sk_nl, buff, sizeof(buff), 0,
 		(struct sockaddr *)&from_nla, &from_nla_len);
 	if (recv_len == ENOBUFS) {
@@ -521,6 +514,10 @@ static int cgre_receive_netlink_msg(int sk_nl)
 		return 0;
 	}
 	if (recv_len < 1)
+		return 0;
+
+	if (from_nla.nl_groups != CN_IDX_PROC
+	    || from_nla.nl_pid != 0)
 		return 0;
 
 	nlh = (struct nlmsghdr *)buff;
