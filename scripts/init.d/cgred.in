@@ -63,14 +63,13 @@ fi
 # For convenience
 processname=cgrulesengd
 servicename=cgred
+lockfile="/var/lock/subsys/$servicename"
 pidfile=/var/run/cgred.pid
-
-RETVAL=0
 
 start()
 {
 	echo -n $"Starting CGroup Rules Engine Daemon: "
-	if [ -f "/var/lock/subsys/$servicename" ] ; then
+	if [ -f "$lockfile" ]; then
 		log_failure_msg "$servicename is already running with PID `cat ${pidfile}`"
 		return 0
 	fi
@@ -84,12 +83,12 @@ start()
 		return 1
 	fi
 	daemon --check $servicename --pidfile $pidfile $CGRED_BIN $OPTIONS
-	RETVAL=$?
+	retval=$?
 	echo
-	if [ $RETVAL -ne 0 ]; then
+	if [ $retval -ne 0 ]; then
 		return 7
 	fi
-	touch /var/lock/subsys/$servicename
+	touch "$lockfile"
 	if [ $? -ne 0 ]; then
 		return 1
 	fi
@@ -104,16 +103,17 @@ stop()
 		log_success_msg
 		return 0
 	fi
-	killproc -p $pidfile $processname -TERM
-	RETVAL=$?
+	killproc -p $pidfile -TERM "$processname"
+	retval=$?
 	echo
-	if [ $RETVAL -ne 0 ] ; then
+	if [ $retval -ne 0 ]; then
 		return 1
 	fi
-	rm -f /var/lock/subsys/$servicename
-	rm -f $pidfile
+	rm -f "$lockfile" "$pidfile"
 	return 0
 }
+
+RETVAL=0
 
 # See how we are called
 case "$1" in
@@ -132,15 +132,17 @@ case "$1" in
 	restart)
 		stop
 		start
+		RETVAL=$?
 		;;
 	condrestart)
-		if [ -f /var/lock/subsys/$servicename ] ; then
+		if [ -f "$lockfile" ]; then
 			stop
 			start
+			RETVAL=$?
 		fi
 		;;
 	reload|flash)
-		if [ -f /var/lock/subsys/$servicename ] ; then
+		if [ -f "$lockfile" ]; then
 			echo $"Reloading rules configuration..."
 			kill -s 12 `cat ${pidfile}`
 			RETVAL=$?
