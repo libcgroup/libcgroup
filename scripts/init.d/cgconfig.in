@@ -34,6 +34,7 @@ prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
 CGCONFIGPARSER_BIN=$sbindir/cgconfigparser
 CONFIG_FILE=/etc/cgconfig.conf
 servicename=cgconfig
+lockfile=/var/lock/subsys/$servicename
 
 #
 # Source LSB routines
@@ -45,8 +46,6 @@ CREATE_DEFAULT=yes
 if [ -e /etc/sysconfig/cgconfig ]; then
         . /etc/sysconfig/cgconfig
 fi
-
-RETVAL=0
 
 create_default_groups() {
 	defaultcgroup=
@@ -98,24 +97,20 @@ create_default_groups() {
 
 start() {
         echo -n "Starting cgconfig service: "
-	if [ -f /var/lock/subsys/$servicename ]
-        then
+	if [ -f "$lockfile" ]; then
             log_warning_msg "lock file already exists"
             return 0
         fi
 
-        if [ $? -eq 0 ]
-        then
-                if [ ! -s $CONFIG_FILE ]
-                then
+        if [ $? -eq 0 ]; then
+                if [ ! -s $CONFIG_FILE ]; then
                     log_failure_msg $CONFIG_FILE "is not configured"
                     return 6
                 fi
 
                 $CGCONFIGPARSER_BIN -l $CONFIG_FILE
                 retval=$?
-                if [ $retval -ne 0 ]
-                then
+                if [ $retval -ne 0 ]; then
                     log_failure_msg "Failed to parse " $CONFIG_FILE
                     return 1
                 fi
@@ -125,11 +120,10 @@ start() {
                 create_default_groups
         fi
 
-        touch /var/lock/subsys/$servicename
+        touch "$lockfile"
         retval=$?
-        if [ $retval -ne 0 ]
-        then
-            log_failure_msg "Failed to touch " /var/lock/subsys/$servicename
+        if [ $retval -ne 0 ]; then
+            log_failure_msg "Failed to touch $lockfile"
             return 1
         fi
         log_success_msg
@@ -139,7 +133,7 @@ start() {
 stop() {
     echo -n "Stopping cgconfig service: "
     cgclear
-    rm -f /var/lock/subsys/$servicename
+    rm -f "$lockfile"
     log_success_msg
     return 0
 }
@@ -166,38 +160,37 @@ common() {
     trap "trapped INT"   INT
 }
 
+restart() {
+	common
+	stop
+	start
+}
+
+RETVAL=0
+
 case $1 in
     'stop')
         common
-        stop;
+        stop
         RETVAL=$?
         ;;
     'start')
         common
-        start;
-        RETVAL=$?
-        ;;
-    'restart')
-        common
-	stop
         start
         RETVAL=$?
         ;;
-    'reload')
-        common
-	stop
-        start
+    'restart'|'reload')
+	restart
         RETVAL=$?
         ;;
     'condrestart')
-        if [ -f /var/lock/subsys/$servicename ] ; then
-            stop
-            start
+        if [ -f "$lockfile" ]; then
+            restart
             RETVAL=$?
         fi
         ;;
     'status')
-        if [ -f /var/lock/subsys/$servicename ] ; then
+        if [ -f "$lockfile" ]; then
             echo "Running"
             exit 0
         else
