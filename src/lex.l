@@ -21,6 +21,8 @@ int line_no = 1;
 #define YY_FATAL_ERROR(msg) fprintf(stderr, "%s\n", msg)
 %}
 
+%option nounput noinput
+
 %%
 \n	{line_no++;}
 [ \t]	{/* DO NOTHING */}
