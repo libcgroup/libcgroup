@@ -516,6 +516,10 @@ static int cgre_receive_netlink_msg(int sk_nl)
 	if (recv_len < 1)
 		return 0;
 
+	if (from_nla_len != sizeof(from_nla)) {
+		flog(LOG_ERR, "Bad address size reading netlink socket");
+		return 0;
+	}
 	if (from_nla.nl_groups != CN_IDX_PROC
 	    || from_nla.nl_pid != 0)
 		return 0;
