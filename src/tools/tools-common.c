@@ -79,7 +79,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 			}
 		}
 		j++;
-	} while (temp);
+	} while (temp && j<CG_CONTROLLER_MAX-1);
 
 	/* Store path to the cgroup */
 	strncpy(cdptr[i]->path, pathptr, FILENAME_MAX);
