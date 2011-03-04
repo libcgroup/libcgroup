@@ -780,8 +780,6 @@ int cgroup_unload_cgroups(void)
 	}
 
 	error = cgroup_get_controller_begin(&ctrl_handle, &info);
-
-
 	if (error && error != ECGEOF) {
 		ret = error;
 		goto out_error;
@@ -796,10 +794,13 @@ int cgroup_unload_cgroups(void)
 			if (!curr_path)
 				goto out_errno;
 
-			ret = cgroup_config_unload_controller(&info);
-
-			if (ret)
-				goto out_error;
+			error = cgroup_config_unload_controller(&info);
+			if (error) {
+				/* remember the error and continue unloading
+				 * the rest */
+				ret = error;
+				error = 0;
+			}
 		}
 
 		error = cgroup_get_controller_next(&ctrl_handle, &info);
