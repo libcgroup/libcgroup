@@ -190,6 +190,8 @@ fi
 AC_CONFIG_FILES([Makefile
 	tests/Makefile
 	tests/tools/testenv.sh
+	tests/tools/Makefile
+	tests/tools/cgconfigparser/Makefile
 	src/Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
