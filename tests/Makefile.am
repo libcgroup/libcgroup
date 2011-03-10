@@ -1,4 +1,4 @@
-SUBDIR = tools
+SUBDIRS = tools
 
 INCLUDES = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/src/.libs/libcgroup.la
