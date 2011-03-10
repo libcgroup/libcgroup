@@ -72,3 +72,5 @@ mv /etc/cgrules.conf $TMP/cgrules-backup.conf &>/dev/null
 export TOOLSDIR="@abs_top_srcdir@/libtool --mode=execute @abs_top_srcdir@/src/tools/"
 # config files directory
 export CONFIGDIR="@abs_top_srcdir@/samples"
+# test directory
+export TESTDIR="@abs_top_srcdir@/tests"
