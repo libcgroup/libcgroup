@@ -31,6 +31,20 @@
 
 #define TEMP_BUF	81
 
+static void usage(int status, const char *program_name)
+{
+	if (status != 0) {
+		fprintf(stderr, "Wrong input parameters,"
+			" try %s -h' for more information.\n",
+			program_name);
+	} else {
+		printf("usage is %s "
+			"[-g <list of controllers>:<relative path to cgroup>] "
+			"[--sticky | --cancel-sticky] <list of pids>  \n",
+			program_name);
+	}
+}
+
 /*
  * Change process group as specified on command line.
  */
@@ -110,10 +124,7 @@ int main(int argc, char *argv[])
 
 
 	if (argc < 2) {
-		fprintf(stderr, "usage is %s "
-			"[-g <list of controllers>:<relative path to cgroup>] "
-			"[--sticky | --cancel-sticky] <list of pids>  \n",
-			argv[0]);
+		usage(1, argv[0]);
 		exit(2);
 	}
 
@@ -137,7 +148,7 @@ int main(int argc, char *argv[])
 			flag |= CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS;
 			break;
 		default:
-			fprintf(stderr, "Invalid command line option\n");
+			usage(1, argv[0]);
 			exit(2);
 			break;
 		}
