@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
 	int flag = 0;
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 	int c;
+	char *endptr;
 
 
 	if (argc < 2) {
@@ -151,7 +152,14 @@ int main(int argc, char *argv[])
 	}
 
 	for (i = optind; i < argc; i++) {
-		pid = (uid_t) atoi(argv[i]);
+		pid = (uid_t) strtol(argv[i], &endptr, 10);
+		if (endptr[0] != '\0') {
+			/* the input argument was not a number */
+			fprintf(stderr, "Error: %s is not valid pid.\n",
+				argv[i]);
+			exit_code = 2;
+			continue;
+		}
 
 		if (flag)
 			ret = cgroup_register_unchanged_process(pid, flag);
