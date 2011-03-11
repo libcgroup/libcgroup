@@ -129,8 +129,12 @@ int main(int argc, char *argv[])
 	}
 
 	memset(cgroup_list, 0, sizeof(cgroup_list));
-	while ((c = getopt_long(argc, argv, "+g:s", longopts, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "+g:sh", longopts, NULL)) > 0) {
 		switch (c) {
+		case 'h':
+			usage(0, argv[0]);
+			exit(0);
+			break;
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg,
 					CG_HIER_MAX);
