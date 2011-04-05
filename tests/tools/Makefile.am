@@ -1,2 +1,2 @@
-SUBDIRS = cgconfigparser
+SUBDIRS = cgconfigparser cgclassify
 

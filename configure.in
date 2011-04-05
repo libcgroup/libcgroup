@@ -196,6 +196,7 @@ AC_CONFIG_FILES([Makefile
 	tests/tools/testenv.sh
 	tests/tools/Makefile
 	tests/tools/cgconfigparser/Makefile
+	tests/tools/cgclassify/Makefile
 	src/Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
