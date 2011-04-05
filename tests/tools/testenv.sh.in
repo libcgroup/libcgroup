@@ -22,7 +22,11 @@ function die()
 {
 	echo $*
 	cgclear
-	mv $TMP/cgrules-backup.conf /etc/cgrules.conf &>/dev/null
+	if [ -e $TMP/cgrules-backup.conf ]; then
+		mv $TMP/cgrules-backup.conf /etc/cgrules.conf &>/dev/null
+	else
+		rm /etc/cgrules.conf &>/dev/null
+	fi
 	rm -rf $TMP
 	unset TMP
 	exit 1
@@ -43,7 +47,11 @@ function cleanup()
 		RET=1
 		cgclear
 	fi
-	mv $TMP/cgrules-backup.conf /etc/cgrules.conf &>/dev/null
+	if [ -e $TMP/cgrules-backup.conf ]; then
+		mv $TMP/cgrules-backup.conf /etc/cgrules.conf &>/dev/null
+	else
+		rm /etc/cgrules.conf &>/dev/null
+	fi
 	rm -rf $TMP
 	unset TMP
 	[ -z $RET ] || exit $RET
