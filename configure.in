@@ -197,6 +197,7 @@ AC_CONFIG_FILES([Makefile
 	tests/tools/Makefile
 	tests/tools/cgconfigparser/Makefile
 	tests/tools/cgclassify/Makefile
+	tests/tools/multimount/Makefile
 	src/Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
