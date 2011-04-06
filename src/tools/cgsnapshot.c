@@ -568,6 +568,27 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	return 0;
 }
 
+static int show_mountpoints(const char *controller)
+{
+	char path[FILENAME_MAX];
+	int ret;
+	void *handle;
+
+	ret = cgroup_get_subsys_mount_point_begin(controller, &handle, path);
+	if (ret)
+		return ret;
+
+	while (ret == 0) {
+		printf("\t%s = %s;\n", controller, path);
+		ret = cgroup_get_subsys_mount_point_next(&handle, path);
+	}
+	cgroup_get_subsys_mount_point_end(&handle);
+
+	if (ret != ECGEOF)
+		return ret;
+	return 0;
+}
+
 /* print data about input mount points */
 /* TODO only wanted ones */
 static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
@@ -576,7 +597,6 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	int ret;
 	void *handle;
 	struct controller_data info;
-	char *mount_point;
 
 	/* start mount section */
 	fprintf(of, "mount {\n");
@@ -587,17 +607,14 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 		/* the controller attached to some hierarchy */
 		if  (info.hierarchy != 0) {
-			ret = cgroup_get_subsys_mount_point(info.name,
-				&mount_point);
+			ret = show_mountpoints(info.name);
 			if (ret != 0) {
 				/* the controller is not mounted */
 				if ((flags &  FL_SILENT) == 0) {
 					fprintf(stderr, "ERROR: %s hierarchy "\
 						"not mounted\n", info.name);
 				}
-			} else
-				fprintf(of, "\t%s = %s;\n",
-					info.name, mount_point);
+			}
 		}
 
 		/* next controller */
