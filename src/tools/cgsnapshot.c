@@ -319,7 +319,10 @@ static int display_cgroup_data(struct cgroup *group,
 		}
 
 		/* print the controller header */
-		fprintf(of, "\t%s {\n", controller[i]);
+		if (strncmp(controller[i], "name=", 5) == 0)
+			fprintf(of, "\t\"%s\" {\n", controller[i]);
+		else
+			fprintf(of, "\t%s {\n", controller[i]);
 		i++;
 		nr_var = cgroup_get_value_name_count(group_controller);
 
@@ -573,13 +576,20 @@ static int show_mountpoints(const char *controller)
 	char path[FILENAME_MAX];
 	int ret;
 	void *handle;
+	int quote = 0;
+
+	if (strncmp(controller, "name=", 5) == 0)
+		quote = 1;
 
 	ret = cgroup_get_subsys_mount_point_begin(controller, &handle, path);
 	if (ret)
 		return ret;
 
 	while (ret == 0) {
-		printf("\t%s = %s;\n", controller, path);
+		if (quote)
+			printf("\t\"%s\" = %s;\n", controller, path);
+		else
+			printf("\t%s = %s;\n", controller, path);
 		ret = cgroup_get_subsys_mount_point_next(&handle, path);
 	}
 	cgroup_get_subsys_mount_point_end(&handle);
@@ -594,9 +604,10 @@ static int show_mountpoints(const char *controller)
 static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	const char *program_name)
 {
-	int ret;
+	int ret, final_ret;
 	void *handle;
 	struct controller_data info;
+	struct cgroup_mount_point mount;
 
 	/* start mount section */
 	fprintf(of, "mount {\n");
@@ -629,7 +640,29 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		}
 	}
 
-	ret |= cgroup_get_all_controller_end(&handle);
+	final_ret = ret;
+	cgroup_get_all_controller_end(&handle);
+
+	/* process also named hierarchies */
+	ret = cgroup_get_controller_begin(&handle, &mount);
+	while (ret == 0) {
+		if (strncmp(mount.name, "name=", 5) == 0) {
+			ret = show_mountpoints(mount.name);
+			if (ret != 0)
+				break;
+		}
+		ret = cgroup_get_controller_next(&handle, &mount);
+	}
+	if (ret != ECGEOF) {
+		if ((flags &  FL_SILENT) != 0) {
+			fprintf(stderr,
+				"E: in get next controller %s\n",
+				cgroup_strerror(ret));
+			return ret;
+		}
+		final_ret = ret;
+	}
+	cgroup_get_controller_end(&handle);
 
 	/* finish mount section */
 	fprintf(of, "}\n\n");
