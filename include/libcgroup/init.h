@@ -41,6 +41,9 @@ int cgroup_init(void);
 /**
  * Returns path where is mounted given controller. Applications should rely on
  * @c libcgroup API and not call this function directly.
+ * Only the first mount point is returned, use
+ * cgroup_get_subsys_mount_point_begin(), cgroup_get_subsys_mount_point_next()
+ * and cgroup_get_subsys_mount_point_end() to get all of them.
  * @param controller Name of the controller
  * @param mount_point The string where the mount point location is stored.
  * 	Please note, the caller must free the mount_point.

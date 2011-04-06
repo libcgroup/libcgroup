@@ -387,8 +387,42 @@ int cgroup_get_all_controller_end(void **handle);
 
 /**
  * @}
+ *
+ * @name List all mount points of a controller.
+ * Use following functions to list all mount points of a hierarchy with given
+ * controller.
+ */
+
+/**
+ * Read the first mount point of the hierarchy with given controller.
+ * The first is the same as the mount point returned by
+ * cgroup_get_subsys_mount_point().
+ * @param handle Handle to be used for iteration.
+ * @param controller Controller name.
+ * @param path Buffer to fill the path into. The buffer must be at least
+ * FILENAME_MAX characters long.
+ */
+int cgroup_get_subsys_mount_point_begin(const char *controller, void **handle,
+		char *path);
+/**
+ * Read next mount point of the hierarchy with given controller.
+ * @param handle Handle to be used for iteration.
+ * @param path Buffer to fill the path into. The buffer must be at least
+ * FILENAME_MAX characters long.
+ */
+int cgroup_get_subsys_mount_point_next(void **handle,
+		char *path);
+
+/**
+ * Release the iterator.
+ */
+int cgroup_get_subsys_mount_point_end(void **handle);
+
+/**
+ * @}
  * @}
  */
+
 __END_DECLS
 
 #endif /* _LIBCGROUP_ITERATORS_H */

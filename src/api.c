@@ -3922,3 +3922,62 @@ void cgroup_dictionary_iterator_end(void **handle)
 	*handle = NULL;
 }
 
+int cgroup_get_subsys_mount_point_begin(const char *controller, void **handle,
+		char *path)
+{
+	int i;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+	if (!handle || !path || !controller)
+		return ECGINVAL;
+
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++)
+		if (strcmp(controller, cg_mount_table[i].name) == 0)
+			break;
+
+	if (cg_mount_table[i].name[0] == '\0') {
+		/* the controller is not mounted at all */
+		*handle = NULL;
+		*path = '\0';
+		return ECGEOF;
+	}
+
+	/*
+	 * 'handle' is pointer to struct cg_mount_point, which should be
+	 * returned next.
+	 */
+	*handle = cg_mount_table[i].mount.next;
+	strcpy(path, cg_mount_table[i].mount.path);
+	return 0;
+}
+
+int cgroup_get_subsys_mount_point_next(void **handle,
+		char *path)
+{
+	struct cg_mount_point *it;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+	if (!handle || !path)
+		return ECGINVAL;
+
+	it = *handle;
+	if (!it) {
+		*handle = NULL;
+		*path = '\0';
+		return ECGEOF;
+	}
+
+	*handle = it->next;
+	strcpy(path, it->path);
+	return 0;
+}
+
+int cgroup_get_subsys_mount_point_end(void **handle)
+{
+	return 0;
+}
+
+

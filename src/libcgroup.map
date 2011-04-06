@@ -96,3 +96,10 @@ CGROUP_0.37 {
 	cgroup_read_value_end;
 	cg_chmod_recursive;
 } CGROUP_0.36;
+
+CGROUP_0.38 {
+       cgroup_get_subsys_mount_point_begin;
+       cgroup_get_subsys_mount_point_next;
+       cgroup_get_subsys_mount_point_end;
+} CGROUP_0.37;
+
