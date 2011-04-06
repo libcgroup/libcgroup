@@ -390,6 +390,39 @@ void cgroup_config_cleanup_namespace_table(void)
 			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
 }
 
+/**
+ * Add necessary options for mount. Currently only 'none' option is added
+ * for mounts with only 'name=xxx' and without real controller.
+ */
+static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount)
+{
+	char *save = NULL;
+	char *opts = strdup(mount->name);
+	char *token;
+	int name_only = 1;
+
+	if (opts == NULL)
+		return ECGFAIL;
+
+	token = strtok_r(opts, ",", &save);
+	while (token != NULL) {
+		if (strncmp(token, "name=", 5) != 0) {
+			name_only = 0;
+			break;
+		}
+		token = strtok_r(NULL, ",", &save);
+	}
+
+	free(opts);
+	if (name_only) {
+		strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
+		strncat(mount->name, "none",
+				FILENAME_MAX - strlen(mount->name) - 1);
+	}
+
+	return 0;
+}
+
 /*
  * Start mounting the mount table.
  */
@@ -418,6 +451,10 @@ static int cgroup_config_mount_fs(void)
 			last_errno = errno;
 			return ECGOTHER;
 		}
+
+		ret = cgroup_config_ajdust_mount_options(curr);
+		if (ret)
+			return ret;
 
 		ret = mount(CGROUP_FILESYSTEM, curr->mount.path,
 				CGROUP_FILESYSTEM, 0, curr->name);
