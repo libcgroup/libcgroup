@@ -718,6 +718,29 @@ unlock:
 	return ret;
 }
 
+int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
+{
+	struct cg_mount_point *mount, *it;
+
+	mount = malloc(sizeof(struct cg_mount_point));
+	if (!mount)
+		return ECGFAIL;
+	mount->next = NULL;
+	strncpy(mount->path, path, sizeof(mount->path));
+	mount->path[sizeof(mount->path)-1] = '\0';
+
+	/*
+	 * Add the mount point to the end of the list.
+	 * Assuming the list is short, no optimization is done.
+	 */
+	it = &item->mount;
+	while (it->next)
+		it = it->next;
+
+	it->next = mount;
+	return 0;
+}
+
 /**
  * cgroup_init(), initializes the MOUNT_POINT.
  *
@@ -826,12 +849,19 @@ int cgroup_init(void)
 			}
 			if (duplicate) {
 				cgroup_dbg("controller %s is already mounted on %s\n",
-					mntopt, cg_mount_table[j].path);
-				break;
+					mntopt, cg_mount_table[j].mount.path);
+				ret = cg_add_duplicate_mount(&cg_mount_table[j],
+						ent->mnt_dir);
+				if (ret)
+					goto unlock_exit;
+				/* continue with next controller */
+				continue;
 			}
 
 			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
-			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
+			strcpy(cg_mount_table[found_mnt].mount.path,
+					ent->mnt_dir);
+			cg_mount_table[found_mnt].mount.next = NULL;
 			cgroup_dbg("Found cgroup option %s, count %d\n",
 				ent->mnt_opts, found_mnt);
 			found_mnt++;
@@ -859,12 +889,18 @@ int cgroup_init(void)
 
 			if (duplicate) {
 				cgroup_dbg("controller %s is already mounted on %s\n",
-					mntopt, cg_mount_table[j].path);
+					mntopt, cg_mount_table[j].mount.path);
+				ret = cg_add_duplicate_mount(&cg_mount_table[j],
+						ent->mnt_dir);
+				if (ret)
+					goto unlock_exit;
 				continue;
 			}
 
 			strcpy(cg_mount_table[found_mnt].name, mntopt);
-			strcpy(cg_mount_table[found_mnt].path, ent->mnt_dir);
+			strcpy(cg_mount_table[found_mnt].mount.path,
+					ent->mnt_dir);
+			cg_mount_table[found_mnt].mount.next = NULL;
 			cgroup_dbg("Found cgroup option %s, count %d\n",
 				ent->mnt_opts, found_mnt);
 			found_mnt++;
@@ -959,10 +995,12 @@ static char *cg_build_path_locked(const char *name, char *path,
 		 */
 		if (strcmp(cg_mount_table[i].name, type) == 0) {
 			if (cg_namespace_table[i]) {
-				sprintf(path, "%s/%s/", cg_mount_table[i].path,
-							cg_namespace_table[i]);
+				sprintf(path, "%s/%s/",
+						cg_mount_table[i].mount.path,
+						cg_namespace_table[i]);
 			} else {
-				sprintf(path, "%s/", cg_mount_table[i].path);
+				sprintf(path, "%s/",
+						cg_mount_table[i].mount.path);
 			}
 
 			if (name) {
@@ -3282,7 +3320,7 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 
 	strncpy(info->name, cg_mount_table[*pos].name, FILENAME_MAX);
 
-	strncpy(info->path, cg_mount_table[*pos].path, FILENAME_MAX);
+	strncpy(info->path, cg_mount_table[*pos].mount.path, FILENAME_MAX);
 
 	(*pos)++;
 	*handle = pos;
@@ -3608,7 +3646,7 @@ int cgroup_get_subsys_mount_point(const char *controller, char **mount_point)
 		if (strncmp(cg_mount_table[i].name, controller, FILENAME_MAX))
 			continue;
 
-		*mount_point = strdup(cg_mount_table[i].path);
+		*mount_point = strdup(cg_mount_table[i].mount.path);
 
 		if (!*mount_point) {
 			last_errno = errno;

@@ -88,10 +88,18 @@ struct cgroup {
 	gid_t control_gid;
 };
 
+struct cg_mount_point {
+	char path[FILENAME_MAX];
+	struct cg_mount_point *next;
+};
 
 struct cg_mount_table_s {
+	/** Controller name. */
 	char name[FILENAME_MAX];
-	char path[FILENAME_MAX];
+	/**
+	 * List of mount points, at least one mount point is there for sure.
+	 */
+	struct cg_mount_point mount;
 	int index;
 };
 

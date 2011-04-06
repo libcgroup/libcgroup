@@ -328,7 +328,8 @@ int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
 	 * Merge controller names with the same mount point
 	 */
 	for (i = 0; i < config_table_index; i++) {
-		if (strcmp(config_mount_table[i].path, mount_point) == 0) {
+		if (strcmp(config_mount_table[i].mount.path,
+				mount_point) == 0) {
 			char *cname = config_mount_table[i].name;
 			strncat(cname, ",", FILENAME_MAX - strlen(cname) - 1);
 			strncat(cname, name,
@@ -338,7 +339,8 @@ int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
 	}
 
 	strcpy(config_mount_table[config_table_index].name, name);
-	strcpy(config_mount_table[config_table_index].path, mount_point);
+	strcpy(config_mount_table[config_table_index].mount.path, mount_point);
+	config_mount_table[config_table_index].mount.next = NULL;
 	config_table_index++;
 done:
 	pthread_rwlock_unlock(&config_table_lock);
@@ -368,7 +370,9 @@ int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 	pthread_rwlock_wrlock(&namespace_table_lock);
 
 	strcpy(config_namespace_table[namespace_table_index].name, name);
-	strcpy(config_namespace_table[namespace_table_index].path, nspath);
+	strcpy(config_namespace_table[namespace_table_index].mount.path,
+			nspath);
+	config_namespace_table[namespace_table_index].mount.next = NULL;
 	namespace_table_index++;
 
 	pthread_rwlock_unlock(&namespace_table_lock);
@@ -398,7 +402,7 @@ static int cgroup_config_mount_fs(void)
 	for (i = 0; i < config_table_index; i++) {
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
 
-		ret = stat(curr->path, &buff);
+		ret = stat(curr->mount.path, &buff);
 
 		if (ret < 0 && errno != ENOENT) {
 			last_errno = errno;
@@ -406,7 +410,7 @@ static int cgroup_config_mount_fs(void)
 		}
 
 		if (errno == ENOENT) {
-			ret = cg_mkdir_p(curr->path);
+			ret = cg_mkdir_p(curr->mount.path);
 			if (ret)
 				return ret;
 		} else if (!S_ISDIR(buff.st_mode)) {
@@ -415,8 +419,8 @@ static int cgroup_config_mount_fs(void)
 			return ECGOTHER;
 		}
 
-		ret = mount(CGROUP_FILESYSTEM, curr->path, CGROUP_FILESYSTEM,
-								0, curr->name);
+		ret = mount(CGROUP_FILESYSTEM, curr->mount.path,
+				CGROUP_FILESYSTEM, 0, curr->name);
 
 		if (ret < 0)
 			return ECGMOUNTFAIL;
@@ -477,10 +481,10 @@ static int cgroup_config_unmount_controllers(void)
 		 * We ignore failures and ensure that all mounted
 		 * containers are unmounted
 		 */
-		error = umount(config_mount_table[i].path);
+		error = umount(config_mount_table[i].mount.path);
 		if (error < 0)
 			cgroup_dbg("Unmount failed\n");
-		error = rmdir(config_mount_table[i].path);
+		error = rmdir(config_mount_table[i].mount.path);
 		if (error < 0)
 			cgroup_dbg("rmdir failed\n");
 	}
@@ -503,7 +507,7 @@ static int config_validate_namespaces(void)
 		 * are good, else we will need to go for two
 		 * loops. This should be optimized in the future
 		 */
-		mount_path = cg_mount_table[i].path;
+		mount_path = cg_mount_table[i].mount.path;
 
 		if (!mount_path) {
 			last_errno = errno;
@@ -538,7 +542,7 @@ static int config_validate_namespaces(void)
 		 * Search through the mount table to locate which subsystems
 		 * are mounted together.
 		 */
-		while (!strncmp(cg_mount_table[j].path, mount_path,
+		while (!strncmp(cg_mount_table[j].mount.path, mount_path,
 							FILENAME_MAX)) {
 			if (!namespace && cg_namespace_table[j]) {
 				/* In case namespace is not setup, set it up */
@@ -636,7 +640,8 @@ static int config_order_namespace_table(void)
 					goto error_out;
 				}
 
-				cg_namespace_table[j] = strdup(config_namespace_table[i].path);
+				cg_namespace_table[j] = strdup(
+					config_namespace_table[i].mount.path);
 				if (!cg_namespace_table[j]) {
 					last_errno = errno;
 					error = ECGOTHER;
