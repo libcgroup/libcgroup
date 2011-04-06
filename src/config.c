@@ -741,6 +741,8 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 	int ret, error;
 	struct cgroup *cgroup = NULL;
 	struct cgroup_controller *cgc = NULL;
+	char path[FILENAME_MAX];
+	void *handle;
 
 	cgroup = cgroup_new_cgroup(".");
 	if (cgroup == NULL)
@@ -756,13 +758,21 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 	if (ret != 0)
 		goto out_error;
 
-	error = umount(mount_info->path);
-	if (error) {
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto out_error;
+	/* unmount everything */
+	ret = cgroup_get_subsys_mount_point_begin(mount_info->name, &handle,
+			path);
+	while (ret == 0) {
+		error = umount(path);
+		if (error) {
+			last_errno = errno;
+			ret = ECGOTHER;
+			goto out_error;
+		}
+		ret = cgroup_get_subsys_mount_point_next(&handle, path);
 	}
-
+	cgroup_get_subsys_mount_point_end(&handle);
+	if (ret == ECGEOF)
+		ret = 0;
 out_error:
 	if (cgroup)
 		cgroup_free(&cgroup);
