@@ -7,9 +7,11 @@
 lssubsys \- list hierarchies containing given subsystem
 
 .SH SYNOPSIS
-\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fIcontroller\fR] [...]
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-M|--all-mount-points\fR]
+[\fIcontroller\fR] [...]
 .br
-\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-i|--hierarchies\fR] [\fB-a|--all\fR]
+\fBlssubsys\fR  [\fB-m|--mount-points\fR] [\fB-M|--all-mount-points\fR]
+[\fB-i|--hierarchies\fR] [\fB-a|--all\fR]
 .br
 \fBlssubsys\fR  [\fB-h|--help\fR]
 
@@ -27,7 +29,12 @@ list all mounted subsystems.
 
 .TP
 .B -m, --mount-points
-Display mount points.
+Display mount points. Only the first mount points of shown hierarchies are displayed.
+
+.TP
+.B -M, --all-mount-points
+Display mount points. All mount points of shown hierarchies are displayed, each on
+separate line.
 
 .TP
 .B -a, --all

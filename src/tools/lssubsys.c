@@ -23,7 +23,8 @@ enum flag{
     FL_MOUNT = 1,	/* show the mount points */
     FL_LIST = 2,
     FL_ALL = 4,		/* show all subsystems - not mounted too */
-    FL_HIERARCHY = 8	/* show info about hierarchies */
+    FL_HIERARCHY = 8,	/* show info about hierarchies */
+    FL_MOUNT_ALL = 16	/* show all mount points of hierarchies */
 };
 
 typedef char cont_name_t[FILENAME_MAX];
@@ -42,25 +43,54 @@ static void usage(int status, const char *program_name)
 		fprintf(stdout, "List information about given controller(s). "\
 			"If no controller is set list information about "\
 			"all mounted controllers.\n");
-		fprintf(stdout, "  -h, --help		Display this help\n");
-		fprintf(stdout, "  -m, --mount-points	Display mount points\n");
-		fprintf(stdout, "  -a, --all		"\
+		fprintf(stdout, "  -h, --help			"\
+			"Display this help\n");
+		fprintf(stdout, "  -m, --mount-points		"\
+			"Display mount points\n");
+		fprintf(stdout, "  -M, --all-mount-points	"\
+			"Display all mount points\n");
+		fprintf(stdout, "  -a, --all			"\
 			"Display information about all controllers "\
 			"(including not mounted ones) \n");
-		fprintf(stdout, "  -i, --hierarchies	Display information "\
-			"about hierarchies\n");
+		fprintf(stdout, "  -i, --hierarchies		"\
+			"Display information about hierarchies\n");
 	}
+}
+
+static int print_controller_mount(const char *controller, const char *clist,
+		const char *first_path, int flags)
+{
+	int ret = 0;
+	void *handle;
+	char path[FILENAME_MAX];
+
+	if (flags & FL_MOUNT_ALL) {
+		ret = cgroup_get_subsys_mount_point_begin(controller, &handle,
+				path);
+		/* intentionally ignore error from above call */
+		while (ret == 0) {
+			printf("%s %s\n", clist, path);
+			ret = cgroup_get_subsys_mount_point_next(&handle, path);
+		}
+		if (ret == ECGEOF)
+			ret = 0;
+		cgroup_get_subsys_mount_point_end(&handle);
+	} else {
+		printf("%s %s\n", clist, first_path);
+	}
+	return ret;
 }
 
 /* print data about input cont_name controller */
 static int print_controller(cont_name_t cont_name, int flags)
 {
 	int ret = 0;
-	char name[FILENAME_MAX];
+	char controller_list[FILENAME_MAX];
 	char path[FILENAME_MAX];
 	void *handle;
 	struct cgroup_mount_point controller;
 	int output = 0;
+	char first_controller[FILENAME_MAX];
 
 	ret = cgroup_get_controller_begin(&handle, &controller);
 	if (ret != 0) {
@@ -70,15 +100,16 @@ static int print_controller(cont_name_t cont_name, int flags)
 	}
 
 	path[0] = '\0';
-	name[0] = '\0';
+	controller_list[0] = '\0';
 
 	/* go through the list of controllers */
 	while (ret == 0) {
 		if (strcmp(path, controller.path) == 0) {
 			/* if it is still the same mount point */
-			strncat(name, "," , FILENAME_MAX-strlen(name)-1);
-			strncat(name, controller.name,
-				FILENAME_MAX-strlen(name)-1);
+			strncat(controller_list, "," ,
+					FILENAME_MAX-strlen(controller_list)-1);
+			strncat(controller_list, controller.name,
+				FILENAME_MAX-strlen(controller_list)-1);
 		} else {
 			/*
 			 * we got new mount point
@@ -86,21 +117,26 @@ static int print_controller(cont_name_t cont_name, int flags)
 			 */
 			if (output) {
 				if ((flags &  FL_MOUNT) != 0)
-					printf("%s %s\n", name, path);
+					print_controller_mount(first_controller,
+							controller_list, path,
+							flags);
 				else
-					printf("%s\n", name);
+					printf("%s\n", controller_list);
 				if ((flags & FL_LIST) != 0) {
-					/* we succesfully finish printing */
+					/* we successfully finish printing */
 					output = 0;
 					break;
 				}
 			}
 
 			output = 0;
-			strncpy(name, controller.name, FILENAME_MAX);
-			name[FILENAME_MAX-1] = '\0';
+			strncpy(controller_list, controller.name, FILENAME_MAX);
+			controller_list[FILENAME_MAX-1] = '\0';
 			strncpy(path, controller.path, FILENAME_MAX);
 			path[FILENAME_MAX-1] = '\0';
+			strncpy(first_controller, controller.name,
+					FILENAME_MAX);
+			first_controller[FILENAME_MAX-1] = '\0';
 		}
 
 		/* set output flag */
@@ -114,9 +150,10 @@ static int print_controller(cont_name_t cont_name, int flags)
 
 	if (output) {
 		if ((flags &  FL_MOUNT) != 0)
-			printf("%s %s\n", name, path);
+			print_controller_mount(first_controller,
+					controller_list, path, flags);
 		else
-			printf("%s\n", name);
+			printf("%s\n", controller_list);
 		if ((flags & FL_LIST) != 0)
 			ret = 0;
 	}
@@ -328,6 +365,7 @@ int main(int argc, char *argv[])
 	static struct option options[] = {
 		{"help", 0, 0, 'h'},
 		{"mount-points", 0, 0, 'm'},
+		{"all-mount-points", 0, 0, 'M'},
 		{"all", 0, 0, 'a'},
 		{"hierarchies", 0, 0, 'i'},
 		{0, 0, 0, 0}
@@ -337,13 +375,16 @@ int main(int argc, char *argv[])
 		cont_name[i][0] = '\0';
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "mhai", options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "mMhai", options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
 			return 0;
 		case 'm':
 			flags |= FL_MOUNT;
+			break;
+		case 'M':
+			flags |= FL_MOUNT | FL_MOUNT_ALL;
 			break;
 		case 'a':
 			flags |= FL_ALL;
