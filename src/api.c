@@ -817,7 +817,8 @@ int cgroup_init(void)
 			/* do not have duplicates in mount table */
 			duplicate = 0;
 			for  (j = 0; j < found_mnt; j++) {
-				if (strncmp(mntopt, cg_mount_table[j].name,
+				if (strncmp(controllers[i],
+							cg_mount_table[j].name,
 							FILENAME_MAX) == 0) {
 					duplicate = 1;
 					break;
