@@ -38,7 +38,10 @@ mount {
 Name of kernel subsystem. List of subsystems supported by kernel
 can be found in 
 .I /proc/cgroups
-file.
+file. Named hierarchy can be specified as controller
+\fB"name=<somename>"\fR. Do not forget to use double quotes around
+this controller name (see examples below).
+
 .B Libcgroup
 merges all subsystems mounted to the same directory (see
 Example 1) and the directory is mounted only once.
@@ -87,7 +90,7 @@ The root control group is always created automatically in all hierarchies
 and it is the base of the group hierarchy. It can be explicitly specified in
 .B cgconfig.conf
 file by using '.' as group name. This can be used e.g. to set its permissions,
-as shown in Example 5.
+as shown in Example 6.
 
 When the parent control group of a subgroup is not specified,
 then it is created automatically.
@@ -168,7 +171,7 @@ parameters.
 .B param value
 Value, which should be written to the file when the control group is
 created. Optionally it can be enclosed in double quotes `"', it can
-contain spaces then.
+contain spaces and other special characters then.
 .RE
 
 .\"********************************************"
@@ -200,6 +203,73 @@ mount -t cgroup -o cpu,cpuacct cpu /mnt/cgroups/cpu
 .RE
 
 .SS Example 2
+.LP
+The configuration file:
+.LP
+.RS
+.nf
+mount {
+.RS
+cpu = /mnt/cgroups/cpu;
+"name=scheduler" = /mnt/cgroups/cpu;
+"name=noctrl" = /mnt/cgroups/noctrl;
+.RE
+}
+
+group daemons {
+.RS
+cpu {
+.RS
+cpu.shares = "1000";
+.RE
+}
+.RE
+}
+group test {
+.RS
+"name=noctrl" {
+}
+.RE
+}
+.RE
+.fi
+creates two hierarchies. One hierarchy named \fBscheduler\fR controlled by cpu
+subsystem, with group \fBdaemons\fR inside. Second hierarchy is named
+\fBnoctrl\fR without any controller, with group \fBtest\fR. It corresponds to
+following operations:
+.LP
+.RS
+.nf
+mkdir /mnt/cgroups/cpu
+mount -t cgroup -o cpu,name=scheduler cpu /mnt/cgroups/cpu
+mount -t cgroup -o none,name=noctrl none /mnt/cgroups/noctrl
+
+mkdir /mnt/cgroups/cpu/daemons
+echo 1000 > /mnt/cgroups/cpu/daemons/www/cpu.shares
+
+mkdir /mnt/cgroups/noctrl/tests
+.fi
+.RE
+
+The
+.I daemons
+group is created automatically when its first subgroup is
+created. All its parameters have the default value and only root can
+access group's files.
+.LP
+Since both
+.I cpuacct
+and
+.I cpu
+subsystems are mounted to the same directory, all
+groups are implicitly controlled also by
+.I cpuacct
+subsystem, even if there is no
+.I cpuacct
+section in any of the groups.
+.RE
+
+.SS Example 3
 .LP
 The configuration file:
 .LP
@@ -306,7 +376,7 @@ subsystem, even if there is no
 section in any of the groups.
 .RE
 
-.SS Example 3
+.SS Example 4
 .LP
 The configuration file:
 
@@ -352,7 +422,7 @@ hierarchy, the second in
 hierarchy. These two groups have nothing in common and can
 contain different subgroups and different tasks.
 
-.SS Example 4
+.SS Example 5
 .LP
 
 The configuration file:
@@ -435,7 +505,7 @@ hierarchy and are not controlled by
 .I cpuacct
 subsystem.
 
-.SS Example 5
+.SS Example 6
 .LP
 The configuration file:
 .LP
@@ -531,7 +601,7 @@ or root can do that.
 .SS Keep hierarchies separated
 Having multiple hierarchies is perfectly valid and can be useful
 in various scenarios. To keeps things clean, do not
-create one group in multiple hierarchies. Examples 3 and 4 shows,
+create one group in multiple hierarchies. Examples 4 and 5 show,
 how unreadable and confusing it can be, especially when reading
 somebody others configuration file.
 
