@@ -3650,6 +3650,9 @@ int cgroup_get_subsys_mount_point(const char *controller, char **mount_point)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
+	if (!controller)
+		return ECGINVAL;
+
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
 		if (strncmp(cg_mount_table[i].name, controller, FILENAME_MAX))
@@ -3913,6 +3916,10 @@ int cgroup_dictionary_iterator_next(void **handle,
 		return ECGINVAL;
 
 	iter = *handle;
+
+	if (!iter)
+		return ECGINVAL;
+
 	if (!iter->item)
 		return ECGEOF;
 
