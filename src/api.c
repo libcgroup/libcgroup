@@ -858,9 +858,13 @@ int cgroup_init(void)
 				continue;
 			}
 
-			strcpy(cg_mount_table[found_mnt].name, controllers[i]);
-			strcpy(cg_mount_table[found_mnt].mount.path,
-					ent->mnt_dir);
+			strncpy(cg_mount_table[found_mnt].name,
+				controllers[i], FILENAME_MAX);
+			cg_mount_table[found_mnt].name[FILENAME_MAX-1] = '\0';
+			strncpy(cg_mount_table[found_mnt].mount.path,
+				ent->mnt_dir, FILENAME_MAX);
+			cg_mount_table[found_mnt].mount.path[FILENAME_MAX-1] =
+				'\0';
 			cg_mount_table[found_mnt].mount.next = NULL;
 			cgroup_dbg("Found cgroup option %s, count %d\n",
 				ent->mnt_opts, found_mnt);
@@ -897,9 +901,13 @@ int cgroup_init(void)
 				continue;
 			}
 
-			strcpy(cg_mount_table[found_mnt].name, mntopt);
-			strcpy(cg_mount_table[found_mnt].mount.path,
-					ent->mnt_dir);
+			strncpy(cg_mount_table[found_mnt].name,
+				mntopt, FILENAME_MAX);
+			cg_mount_table[found_mnt].name[FILENAME_MAX-1] = '\0';
+			strncpy(cg_mount_table[found_mnt].mount.path,
+				ent->mnt_dir, FILENAME_MAX);
+			cg_mount_table[found_mnt].mount.path[FILENAME_MAX-1] =
+				'\0';
 			cg_mount_table[found_mnt].mount.next = NULL;
 			cgroup_dbg("Found cgroup option %s, count %d\n",
 				ent->mnt_opts, found_mnt);
@@ -2269,7 +2277,8 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 	/* Fill in cgroup details.  */
 	cgroup_dbg("Will move pid %d to cgroup '%s'\n", pid, dest);
 
-	strcpy(cgroup->name, dest);
+	strncpy(cgroup->name, dest, FILENAME_MAX);
+	cgroup->name[FILENAME_MAX-1] = '\0';
 
 	/* Scan all the controllers */
 	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
