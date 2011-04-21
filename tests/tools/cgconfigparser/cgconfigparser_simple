@@ -19,6 +19,5 @@ if [ "$lss_o1" != "$lss_o2" ]; then
      echo "ERROR: first lss ouptput:'$lss_o1', second lss output:'$lss_o2'"
 fi
 
-echo "PASS: cgconfigparser_simple"
 cleanup
 exit 0
