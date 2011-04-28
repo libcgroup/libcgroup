@@ -21,8 +21,29 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "tools-common.h"
+
+static struct option const long_options[] =
+{
+	{"recursive", no_argument, NULL, 'r'},
+	{"help", no_argument, NULL, 'h'},
+	{NULL, 0, NULL, 0}
+};
+
+static void usage(int status, const char *program_name)
+{
+	if (status != 0)
+		fprintf(stderr, "Wrong input parameters,"
+			" try %s --help' for more information.\n",
+			program_name);
+	else {
+		printf("Usage: %s [-h ] [-r ]  [<controllers>:<path>] ...\n",
+			program_name);
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -38,34 +59,32 @@ int main(int argc, char *argv[])
 	struct cgroup_controller *cgc;
 
 	if (argc < 2) {
-		fprintf(stderr, "Usage is %s [-r] "
-			"<list of controllers>:<relative path to cgroup> "
-			"[...]\n",
-			argv[0]);
+		usage(1, argv[0]);
 		return -1;
 	}
 
 	/*
 	 * Parse arguments
 	 */
-	while ((c = getopt(argc, argv, "r")) > 0) {
+	while ((c = getopt_long(argc, argv, "rh",
+		long_options, NULL)) > 0) {
 		switch (c) {
 		case 'r':
 			flags |= CGFLAG_DELETE_RECURSIVE;
 			break;
+		case 'h':
+			usage(0, argv[0]);
+			ret = 0;
+			goto err;
 		default:
-			fprintf(stderr, "%s: "
-				"invalid command line option\n",
-				argv[0]);
-			return -1;
-			break;
+			usage(1, argv[0]);
+			ret = -1;
+			goto err;
 		}
 	}
 
 	if (optind >= argc) {
-		fprintf(stderr, "%s: "
-			"no groups to delete\n",
-			argv[0]);
+		usage(1, argv[0]);
 		ret = -1;
 		goto err;
 	}

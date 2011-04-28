@@ -7,7 +7,7 @@
 cgdelete \- remove control group(s)
 
 .SH SYNOPSIS
-\fBcgdelete\fR [\fB-r\fR] [<\fIcontrollers\fR>:\fI<path\fR>] ...
+\fBcgdelete\fR [\fB-h\fR] [\fB-r\fR] [<\fIcontrollers\fR>:\fI<path\fR>] ...
 
 .SH DESCRIPTION
 The \fBcgdelete\fR
@@ -19,7 +19,11 @@ Defines control group to delete. There can be multiple control
 groups specified.
 
 .TP
-.B -r
+.B -h, --help
+Display this help and exit.
+
+.TP
+.B -r, --recursive
 Recursively remove all subgroups.
 
 .SH SEE ALSO
