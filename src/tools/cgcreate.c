@@ -42,18 +42,18 @@ static void usage(int status, const char *program_name)
 			"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
 			"-g <controllers>:<path> [-g ...]\n",
 			program_name);
-		fprintf(stdout, "  -t <tuid>:<tgid>		Set "\
-			"the task permission\n");
 		fprintf(stdout, "  -a <tuid>:<tgid>		Set "\
 			"the admin permission\n");
-		fprintf(stdout, "  -g <controllers>:<path>	Control "\
-			"group which should be added\n");
-		fprintf(stdout, "  -h,--help			Display "\
-			"this help\n");
+		fprintf(stdout, "  -d, --dperm mode		Group "\
+			"directory permissions\n");
 		fprintf(stdout, "  -f, --fperm mode		Group "\
 			"file permissions\n");
-		fprintf(stdout, "  -d, --dperm mode		Group "\
-			"direrory permissions\n");
+		fprintf(stdout, "  -g <controllers>:<path>	Control "\
+			"group which should be added\n");
+		fprintf(stdout, "  -h, --help			Display "\
+			"this help\n");
+		fprintf(stdout, "  -t <tuid>:<tgid>		Set "\
+			"the task permission\n");
 	}
 }
 
