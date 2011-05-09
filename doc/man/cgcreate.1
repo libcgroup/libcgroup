@@ -13,15 +13,6 @@ cgcreate \- create new cgroup(s)
 The command creates new cgroup(s) defined by option 
 \fB-g\fR.
 
-
-
-.TP
-.B -t <tuid>:<tgid>
-defines the name of the user and the group, which owns tasks
-file of the defined control group. I.e. this user and members
-of this group have write access to the file.
-The default value is the same as has the parent cgroup.
-
 .TP
 .B -a <agid>:<auid>
 defines the name of the user and the group, which owns the
@@ -52,6 +43,14 @@ multiple times.
 .TP
 .B -h, --help
 display this help and exit
+
+.TP
+.B -t <tuid>:<tgid>
+defines the name of the user and the group, which owns tasks
+file of the defined control group. I.e. this user and members
+of this group have write access to the file.
+The default value is the same as has the parent cgroup.
+
 
 .SH FILES
 
