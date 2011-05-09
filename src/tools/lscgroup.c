@@ -249,6 +249,7 @@ int main(int argc, char *argv[])
 
 	int ret = 0;
 	int c;
+	int i;
 
 	int flags = 0;
 
@@ -256,26 +257,35 @@ int main(int argc, char *argv[])
 
 	static struct option options[] = {
 		{"help", 0, 0, 'h'},
+		{"group", required_argument, NULL, 'g'},
 		{0, 0, 0, 0}
 	};
 
+	memset(cgroup_list, 0, sizeof(cgroup_list));
+
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "h", options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "hg:", options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
-			return 0;
+			ret = 0;
+			goto err;
+		case 'g':
+			ret = parse_cgroup_spec(cgroup_list, optarg,
+				CG_HIER_MAX);
+			if (ret) {
+				fprintf(stderr, "%s: cgroup controller"
+					" and path parsing failed (%s)\n",
+					argv[0], optarg);
+				return ret;
+			}
+			break;
 		default:
 			usage(1, argv[0]);
-			return -1;
+			ret = 1;
+			goto err;
 		}
 	}
-
-	memset(cgroup_list, 0, sizeof(cgroup_list));
-
-	/* no cgroup on input */
-	if (optind < argc)
-		flags |= FL_LIST;
 
 	/* read the list of controllers */
 	while (optind < argc) {
@@ -290,8 +300,23 @@ int main(int argc, char *argv[])
 		optind++;
 	}
 
-	/* print the information, based on list of input cgroups and flags */
+	if (cgroup_list[0] != NULL) {
+		/* cgroups on input */
+		flags |= FL_LIST;
+	}
+
+	/* print the information
+	   based on list of input cgroups and flags */
 	ret = cgroup_list_cgroups(argv[0], cgroup_list, flags);
+
+err:
+	if (cgroup_list[0]) {
+		for (i = 0; i < CG_HIER_MAX; i++) {
+			if (cgroup_list[i])
+				cgroup_free_group_spec(cgroup_list[i]);
+		}
+	}
+
 
 	return ret;
 }
