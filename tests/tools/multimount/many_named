@@ -48,36 +48,37 @@ mkdir -p $TMP/cgroups/cpu 2>/dev/null
 mount -t cgroup -o cpuset,cpuacct,name=cputest test $TMP/cgroups/cpu \
 		|| die "Mount cpu failed"
 
+# !!! lssubsys does NOT support named hierarchies now !!!
 # check lssubsys
 # plain lssubsys - every hierarchy only once
-$TOOLSDIR/lssubsys >$TMP/subsys1.out \
-	|| die "plain lssubsys failed"
-[ `wc -l <$TMP/subsys1.out` -eq $(( $HIERARCHIES+1 )) ] \
-	|| die "unexpected output of plan lssubsys"
+#$TOOLSDIR/lssubsys >$TMP/subsys1.out \
+#	|| die "plain lssubsys failed"
+#[ `wc -l <$TMP/subsys1.out` -eq $(( $HIERARCHIES+1 )) ] \
+#	|| die "unexpected output of plain lssubsys"
 
 # lssubsys -m - first mount point is returned
-$TOOLSDIR/lssubsys -m >$TMP/subsys2.out \
-	|| die "lssubsys -m failed"
-[ `wc -l <$TMP/subsys2.out` -eq $(( $HIERARCHIES+1 )) ] \
-	|| die "unexpected output of lssubsys -m"
-grep <$TMP/subsys2.out cgroups/cpu >/dev/null \
-	|| die "lssubsys -m does not show the first mount point for cputest"
-for i in `seq $HIERARCHIES`; do
-	grep <$TMP/subsys2.out cgroups/named$i-1 >/dev/null \
-		|| die "lssubsys -m does not show cgroups/named$i-1"
-done
+#$TOOLSDIR/lssubsys -m >$TMP/subsys2.out \
+#	|| die "lssubsys -m failed"
+#[ `wc -l <$TMP/subsys2.out` -eq $(( $HIERARCHIES+1 )) ] \
+#	|| die "unexpected output of lssubsys -m"
+#grep <$TMP/subsys2.out cgroups/cpu >/dev/null \
+#	|| die "lssubsys -m does not show the first mount point for cputest"
+#for i in `seq $HIERARCHIES`; do
+#	grep <$TMP/subsys2.out cgroups/named$i-1 >/dev/null \
+#		|| die "lssubsys -m does not show cgroups/named$i-1"
+#done
 
 # lssubsys -M - all mount points are returned
-$TOOLSDIR/lssubsys -M >$TMP/subsys3.out \
-	|| die "lssubsys -M failed"
-[ `wc -l <$TMP/subsys3.out` -eq $(( $COUNT*$HIERARCHIES+1)) ] \
-	|| die "unexpected output of lssubsys -M"
-for i in `seq $HIERARCHIES`; do
-	for j in `seq $COUNT`; do
-		grep <$TMP/subsys3.out cgroups/named$i-$j >/dev/null \
-		|| die "lssubsys -m does not show cgroups/named$i-$j"
-	done
-done
+#$TOOLSDIR/lssubsys -M >$TMP/subsys3.out \
+#	|| die "lssubsys -M failed"
+#[ `wc -l <$TMP/subsys3.out` -eq $(( $COUNT*$HIERARCHIES+1)) ] \
+#	|| die "unexpected output of lssubsys -M"
+#for i in `seq $HIERARCHIES`; do
+#	for j in `seq $COUNT`; do
+#		grep <$TMP/subsys3.out cgroups/named$i-$j >/dev/null \
+#		|| die "lssubsys -m does not show cgroups/named$i-$j"
+#	done
+#done
 
 $TOOLSDIR/cgsnapshot -b $CONFIGDIR/cgsnapshot_blacklist.conf >$TMP/snapshot.conf \
 	|| die "cgsnapshot failed"
