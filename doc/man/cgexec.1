@@ -12,11 +12,11 @@ cgexec \- run the task in given control groups
 .SH DESCRIPTION
 The \fBcgexec\fR
 program executes the task \fBcommand\fR
-with arguments \fBarguments\fR in given control groups.
+with arguments \fBarguments\fR in the given control groups.
 
 .TP
 .B -g <controllers>:<path>
-defines control groups in which the task will be run.
+defines the control groups in which the task will be run.
 \fBcontrollers\fR is a list of controllers and
 \fBpath\fR is the relative path to control groups
 in the given controllers list.
@@ -25,10 +25,10 @@ This flag can be used multiple times to
 define multiple pairs of lists of controllers
 and relative paths.
 Instead of the list of all mounted controllers,
-wildcard \fBb"*b"\fR can be used.
+the wildcard \fBb"*b"\fR can be used.
 
-If this option is not used then
-\fBcgexec\fR will automatically place the task to the right
+If this option is not used,
+\fBcgexec\fR will automatically place the task in the right
 cgroup based on \fB/etc/cgrules.conf\fR.
 
 .TP
@@ -39,9 +39,9 @@ Display this help and exit.
 .B --sticky
 If running the task \fBcommand\fR with this option, the daemon of
 service cgred (cgrulesengd process) does not change both the task
-of the \fBcommand\fR and the children tasks. Without this option,
+of the \fBcommand\fR and the child tasks. Without this option,
 the daemon does not change the task of the \fBcommand\fR but it
-changes the children tasks to the right cgroup based on
+changes the child tasks to the right cgroup based on
 \fB/etc/cgrules.conf\fR automatically.
 
 .LP

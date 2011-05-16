@@ -12,13 +12,13 @@ cgclassify \- move running task(s) to given cgroups
 this command moves processes defined by the list
 of processes
 (\fBpidlist\fR)
-to given control groups.
+to the given control groups.
 
 The pids in the pidlist are separated by spaces
 
 .TP
 .B -g <controllers>:<path>
-defines control groups where the task will be moved.
+defines the control groups where the task will be moved.
 \fBcontrollers\fR is a list of controllers and
 \fBpath\fR is the relative path to control groups
 in the given controllers list.
@@ -27,26 +27,25 @@ This flag can be used multiple times to
 define multiple pairs of lists of controllers
 and relative paths.
 Instead of the list of all mounted controllers,
-wildcard \fB*\fR can be used.
+the wildcard \fB*\fR can be used.
 
 If this option is not used then
-\fBcgclassify\fR will automatically place the task to the
+\fBcgclassify\fR will automatically move the task to a
 control group based on \fB/etc/cgrules.conf\fR.
 
 .TP
 .B --sticky
-If this option is used, the daemon of service cgred (cgrulesengd
-process) does not change both the specified \fBpidlist\fR and their
-children tasks. Without this option, the daemon does not change the
-specified \fBpidlist\fR but it changes their children tasks to the
-right cgroup based on \fB/etc/cgrules.conf\fR automatically.
+If this option is used, the daemon of service cgred (cgrulesengd process)
+does not change both the specified \fBpidlist\fR and their children tasks.
+Without this option, the daemon does not change the specified \fBpidlist\fR
+but it automacically changes their child tasks to the right cgroup based on
+\fB/etc/cgrules.conf\fR.
 
 .TP
 .B --cancel-sticky
-If this option is used, the daemon of service cgred (cgrulesengd
-process) can change both the specified \fBpidlist\fR and their
-children tasks to right cgroup based on \fB/etc/cgrules.conf\fR
-automatically.
+If this option is used, the daemon of service cgred (cgrulesengd process)
+can automatically change both the specified \fBpidlist\fR and their child
+tasks to the right cgroup based on \fB/etc/cgrules.conf\fR.
 
 .SH FILES
 .LP

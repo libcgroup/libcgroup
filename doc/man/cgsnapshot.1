@@ -11,26 +11,25 @@ cgsnapshot \- generate the configuration file for given controllers
 [\fB-w\fR \fIfile\fR] [\fB-f\fR \fIoutput_file\fR]  [\fBcontroller\fR] [...]
 
 .SH DESCRIPTION
-
 \fBcgsnapshot\fR
 generates the cgconfig compatible configuration file
-for given controllers.
+for the given controllers.
 If no controller is set, then
 cgsnapshot shows all mounted hierarchies.
-The output is in the same format as
+The output is in the same format as the
 .B cgconfig.conf
 configuration file.
 
 .TP
 .B -b file
-Display only variables from blacklist.
+Display only variables from the blacklist.
 The default location of the blacklist is
 .B /etc/cgsnapshot_blacklist.conf.
-This list contains all variables which should be ignored by
+This list contains all variables which should be ignored by the
 .B cgsnapshot
-tool.
-If the variable is blacklisted, then it will not be displayed.
-If it is not present on the blacklist, then the whitelist
+.
+If the variable is blacklisted, it will not be displayed.
+If it is not present on the blacklist, the whitelist
 is checked.
 
 .TP
@@ -56,36 +55,36 @@ Do not display the variables which are not on the whitelist
 Set the blacklist configuration file.
 This list contains all variables which should be displayed by
 .B cgsnapshot
-tool.
-If the variable is not blacklisted then whitelist is checked.
-If the variable is on the whitelist, then it is displayed by
+.
+If the variable is not blacklisted, the whitelist is checked.
+If the variable is on the whitelist, it is displayed by
 .B cgsnapshot
-tool.
-If the variable is not on the whitelist, then
-the variable is displayed and warning message is produced.
+.
+If the variable is not on the whitelist,
+the variable is displayed and a warning message is produced.
 By default the whitelist is not used.
 
-The warning message can be omitted using
+The warning message can be omitted using the
 .B -s, --silent
 flag.
-If
+If the
 .B -t, --strict
-flag is used then the variable which is not on whitelist is
+flag is used, the variable which is not on the whitelist is
 not displayed.
 
 .TP
 .B controller
-defines controller whose hierarchies will be
+defines the controller whose hierarchies will be
 output
 
 .SH FILES
 .TP
 .B /etc/cgsnapshot_blacklist.conf
-default location of the blacklist
+default blacklist
 
 .TP
 .B /etc/cgsnapshot_whitelist.conf
-default location of the whitelist
+default whitelist
 
 .TP
 .B /etc/cgconfig.conf

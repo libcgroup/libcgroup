@@ -7,13 +7,13 @@ cgconfig.conf \- libcgroup configuration file
 .B "cgconfig.conf"
 is a configuration file used by
 .B libcgroup
-to define control groups, their parameters and also mount points.
+to define control groups, their parameters and their mount points.
 The file consists of
 .I mount
 and
 .I group
 sections. These sections can be in arbitrary order. Any line starting
-with '#' is considered as a comment line and is ignored.
+with '#' is considered a comment line and is ignored.
 .LP
 .I mount
 section has this form:
@@ -35,7 +35,7 @@ mount {
 
 .TP
 .B controller
-Name of kernel subsystem. List of subsystems supported by kernel
+Name of the kernel subsystem. The list of subsystems supported by the kernel
 can be found in 
 .I /proc/cgroups
 file. Named hierarchy can be specified as controller
@@ -48,8 +48,8 @@ Example 1) and the directory is mounted only once.
 
 .TP
 .B path
-The directory path, where group hierarchy associated to given
-controller, shall be mounted. The directory is created
+The directory path where the group hierarchy associated to a given
+controller shall be mounted. The directory is created
 automatically on cgconfig service startup if it does not exist and
 is deleted on service shutdown.
 .LP
@@ -89,11 +89,11 @@ subgroups. Subgroups can be specified using '/' delimiter.
 The root control group is always created automatically in all hierarchies
 and it is the base of the group hierarchy. It can be explicitly specified in
 .B cgconfig.conf
-file by using '.' as group name. This can be used e.g. to set its permissions,
+by using '.' as group name. This can be used e.g. to set its permissions,
 as shown in Example 6.
 
-When the parent control group of a subgroup is not specified,
-then it is created automatically.
+When the parent control group of a subgroup is not specified
+it is created automatically.
 
 .TP
 .B permissions
@@ -129,22 +129,22 @@ gid = <admin group>;
 .RS
 .TP 17
 .B "task user/group"
-Name of the user and the group, which owns
+Name of the user and the group, which own the
 .I tasks
 file of the control group. I.e. this user and members of this
-group has write access to the file.
+group have write access to the file.
 .TP 17
 .B "admin user/group"
-Name of the user and the group, which owns the rest of control group's
+Name of the user and the group which own the rest of control group's
 files. These users are allowed to set subsystem
 parameters and create subgroups.
 .LP
-Permissions are related only to enclosing control group and are not
+Permissions are only apply to the enclosing control group and are not
 inherited by subgroups. If there is no
 .B perm
-section in control group definition,
+section in the control group definition,
 .I root:root
-is owner of all files.
+is the owner of all files.
 .RE
 .TP
 .B controller
@@ -155,13 +155,13 @@ specifying
 .B controller
 the control group and all its parents are controlled by the specific
 subsystem. One control group can be controlled by multiple subsystems,
-even if the subsystems are mounted to different directories. Each
-control group must be controlled by at least one subsystem, so
+even if the subsystems are mounted on different directories. Each
+control group must be controlled by at least one subsystem, so that
 .B libcgroup
-knows, in which hierarchies the control group should be created.
+knows in which hierarchies the control group should be created.
 
-The parameters of given controller can be modified in following section 
-enclosed in brackets.
+The parameters of the given controller can be modified in the following
+section enclosed in brackets.
 .RS
 .TP
 .B param name
@@ -169,9 +169,9 @@ Name of the file to set. Each controller can have zero or more
 parameters.
 .TP
 .B param value
-Value, which should be written to the file when the control group is
-created. Optionally it can be enclosed in double quotes `"', it can
-contain spaces and other special characters then.
+Value which should be written to the file when the control group is
+created. If it is enclosed in double quotes `"', it can contain spaces
+and other special characters.
 .RE
 
 .\"********************************************"
@@ -192,8 +192,8 @@ cpuacct = /mnt/cgroups/cpu;
 .fi
 .RE
 
-creates the hierarchy controlled by two subsystems, with no groups
-inside. It corresponds to following operations:
+creates the hierarchy controlled by two subsystems with no groups
+inside. It corresponds to the following operations:
 .LP
 .RS
 .nf
@@ -337,7 +337,7 @@ cpu.shares = "500";
 .fi
 creates the hierarchy controlled by two subsystems with one group and
 two subgroups inside, setting one parameter.
-It corresponds to following operations:
+It corresponds to the following operations:
 .LP
 .RS
 .nf
@@ -362,14 +362,14 @@ The
 .I daemons
 group is created automatically when its first subgroup is
 created. All its parameters have the default value and only root can
-access group's files.
+access the group's files.
 .LP
 Since both
 .I cpuacct
 and
 .I cpu
 subsystems are mounted to the same directory, all
-groups are implicitly controlled also by
+groups are implicitly also controlled by the
 .I cpuacct
 subsystem, even if there is no
 .I cpuacct
@@ -401,7 +401,7 @@ cpu {
 .fi
 .RE
 creates two hierarchies and one common group in both of them.
-It corresponds to following operations:
+It corresponds to the following operations:
 .LP
 .RS
 .nf
@@ -415,9 +415,9 @@ mkdir /mnt/cgroups/cpuacct/daemons
 .fi
 .RE
 
-In fact there are two groups created. One in
+In fact there are two groups created. One in the
 .I cpuacct
-hierarchy, the second in
+hierarchy, the second in the
 .I cpu
 hierarchy. These two groups have nothing in common and can
 contain different subgroups and different tasks.
@@ -465,10 +465,10 @@ cpu.shares = "500";
 }
 .fi
 .RE
-creates two hierarchies with few groups inside. One of groups
+creates two hierarchies with few groups inside. One of the groups
 is created in both hierarchies.
 
-It corresponds to following operations:
+It corresponds to the following operations:
 .LP
 .RS
 .nf
@@ -487,21 +487,21 @@ echo 500 > /mnt/cgroups/cpu/daemons/ftp/cpu.shares
 .RE
 Group
 .I daemons
-is created in both hierarchies. In
+is created in both hierarchies. In the
 .I cpuacct
 hierarchy the group is explicitly mentioned in the configuration
-file. In 
+file. In the
 .I cpu
-hierarchy is the group created implicitly when
+hierarchy the group is created implicitly when
 .I www
 is created there. These two groups have nothing in common, for example
 they do not share processes and subgroups. Groups
 .I www
 and
 .I ftp
-are created only in
+are created only in the
 .I cpu
-hierarchy and are not controlled by
+hierarchy and are not controlled by the
 .I cpuacct
 subsystem.
 
@@ -565,9 +565,9 @@ cpu {
 }
 .RE
 .fi
-creates the hierarchy controlled by two subsystems with one group with some
+creates the hierarchy controlled by two subsystems with one group having some
 special permissions.
-It corresponds to following operations:
+It corresponds to the following operations:
 .LP
 .RS
 .nf
@@ -583,17 +583,17 @@ chown root:daemonmaster /mnt/cgroups/cpu/daemons/tasks
 .fi
 .RE
 
-Users, which are members of the 
+Users which are members of the
 .I operator
 group are allowed to administer the control groups, i.e. create new control
-groups and can move processes between these groups without having root
+groups and move processes between these groups without having root
 privileges.
 
-Members of
+Members of the
 .I daemonmaster
-group can move processes to
+group can move processes to the
 .I daemons
-control group, but they can not move the process out of the group. Only
+control group, but they can not move the process out of the group. Only the
 .I operator
 or root can do that.
 
@@ -601,13 +601,13 @@ or root can do that.
 .SS Keep hierarchies separated
 Having multiple hierarchies is perfectly valid and can be useful
 in various scenarios. To keeps things clean, do not
-create one group in multiple hierarchies. Examples 4 and 5 show,
+create one group in multiple hierarchies. Examples 4 and 5 show
 how unreadable and confusing it can be, especially when reading
-somebody others configuration file.
+somebody elses configuration file.
 
 .SS Explicit is better than implicit
 .B libcgroup
-can implicitly create groups which are needed for creation of
+can implicitly create groups which are needed for the creation of
 configured subgroups. This may be useful and save some typing in
 simple scenarios. When it comes to multiple hierarchies, it's
 better to explicitly specify all groups and all controllers
@@ -626,7 +626,7 @@ default libcgroup configuration file
 cgconfigparser (8)
 
 .SH BUGS
-Parameter values can be only single string without spaces.
+Parameter values must be single strings without spaces.
 Parsing of quoted strings is not implemented.
 
 .SH

@@ -12,7 +12,7 @@ cgset \- set the parameters of given cgroup(s)
 \fBcgset\fR \fB--copy-from\fR <\fIsource_cgrup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
-The command set the parameters of input cgroup(s).
+Set the parameters of input cgroups.
 
 .TP
 .B <path>
@@ -21,14 +21,14 @@ This parameter can be used multiple times.
 
 .TP
 .B -r <name=value>
-defines name of the file to set and
+defines the name of the file to set and
 the value which should be written to that file.
 This parameter can be used multiple times.
 
 .TP
 .B -copy-from <source_cgrup_path>
-defines name of cgroup whose parameters will be
-copied to input cgroup.
+defines the name of the cgroup whose parameters will be
+copied to the input cgroup.
 
 .SH SEE ALSO
 cgrules.conf (1), cgcreate (1), cgget (1)

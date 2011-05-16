@@ -16,15 +16,14 @@ lssubsys \- list hierarchies containing given subsystem
 \fBlssubsys\fR  [\fB-h|--help\fR]
 
 .SH DESCRIPTION
-
-The command list hierarchies containing
-the given subsystem(s) if no subsystem is defined then it
+\fBlssubsys\fR list the hierarchies containing
+the given subsystem(s). If no subsystem is defined, it
 displays all mounted hierarchies.
 
 .TP
 .B controller
-defines subsystem whose hierarchy is shown.
-If this parameter is not used then the command
+defines the subsystem whose hierarchy is shown.
+If this parameter is not used, the command will
 list all mounted subsystems.
 
 .TP
@@ -38,24 +37,24 @@ separate line.
 
 .TP
 .B -a, --all
-Display all subsystems (including not mounted ones).
+Display all subsystems (including unmounted ones).
 
 .TP
 .B -i, --hierarchies
-Display attached hierarchy number, if the subsystem is in a hierarchy.
+Display the attached hierarchy number if the subsystem is in a hierarchy.
 If the option
 .B -m
-is used too, then the hierarchy number is shown only for not mounted hierarchies.
+is also used, the hierarchy number is shown only for unmounted hierarchies.
 
 .TP
 .B -h, --help
 Display help and exit.
 
 .SH EXAMPLE
-Command
+The command
 .B lssubsys -am
-lists all subsystems which are present on the system,
-mounted ones have attached the mount point:
+lists all subsystems which are present in the system,
+mounted ones will be shown with their mount point:
 .RS
 .nf
 $ lssubsys -am
@@ -69,11 +68,11 @@ net_cls /cgroup/net_cls
 .fi
 .RE
 .LP
-Command
+The command
 .B lssubsys -ami
-lists all subsystems which are present on the system,
-mounted subsystems have attached the mount point,
-not mounted ones which are in some hierarchy have attached the hierarchy number:
+lists all subsystems which are present in the system,
+mounted subsystems are listed with their mount points,
+unmounted ones which are in a hierarchy are listed with their hierarchy number:
 .RS
 .nf
 $ lssubsys -ami

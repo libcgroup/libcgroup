@@ -9,15 +9,14 @@ cgrulesengd \- control group rules daemon
 
 .SH DESCRIPTION
 \fBcgrulesengd\fR is a daemon, which distributes processes to control groups. When
-any process changes its effective UID or GID, \fBcgrulesengd\fR inspects list
-of rules loaded from \fIcgrules.conf\fR file and moves the process to
+any process changes its effective UID or GID, \fBcgrulesengd\fR inspects the list
+of rules loaded from the \fIcgrules.conf\fR file and moves the process to
 the appropriate control group.
 
-The list of rules is read during the daemon startup and are cached in daemon's memory.
+The list of rules is read during the daemon startup is are cached in the daemon's memory.
 The daemon reloads the list of rules when it receives SIGUSR2 signal.
 
-The daemon opens a standard unix socket to receive 'sticky' requests from
-cgexec tool.
+The daemon opens a standard unix socket to receive 'sticky' requests from \fBcgexec\fR.
 
 .SH OPTIONS
 .TP
@@ -26,23 +25,24 @@ Display help.
 .TP
 .B -f <path>|--logfile=<path>
 Write log messages to the given log file. When '-' is used as <path>, log messages
-are written to the standard output. Both '\fB-f\fR' and '\fB-s\fR' can be used together then logs
-are sent to both destinations.
+are written to the standard output. If '\fB-f\fR' and '\fB-s\fR' are used together,
+the logs are sent to both destinations.
+
 .TP
 .B -s[facility]|--syslog=[facility]
-Write log messages to syslog. The default facility is DAEMON. Both '\fB-f\fR'
-and '\fB-s\fR' can be used together then logs are sent to both destinations.
+Write log messages to syslog. The default facility is DAEMON. If '\fB-f\fR'
+and '\fB-s\fR' are used together, the logs are sent to both destinations.
 .TP
 .B -n|--nodaemon
-Don't fork the daemon, stay in foreground.
+Don't fork the daemon, stay in the foreground.
 .TP
 .B -v|--verbose
-Display more log messages. This option can be used twice to enable even more log
+Display more log messages. This option can be used twice to enable more verbose log
 messages.
 .TP
 .B -q|--quiet
 Display less log messages. This option can be used twice to enable even less log
-messages and log errors only.
+messages and to only log errors.
 .TP
 .B -Q|--nolog
 Disable logging.
@@ -53,8 +53,8 @@ write them to the standard output.
 .TP
 .B -u <user>|--socket-user=<user>
 .B -g <group>|--socket-group=<group>
-Set owner of cgrulesengd socket. It assumes that cgexec tool runs with proper
-suid permissions so it can write to the socket when cgexec --sticky is used.
+Set the owner of cgrulesengd socket. Assumes that \fBcgexec\fR runs with proper
+suid permissions so it can write to the socket when \fBcgexec\fR --sticky is used.
 .SH FILES
 .LP
 .PD .1v

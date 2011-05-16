@@ -11,9 +11,9 @@ cgget \- print parameter(s) of given group(s)
 [\fB-g\fR <\fIcontroller\fR>] [\fB-a\fR] <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
-The command prints the parameter(s) of input cgroup(s).
-If there is not set any controller or variable,
-then values of all possible variables are displayed.
+Prints the parameter(s) of input cgroup(s).
+If neither controller nor variable are specified,
+the values of all possible variables are displayed.
 
 .TP
 .B <path>
@@ -32,11 +32,11 @@ This option can be used multiple times.
 
 .TP
 .B -a, --all
-print the variables for all controllers which consists given cgroup
+print the variables for all controllers which consist in the  given cgroup
 
 .TP
 .B -n
-do not print headers, i.e. name of groups.
+do not print headers, i.e. names of groups.
 
 .TP
 .B -v, --values-only
