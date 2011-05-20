@@ -24,6 +24,12 @@ static struct option const long_options[] =
 	{NULL, 0, NULL, 0}
 };
 
+enum group{
+    GR_NOTSET = 0,	/* 0 .. path not specified -g<g>  or -a not used */
+    GR_GROUP,		/* 1 .. path not specified -g<g>  or -a used */
+    GR_LIST		/* 2 .. path specified using -g<g>:<p> */
+};
+
 
 static void usage(int status, const char *program_name)
 {
@@ -32,12 +38,15 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	else {
-		printf("Usage: %s [-nv] [-r<name>] [-g<controller>] [-a] ... "\
-			"<path> ...\n", program_name);
+		fprintf(stdout, "Usage: %s [-nv] [-r<name>] "\
+			"[-g<controller>] [-a] <path> ...\n", program_name);
+		fprintf(stdout, "   or: %s [-nv] [-r<name>] "\
+			"-g<controller>:<path> ...\n", program_name);
 	}
 }
 
-static int display_one_record(char *name, struct cgroup_controller *group_controller,
+static int display_record(char *name,
+	struct cgroup_controller *group_controller,
 	const char *group_name, const char *program_name, int mode)
 {
 	int ret = 0;
@@ -54,58 +63,52 @@ static int display_one_record(char *name, struct cgroup_controller *group_contro
 
 	if (ret == ECGEOF) {
 		printf("\n");
-		ret = 0;
 		goto read_end;
 	}
 
-	if (ret != 0) {
-		fprintf(stderr, "variable file read failed %d\n", ret);
-		return ret;
-	}
+	if (ret != 0)
+		goto end;
 
 	printf("%s", line);
-	if (line[strlen(line)-1] == '\n') {
-		/* if the value continue on the net row,
-		 * indent the next row
-		 */
+	if (line[strlen(line)-1] == '\n')
+		/* if value continue on the next row. indent it */
 		ind = 1;
-	}
+
 
 	/* read iteratively the whole value  */
 	while ((ret = cgroup_read_value_next(&handle, line, LL_MAX)) == 0) {
-		if (ind == 1) {
+		if (ind == 1)
 			printf("\t");
-			ind = 0;
-		}
-
 		printf("%s", line);
+		ind = 0;
 
-		if (line[strlen(line)-1] == '\n') {
-			/* if the value continue on the net row,
-			 * indent the next row
-			 */
+		/* if value continue on the next row. indent it */
+		if (line[strlen(line)-1] == '\n')
 			ind = 1;
-		}
 	}
 
+read_end:
+	cgroup_read_value_end(&handle);
 	if (ret == ECGEOF)
 		ret = 0;
-read_end:
 
-	cgroup_read_value_end(&handle);
+end:
+	if (ret != 0)
+		fprintf(stderr, "variable file read failed %s\n",
+			cgroup_strerror(ret));
 	return ret;
 }
 
 
 
-static int display_name_values(char **names, int count, const char* group_name,
+static int display_name_values(char **names, const char* group_name,
 		const char *program_name, int mode)
 {
 	int i;
 	struct cgroup_controller *group_controller = NULL;
 	struct cgroup *group = NULL;
 	int ret = 0;
-	char *controller = NULL, *parameter = NULL;
+	char *controller = NULL, *dot;
 
 	group = cgroup_new_cgroup(group_name);
 	if (group == NULL) {
@@ -120,7 +123,8 @@ static int display_name_values(char **names, int count, const char* group_name,
 		goto err;
 	}
 
-	for (i = 0; i < count; i++) {
+	i = 0;
+	while (names[i] != NULL) {
 		/* Parse the controller out of 'controller.parameter'. */
 		free(controller);
 		controller = strdup(names[i]);
@@ -129,15 +133,14 @@ static int display_name_values(char **names, int count, const char* group_name,
 			ret = -1;
 			goto err;
 		}
-		parameter = strchr(controller, '.');
-		if (parameter == NULL) {
+		dot = strchr(controller, '.');
+		if (dot == NULL) {
 			fprintf(stderr, "%s: error parsing parameter name\n" \
 					" '%s'", program_name, names[i]);
 			ret = -1;
 			goto err;
 		}
-		*parameter = '\0';
-		parameter++;
+		*dot = '\0';
 
 		/* Find appropriate controller. */
 		group_controller = cgroup_get_controller(group, controller);
@@ -150,10 +153,11 @@ static int display_name_values(char **names, int count, const char* group_name,
 		}
 
 		/* Finally read the parameter value.*/
-		ret = display_one_record(names[i], group_controller,
+		ret = display_record(names[i], group_controller,
 			group_name, program_name, mode);
 		if (ret != 0)
 			goto err;
+		i++;
 	}
 err:
 	if (controller)
@@ -163,8 +167,8 @@ err:
 	return ret;
 }
 
-static int display_controller_values(char **controllers, int count,
-		const char *group_name, const char *program_name, int mode)
+static int display_controller_values(char **controllers, const char *group_name,
+	const char *program_name, int mode)
 {
 	struct cgroup *group = NULL;
 	struct cgroup_controller *group_controller = NULL;
@@ -190,8 +194,8 @@ static int display_controller_values(char **controllers, int count,
 	}
 
 	/* for all wanted controllers */
-	for (j = 0; j < count; j++) {
-
+	j = 0;
+	while (controllers[j] != NULL) {
 		/* read the controller group data */
 		group_controller = cgroup_get_controller(group, controllers[j]);
 		if (group_controller == NULL) {
@@ -208,7 +212,7 @@ static int display_controller_values(char **controllers, int count,
 		for (i = 0; i < name_count; i++) {
 			name = cgroup_get_value_name(group_controller, i);
 			if (name != NULL) {
-				ret = display_one_record(name, group_controller,
+				ret = display_record(name, group_controller,
 					group_name, program_name, mode);
 				if (ret) {
 					result = ret;
@@ -216,6 +220,7 @@ static int display_controller_values(char **controllers, int count,
 				}
 			}
 		}
+		j = j+1;
 	}
 
 err:
@@ -224,62 +229,67 @@ err:
 
 }
 
-static int display_all_controllers(const char *group_name,
-	const char *program_name, int mode)
+static int display_values(char **controllers, int max, const char *group_name,
+	char **names, int mode, const char *program_name)
 {
-	void *handle;
-	int ret;
-	struct cgroup_mount_point controller;
-	char *name;
-	int succ = 0;
+	int ret, result = 0;
 
-	ret = cgroup_get_controller_begin(&handle, &controller);
+	/* display the directory if needed */
+	if (mode & MODE_SHOW_HEADERS)
+		printf("%s:\n", group_name);
 
-	/* go through the list of controllers/mount point pairs */
-	while (ret == 0) {
-		name = controller.name;
-		succ |= display_controller_values(&name, 1,
-			group_name, program_name, mode);
-		ret = cgroup_get_controller_next(&handle, &controller);
+	/* display all wanted variables */
+	if (names[0] != NULL) {
+		ret = display_name_values(names, group_name, program_name,
+			mode);
+		if (ret)
+			result = ret;
 	}
 
-	cgroup_get_controller_end(&handle);
-	return succ;
-}
-
-static int add_record_to_buffer(int *p_number,
-	int *p_max, char ***p_records, char *new_rec)
-{
-
-	if (*p_number >= *p_max) {
-		*p_max += CG_NV_MAX;
-		*p_records = (char **) realloc(*p_records,
-			*p_max * sizeof(char *));
-		if (!(*p_records)) {
-			fprintf(stderr, "not enough memory\n");
-			return -1;
-		}
+	/* display all wanted controllers */
+	if (controllers[0] != NULL) {
+		ret = display_controller_values(controllers, group_name,
+			program_name, mode);
+		if (ret)
+			result = ret;
 	}
 
-	(*p_records)[*p_number] = new_rec;
-	(*p_number)++;
+	/* separate each group with empty line. */
+	if (mode & MODE_SHOW_HEADERS)
+		printf("\n");
 
-	return 0;
+	return result;
 }
+
+void add_record_to_buffer(char **buffer, char *record, int capacity)
+{
+	int i;
+
+	/* find first free entry inside the cgroup data array */
+	for (i = 0; i < capacity; i++) {
+		if (!buffer[i])
+			break;
+	}
+
+	if (i < capacity)
+		buffer[i] = strdup(record);
+}
+
 
 int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int result = 0;
 	int c, i;
+	int group_needed = GR_NOTSET;
 
-	char **names = NULL;
-	int n_number = 0;
-	int n_max = 0;
+	int capacity = argc + CG_CONTROLLER_MAX; /* maximal number of records */
+	struct cgroup_group_spec **cgroup_list; /* list of all groups */
+	char **names;			/* list of wanted variable names */
+	char **controllers;		/* list of wanted controllers*/
 
-	char **controllers = NULL;
-	int c_number = 0;
-	int c_max = 0;
+	void *handle;
+	struct cgroup_mount_point controller;
 
 	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
 
@@ -287,6 +297,17 @@ int main(int argc, char *argv[])
 	if (argc < 2) {
 		usage(1, argv[0]);
 		return 1;
+	}
+
+	names = (char **)calloc(capacity+1, sizeof(char *));
+	controllers = (char **)calloc(capacity+1, sizeof(char *));
+	cgroup_list = (struct cgroup_group_spec **)calloc(capacity,
+		sizeof(struct cgroup_group_spec *));
+	if ((names == NULL) || (controllers == NULL) ||
+		(cgroup_list == NULL)) {
+		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		ret = -1;
+		goto err;
 	}
 
 	/* Parse arguments. */
@@ -311,23 +332,49 @@ int main(int argc, char *argv[])
 
 		case 'r':
 			/* Add name to buffer. */
-			ret = add_record_to_buffer(
-				&n_number, &n_max, &names, optarg);
+			add_record_to_buffer(names, optarg, capacity);
 			if (ret) {
 				result = ret;
 				goto err;
 			}
 			break;
 		case 'g':
-			/* for each controller add all variables to list */
-			ret = add_record_to_buffer(&c_number,
-				&c_max, &controllers, optarg);
-			if (ret) {
-				result = ret;
-				goto err;
+			if (strchr(optarg, ':') == NULL) {
+				/* -g <group> */
+				if (group_needed == 2) {
+					usage(1, argv[0]);
+					result = -1;
+					goto err;
+				}
+				group_needed = 1;
+				add_record_to_buffer(controllers, optarg,
+					capacity);
+			} else {
+				/* -g <group>:<path> */
+				if (group_needed == 1) {
+					usage(1, argv[0]);
+					result = -1;
+					goto err;
+				}
+				group_needed = 2;
+				ret = parse_cgroup_spec(cgroup_list, optarg,
+					capacity);
+				if (ret) {
+					fprintf(stderr, "%s: cgroup controller/"
+						"path parsing failed (%s)\n",
+						argv[0], argv[optind]);
+					ret = -1;
+					goto err;
+				}
 			}
 			break;
 		case 'a':
+			if (group_needed == 2) {
+				usage(1, argv[0]);
+				result = -1;
+				goto err;
+			}
+			group_needed = 1;
 			/* go through cgroups for all possible controllers */
 			mode |=  MODE_SHOW_ALL_CONTROLLERS;
 			break;
@@ -335,22 +382,16 @@ int main(int argc, char *argv[])
 			usage(1, argv[0]);
 			result = -1;
 			goto err;
-			break;
 		}
 	}
 
-	if (!argv[optind]) {
-		fprintf(stderr, "%s: no cgroup specified\n", argv[0]);
+	if (((group_needed == 2) && (argv[optind])) ||
+	    ((group_needed != 2) && (!argv[optind]))) {
+		/* mixed -g <controller>:<path> and <path> or path not set */
+		usage(1, argv[0]);
 		result = -1;
 		goto err;
 	}
-
-	/*
-	 * if no controller or variable is set
-	 * then show values of all possible variables
-	 */
-	if ((c_number == 0) && (n_number == 0))
-		mode |=  MODE_SHOW_ALL_CONTROLLERS;
 
 	/* Initialize libcgroup. */
 	ret = cgroup_init();
@@ -361,44 +402,43 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	if (!argv[optind]) {
-		fprintf(stderr, "%s: no cgroup specified\n", argv[0]);
-		result = -1;
-		goto err;
+	if ((mode & MODE_SHOW_ALL_CONTROLLERS) ||
+		((controllers[0] == NULL) && (names[0] == NULL)
+		&& (cgroup_list[0] == NULL))) {
+		/* show info about all controllers */
+		ret = cgroup_get_controller_begin(&handle, &controller);
+		/* go through list of controllers, add them to the list */
+		while (ret == 0) {
+			add_record_to_buffer(controllers, controller.name,
+				capacity);
+			ret = cgroup_get_controller_next(&handle, &controller);
+		}
+		cgroup_get_controller_end(&handle);
+	}
+
+	/* Parse control groups set by -g<c>:<p> pairs */
+	for (i = 0; i < capacity; i++) {
+		if (!cgroup_list[i])
+			break;
+		ret |= display_values(cgroup_list[i]->controllers, capacity,
+			cgroup_list[i]->path, names, mode, argv[0]);
 	}
 
 	/* Parse control groups and print them .*/
 	for (i = optind; i < argc; i++) {
-
-		/* display the directory if needed */
-		if (mode & MODE_SHOW_HEADERS)
-			printf("%s:\n", argv[i]);
-
-		ret = display_name_values(names,
-			n_number, argv[i], argv[0], mode);
-		if (ret)
-			result = ret;
-
-		ret = display_controller_values(controllers, c_number, argv[i],
-			argv[0], mode - (mode & MODE_SHOW_ALL_CONTROLLERS));
-		if (ret) {
-			result = ret;
-			goto err;
-		}
-
-		if (mode & MODE_SHOW_ALL_CONTROLLERS) {
-			ret = display_all_controllers(argv[i], argv[0], mode);
-			/* remember the error but continue showing the rest */
-			if (ret)
-				result = ret;
-		}
-
-		/* Separate each group with empty line. */
-		if (mode & MODE_SHOW_HEADERS && i != argc-1)
-			printf("\n");
+		ret |= display_values(controllers, capacity,
+			argv[i], names, mode, argv[0]);
 	}
 
 err:
-	free(names);
+	for (i = 0; i < capacity; i++) {
+		if (cgroup_list[i])
+			cgroup_free_group_spec(cgroup_list[i]);
+		if (controllers[i])
+			free(controllers[i]);
+		if (names[i])
+			free(names[i]);
+	}
+
 	return result;
 }
