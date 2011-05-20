@@ -8,7 +8,10 @@ cgget \- print parameter(s) of given group(s)
 
 .SH SYNOPSIS
 \fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
-[\fB-g\fR <\fIcontroller\fR>] [\fB-a\fR] <\fBcgroup_path\fR> ...
+[\fB-g\fR <\fIcontroller\fR>] [\fB-a\fR] <\fBpath\fR> ...
+.br
+\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
+\fB-g\fR <\fIcontroller\fR>:<\fBpath\fR> ...
 
 .SH DESCRIPTION
 Prints the parameter(s) of input cgroup(s).
@@ -21,9 +24,8 @@ is the name of the cgroup which should be read.
 This parameter can be used multiple times.
 
 .TP
-.B -r, --variable <name>
-defines parameter to display.
-This option can be used multiple times.
+.B -a, --all
+print the variables for all controllers which consist in the  given cgroup
 
 .TP
 .B -g <controller>
@@ -31,20 +33,27 @@ defines controller which values should be displaied.
 This option can be used multiple times.
 
 .TP
-.B -a, --all
-print the variables for all controllers which consist in the  given cgroup
+.B -g <controller>:<path>
+defines control groups which values should be displaied.
+This option can be used multiple times.
+
+.TP
+.B -h, --help
+display help and exit
 
 .TP
 .B -n
 do not print headers, i.e. names of groups.
 
 .TP
-.B -v, --values-only
-print only values, not parameter names.
+.B -r, --variable <name>
+defines parameter to display.
+This option can be used multiple times.
+
 
 .TP
-.B -h, --help
-display help and exit
+.B -v, --values-only
+print only values, not parameter names.
 
 .SH EXAMPLES
 .nf
