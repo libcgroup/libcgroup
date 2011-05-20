@@ -38,10 +38,25 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	else {
-		fprintf(stdout, "Usage: %s [-nv] [-r<name>] "\
-			"[-g<controller>] [-a] <path> ...\n", program_name);
-		fprintf(stdout, "   or: %s [-nv] [-r<name>] "\
-			"-g<controller>:<path> ...\n", program_name);
+		fprintf(stdout, "Usage: %s [-nv] [-r <name>] "\
+			"[-g <controller>] [-a] <path> ...\n", program_name);
+		fprintf(stdout, "   or: %s [-nv] [-r <name>] "\
+			"-g <controller>:<path> ...\n", program_name);
+		fprintf(stdout, "Print parameter(s) of given group(s).\n");
+		fprintf(stdout, "  -a, --all			"\
+			"Print info about all relevant controllers\n");
+		fprintf(stdout, "  -g <controller>		"\
+			"Controller which info should be displaied\n");
+		fprintf(stdout, "  -g <controller>:<path>	"\
+			"Control group whih info should be displaied\n");
+		fprintf(stdout, "  -h, --help			"\
+			"Display this help\n");
+		fprintf(stdout, "  -n				"\
+			"Do not print headers\n");
+		fprintf(stdout, "  -r, --variable <name>	"\
+			"Define parameter to display\n");
+		fprintf(stdout, "  -v, --values-only		"\
+			"Print only values, not parameter names\n");
 	}
 }
 
