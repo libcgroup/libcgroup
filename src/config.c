@@ -723,24 +723,25 @@ int cgroup_config_load_config(const char *pathname)
 	mount_enabled = (config_mount_table[0].name[0] != '\0');
 
 	/*
-	 * The configuration should have either namespace or mount.
-	 * Not both and not none.
+	 * The configuration should have namespace or mount, not both.
 	 */
-	if (namespace_enabled == mount_enabled) {
+	if (namespace_enabled && mount_enabled) {
 		free(config_cgroup_table);
 		return ECGMOUNTNAMESPACE;
 	}
-
-	/*
-	 * We do not allow both mount and namespace sections in the
-	 * same configuration file. So test for that
-	 */
 
 	error = cgroup_config_mount_fs();
 	if (error)
 		goto err_mnt;
 
 	error = cgroup_init();
+	if (error == ECGROUPNOTMOUNTED && cgroup_table_index == 0) {
+		/*
+		 * The config file seems to be empty.
+		 */
+		error = 0;
+		goto err_mnt;
+	}
 	if (error)
 		goto err_mnt;
 
