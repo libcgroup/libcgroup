@@ -431,6 +431,7 @@ static int cgroup_config_mount_fs(void)
 	int ret;
 	struct stat buff;
 	int i;
+	int error;
 
 	for (i = 0; i < config_table_index; i++) {
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
@@ -439,30 +440,43 @@ static int cgroup_config_mount_fs(void)
 
 		if (ret < 0 && errno != ENOENT) {
 			last_errno = errno;
-			return ECGOTHER;
+			error = ECGOTHER;
+			goto out_err;
 		}
 
 		if (errno == ENOENT) {
 			ret = cg_mkdir_p(curr->mount.path);
-			if (ret)
-				return ret;
+			if (ret) {
+				error = ret;
+				goto out_err;
+			}
 		} else if (!S_ISDIR(buff.st_mode)) {
 			errno = ENOTDIR;
 			last_errno = errno;
-			return ECGOTHER;
+			error = ECGOTHER;
+			goto out_err;
 		}
 
-		ret = cgroup_config_ajdust_mount_options(curr);
-		if (ret)
-			return ret;
+		error = cgroup_config_ajdust_mount_options(curr);
+		if (error)
+			goto out_err;
 
 		ret = mount(CGROUP_FILESYSTEM, curr->mount.path,
 				CGROUP_FILESYSTEM, 0, curr->name);
 
-		if (ret < 0)
-			return ECGMOUNTFAIL;
+		if (ret < 0) {
+			error = ECGMOUNTFAIL;
+			goto out_err;
+		}
 	}
 	return 0;
+out_err:
+	/*
+	 * If we come here, we have failed. Since we have touched only
+	 * mountpoints prior to i, we shall operate on only them now.
+	 */
+	config_table_index = i;
+	return error;
 }
 
 /*
