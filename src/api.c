@@ -211,42 +211,31 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
 /*
  * TODO: Need to decide a better place to put this function.
  */
-int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
+static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
        int dirm_change, mode_t file_mode, int filem_change)
 {
 	int ret = 0;
 	int final_ret =0;
 	FTS *fts;
 	char *fts_path[2];
-	char *path = NULL;
 
-	fts_path[0] = (char *)malloc(FILENAME_MAX);
-	if (!fts_path[0]) {
-		last_errno = errno;
-		return ECGOTHER;
-	}
+	fts_path[0] = path;
 	fts_path[1] = NULL;
-	path = fts_path[0];
 	cgroup_dbg("chmod: path is %s\n", path);
-
-	if (!cg_build_path(cgroup->name, path,
-			cgroup->controller[0]->name)) {
-		final_ret = ECGFAIL;
-		goto err;
-	}
 
 	fts = fts_open(fts_path, FTS_PHYSICAL | FTS_NOCHDIR |
 			FTS_NOSTAT, NULL);
 	if (fts == NULL) {
 		last_errno = errno;
-		final_ret = ECGOTHER;
-		goto err;
+		return ECGOTHER;
 	}
 	while (1) {
 		FTSENT *ent;
 		ent = fts_read(fts);
 		if (!ent) {
 			cgroup_dbg("fts_read failed\n");
+			last_errno = errno;
+			final_ret = ECGOTHER;
 			break;
 		}
 		ret = cg_chmod_file(fts, ent, dir_mode, dirm_change,
@@ -257,12 +246,36 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 		}
 	}
 	fts_close(fts);
-
-err:
-	free(fts_path[0]);
 	return final_ret;
 }
 
+int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
+		int dirm_change, mode_t file_mode, int filem_change)
+{
+	int i;
+	char *path;
+	int final_ret = 0;
+	int ret;
+
+	path = malloc(FILENAME_MAX);
+	if (!path) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	for (i = 0; i < cgroup->index; i++) {
+		if (!cg_build_path(cgroup->name, path,
+				cgroup->controller[i]->name)) {
+			final_ret = ECGFAIL;
+			break;
+		}
+		ret = cg_chmod_recursive_controller(path, dir_mode, dirm_change,
+				file_mode, filem_change);
+		if (ret)
+			final_ret = ret;
+	}
+	free(path);
+	return final_ret;
+}
 
 static char *cgroup_basename(const char *path)
 {
