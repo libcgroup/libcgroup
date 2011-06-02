@@ -736,8 +736,10 @@ int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
 	struct cg_mount_point *mount, *it;
 
 	mount = malloc(sizeof(struct cg_mount_point));
-	if (!mount)
-		return ECGFAIL;
+	if (!mount) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	mount->next = NULL;
 	strncpy(mount->path, path, sizeof(mount->path));
 	mount->path[sizeof(mount->path)-1] = '\0';
@@ -1355,7 +1357,8 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 
 		dst->values[i] = calloc(1, sizeof(struct control_value));
 		if (!dst->values[i]) {
-			ret = ECGFAIL;
+			last_errno = errno;
+			ret = ECGOTHER;
 			goto err;
 		}
 
@@ -1395,7 +1398,8 @@ int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src)
 
 		dst->controller[i] = calloc(1, sizeof(struct cgroup_controller));
 		if (!dst->controller[i]) {
-			ret = ECGFAIL;
+			last_errno = errno;
+			ret = ECGOTHER;
 			goto err;
 		}
 
@@ -1559,7 +1563,8 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 
 	dir = strdup(cgroup->name);
 	if (!dir) {
-		return ECGFAIL;
+		last_errno = errno;
+		return ECGOTHER;
 	}
 	cgroup_dbg("group name is %s\n", dir);
 
@@ -1574,8 +1579,10 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 	}
 	else {
 		*parent = strdup(pdir);
-		if (*parent == NULL)
-			ret = ECGFAIL;
+		if (*parent == NULL) {
+			last_errno = errno;
+			ret = ECGOTHER;
+		}
 	}
 	free(dir);
 
@@ -1934,8 +1941,10 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			 * it afterwards.
 			 */
 			parent_name = strdup(".");
-			if (parent_name == NULL)
-				return ECGFAIL;
+			if (parent_name == NULL) {
+				last_errno = errno;
+				return ECGOTHER;
+			}
 			delete_group = 0;
 		} else
 			/*
@@ -3845,8 +3854,10 @@ int cgroup_dictionary_create(struct cgroup_dictionary **dict,
 	*dict = (struct cgroup_dictionary *) calloc(
 			1, sizeof(struct cgroup_dictionary));
 
-	if (!dict)
-		return ECGFAIL;
+	if (!dict) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 	(*dict)->flags = flags;
 	return 0;
 }
@@ -3862,8 +3873,10 @@ int cgroup_dictionary_add(struct cgroup_dictionary *dict,
 
 	it = (struct cgroup_dictionary_item *) malloc(
 			sizeof(struct cgroup_dictionary_item));
-	if (!it)
-		return ECGFAIL;
+	if (!it) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 
 	it->next = NULL;
 	it->name = name;
@@ -3914,8 +3927,10 @@ int cgroup_dictionary_iterator_begin(struct cgroup_dictionary *dict,
 
 	iter = (struct cgroup_dictionary_iterator *) malloc(
 			sizeof(struct cgroup_dictionary_iterator));
-	if (!iter)
-		return ECGFAIL;
+	if (!iter) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
 
 	iter->item = dict->head;
 	*handle = iter;
