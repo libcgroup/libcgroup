@@ -276,7 +276,7 @@ static int display_values(char **controllers, int max, const char *group_name,
 	return result;
 }
 
-void add_record_to_buffer(char **buffer, char *record, int capacity)
+int add_record_to_buffer(char **buffer, char *record, int capacity)
 {
 	int i;
 
@@ -286,8 +286,13 @@ void add_record_to_buffer(char **buffer, char *record, int capacity)
 			break;
 	}
 
-	if (i < capacity)
+	if (i < capacity) {
 		buffer[i] = strdup(record);
+		if (buffer[i] == NULL)
+			return 1;
+		return 0;
+	}
+	return 1;
 }
 
 
@@ -347,7 +352,7 @@ int main(int argc, char *argv[])
 
 		case 'r':
 			/* Add name to buffer. */
-			add_record_to_buffer(names, optarg, capacity);
+			ret = add_record_to_buffer(names, optarg, capacity);
 			if (ret) {
 				result = ret;
 				goto err;
