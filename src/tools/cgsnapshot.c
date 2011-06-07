@@ -101,7 +101,7 @@ int load_list(char *filename, struct black_list_type **p_list)
 		return 1;
 	}
 
-	/* go through the all configuration file and search the line */
+	/* go through the configuration file and search the line */
 	while (fgets(buf, FILENAME_MAX, fw) != NULL) {
 		buf[FILENAME_MAX-1] = '\0';
 		i = 0;
@@ -118,13 +118,21 @@ int load_list(char *filename, struct black_list_type **p_list)
 		if (new == NULL) {
 			fprintf(stderr, "ERROR: Memory allocation problem "
 				"(%s)\n", strerror(errno));
-			*p_list = NULL;
-			return 1;
+			ret = 1;
+			goto err;
 		}
 
 		ret = sscanf(buf, "%s", name);
-		new->name = strdup(name);
+		if (ret == 0)
+			continue;
 
+		new->name = strdup(name);
+		if (new->name == NULL) {
+			fprintf(stderr, "ERROR: Memory allocation problem "
+				"(%s)\n", strerror(errno));
+			ret = 1;
+			goto err;
+		}
 		new->next = NULL;
 
 		/* update the variables list */
@@ -140,6 +148,17 @@ int load_list(char *filename, struct black_list_type **p_list)
 	fclose(fw);
 	*p_list = start;
 	return 0;
+
+err:
+	new = start;
+	while (new != NULL) {
+		end = new->next;
+		free(new->name);
+		free(new);
+		new = end;
+	}
+	*p_list = NULL;
+	return ret;
 }
 
 /* free list structure */
