@@ -105,6 +105,7 @@ int cgroup_config_insert_cgroup(char *cg_name)
 
 		memset(newblk + oldlen, 0, (MAX_CGROUPS - oldlen) *
 				sizeof(struct cgroup));
+		init_cgroup_table(newblk + oldlen, MAX_CGROUPS - oldlen);
 		config_cgroup_table = newblk;
 		cgroup_dbg("MAX_CGROUPS %d\n", MAX_CGROUPS);
 		cgroup_dbg("reallocated config_cgroup_table to %p\n", config_cgroup_table);
@@ -726,6 +727,11 @@ int cgroup_config_load_config(const char *pathname)
 	}
 
 	config_cgroup_table = calloc(MAX_CGROUPS, sizeof(struct cgroup));
+	if (!config_cgroup_table)
+		return ECGFAIL;
+
+	init_cgroup_table(config_cgroup_table, MAX_CGROUPS);
+
 	if (yyparse() != 0) {
 		cgroup_dbg("Failed to parse file %s\n", pathname);
 		fclose(yyin);

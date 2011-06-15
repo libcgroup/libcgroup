@@ -84,8 +84,11 @@ struct cgroup {
 	int index;
 	uid_t tasks_uid;
 	gid_t tasks_gid;
+	mode_t task_fperm;
 	uid_t control_uid;
 	gid_t control_gid;
+	mode_t control_fperm;
+	mode_t control_dperm;
 };
 
 struct cg_mount_point {
@@ -189,6 +192,7 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname);
 int cg_mkdir_p(const char *path);
 struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 		struct control_value *name_value, int nv_number);
+void init_cgroup_table(struct cgroup *cgroups, size_t count);
 
 /*
  * Main mounting structures

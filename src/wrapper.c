@@ -23,13 +23,26 @@
 #include <string.h>
 #include <unistd.h>
 
+static void init_cgroup(struct cgroup *cgroup)
+{
+	cgroup->task_fperm = cgroup->control_fperm = cgroup->control_dperm = NO_PERMS;
+}
+
+void init_cgroup_table(struct cgroup *cgroups, size_t count)
+{
+	size_t i;
+
+	for (i = 0; i < count; ++i)
+		init_cgroup(&cgroups[i]);
+}
+
 struct cgroup *cgroup_new_cgroup(const char *name)
 {
 	struct cgroup *cgroup = calloc(1, sizeof(struct cgroup));
-
 	if (!cgroup)
 		return NULL;
 
+	init_cgroup(cgroup);
 	strncpy(cgroup->name, name, sizeof(cgroup->name));
 
 	return cgroup;

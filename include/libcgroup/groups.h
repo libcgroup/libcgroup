@@ -109,6 +109,10 @@ struct cgroup;
  */
 struct cgroup_controller;
 
+/**
+ * Uninitialized file/directory permissions used for task/control files.
+ */
+#define NO_PERMS (-1U)
 
 /**
  * Allocate new cgroup structure. This function itself does not create new
