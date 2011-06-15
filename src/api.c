@@ -1475,6 +1475,13 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			cgroup_dbg("Changing ownership of %s\n", fts_path[0]);
 			error = cg_chown_recursive(fts_path,
 				cgroup->control_uid, cgroup->control_gid);
+			if (!error) {
+				error = cg_chmod_recursive_controller(fts_path[0],
+						cgroup->control_dperm,
+						cgroup->control_dperm != NO_PERMS,
+						cgroup->control_fperm,
+						cgroup->control_fperm != NO_PERMS);
+			}
 		}
 
 		if (error)
@@ -1521,11 +1528,15 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			}
 			error = chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
+			if (!error && cgroup->task_fperm != NO_PERMS)
+				error = chmod(path, cgroup->task_fperm);
+
 			if (error) {
 				last_errno = errno;
 				error = ECGOTHER;
 				goto err;
 			}
+
 		}
 		free(base);
 		base = NULL;

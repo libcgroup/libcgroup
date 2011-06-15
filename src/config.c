@@ -234,6 +234,14 @@ int cgroup_config_group_task_perm(char *perm_type, char *value)
 		config_cgroup->tasks_gid = val;
 	}
 
+	if (!strcmp(perm_type, "fperm")) {
+		char *endptr;
+		val = strtol(value, &endptr, 8);
+		if (*endptr)
+			goto group_task_error;
+		config_cgroup->task_fperm = val;
+	}
+
 	free(perm_type);
 	free(value);
 	return 1;
@@ -298,6 +306,22 @@ int cgroup_config_group_admin_perm(char *perm_type, char *value)
 			free(group);
 		}
 		config_cgroup->control_gid = val;
+	}
+
+	if (!strcmp(perm_type, "fperm")) {
+		char *endptr;
+		val = strtol(value, &endptr, 8);
+		if (*endptr)
+			goto admin_error;
+		config_cgroup->control_fperm = val;
+	}
+
+	if (!strcmp(perm_type, "dperm")) {
+		char *endptr;
+		val = strtol(value, &endptr, 8);
+		if (*endptr)
+			goto admin_error;
+		config_cgroup->control_dperm = val;
 	}
 
 	free(perm_type);
