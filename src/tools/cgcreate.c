@@ -302,6 +302,9 @@ int main(int argc, char *argv[])
 		}
 
 		/* all variables set so create cgroup */
+		if (dirm_change + filem_change > 0)
+			cgroup_set_permissions(cgroup, dir_mode, file_mode,
+					file_mode);
 		ret = cgroup_create_cgroup(cgroup, 0);
 		if (ret) {
 			fprintf(stderr, "%s: "
@@ -309,17 +312,6 @@ int main(int argc, char *argv[])
 				argv[0], cgroup->name, cgroup_strerror(ret));
 			cgroup_free(&cgroup);
 			goto err;
-		}
-		if (dirm_change + filem_change > 0) {
-			ret = cg_chmod_recursive(cgroup, dir_mode, dirm_change,
-				file_mode, filem_change);
-			if (ret) {
-				fprintf(stderr, "%s: can't change permission " \
-					"of cgroup %s: %s\n", argv[0],
-					cgroup->name, cgroup_strerror(ret));
-				cgroup_free(&cgroup);
-				goto err;
-			}
 		}
 		cgroup_free(&cgroup);
 	}

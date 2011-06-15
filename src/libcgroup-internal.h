@@ -251,6 +251,17 @@ extern int cgroup_dictionary_iterator_next(void **handle,
  */
 extern void cgroup_dictionary_iterator_end(void **handle);
 
+/**
+ * Changes permissions for given path. If owner_is_umask is specified
+ * then it uses owner permissions as a mask for group and others permissions.
+ *
+ * @param path Patch to chmod.
+ * @param mode File permissions to set.
+ * @param owner_is_umask Flag whether path owner permissions should be used
+ * as a mask for group and others permissions.
+ */
+int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
+
 __END_DECLS
 
 #endif

@@ -175,12 +175,47 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	return ret;
 }
 
+int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
+{
+	struct stat buf;
+	mode_t mask = -1U;
+
+	if (owner_is_umask) {
+		mode_t umask, gmask, omask;
+
+		/*
+		 * Use owner permissions as an umask for group and others
+		 * permissions because we trust kernel to initialize owner
+		 * permissions to something useful.
+		 */
+		if (stat(path, &buf) == -1)
+			goto fail;
+		umask = S_IRWXU & buf.st_mode;
+		gmask = umask >> 3;
+		omask = gmask >> 3;
+
+		mask = umask|gmask|omask;
+	}
+
+	if (chmod(path, mode & mask))
+		goto fail;
+
+	return 0;
+
+fail:
+	last_errno = errno;
+	return ECGOTHER;
+}
+
 int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
-	int dirm_change, mode_t file_mode, int filem_change)
+	int dirm_change, mode_t file_mode, int filem_change,
+	int owner_is_umask)
 {
 	int ret = 0;
 	const char *filename = fts->fts_path;
+
 	cgroup_dbg("chmod: seeing file %s\n", filename);
+
 	switch (ent->fts_info) {
 	case FTS_ERR:
 		errno = ent->fts_errno;
@@ -190,19 +225,16 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
 	case FTS_DNR:
 	case FTS_DP:
 		if (dirm_change)
-			ret = chmod(filename, dir_mode);
+			ret = cg_chmod_path(filename, dir_mode, owner_is_umask);
 		break;
 	case FTS_F:
 	case FTS_NSOK:
 	case FTS_NS:
 	case FTS_DEFAULT:
 		if (filem_change)
-			ret = chmod(filename, file_mode);
+			ret = cg_chmod_path(filename, file_mode,
+					owner_is_umask);
 		break;
-	}
-	if (ret < 0) {
-		last_errno = errno;
-		ret = ECGOTHER;
 	}
 	return ret;
 }
@@ -212,7 +244,8 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
  * TODO: Need to decide a better place to put this function.
  */
 static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
-       int dirm_change, mode_t file_mode, int filem_change)
+		int dirm_change, mode_t file_mode, int filem_change,
+		int owner_is_umask)
 {
 	int ret = 0;
 	int final_ret =0;
@@ -239,7 +272,7 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 			break;
 		}
 		ret = cg_chmod_file(fts, ent, dir_mode, dirm_change,
-			file_mode, filem_change);
+			file_mode, filem_change, owner_is_umask);
 		if (ret) {
 			last_errno = errno;
 			final_ret = ECGOTHER;
@@ -269,12 +302,21 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 			break;
 		}
 		ret = cg_chmod_recursive_controller(path, dir_mode, dirm_change,
-				file_mode, filem_change);
+				file_mode, filem_change, 0);
 		if (ret)
 			final_ret = ret;
 	}
 	free(path);
 	return final_ret;
+}
+
+void cgroup_set_permissions(struct cgroup *cgroup,
+		mode_t control_dperm, mode_t control_fperm,
+		mode_t task_fperm)
+{
+	cgroup->control_dperm = control_dperm;
+	cgroup->control_fperm = control_fperm;
+	cgroup->task_fperm = task_fperm;
 }
 
 static char *cgroup_basename(const char *path)
@@ -1475,13 +1517,13 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			cgroup_dbg("Changing ownership of %s\n", fts_path[0]);
 			error = cg_chown_recursive(fts_path,
 				cgroup->control_uid, cgroup->control_gid);
-			if (!error) {
+			if (!error)
 				error = cg_chmod_recursive_controller(fts_path[0],
 						cgroup->control_dperm,
 						cgroup->control_dperm != NO_PERMS,
 						cgroup->control_fperm,
-						cgroup->control_fperm != NO_PERMS);
-			}
+						cgroup->control_fperm != NO_PERMS,
+						1);
 		}
 
 		if (error)
@@ -1529,7 +1571,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			error = chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
 			if (!error && cgroup->task_fperm != NO_PERMS)
-				error = chmod(path, cgroup->task_fperm);
+				error = cg_chmod_path(path, cgroup->task_fperm,
+						1);
 
 			if (error) {
 				last_errno = errno;

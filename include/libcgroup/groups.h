@@ -176,7 +176,8 @@ void cgroup_free_controllers(struct cgroup *cgroup);
  * Physically create a control group in kernel. The group is created in all
  * hierarchies, which cover controllers added by cgroup_add_controller().
  * All parameters set by cgroup_add_value_* functions are written.
- * The created groups has owner which was set by cgroup_set_uid_gid().
+ * The created groups has owner which was set by cgroup_set_uid_gid() and
+ * permissions set by cgroup_set_permissions.
  * @param cgroup
  * @param ignore_ownership When nozero, all errors are ignored when setting
  * 	owner of the group and/or its tasks file.
@@ -339,6 +340,22 @@ int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
  */
 int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
 		gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid);
+
+/**
+ * Stores given file permissions of the group's control and tasks files
+ * into the @c cgroup data structure. Use NO_PERMS if permissions shouldn't
+ * be changed or a value which applicable to chmod(2). Please note that
+ * the given permissions are masked with the file owner's permissions.
+ * For example if a control file has permissions 640 and control_fperm is
+ * 471 the result will be 460.
+ * @param cgroup
+ * @param control_dperm Directory permission for the group.
+ * @param control_fperm File permission for the control files.
+ * @param task_fperm File permissions for task file.
+ */
+void cgroup_set_permissions(struct cgroup *cgroup,
+		mode_t control_dperm, mode_t control_fperm,
+		mode_t task_fperm);
 
 /**
  * @}
