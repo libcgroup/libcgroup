@@ -1286,18 +1286,34 @@ static int cg_set_control_value(char *path, const char *val)
 			 * does not exist. So we check if the tasks file
 			 * exist. Before that, we need to extract the path.
 			 */
-			int len = strlen(path);
+			char *path_dir_end;
+			char *tasks_path;
 
-			while (*(path+len) != '/')
-				len--;
-			*(path+len+1) = '\0';
-			strncat(path, "tasks", sizeof(path) - strlen(path));
-			control_file = fopen(path, "re");
-			if (!control_file) {
-				if (errno == ENOENT)
-					return ECGROUPSUBSYSNOTMOUNTED;
+			path_dir_end = strrchr(path, '/');
+			if (path_dir_end == NULL)
+				return ECGROUPVALUENOTEXIST;
+			path_dir_end = '\0';
+
+			/* task_path contain: $path/tasks */
+			tasks_path = (char *)malloc(strlen(path) + 6 + 1);
+			if (tasks_path == NULL) {
+				last_errno = errno;
+				return ECGOTHER;
 			}
+			strcpy(tasks_path, path);
+			strcat(tasks_path, "/tasks");
+
+			/* test tasks file for read flag */
+			control_file = fopen(tasks_path, "re");
+			if (!control_file) {
+				if (errno == ENOENT) {
+					free(tasks_path);
+					return ECGROUPSUBSYSNOTMOUNTED;
+				}
+			}
+
 			fclose(control_file);
+			free(tasks_path);
 			return ECGROUPNOTALLOWED;
 		}
 		return ECGROUPVALUENOTEXIST;
