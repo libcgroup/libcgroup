@@ -2083,6 +2083,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 
 	*value = calloc(CG_VALUE_MAX, 1);
 	if (!*value) {
+		fclose(ctrl_file);
 		last_errno = errno;
 		return ECGOTHER;
 	}
