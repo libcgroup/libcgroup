@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
 		(cgroup_list == NULL)) {
 		fprintf(stderr, "%s: out of memory\n", argv[0]);
 		ret = -1;
-		goto err;
+		goto err_free;
 	}
 
 	/* Parse arguments. */
@@ -459,6 +459,11 @@ err:
 		if (names[i])
 			free(names[i]);
 	}
+
+err_free:
+	free(cgroup_list);
+	free(controllers);
+	free(names);
 
 	return result;
 }
