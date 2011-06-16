@@ -113,6 +113,10 @@ int load_list(char *filename, struct black_list_type **p_list)
 		if ((buf[i] == '#') || (buf[i] == '\0'))
 			continue;
 
+		ret = sscanf(buf, "%s", name);
+		if (ret == 0)
+			continue;
+
 		new = (struct black_list_type *)malloc(sizeof
 			(struct black_list_type));
 		if (new == NULL) {
@@ -122,15 +126,12 @@ int load_list(char *filename, struct black_list_type **p_list)
 			goto err;
 		}
 
-		ret = sscanf(buf, "%s", name);
-		if (ret == 0)
-			continue;
-
 		new->name = strdup(name);
 		if (new->name == NULL) {
 			fprintf(stderr, "ERROR: Memory allocation problem "
 				"(%s)\n", strerror(errno));
 			ret = 1;
+			free(new);
 			goto err;
 		}
 		new->next = NULL;
@@ -145,11 +146,11 @@ int load_list(char *filename, struct black_list_type **p_list)
 		}
 	}
 
-	fclose(fw);
 	*p_list = start;
 	return 0;
 
 err:
+	fclose(fw);
 	new = start;
 	while (new != NULL) {
 		end = new->next;
