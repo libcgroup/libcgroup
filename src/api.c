@@ -3079,6 +3079,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 	entry->fts = fts_open(cg_path, FTS_LOGICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	if (entry->fts == NULL) {
+		free(entry);
 		last_errno = errno;
 		return ECGOTHER;
 	}
