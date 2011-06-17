@@ -117,12 +117,15 @@ task {
 .ft B
 uid = <task user>;
 gid = <task group>;
+fperm = <file permissions>
 .RE
 }
 admin {
 .RS
 uid = <admin name>;
 gid = <admin group>;
+dperm = <directory permissions>
+fperm = <file permissions>
 .RE
 }
 .RE
@@ -136,20 +139,24 @@ gid = <admin group>;
 .B "task user/group"
 Name of the user and the group, which own the
 .I tasks
-file of the control group. I.e. this user and members of this
-group have write access to the file.
+file of the control group. Given fperm then specify the file permissions.
+Please note that the given value is not used as was specified. Instead,
+current file owner permissions are used as a "umask" for group and others
+permisions. For example if fperm = 777 then both group and others will get
+the same permissions as the file owner.
 .TP 17
 .B "admin user/group"
 Name of the user and the group which own the rest of control group's
-files. These users are allowed to set subsystem
-parameters and create subgroups.
+files. Given fperm and dperm control file and directory permissions.
+Again, the given value is masked by the file/directory owner permissions.
 .LP
 Permissions are only apply to the enclosing control group and are not
 inherited by subgroups. If there is no
 .B perm
 section in the control group definition,
 .I root:root
-is the owner of all files.
+is the owner of all files and default file permissions are preserved if
+fperm resp. dperm are not specified.
 .RE
 .TP
 .B controller
@@ -299,12 +306,15 @@ task {
 .RS
 uid = root;
 gid = webmaster;
+fperm = 770;
 .RE
 }
 admin {
 .RS
 uid = root;
 gid = root;
+dperm = 775;
+fperm = 744;
 .RE
 }
 .RE
@@ -325,12 +335,15 @@ task {
 .RS
 uid = root;
 gid = ftpmaster;
+fperm = 774;
 .RE
 }
 admin {
 .RS
 uid = root;
 gid = root;
+dperm = 755;
+fperm = 700;
 .RE
 }
 .RE
@@ -346,7 +359,9 @@ cpu.shares = "500";
 .fi
 creates the hierarchy controlled by two subsystems with one group and
 two subgroups inside, setting one parameter.
-It corresponds to the following operations:
+It corresponds to the following operations (except for file permissions
+which are little bit trickier to emulate via chmod):
+
 .LP
 .RS
 .nf
@@ -360,10 +375,50 @@ chown root:root /mnt/cgroups/cpu/daemons/www/*
 chown root:webmaster /mnt/cgroups/cpu/daemons/www/tasks
 echo 1000 > /mnt/cgroups/cpu/daemons/www/cpu.shares
 
+ # + chmod the files so the result looks like:
+ # ls -la /mnt/cgroups/cpu/daemons/www/
+ # admin.dperm = 755:
+ # drwxr-xr-x. 2 root webmaster 0 Jun 16 11:51 .
+ #
+ # admin.fperm = 744:
+ # --w-------. 1 root webmaster 0 Jun 16 11:51 cgroup.event_control
+ # -r--r--r--. 1 root webmaster 0 Jun 16 11:51 cgroup.procs
+ # -r--r--r--. 1 root webmaster 0 Jun 16 11:51 cpuacct.stat
+ # -rw-r--r--. 1 root webmaster 0 Jun 16 11:51 cpuacct.usage
+ # -r--r--r--. 1 root webmaster 0 Jun 16 11:51 cpuacct.usage_percpu
+ # -rw-r--r--. 1 root webmaster 0 Jun 16 11:51 cpu.rt_period_us
+ # -rw-r--r--. 1 root webmaster 0 Jun 16 11:51 cpu.rt_runtime_us
+ # -rw-r--r--. 1 root webmaster 0 Jun 16 11:51 cpu.shares
+ # -rw-r--r--. 1 root webmaster 0 Jun 16 11:51 notify_on_release
+ #
+ # tasks.fperm = 770
+ # -rw-rw----. 1 root webmaster 0 Jun 16 11:51 tasks
+
+
 mkdir /mnt/cgroups/cpu/daemons/ftp
 chown root:root /mnt/cgroups/cpu/daemons/ftp/*
 chown root:ftpmaster /mnt/cgroups/cpu/daemons/ftp/tasks
 echo 500 > /mnt/cgroups/cpu/daemons/ftp/cpu.shares
+
+ # + chmod the files so the result looks like:
+ # ls -la /mnt/cgroups/cpu/daemons/ftp/
+ # admin.dperm = 755:
+ # drwxr-xr-x. 2 root ftpmaster 0 Jun 16 11:51 .
+ #
+ # admin.fperm = 700:
+ # --w-------. 1 root ftpmaster 0 Jun 16 11:51 cgroup.event_control
+ # -r--------. 1 root ftpmaster 0 Jun 16 11:51 cgroup.procs
+ # -r--------. 1 root ftpmaster 0 Jun 16 11:51 cpuacct.stat
+ # -rw-------. 1 root ftpmaster 0 Jun 16 11:51 cpuacct.usage
+ # -r--------. 1 root ftpmaster 0 Jun 16 11:51 cpuacct.usage_percpu
+ # -rw-------. 1 root ftpmaster 0 Jun 16 11:51 cpu.rt_period_us
+ # -rw-------. 1 root ftpmaster 0 Jun 16 11:51 cpu.rt_runtime_us
+ # -rw-------. 1 root ftpmaster 0 Jun 16 11:51 cpu.shares
+ # -rw-------. 1 root ftpmaster 0 Jun 16 11:51 notify_on_release
+ #
+ # tasks.fperm = 774:
+ # -rw-rw-r--. 1 root ftpmaster 0 Jun 16 11:51 tasks
+
 .fi
 .RE
 
