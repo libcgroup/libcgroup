@@ -637,6 +637,9 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 		 */
 		if (grp && muid != CGRULE_INVALID) {
 			pwd = getpwuid(muid);
+			if (!pwd) {
+				continue;
+			}
 			for (i = 0; grp->gr_mem[i]; i++) {
 				if (!(strcmp(pwd->pw_name, grp->gr_mem[i])))
 					matched = true;
@@ -3909,6 +3912,8 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 			}
 		}
 	}
+
+	fclose(procs);
 
 	*size = n;
 

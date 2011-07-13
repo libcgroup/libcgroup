@@ -146,6 +146,8 @@ int load_list(char *filename, struct black_list_type **p_list)
 		}
 	}
 
+	fclose(fw);
+
 	*p_list = start;
 	return 0;
 
