@@ -3696,11 +3696,24 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
 	 */
 	ret = cg_get_procname_from_proc_cmdline(pid, pname_status,
 						    &pname_cmdline);
-	if (!ret)
+	if (!ret) {
 		*procname = pname_cmdline;
+		free(pname_status);
+		return 0;
+	}
 
+	/*
+	 * The above strncmp() is not 0 also if executing a symbolic link,
+	 * /proc/pid/exe points to real executable name then.
+	 * Return it as the last resort.
+	 */
 	free(pname_status);
-	return ret;
+	*procname = strdup(buf);
+	if (*procname == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	return 0;
 }
 
 int cgroup_register_unchanged_process(pid_t pid, int flags)
