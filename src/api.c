@@ -3634,7 +3634,6 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid,
 			ret = 0;
 			break;
 		}
-		len = 0;
 	}
 	fclose(f);
 	return ret;
