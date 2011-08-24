@@ -1350,7 +1350,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 {
 	char *path, base[FILENAME_MAX];
 	int i;
-	int error;
+	int error = 0;
 	int ret;
 
 	if (!cgroup_initialized)
@@ -1388,12 +1388,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 				goto err;
 		}
 	}
-	if (path)
-		free(path);
-	return 0;
 err:
-	if (path)
-		free(path);
 	return error;
 
 }
