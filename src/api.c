@@ -700,6 +700,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 		if (len_procname) {
 			newrule->procname = strdup(procname);
 			if (!newrule->procname) {
+				free(newrule);
 				last_errno = errno;
 				ret = ECGOTHER;
 				goto close;
