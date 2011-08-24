@@ -486,7 +486,8 @@ static int display_controller_data(
 			if (group == NULL) {
 				printf("cannot create group '%s'\n",
 					cgroup_name);
-				return -1;
+				ret = ECGFAIL;
+				goto err;
 			}
 
 			ret = cgroup_get_cgroup(group);
