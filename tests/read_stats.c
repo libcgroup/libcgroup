@@ -49,7 +49,11 @@ int main(int argc, char *argv[])
 
 	controller = argv[1];
 
-	cgroup_init();
+	ret = cgroup_init();
+	if (ret != 0) {
+		fprintf(stderr, "init failed\n");
+		exit(EXIT_FAILURE);
+	}
 
 	ret = cgroup_walk_tree_begin(controller, "/", 0, &handle, &info, &lvl);
 
