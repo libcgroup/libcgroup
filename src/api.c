@@ -3883,12 +3883,6 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 		return ECGROUPUNSUPP;
 
 	/*
-	 * Read all the procs and then sort them up.
-	 */
-
-	tmp_list = *pids;
-
-	/*
 	 * Keep doubling the memory allocated if needed
 	 */
 	tmp_list= malloc(sizeof(pid_t) * tot_procs);
@@ -3900,6 +3894,9 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 	procs = fopen(cgroup_path, "r");
 	if (!procs) {
 		last_errno = errno;
+		free(tmp_list);
+		*pids = NULL;
+		*size = 0;
 		return ECGOTHER;
 	}
 
@@ -3913,10 +3910,15 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 			n++;
 		}
 		if (!feof(procs)) {
+			pid_t *orig_list = tmp_list;
 			tot_procs *= 2;
 			tmp_list = realloc(tmp_list, sizeof(pid_t) * tot_procs);
 			if (!tmp_list) {
 				last_errno = errno;
+				fclose(procs);
+				free(orig_list);
+				*pids = NULL;
+				*size = 0;
 				return ECGOTHER;
 			}
 		}
