@@ -3822,6 +3822,7 @@ int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
 {
 	FILE *proc_cgroup = NULL;
 	char buf[FILENAME_MAX];
+	int ret;
 
 	if (!info)
 		return ECGINVAL;
@@ -3834,11 +3835,18 @@ int cgroup_get_all_controller_begin(void **handle, struct controller_data *info)
 
 	if (!fgets(buf, FILENAME_MAX, proc_cgroup)) {
 		last_errno = errno;
+		fclose(proc_cgroup);
+		*handle = NULL;
 		return ECGOTHER;
 	}
 	*handle = proc_cgroup;
 
-	return cgroup_get_all_controller_next(handle, info);
+	ret = cgroup_get_all_controller_next(handle, info);
+	if (ret != 0) {
+		fclose(proc_cgroup);
+		*handle = NULL;
+	}
+	return ret;
 }
 
 static int pid_compare(const void *a, const void *b)
