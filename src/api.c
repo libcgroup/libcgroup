@@ -1313,9 +1313,9 @@ static int cg_set_control_value(char *path, const char *val)
 					free(tasks_path);
 					return ECGROUPSUBSYSNOTMOUNTED;
 				}
+			} else {
+				fclose(control_file);
 			}
-
-			fclose(control_file);
 			free(tasks_path);
 			return ECGROUPNOTALLOWED;
 		}
