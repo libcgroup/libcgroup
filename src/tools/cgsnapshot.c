@@ -626,7 +626,7 @@ static int show_mountpoints(const char *controller)
 static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	const char *program_name)
 {
-	int ret, final_ret;
+	int ret, final_ret = 0;
 	void *handle;
 	struct controller_data info;
 	struct cgroup_mount_point mount;
@@ -660,9 +660,9 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 				cgroup_strerror(ret));
 			return ret;
 		}
+		final_ret = ret;
 	}
 
-	final_ret = ret;
 	cgroup_get_all_controller_end(&handle);
 
 	/* process also named hierarchies */
@@ -688,7 +688,7 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 	/* finish mount section */
 	fprintf(of, "}\n\n");
-	return ret;
+	return final_ret;
 }
 
 int main(int argc, char *argv[])
