@@ -3946,10 +3946,12 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 int cgroup_dictionary_create(struct cgroup_dictionary **dict,
 		int flags)
 {
+	if (!dict)
+		return ECGINVAL;
 	*dict = (struct cgroup_dictionary *) calloc(
 			1, sizeof(struct cgroup_dictionary));
 
-	if (!dict) {
+	if (!*dict) {
 		last_errno = errno;
 		return ECGOTHER;
 	}
