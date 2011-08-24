@@ -138,6 +138,7 @@ namevalue_conf
 			fprintf(stderr, "parsing failed at line number %d:%s\n",
 				line_no, cgroup_strerror(ret));
 			$$ = NULL;
+			cgroup_dictionary_free(dict);
 			return ECGCONFIGPARSEFAIL;
 		}
 		$$ = dict;
