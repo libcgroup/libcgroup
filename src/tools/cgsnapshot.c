@@ -659,7 +659,6 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			fprintf(stderr,
 				"E: in get next controller %s\n",
 				cgroup_strerror(ret));
-			return ret;
 		}
 		final_ret = ret;
 	}
@@ -681,7 +680,6 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			fprintf(stderr,
 				"E: in get next controller %s\n",
 				cgroup_strerror(ret));
-			return ret;
 		}
 		final_ret = ret;
 	}
