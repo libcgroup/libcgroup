@@ -885,12 +885,7 @@ int cgroup_unload_cgroups(void)
 	}
 
 	error = cgroup_get_controller_begin(&ctrl_handle, &info);
-	if (error && error != ECGEOF) {
-		ret = error;
-		goto out_error;
-	}
-
-	while (error != ECGEOF) {
+	while (error == 0) {
 		if (!curr_path || strcmp(info.path, curr_path) != 0) {
 			if (curr_path)
 				free(curr_path);
@@ -909,13 +904,11 @@ int cgroup_unload_cgroups(void)
 		}
 
 		error = cgroup_get_controller_next(&ctrl_handle, &info);
-
-		if (error && error != ECGEOF) {
-			ret = error;
-			goto out_error;
-		}
 	}
-
+	if (error == ECGEOF)
+		error = 0;
+	if (error)
+		ret = error;
 out_error:
 	if (curr_path)
 		free(curr_path);
