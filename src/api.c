@@ -3078,8 +3078,6 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	cgroup_dbg("path is %s\n", base_path);
 
-	cgroup_dbg("path is %s\n", base_path);
-
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
 
@@ -3087,6 +3085,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 
 	if (!entry) {
 		last_errno = errno;
+		*handle = NULL;
 		return ECGOTHER;
 	}
 
@@ -3101,20 +3100,28 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 	if (entry->fts == NULL) {
 		free(entry);
 		last_errno = errno;
+		*handle = NULL;
 		return ECGOTHER;
 	}
 	ent = fts_read(entry->fts);
 	if (!ent) {
 		cgroup_dbg("fts_read failed\n");
+		fts_close(entry->fts);
 		free(entry);
+		*handle = NULL;
 		return ECGINVAL;
 	}
 	if (!*base_level && depth)
 		*base_level = ent->fts_level + depth;
 
 	ret = cg_walk_node(entry->fts, ent, *base_level, info, entry->flags);
-
-	*handle = entry;
+	if (ret != 0) {
+		fts_close(entry->fts);
+		free(entry);
+		*handle = NULL;
+	} else {
+		*handle = entry;
+	}
 	return ret;
 }
 
