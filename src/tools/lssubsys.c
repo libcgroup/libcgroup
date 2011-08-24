@@ -102,17 +102,12 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 	int first = 1;
 	cont_name_t cont_names;
 	cont_name_t cont_name;
-	int init = 1;
 
-	/* initialize libcgroup */
-	ret = cgroup_init();
-	if (ret) {
-		/*
-		 * if the group is not initialised we assume
-		 * no mount points are available
-		 */
-		init = 0;
-	}
+	/*
+	 * Initialize libcgroup and intentionally ignore its result,
+	 * no mounted controller is valid use case.
+	 */
+	(void) cgroup_init();
 
 	ret = cgroup_get_all_controller_begin(&handle, &info);
 	if ((ret != 0) && (ret != ECGEOF)) {
