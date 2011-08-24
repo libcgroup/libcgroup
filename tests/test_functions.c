@@ -552,12 +552,14 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 			} else {
 				message(i++, FAIL, wr, retval ,
 							 info[NOMESSAGE]);
+				cgroup_free(&newcgroup);
 				return NULL;
 			}
 		 } else {
 			/* Since these wrappers do not return an int so -1 */
 			message(i++, FAIL, "add_controller", -1,
 							 info[NOMESSAGE]);
+			cgroup_free(&newcgroup);
 			return NULL;
 		}
 	} else {
