@@ -17,8 +17,13 @@
 #include <libcgroup-internal.h>
 #include "parse.h"
 int line_no = 1;
+jmp_buf parser_error_env;
 
-#define YY_FATAL_ERROR(msg) fprintf(stderr, "%s\n", msg)
+#define YY_FATAL_ERROR(msg) \
+	do { \
+		fprintf(stderr, "%s\n", msg); \
+		longjmp(parser_error_env, 1); \
+	} while(0);
 %}
 
 %option nounput noinput

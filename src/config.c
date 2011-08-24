@@ -741,6 +741,7 @@ int cgroup_config_load_config(const char *pathname)
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
 	yyin = fopen(pathname, "re");
+	int ret;
 
 	if (!yyin) {
 		cgroup_dbg("Failed to open file %s\n", pathname);
@@ -754,7 +755,16 @@ int cgroup_config_load_config(const char *pathname)
 
 	init_cgroup_table(config_cgroup_table, MAX_CGROUPS);
 
-	if (yyparse() != 0) {
+	/*
+	 * Parser calls longjmp() on really fatal error (like out-of-memory).
+	 */
+	ret = setjmp(parser_error_env);
+	if (!ret)
+		ret = yyparse();
+	if (ret) {
+		/*
+		 * Either yyparse failed or longjmp() was called.
+		 */
 		cgroup_dbg("Failed to parse file %s\n", pathname);
 		fclose(yyin);
 		free(config_cgroup_table);

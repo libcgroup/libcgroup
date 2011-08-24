@@ -25,6 +25,7 @@ __BEGIN_DECLS
 #include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <setjmp.h>
 
 /* Maximum number of mount points/controllers */
 #define MAX_MNT_ELEMENTS	8
@@ -184,6 +185,11 @@ struct cgroup_dictionary_iterator {
  * per thread errno variable, to be used when return code is ECGOTHER
  */
 extern __thread int last_errno;
+
+/**
+ * 'Exception handler' for lex parser.
+ */
+extern jmp_buf parser_error_env;
 
 /* Internal API */
 char *cg_build_path(const char *name, char *path, const char *type);
