@@ -43,6 +43,12 @@ int main(int argc, char *argv[])
 	}
 
 	pwd = getpwnam(argv[1]);
+	if (!pwd) {
+		fprintf(stderr, "getpwnam() failed: %s\n",
+				strerror(errno));
+		ret = -errno;
+		goto finished;
+	}
 	uid = pwd->pw_uid;
 	fprintf(stdout, "Setting UID to %s (%d).\n", pwd->pw_name, uid);
 	if ((ret = setuid(uid))) {
