@@ -167,8 +167,7 @@ static int cgroup_list_all_controllers(const char *tname,
 	int is_on_list = 0;
 
 	ret = cgroup_get_all_controller_begin(&handle, &info);
-
-	while (ret != ECGEOF) {
+	while (ret == 0) {
 		if (info.hierarchy == 0) {
 			/* the controller is not attached to any hierrachy */
 			if (flags & FL_ALL)
@@ -207,15 +206,17 @@ static int cgroup_list_all_controllers(const char *tname,
 		}
 
 		ret = cgroup_get_all_controller_next(&handle, &info);
-		if (ret && ret != ECGEOF) {
-			fprintf(stderr,
-				"cgroup_get_controller_next failed (%s)\n",
-				cgroup_strerror(ret));
-			return ret;
-		}
+	}
+	cgroup_get_all_controller_end(&handle);
+	if (ret == ECGEOF)
+		ret = 0;
+	if (ret) {
+		fprintf(stderr,
+			"cgroup_get_controller_begin/next failed (%s)\n",
+			cgroup_strerror(ret));
+		return ret;
 	}
 
-	ret = cgroup_get_all_controller_end(&handle);
 
 	for (j = 0; j < counter; j++)
 		ret = print_all_controllers_in_hierarchy(tname,
