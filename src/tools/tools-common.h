@@ -38,6 +38,15 @@ struct cgroup_group_spec {
 
 
 /**
+ * Simple dynamic array of strings.
+ */
+struct cgroup_string_list {
+	char **items;
+	int size;
+	int count;
+};
+
+/**
  * Parse command line option with group specifier into provided data structure.
  * The option must have form of 'controller1,controller2,..:group_name'.
  *
@@ -58,5 +67,42 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
  * 	@param cl The structure to free from memory
  */
 void cgroup_free_group_spec(struct cgroup_group_spec *cl);
+
+
+/**
+ * Initialize a new list.
+ * @param list List to initialize.
+ * @param initial_size Initial size of the list to pre-allocate.
+ */
+int cgroup_string_list_init(struct cgroup_string_list *list,
+		int initial_size);
+
+/**
+ * Destroy a list, automatically freeing all its items.
+ * @param list List to destroy.
+ */
+void cgroup_string_list_free(struct cgroup_string_list *list);
+
+/**
+ * Adds new item to the list. It automatically resizes underlying array if
+ * needed.
+ * @param list List to modify.
+ * @param item Item to add. The item is automatically copied to new buffer.
+ */
+int cgroup_string_list_add_item(struct cgroup_string_list *list,
+		const char *item);
+
+/**
+ * Add alphabetically sorted files present in given directory (without subdirs)
+ * to list of strings. The function exits on error.
+ * @param list The list to add files to.
+ * @param dirname Full path to directory to examime.
+ * @param program_name Name of the executable, it will be used for printing
+ * errors to stderr.
+ *
+ */
+int cgroup_string_list_add_directory(struct cgroup_string_list *list,
+		char *dirname, char *program_name);
+
 
 #endif /* TOOLS_COMMON */

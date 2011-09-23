@@ -14,10 +14,15 @@
  *
  */
 
+/* for asprintf */
+#define _GNU_SOURCE
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include <libcgroup.h>
 #include "tools-common.h"
@@ -113,4 +118,118 @@ void cgroup_free_group_spec(struct cgroup_group_spec *cl)
 	free(cl);
 }
 
+
+int cgroup_string_list_init(struct cgroup_string_list *list,
+		int initial_size)
+{
+	if (list == NULL)
+		return ECGINVAL;
+	list->items = calloc(initial_size, sizeof(char *));
+	if (!list->items)
+		return ECGFAIL;
+	list->count = 0;
+	list->size = initial_size;
+	return 0;
+}
+
+void cgroup_string_list_free(struct cgroup_string_list *list)
+{
+	int i;
+
+	if (list == NULL)
+		return;
+
+	if (list->items == NULL)
+		return;
+
+	for (i = 0; i < list->count; i++)
+		free(list->items[i]);
+
+	free(list->items);
+}
+
+int cgroup_string_list_add_item(struct cgroup_string_list *list,
+		const char *item)
+{
+	if (list == NULL)
+		return ECGINVAL;
+	if (list->size <= list->count) {
+		char **tmp = realloc(list->items,
+				sizeof(char *) * list->size*2);
+		if (tmp == NULL)
+			return ECGFAIL;
+		list->items = tmp;
+		list->size = list->size * 2;
+	}
+
+	list->items[list->count] = strdup(item);
+	if (list->items[list->count] == NULL)
+		return ECGFAIL;
+	list->count++;
+	return 0;
+}
+
+static int _compare_string(const void *a, const void *b)
+{
+	const char *sa = * (char * const *) a;
+	const char *sb = * (char * const *) b;
+	return strcmp(sa, sb);
+}
+
+
+int cgroup_string_list_add_directory(struct cgroup_string_list *list,
+		char *dirname, char *program_name)
+{
+	int start, ret, count = 0;
+	DIR *d;
+	struct dirent *item;
+
+	if (list == NULL)
+		return ECGINVAL;
+
+	start = list->count;
+
+	d = opendir(dirname);
+	if (!d) {
+		fprintf(stderr, "%s: cannot open %s: %s\n", program_name,
+				dirname, strerror(errno));
+		exit(1);
+	}
+
+	do {
+		errno = 0;
+		item = readdir(d);
+		if (item && (item->d_type == DT_REG
+				|| item->d_type == DT_LNK)) {
+			char *tmp;
+			ret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
+			if (ret < 0) {
+				fprintf(stderr, "%s: out of memory\n",
+						program_name);
+				exit(1);
+			}
+			ret = cgroup_string_list_add_item(list, tmp);
+			free(tmp);
+			count++;
+			if (ret) {
+				fprintf(stderr, "%s: %s\n",
+						program_name,
+						cgroup_strerror(ret));
+				exit(1);
+			}
+		}
+		if (!item && errno) {
+			fprintf(stderr, "%s: cannot read %s: %s\n",
+					program_name, dirname, strerror(errno));
+			exit(1);
+		}
+	} while (item != NULL);
+	closedir(d);
+
+	/* sort the names found in the directory */
+	if (count > 0)
+		qsort(&list->items[start], count, sizeof(char *),
+				_compare_string);
+	return 0;
+}
 
