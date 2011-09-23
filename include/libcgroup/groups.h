@@ -26,6 +26,13 @@ enum cgroup_delete_flag {
 	 * Recursively delete all child groups.
 	 */
 	CGFLAG_DELETE_RECURSIVE	= 2,
+
+	/**
+	 * Delete the cgroup only if it is empty, i.e. it has no subgroups and
+	 * no processes inside. This flag cannot be used with
+	 * CGFLAG_DELETE_RECURSIVE.
+	 */
+	CGFLAG_DELETE_EMPTY_ONLY	= 4,
 };
 
 /**

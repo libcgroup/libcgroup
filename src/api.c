@@ -1871,30 +1871,33 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 
 	cgroup_dbg("Removing group %s:%s\n", controller, cgroup_name);
 
-	/*
-	 * Open tasks file of the group to delete.
-	 */
-	if (!cg_build_path(cgroup_name, path, controller))
-		return ECGROUPSUBSYSNOTMOUNTED;
-	strncat(path, "tasks", sizeof(path) - strlen(path));
-
-	delete_tasks = fopen(path, "re");
-	if (delete_tasks) {
-		ret = cg_move_task_files(delete_tasks, target_tasks);
-		fclose(delete_tasks);
-	} else {
+	if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
 		/*
-		 * Can't open the tasks file. If the file does not exist, ignore
-		 * it - the group has been already removed.
+		 * Open tasks file of the group to delete.
 		 */
-		if (errno != ENOENT) {
-			last_errno = errno;
-			ret = ECGOTHER;
-		}
-	}
+		if (!cg_build_path(cgroup_name, path, controller))
+			return ECGROUPSUBSYSNOTMOUNTED;
+		strncat(path, "tasks", sizeof(path) - strlen(path));
 
-	if (ret != 0 && !(flags & CGFLAG_DELETE_IGNORE_MIGRATION))
-		return ret;
+		delete_tasks = fopen(path, "re");
+		if (delete_tasks) {
+			ret = cg_move_task_files(delete_tasks, target_tasks);
+			fclose(delete_tasks);
+		} else {
+			/*
+			 * Can't open the tasks file. If the file does not
+			 * exist, ignore it - the group has been already
+			 * removed.
+			 */
+			if (errno != ENOENT) {
+				last_errno = errno;
+				ret = ECGOTHER;
+			}
+		}
+
+		if (ret != 0 && !(flags & CGFLAG_DELETE_IGNORE_MIGRATION))
+			return ret;
+	}
 
 	/*
 	 * Remove the group.
@@ -2009,35 +2012,41 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	if (!cgroup)
 		return ECGROUPNOTALLOWED;
 
+	if ((flags & CGFLAG_DELETE_RECURSIVE)
+			&& (flags & CGFLAG_DELETE_EMPTY_ONLY))
+		return ECGINVAL;
+
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	ret = cgroup_find_parent(cgroup, &parent_name);
-	if (ret)
-		return ret;
+	if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
+		ret = cgroup_find_parent(cgroup, &parent_name);
+		if (ret)
+			return ret;
 
-	if (parent_name == NULL) {
-		/*
-		 * Root group is being deleted.
-		 */
-		if (flags & CGFLAG_DELETE_RECURSIVE) {
+		if (parent_name == NULL) {
 			/*
-			 * Move all tasks to the root group and do not delete
-			 * it afterwards.
+			 * Root group is being deleted.
 			 */
-			parent_name = strdup(".");
-			if (parent_name == NULL) {
-				last_errno = errno;
+			if (flags & CGFLAG_DELETE_RECURSIVE) {
+				/*
+				 * Move all tasks to the root group and do not
+				 * delete it afterwards.
+				 */
+				parent_name = strdup(".");
+				if (parent_name == NULL) {
+					last_errno = errno;
 				return ECGOTHER;
-			}
-			delete_group = 0;
-		} else
-			/*
-			 *  TODO: should it succeed?
-			 */
-			return 0;
+				}
+				delete_group = 0;
+			} else
+				/*
+				 *  TODO: should it succeed?
+				 */
+				return 0;
+		}
 	}
 
 	/*
@@ -2046,18 +2055,22 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	for (i = 0; i < cgroup->index; i++) {
 		ret = 0;
 
-		if (!cg_build_path(parent_name, parent_path,
+		if (parent_name) {
+			/* tasks need to be moved, pre-open target tasks file */
+			if (!cg_build_path(parent_name, parent_path,
 					cgroup->controller[i]->name))
-			continue;
+				continue;
 
-		strncat(parent_path, "/tasks", sizeof(parent_path)
-				- strlen(parent_path));
+			strncat(parent_path, "/tasks", sizeof(parent_path)
+					- strlen(parent_path));
 
-		parent_tasks = fopen(parent_path, "we");
-		if (!parent_tasks) {
-			last_errno = errno;
-			ret = ECGOTHER;
-		} else {
+			parent_tasks = fopen(parent_path, "we");
+			if (!parent_tasks) {
+				last_errno = errno;
+				ret = ECGOTHER;
+			}
+		}
+		if (parent_tasks || !parent_name) {
 			if (flags & CGFLAG_DELETE_RECURSIVE) {
 				ret = cg_delete_cgroup_controller_recursive(
 						cgroup->name,
@@ -2069,7 +2082,8 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 						cgroup->controller[i]->name,
 						parent_tasks, flags);
 			}
-			fclose(parent_tasks);
+			if (parent_tasks)
+				fclose(parent_tasks);
 		}
 
 		/*
