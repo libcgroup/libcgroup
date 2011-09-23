@@ -18,7 +18,7 @@ cgset_SOURCES = cgset.c tools-common.c tools-common.h
 
 cgget_SOURCES = cgget.c tools-common.c tools-common.h
 
-cgconfigparser_SOURCES = cgconfig.c
+cgconfigparser_SOURCES = cgconfig.c tools-common.c tools-common.h
 
 cgclear_SOURCES = cgclear.c tools-common.c tools-common.h
 
