@@ -731,6 +731,23 @@ error_out:
 	return error;
 }
 
+/**
+ * Free all memory allocated during cgroup_parse_config(), namely
+ * config_cgroup_table.
+ */
+static void cgroup_free_config(void)
+{
+	int i;
+	if (config_cgroup_table) {
+		for (i = 0; i < cgroup_table_index; i++)
+			cgroup_free_controllers(
+					&config_cgroup_table[i]);
+		free(config_cgroup_table);
+		config_cgroup_table = NULL;
+	}
+	config_table_index = 0;
+}
+
 static int cgroup_parse_config(const char *pathname)
 {
 	int ret;
@@ -776,8 +793,7 @@ err:
 	if (yyin)
 		fclose(yyin);
 	if (ret) {
-		free(config_cgroup_table);
-		config_cgroup_table = NULL;
+		cgroup_free_config();
 	}
 	return ret;
 }
@@ -841,13 +857,14 @@ int cgroup_config_load_config(const char *pathname)
 	if (error)
 		goto err_grp;
 
+	cgroup_free_config();
+
 	return 0;
 err_grp:
 	cgroup_config_destroy_groups();
 err_mnt:
 	cgroup_config_unmount_controllers();
-	free(config_cgroup_table);
-	config_cgroup_table = NULL;
+	cgroup_free_config();
 	return error;
 }
 
