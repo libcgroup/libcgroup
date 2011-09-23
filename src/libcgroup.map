@@ -102,4 +102,5 @@ CGROUP_0.38 {
        cgroup_get_subsys_mount_point_next;
        cgroup_get_subsys_mount_point_end;
        cgroup_set_permissions;
+       cgroup_config_unload_config;
 } CGROUP_0.37;

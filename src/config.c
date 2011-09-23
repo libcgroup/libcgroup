@@ -798,6 +798,20 @@ err:
 	return ret;
 }
 
+int _cgroup_config_compare_groups(const void *p1, const void *p2)
+{
+	const struct cgroup *g1 = p1;
+	const struct cgroup *g2 = p2;
+
+	return strcmp(g1->name, g2->name);
+}
+
+static void cgroup_config_sort_groups()
+{
+	qsort(config_cgroup_table, cgroup_table_index, sizeof(struct cgroup),
+			_cgroup_config_compare_groups);
+}
+
 /*
  * The main function which does all the setup of the data structures
  * and finally creates the cgroups
@@ -866,6 +880,132 @@ err_mnt:
 	cgroup_config_unmount_controllers();
 	cgroup_free_config();
 	return error;
+}
+
+/* unmounts given mount, but only if it is empty */
+static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
+{
+	char *controller, *controller_list;
+	struct cg_mount_point *mount = &(mount_info->mount);
+	void *handle = NULL;
+	int ret, lvl;
+	struct cgroup_file_info info;
+	char *saveptr = NULL;
+
+	/* parse the first controller name from list of controllers */
+	controller_list = strdup(mount_info->name);
+	if (!controller_list) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	controller = strtok_r(controller_list, ",", &saveptr);
+	if (!controller) {
+		free(controller_list);
+		return ECGINVAL;
+	}
+
+	/* check if the hierarchy is empty */
+	ret = cgroup_walk_tree_begin(controller, "/", 0, &handle, &info, &lvl);
+	free(controller_list);
+	if (ret == ECGCONTROLLEREXISTS)
+		return 0;
+	if (ret)
+		return ret;
+	/* skip the first found directory, it's '/' */
+	ret = cgroup_walk_tree_next(0, &handle, &info, lvl);
+	/* find any other subdirectory */
+	while (ret == 0) {
+		if (info.type == CGROUP_FILE_TYPE_DIR)
+			break;
+		ret = cgroup_walk_tree_next(0, &handle, &info, lvl);
+	}
+	cgroup_walk_tree_end(&handle);
+	if (ret == 0) {
+		cgroup_dbg("won't unmount %s: hieararchy is not empty\n",
+				mount_info->name);
+		return 0; /* the hieararchy is not empty */
+	}
+	if (ret != ECGEOF)
+		return ret;
+
+
+	/*
+	 * ret must be ECGEOF now = there is only root group in the hierarchy
+	 * -> unmount all mount points.
+	 */
+	ret = 0;
+	while (mount) {
+		int err;
+		cgroup_dbg("unmounting %s at %s\n", mount_info->name,
+				mount->path);
+		err = umount(mount->path);
+
+		if (err && !ret) {
+			ret = ECGOTHER;
+			last_errno = errno;
+		}
+		mount = mount->next;
+	}
+	return ret;
+}
+
+int cgroup_config_unload_config(const char *pathname, int flags)
+{
+	int ret, i, error;
+	int namespace_enabled = 0;
+	int mount_enabled = 0;
+
+	cgroup_dbg("cgroup_config_unload_config: parsing %s\n", pathname);
+	ret = cgroup_parse_config(pathname);
+	if (ret)
+		goto err;
+
+	namespace_enabled = (config_namespace_table[0].name[0] != '\0');
+	mount_enabled = (config_mount_table[0].name[0] != '\0');
+	/*
+	 * The configuration should have namespace or mount, not both.
+	 */
+	if (namespace_enabled && mount_enabled) {
+		free(config_cgroup_table);
+		return ECGMOUNTNAMESPACE;
+	}
+
+	ret = config_order_namespace_table();
+	if (ret)
+		goto err;
+
+	ret = config_validate_namespaces();
+	if (ret)
+		goto err;
+
+	/*
+	 * Delete the groups in reverse order, i.e. subgroups first, then
+	 * parents.
+	 */
+	cgroup_config_sort_groups();
+	for (i = cgroup_table_index-1; i >= 0; i--) {
+		struct cgroup *cgroup = &config_cgroup_table[i];
+		cgroup_dbg("removing %s\n", pathname);
+		error = cgroup_delete_cgroup_ext(cgroup, flags);
+		if (error && !ret) {
+			/* store the error, but continue deleting the rest */
+			ret = error;
+		}
+	}
+
+	if (mount_enabled) {
+		for (i = 0; i < config_table_index; i++) {
+			struct cg_mount_table_s *m = &(config_mount_table[i]);
+			cgroup_dbg("unmounting %s\n", m->name);
+			error = cgroup_config_try_unmount(m);
+			if (error && !ret)
+				ret = error;
+		}
+	}
+
+err:
+	cgroup_free_config();
+	return ret;
 }
 
 static int cgroup_config_unload_controller(const struct cgroup_mount_point *mount_info)

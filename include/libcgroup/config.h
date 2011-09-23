@@ -39,6 +39,23 @@ int cgroup_config_load_config(const char *pathname);
 int cgroup_unload_cgroups(void);
 
 /**
+ * Delete all cgroups and unmount all mount points defined in specified config
+ * file.
+ *
+ * The groups are either removed recursively or only the empty ones, based
+ * on given flags. Mount point are always umounted only if they are empty,
+ * regardless of any flags.
+ *
+ * The groups are sorted before they are removed, so the removal of empty ones
+ * actually works (i.e. subgroups are removed first).
+ *
+ * @param pathname Name of the configuration file to unload.
+ * @param flags Combination of CGFLAG_DELETE_* flags, which indicate what and
+ *	how to delete.
+ */
+int cgroup_config_unload_config(const char *pathname, int flags);
+
+/**
  * @}
  * @}
  */
