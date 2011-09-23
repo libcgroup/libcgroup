@@ -749,7 +749,13 @@ static int cgroup_parse_config(const char *pathname)
 		goto err;
 	}
 
+	/* Clear all internal variables so this function can be called twice. */
 	init_cgroup_table(config_cgroup_table, MAX_CGROUPS);
+	memset(config_namespace_table, 0, sizeof(config_namespace_table));
+	memset(config_mount_table, 0, sizeof(config_mount_table));
+	config_table_index = 0;
+	namespace_table_index = 0;
+	cgroup_table_index = 0;
 
 	/*
 	 * Parser calls longjmp() on really fatal error (like out-of-memory).
