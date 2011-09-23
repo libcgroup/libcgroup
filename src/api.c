@@ -850,6 +850,17 @@ int cgroup_init(void)
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 
+	/* free global variables filled by previous cgroup_init() */
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		struct cg_mount_point *mount = cg_mount_table[i].mount.next;
+		while (mount) {
+			struct cg_mount_point *tmp = mount;
+			mount = mount->next;
+			free(tmp);
+		}
+	}
+	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
+
 	proc_cgroup = fopen("/proc/cgroups", "re");
 
 	if (!proc_cgroup) {
@@ -878,6 +889,7 @@ int cgroup_init(void)
 	}
 	free(buf);
 
+	i = 0;
 	while (!feof(proc_cgroup)) {
 		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
 				&hierarchy, &num_cgroups, &enabled);
