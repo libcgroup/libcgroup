@@ -1689,35 +1689,32 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 }
 
 /**
- * Find the parent of the specified directory. It returns the parent (the
- * parent is usually name/.. unless name is a mount point.  It is assumed
- * both the cgroup (and, therefore, parent) already exist, and will fail
- * otherwise.
+ * Find the parent of the specified directory. It returns the parent in
+ * hierarchy of given controller (the parent is usually name/.. unless name is
+ * a mount point.  It is assumed both the cgroup (and, therefore, parent)
+ * already exist, and will fail otherwise.
+ *
+ * When namespaces are used, a group can have different parents for different
+ * controllers.
  *
  * @param cgroup The cgroup
+ * @param controller The controller
  * @param parent Output, name of parent's group (if the group has parent) or
  *	NULL, if the provided cgroup is the root group and has no parent.
  *	Caller is responsible to free the returned string!
  * @return 0 on success, >0 on error.
  */
-static int cgroup_find_parent(struct cgroup *cgroup, char **parent)
+static int cgroup_find_parent(struct cgroup *cgroup, char *controller,
+		char **parent)
 {
 	char child_path[FILENAME_MAX];
 	char *parent_path = NULL;
 	struct stat stat_child, stat_parent;
-	char *controller = NULL;
 	int ret = 0;
 
 	*parent = NULL;
 
-	/* if cgroup has no controllers attached, consider it unconfigured */
-	if (cgroup->controller[0] == NULL) {
-		cgroup_dbg("cgroup_find_parent called on unconfigured group\n");
-		return ECGFAIL;
-	}
-
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	controller = cgroup->controller[0]->name;
 	if (!cg_build_path_locked(cgroup->name, child_path, controller)) {
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 		return ECGFAIL;
@@ -2033,71 +2030,91 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
-		ret = cgroup_find_parent(cgroup, &parent_name);
-		if (ret)
-			return ret;
-
-		if (parent_name == NULL) {
-			/*
-			 * Root group is being deleted.
-			 */
-			if (flags & CGFLAG_DELETE_RECURSIVE) {
-				/*
-				 * Move all tasks to the root group and do not
-				 * delete it afterwards.
-				 */
-				parent_name = strdup(".");
-				if (parent_name == NULL) {
-					last_errno = errno;
-				return ECGOTHER;
-				}
-				delete_group = 0;
-			} else
-				/*
-				 *  TODO: should it succeed?
-				 */
-				return 0;
-		}
-	}
-
 	/*
 	 * Remove the group from all controllers.
 	 */
 	for (i = 0; i < cgroup->index; i++) {
 		ret = 0;
 
+		/* find parent, it can be different for each controller */
+		if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
+			ret = cgroup_find_parent(cgroup,
+					cgroup->controller[i]->name,
+					&parent_name);
+			if (ret) {
+				if (first_error == 0) {
+					first_errno = last_errno;
+					first_error = ret;
+				}
+				continue;
+			}
+			if (parent_name == NULL) {
+				/*
+				 * Root group is being deleted.
+				 */
+				if (flags & CGFLAG_DELETE_RECURSIVE) {
+					/*
+					 * Move all tasks to the root group and
+					 * do not delete it afterwards.
+					 */
+					parent_name = strdup(".");
+					if (parent_name == NULL) {
+						if (first_error == 0) {
+							first_errno = errno;
+							first_error = ECGOTHER;
+						}
+						continue;
+					}
+					delete_group = 0;
+				} else
+					/*
+					 * root group is being deleted in non-
+					 * recursive mode
+					 */
+					continue;
+			}
+		}
+
 		if (parent_name) {
 			/* tasks need to be moved, pre-open target tasks file */
 			if (!cg_build_path(parent_name, parent_path,
-					cgroup->controller[i]->name))
+					cgroup->controller[i]->name)) {
+				if (first_error == 0)
+					first_error = ECGFAIL;
+				free(parent_name);
 				continue;
-
+			}
 			strncat(parent_path, "/tasks", sizeof(parent_path)
 					- strlen(parent_path));
 
 			parent_tasks = fopen(parent_path, "we");
 			if (!parent_tasks) {
-				last_errno = errno;
-				ret = ECGOTHER;
+				if (first_error == 0) {
+					first_errno = errno;
+					first_error = ECGOTHER;
+				}
+				free(parent_name);
+				continue;
 			}
 		}
-		if (parent_tasks || !parent_name) {
-			if (flags & CGFLAG_DELETE_RECURSIVE) {
-				ret = cg_delete_cgroup_controller_recursive(
-						cgroup->name,
-						cgroup->controller[i]->name,
-						parent_tasks, flags,
-						delete_group);
-			} else {
-				ret = cg_delete_cgroup_controller(cgroup->name,
-						cgroup->controller[i]->name,
-						parent_tasks, flags);
-			}
-			if (parent_tasks)
-				fclose(parent_tasks);
+		if (flags & CGFLAG_DELETE_RECURSIVE) {
+			ret = cg_delete_cgroup_controller_recursive(
+					cgroup->name,
+					cgroup->controller[i]->name,
+					parent_tasks, flags,
+					delete_group);
+		} else {
+			ret = cg_delete_cgroup_controller(cgroup->name,
+					cgroup->controller[i]->name,
+					parent_tasks, flags);
 		}
 
+		if (parent_tasks) {
+			fclose(parent_tasks);
+			parent_tasks = NULL;
+		}
+		free(parent_name);
+		parent_name = NULL;
 		/*
 		 * If any of the controller delete fails, remember the first
 		 * error code, but continue with next controller and try remove
@@ -2116,7 +2133,6 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	if (first_errno != 0)
 		last_errno = first_errno;
 
-	free(parent_name);
 	return first_error;
 }
 
