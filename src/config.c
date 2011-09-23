@@ -731,17 +731,11 @@ error_out:
 	return error;
 }
 
-/*
- * The main function which does all the setup of the data structures
- * and finally creates the cgroups
- */
-int cgroup_config_load_config(const char *pathname)
+static int cgroup_parse_config(const char *pathname)
 {
-	int error;
-	int namespace_enabled = 0;
-	int mount_enabled = 0;
-	yyin = fopen(pathname, "re");
 	int ret;
+
+	yyin = fopen(pathname, "re");
 
 	if (!yyin) {
 		cgroup_dbg("Failed to open file %s\n", pathname);
@@ -750,8 +744,10 @@ int cgroup_config_load_config(const char *pathname)
 	}
 
 	config_cgroup_table = calloc(MAX_CGROUPS, sizeof(struct cgroup));
-	if (!config_cgroup_table)
-		return ECGFAIL;
+	if (!config_cgroup_table) {
+		ret = ECGFAIL;
+		goto err;
+	}
 
 	init_cgroup_table(config_cgroup_table, MAX_CGROUPS);
 
@@ -766,10 +762,34 @@ int cgroup_config_load_config(const char *pathname)
 		 * Either yyparse failed or longjmp() was called.
 		 */
 		cgroup_dbg("Failed to parse file %s\n", pathname);
-		fclose(yyin);
-		free(config_cgroup_table);
-		return ECGCONFIGPARSEFAIL;
+		ret = ECGCONFIGPARSEFAIL;
+		goto err;
 	}
+
+err:
+	if (yyin)
+		fclose(yyin);
+	if (ret) {
+		free(config_cgroup_table);
+		config_cgroup_table = NULL;
+	}
+	return ret;
+}
+
+/*
+ * The main function which does all the setup of the data structures
+ * and finally creates the cgroups
+ */
+int cgroup_config_load_config(const char *pathname)
+{
+	int error;
+	int namespace_enabled = 0;
+	int mount_enabled = 0;
+	int ret;
+
+	ret = cgroup_parse_config(pathname);
+	if (ret != 0)
+		return ret;
 
 	namespace_enabled = (config_namespace_table[0].name[0] != '\0');
 	mount_enabled = (config_mount_table[0].name[0] != '\0');
@@ -815,14 +835,13 @@ int cgroup_config_load_config(const char *pathname)
 	if (error)
 		goto err_grp;
 
-	fclose(yyin);
 	return 0;
 err_grp:
 	cgroup_config_destroy_groups();
 err_mnt:
 	cgroup_config_unmount_controllers();
 	free(config_cgroup_table);
-	fclose(yyin);
+	config_cgroup_table = NULL;
 	return error;
 }
 
