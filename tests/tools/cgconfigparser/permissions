@@ -1,0 +1,38 @@
+#!/bin/bash
+# this script tests fperm and dperm configuration options
+
+
+. `dirname $0`/../testenv.sh
+
+CONFDIR=$TESTDIR/tools/cgconfigparser/cgconfigparser_conf_files
+
+# all mount points are in /$TMP/cgroups
+mkdir /$TMP/cgroups/ 2>/dev/null
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions.conf` || \
+    die "cgconfigparser -l $CONFDIR/permissions.conf failed"
+
+# permissions test
+function check_perm()
+{
+    STEP=$1
+    FILENAME=$2
+    EXPECTED=$3
+    REAL=`stat -c "%a" $FILENAME`
+    if [ "$EXPECTED" != "$REAL" ]; then
+        die "$STEP: Wrong permissions of $FILENAME,"\
+            " expected $EXPECTED, actual $REAL"
+    fi
+}
+
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www" 770
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 666
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/tasks" 640
+
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp" 742
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
+cleanup
+exit 0
