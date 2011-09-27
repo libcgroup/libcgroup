@@ -266,9 +266,11 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 		FTSENT *ent;
 		ent = fts_read(fts);
 		if (!ent) {
-			cgroup_dbg("fts_read failed\n");
-			last_errno = errno;
-			final_ret = ECGOTHER;
+			if (errno != 0) {
+				cgroup_dbg("fts_read failed\n");
+				last_errno = errno;
+				final_ret = ECGOTHER;
+			}
 			break;
 		}
 		ret = cg_chmod_file(fts, ent, dir_mode, dirm_change,
