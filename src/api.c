@@ -120,6 +120,8 @@ const char const *cgroup_strerror_codes[] = {
 	"Value setting does not succeed",
 };
 
+static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
+
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
@@ -240,17 +242,20 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
 }
 
 
-/*
- * TODO: Need to decide a better place to put this function.
+/**
+ * Changes permissions of all directories and control files (i.e. all
+ * files except files named in ignore_list. The list must be terminated with
+ * NULL.
  */
 static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 		int dirm_change, mode_t file_mode, int filem_change,
-		int owner_is_umask)
+		int owner_is_umask, const char const **ignore_list)
 {
 	int ret = 0;
 	int final_ret =0;
 	FTS *fts;
 	char *fts_path[2];
+	int i, ignored;
 
 	fts_path[0] = path;
 	fts_path[1] = NULL;
@@ -273,8 +278,19 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 			}
 			break;
 		}
+		ignored = 0;
+		if (ignore_list != NULL)
+			for (i = 0; ignore_list[i] != NULL; i++)
+				if (!strcmp(ignore_list[i], ent->fts_name)) {
+					ignored = 1;
+					break;
+				}
+		if (ignored)
+			continue;
+
 		ret = cg_chmod_file(fts, ent, dir_mode, dirm_change,
-			file_mode, filem_change, owner_is_umask);
+				file_mode, filem_change,
+				owner_is_umask);
 		if (ret) {
 			last_errno = errno;
 			final_ret = ECGOTHER;
@@ -304,7 +320,7 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 			break;
 		}
 		ret = cg_chmod_recursive_controller(path, dir_mode, dirm_change,
-				file_mode, filem_change, 0);
+				file_mode, filem_change, 0, NULL);
 		if (ret)
 			final_ret = ret;
 	}
@@ -1540,7 +1556,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 						cgroup->control_dperm != NO_PERMS,
 						cgroup->control_fperm,
 						cgroup->control_fperm != NO_PERMS,
-						1);
+						1, cgroup_ignored_tasks_files);
 		}
 
 		if (error)
