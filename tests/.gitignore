@@ -12,3 +12,4 @@ setuid
 test_named_hierarchy
 walk_task
 walk_test
+wrapper_test
