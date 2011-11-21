@@ -97,15 +97,11 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 	if (ret != 0)
 		return ret;
 
-	strncpy(cgroup_dir_path, info.full_path, FILENAME_MAX);
-	/* remove problematic  '/' characters from cgroup directory path*/
-	trim_filepath(cgroup_dir_path);
-
 	strncpy(input_dir_path, input_path, FILENAME_MAX);
 	/* remove problematic  '/' characters from input path*/
-	trim_filepath(cgroup_dir_path);
+	trim_filepath(input_dir_path);
 
-	len  = strlen(cgroup_dir_path) - strlen(input_dir_path) + 1;
+	len  = strlen(info.full_path) - strlen(input_dir_path);
 	print_info(&info, name, len);
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0)
 		print_info(&info, name, len);
