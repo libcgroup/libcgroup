@@ -23,8 +23,8 @@
 # Provides:             cgconfig
 # Required-Start:
 # Required-Stop:
-# Should-Start:
-# Should-Stop:
+# Should-Start:         ypbind
+# Should-Stop:          ypbind
 # Short-Description:    Create and setup control group filesystem(s)
 # Description:          Create and setup control group filesystem(s)
 ### END INIT INFO
