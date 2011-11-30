@@ -101,5 +101,41 @@ check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
 
 $TOOLSDIR/cgclear || die "cgclear failed"
 
+# STEP5: config file without default section, but with -a -t params
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` -t nobody:nobody -a nobody:nobody -d 757 -f 757 || \
+    die "STEP5: cgconfigparser -l $CONFDIR/permissions_default4.conf failed"
+
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 646 nobody nobody
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www/tasks" 646 nobody nobody
+
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
+# STEP6: config file without default section, but with -a -t params and sticky bit
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` -t nobody:nobody -a nobody:nobody -d 2757 -f 7757 || \
+    die "STEP6: cgconfigparser -l $CONFDIR/permissions_default4.conf failed"
+
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www" 2757 nobody nobody
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 7646 nobody nobody
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www/tasks" 7646 nobody nobody
+
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ssh" 2757 root nobody
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
 cleanup
 exit 0
