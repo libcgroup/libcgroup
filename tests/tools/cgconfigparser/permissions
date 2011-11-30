@@ -6,11 +6,6 @@
 
 CONFDIR=$TESTDIR/tools/cgconfigparser/cgconfigparser_conf_files
 
-# all mount points are in /$TMP/cgroups
-mkdir /$TMP/cgroups/ 2>/dev/null
-$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions.conf` || \
-    die "cgconfigparser -l $CONFDIR/permissions.conf failed"
-
 # permissions test
 function check_perm()
 {
@@ -36,6 +31,12 @@ function check_perm()
     fi
 }
 
+# all mount points are in /$TMP/cgroups
+mkdir /$TMP/cgroups/ 2>/dev/null
+
+# STEP1: simple config file without default section
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions.conf` || \
+    die "STEP1: cgconfigparser -l $CONFDIR/permissions.conf failed"
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www" 770 root root
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 666 root root
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/tasks" 640 root nobody
@@ -43,6 +44,60 @@ check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/tasks" 640 root nobody
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
 check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "STEP1: cgclear failed"
+
+# STEP2: config file with one default section
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default1.conf` || \
+    die "STEP2: cgconfigparser -l $CONFDIR/permissions_default1.conf failed"
+
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 646 nobody nobody
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/www/tasks" 646 nobody nobody
+
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP2" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
+# STEP3: config file with two default sections - the last wins
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default2.conf` || \
+    die "STEP3: cgconfigparser -l $CONFDIR/permissions_default2.conf failed"
+
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 646 nobody nobody
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/www/tasks" 646 nobody nobody
+
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP3" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
+# STEP4: config file with one default section, now with SUID and SGID bits
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default3.conf` || \
+    die "STEP4: cgconfigparser -l $CONFDIR/permissions_default3.conf failed"
+
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/www" 2757 nobody nobody
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 7646 nobody nobody
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/www/tasks" 1646 nobody nobody
+
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ssh" 2757 root nobody
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP4" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
 
 $TOOLSDIR/cgclear || die "cgclear failed"
 
