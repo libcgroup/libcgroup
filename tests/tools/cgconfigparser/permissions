@@ -16,21 +16,33 @@ function check_perm()
 {
     STEP=$1
     FILENAME=$2
-    EXPECTED=$3
-    REAL=`stat -c "%a" $FILENAME`
-    if [ "$EXPECTED" != "$REAL" ]; then
+    EXPECTED_PERM=$3
+    EXPECTED_UID=$4
+    EXPECTED_GID=$5
+    REAL_PERM=`stat -c "%a" $FILENAME`
+    REAL_UID=`stat -c "%U" $FILENAME`
+    REAL_GID=`stat -c "%G" $FILENAME`
+    if [ "$EXPECTED_PERM" != "$REAL_PERM" ]; then
         die "$STEP: Wrong permissions of $FILENAME,"\
-            " expected $EXPECTED, actual $REAL"
+            " expected $EXPECTED_PERM, actual $REAL_PERM"
+    fi
+    if [ "$EXPECTED_UID" != "$REAL_UID" ]; then
+        die "$STEP: Wrong uid of $FILENAME,"\
+            " expected $EXPECTED_UID, actual $REAL_UID"
+    fi
+    if [ "$EXPECTED_GID" != "$REAL_GID" ]; then
+        die "$STEP: Wrong gid of $FILENAME,"\
+            " expected $EXPECTED_GID, actual $REAL_GID"
     fi
 }
 
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www" 770
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 666
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/tasks" 640
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www" 770 root root
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 666 root root
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/www/tasks" 640 root nobody
 
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp" 742
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426
-check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP1" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root nobody
 
 $TOOLSDIR/cgclear || die "cgclear failed"
 
