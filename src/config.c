@@ -50,6 +50,7 @@ extern FILE *yyin;
 extern int yyparse(void);
 
 static struct cgroup default_group;
+static int default_group_set = 0;
 
 /*
  * The basic global data structures.
@@ -803,8 +804,11 @@ static int cgroup_parse_config(const char *pathname)
 	config_table_index = 0;
 	namespace_table_index = 0;
 	cgroup_table_index = 0;
-	/* init the default cgroup */
-	init_cgroup_table(&default_group, 1);
+
+	if (!default_group_set) {
+		/* init the default cgroup */
+		init_cgroup_table(&default_group, 1);
+	}
 
 	/*
 	 * Parser calls longjmp() on really fatal error (like out-of-memory).
@@ -1167,5 +1171,24 @@ int cgroup_config_define_default(void)
 	 * can be used by following 'group { }'.
 	 */
 	init_cgroup_table(config_cgroup, 1);
+	return 0;
+}
+
+int cgroup_config_set_default(struct cgroup *new_default)
+{
+	if (!new_default)
+		return ECGINVAL;
+
+	init_cgroup_table(&default_group, 1);
+
+	default_group.control_dperm = new_default->control_dperm;
+	default_group.control_fperm = new_default->control_fperm;
+	default_group.control_gid = new_default->control_gid;
+	default_group.control_uid = new_default->control_uid;
+	default_group.task_fperm = new_default->task_fperm;
+	default_group.tasks_gid = new_default->tasks_gid;
+	default_group.tasks_uid = new_default->tasks_uid;
+	default_group_set = 1;
+
 	return 0;
 }

@@ -56,6 +56,24 @@ int cgroup_unload_cgroups(void);
 int cgroup_config_unload_config(const char *pathname, int flags);
 
 /**
+ * Sets default permissions of groups created by subsequent
+ * cgroup_config_load_config() calls. If a config file contains a 'default {}'
+ * section, the default permissions from the config file is then used.
+ *
+ * Use cgroup_new_cgroup() to create a dummy group and cgroup_set_uid_gid() and
+ * cgroup_set_permissions() to set its permissions. Use NO_UID_GID instead of
+ * GID/UID and NO_PERMS instead of file/directory permissions to let kernel
+ * decide the default permissions where you don't want specific user and/or
+ * permissions. Kernel then uses current user/group and permissions from umask
+ * then.
+ *
+ * @param new_default New default permissions from this group are copied to
+ * libcgroup internal structures. I.e., this group can be freed immediatelly
+ * after this function returns.
+ */
+int cgroup_config_set_default(struct cgroup *new_default);
+
+/**
  * @}
  * @}
  */
