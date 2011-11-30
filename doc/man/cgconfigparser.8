@@ -22,11 +22,41 @@ mount points defined by the configuration file.
 The format of the file is described in
 \fBcgconfig.conf\fR. This option can be used multiple times and can be mixed
 with \fB-L\fR option.
+
 .TP
 .B -L, --load-directory=DIR
 Finds all files in given directory and parses them in alphabetical order
 like they were specified by \fB-l\fR option. This option can be used
 multiple times and can be mixed with \fB-l\fR option.
+
+.TP
+.B -a <agid>:<auid>
+defines the default owner of the
+rest of the defined control group’s files. These users are
+allowed to set subsystem parameters and create subgroups.
+The default value is the same as has the parent cgroup.
+
+.TP
+.B -d, --dperm=mode
+sets the default permissions of a control groups directory.
+The permissions needs to be specified as octal numbers e.g.
+\fB-d 775\fR.
+
+.TP
+.B -f, --fperm=mode
+sets the default permissions of the control groups and tasks files.
+The permissions needs to be specified as octal numbers e.g.
+\fB-f 775\fR.
+The value is not used as given because the current owner's
+permissions are used as an umask (so 777 will set group and
+others permissions to the owners permissions).
+
+.TP
+.B -t <tuid>:<tgid>
+defines the default owner of tasks file of the defined control
+group. I.e. this user and members
+of this group have write access to the file.
+
 .LP
 
 .SH SEE ALSO
