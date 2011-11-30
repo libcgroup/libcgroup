@@ -37,7 +37,7 @@ int yywrap(void)
 
 %}
 
-%token ID MOUNT GROUP PERM TASK ADMIN NAMESPACE
+%token ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT
 
 %union {
 	char *name;
@@ -48,7 +48,7 @@ int yywrap(void)
 %type <name> ID
 %type <val> mountvalue_conf mount task_namevalue_conf admin_namevalue_conf
 %type <val> admin_conf task_conf task_or_admin group_conf group start
-%type <val> namespace namespace_conf
+%type <val> namespace namespace_conf default default_conf
 %type <values> namevalue_conf
 %start start
 %%
@@ -61,6 +61,10 @@ start   : start group
 	{
 		$$ = $1;
 	}
+	| start default
+	{
+	  $$ = $1;
+	}
         | start namespace
 	{
 		$$ = $1;
@@ -70,6 +74,22 @@ start   : start group
 		$$ = 1;
 	}
         ;
+
+default :       DEFAULT '{' default_conf '}'
+	{
+		$$ = $3;
+		if ($$) {
+			cgroup_config_define_default();
+		}
+	}
+	;
+
+default_conf
+	:       PERM '{' task_or_admin '}'
+	{
+		$$ = $3;
+	}
+	;
 
 group   :       GROUP ID '{' group_conf '}'
 	{

@@ -49,6 +49,8 @@ unsigned int MAX_CGROUPS = 64;	/* NOTE: This value changes dynamically */
 extern FILE *yyin;
 extern int yyparse(void);
 
+static struct cgroup default_group;
+
 /*
  * The basic global data structures.
  *
@@ -748,6 +750,34 @@ static void cgroup_free_config(void)
 	config_table_index = 0;
 }
 
+/**
+ * Applies default permissions/uid/gid to all groups in config file.
+ */
+static void cgroup_config_apply_default()
+{
+	int i;
+	if (config_cgroup_table) {
+		for (i = 0; i < cgroup_table_index; i++) {
+			struct cgroup *c = &config_cgroup_table[i];
+
+			if (c->control_dperm == NO_PERMS)
+				c->control_dperm = default_group.control_dperm;
+			if (c->control_fperm == NO_PERMS)
+				c->control_fperm = default_group.control_fperm;
+			if (c->control_gid == NO_UID_GID)
+				c->control_gid = default_group.control_gid;
+			if (c->control_uid == NO_UID_GID)
+				c->control_uid = default_group.control_uid;
+			if (c->task_fperm == NO_PERMS)
+				c->task_fperm = default_group.task_fperm;
+			if (c->tasks_gid == NO_UID_GID)
+				c->tasks_gid = default_group.tasks_gid;
+			if (c->tasks_uid == NO_UID_GID)
+				c->tasks_uid = default_group.tasks_uid;
+		}
+	}
+}
+
 static int cgroup_parse_config(const char *pathname)
 {
 	int ret;
@@ -773,6 +803,8 @@ static int cgroup_parse_config(const char *pathname)
 	config_table_index = 0;
 	namespace_table_index = 0;
 	cgroup_table_index = 0;
+	/* init the default cgroup */
+	init_cgroup_table(&default_group, 1);
 
 	/*
 	 * Parser calls longjmp() on really fatal error (like out-of-memory).
@@ -866,6 +898,7 @@ int cgroup_config_load_config(const char *pathname)
 	if (error)
 		goto err_mnt;
 
+	cgroup_config_apply_default();
 	error = cgroup_config_create_groups();
 	cgroup_dbg("creating all cgroups now, error=%d\n", error);
 	if (error)
@@ -1101,4 +1134,38 @@ out_errno:
 	last_errno = errno;
 	cgroup_get_controller_end(&ctrl_handle);
 	return ECGOTHER;
+}
+
+/**
+ * Defines the default group. The parser puts content of 'default { }' to
+ * topmost group in config_cgroup_table. This function copies the permissions
+ * from it to our default cgroup.
+ */
+int cgroup_config_define_default(void)
+{
+	struct cgroup *config_cgroup =
+			&config_cgroup_table[cgroup_table_index];
+
+	init_cgroup_table(&default_group, 1);
+	if (config_cgroup->control_dperm != NO_PERMS)
+		default_group.control_dperm = config_cgroup->control_dperm;
+	if (config_cgroup->control_fperm != NO_PERMS)
+		default_group.control_fperm = config_cgroup->control_fperm;
+	if (config_cgroup->control_gid != NO_UID_GID)
+		default_group.control_gid = config_cgroup->control_gid;
+	if (config_cgroup->control_uid != NO_UID_GID)
+		default_group.control_uid = config_cgroup->control_uid;
+	if (config_cgroup->task_fperm != NO_PERMS)
+		default_group.task_fperm = config_cgroup->task_fperm;
+	if (config_cgroup->tasks_gid != NO_UID_GID)
+		default_group.tasks_gid = config_cgroup->tasks_gid;
+	if (config_cgroup->tasks_uid != NO_UID_GID)
+		default_group.tasks_uid = config_cgroup->tasks_uid;
+
+	/*
+	 * Reset all changes made by 'default { }' to the topmost group so it
+	 * can be used by following 'group { }'.
+	 */
+	init_cgroup_table(config_cgroup, 1);
+	return 0;
 }
