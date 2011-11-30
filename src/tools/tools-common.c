@@ -239,33 +239,25 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 /* allowed mode strings are octal version: "755" */
 int parse_mode(char *string, mode_t *pmode, const char *program_name)
 {
-	mode_t mode = 0;
-	int pos = 0; /* position of the number iin string */
-	int i;
-	int j = 64;
+	char *end;
+	long mode;
+	size_t len;
 
-	while (pos < 3) {
-		if ('0' <= string[pos] && string[pos] < '8') {
-			i = (int)string[pos] - (int)'0';
-			/* parse the permission triple*/
-			mode = mode + i*j;
-			j = j / 8;
-		} else {
-			fprintf(stdout, "%s wrong mode format %s",
-				program_name, string);
-			return -1;
-		}
-		pos++;
-	}
+	len = strlen(string);
+	if (len < 3 || len > 4)
+		goto err;
 
-	/* the string have contains three characters */
-	if (string[pos] != '\0') {
-		fprintf(stdout, "%s wrong mode format %s",
-			program_name, string);
-		return -1;
-	}
+	errno = 0;
+	mode = strtol(string, &end, 8);
+	if (errno != 0 || *end != '\0')
+		goto err;
 	*pmode = mode;
 	return 0;
+
+err:
+	*pmode = 0;
+	fprintf(stdout, "%s wrong mode format %s", program_name, string);
+	return -1;
 }
 
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
