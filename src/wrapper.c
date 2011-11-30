@@ -29,6 +29,8 @@
 static void init_cgroup(struct cgroup *cgroup)
 {
 	cgroup->task_fperm = cgroup->control_fperm = cgroup->control_dperm = NO_PERMS;
+	cgroup->control_gid = cgroup->control_uid = cgroup->tasks_gid =
+			cgroup->tasks_uid = NO_UID_GID;
 }
 
 void init_cgroup_table(struct cgroup *cgroups, size_t count)

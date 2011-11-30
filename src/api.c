@@ -122,6 +122,14 @@ const char const *cgroup_strerror_codes[] = {
 
 static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
+static int cg_chown(const char *filename, uid_t owner, gid_t group)
+{
+	if (owner == NO_UID_GID)
+		owner = 0;
+	if (group == NO_UID_GID)
+		group = 0;
+	return chown(filename, owner, group);
+}
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 {
 	int ret = 0;
@@ -139,7 +147,7 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 	case FTS_DP:
 	case FTS_F:
 	case FTS_DEFAULT:
-		ret = chown(filename, owner, group);
+		ret = cg_chown(filename, owner, group);
 		break;
 	}
 	if (ret < 0) {
@@ -1613,7 +1621,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				error = ECGOTHER;
 				goto err;
 			}
-			error = chown(path, cgroup->tasks_uid,
+			error = cg_chown(path, cgroup->tasks_uid,
 							cgroup->tasks_gid);
 			if (!error && cgroup->task_fperm != NO_PERMS)
 				error = cg_chmod_path(path, cgroup->task_fperm,

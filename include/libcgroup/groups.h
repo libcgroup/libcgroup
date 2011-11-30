@@ -122,6 +122,11 @@ struct cgroup_controller;
 #define NO_PERMS (-1U)
 
 /**
+ * Uninitialized UID/GID used for task/control files.
+ */
+#define NO_UID_GID (-1U)
+
+/**
  * Allocate new cgroup structure. This function itself does not create new
  * control group in kernel, only new <tt>struct cgroup</tt> inside libcgroup!
  *
