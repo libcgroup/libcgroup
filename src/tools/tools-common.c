@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <libcgroup.h>
 #include "tools-common.h"
@@ -233,3 +235,75 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 	return 0;
 }
 
+
+/* allowed mode strings are octal version: "755" */
+int parse_mode(char *string, mode_t *pmode, const char *program_name)
+{
+	mode_t mode = 0;
+	int pos = 0; /* position of the number iin string */
+	int i;
+	int j = 64;
+
+	while (pos < 3) {
+		if ('0' <= string[pos] && string[pos] < '8') {
+			i = (int)string[pos] - (int)'0';
+			/* parse the permission triple*/
+			mode = mode + i*j;
+			j = j / 8;
+		} else {
+			fprintf(stdout, "%s wrong mode format %s",
+				program_name, string);
+			return -1;
+		}
+		pos++;
+	}
+
+	/* the string have contains three characters */
+	if (string[pos] != '\0') {
+		fprintf(stdout, "%s wrong mode format %s",
+			program_name, string);
+		return -1;
+	}
+	*pmode = mode;
+	return 0;
+}
+
+int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
+		const char *program_name)
+{
+	char *grp_string, *pwd_string;
+	struct passwd *pwd;
+	struct group *grp;
+
+	*uid = *gid = NO_UID_GID;
+
+	if (string[0] == ':')
+		grp_string = strtok(string, ":");
+	else {
+		pwd_string = strtok(string, ":");
+		if (pwd_string != NULL)
+			grp_string = strtok(NULL, ":");
+	}
+
+	if (pwd_string != NULL) {
+		pwd = getpwnam(pwd_string);
+		if (pwd != NULL) {
+			*uid = pwd->pw_uid;
+		} else {
+			fprintf(stderr, "%s: can't find uid of user %s.\n",
+					program_name, pwd_string);
+			return -1;
+		}
+	}
+	if (grp_string != NULL) {
+		grp = getgrnam(grp_string);
+		if (grp != NULL)
+			*gid = grp->gr_gid;
+		else {
+			fprintf(stderr, "%s: can't find gid of group %s.\n",
+				program_name, grp_string);
+			return -1;
+		}
+	}
+	return 0;
+}

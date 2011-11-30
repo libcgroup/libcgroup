@@ -105,4 +105,22 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 		char *dirname, char *program_name);
 
 
+/**
+ * Parse file permissions as octal number.
+ * @param string A string to parse, must contain 3-4 characters '0'-'7'.
+ * @param pmode Parsed mode.
+ * @oaram program_name Argv[0] to show error messages.
+ */
+int parse_mode(char *string, mode_t *pmode, const char *program_name);
+
+/**
+ * Parse UID and GID from string in form "user:group".
+ * @param string A string to parse.
+ * @param uid Parsed UID (-1 if 'user' is missing in the string).
+ * @param gid Parsed GID (-1 if 'group' is missing in the string).
+ * @param program_name Argv[0] to show error messages.
+ */
+int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
+		const char *program_name);
+
 #endif /* TOOLS_COMMON */

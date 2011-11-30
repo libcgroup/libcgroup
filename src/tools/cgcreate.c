@@ -57,38 +57,6 @@ static void usage(int status, const char *program_name)
 	}
 }
 
-/* allowed mode strings are octal version: "755" */
-
-int parse_mode(char *string, mode_t *pmode, const char *program_name)
-{
-	mode_t mode = 0;
-	int pos = 0; /* position of the number iin string */
-	int i;
-	int j = 64;
-
-	while (pos < 3) {
-		if ('0' <= string[pos] && string[pos] < '8') {
-			i = (int)string[pos] - (int)'0';
-			/* parse the permission triple*/
-			mode = mode + i*j;
-			j = j / 8;
-		} else {
-			fprintf(stdout, "%s wrong mode format %s",
-				program_name, string);
-			return -1;
-		}
-		pos++;
-	}
-
-	/* the string have contains three characters */
-	if (string[pos] != '\0') {
-		fprintf(stdout, "%s wrong mode format %s",
-			program_name, string);
-		return -1;
-	}
-	*pmode = mode;
-	return 0;
-}
 
 int main(int argc, char *argv[])
 {
@@ -105,14 +73,6 @@ int main(int argc, char *argv[])
 		{"fperm", required_argument, NULL, 'f' },
 		{0, 0, 0, 0},
 	};
-
-	/* Structure to get GID from group name */
-	struct group *grp = NULL;
-	char *grp_string = NULL;
-
-	/* Structure to get UID from user name */
-	struct passwd *pwd = NULL;
-	char *pwd_string = NULL;
 
 	uid_t tuid = CGRULE_INVALID, auid = CGRULE_INVALID;
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
@@ -152,74 +112,13 @@ int main(int argc, char *argv[])
 			goto err;
 		case 'a':
 			/* set admin uid/gid */
-			if (optarg[0] == ':')
-				grp_string = strtok(optarg, ":");
-			else {
-				pwd_string = strtok(optarg, ":");
-				if (pwd_string != NULL)
-					grp_string = strtok(NULL, ":");
-			}
-
-			if (pwd_string != NULL) {
-				pwd = getpwnam(pwd_string);
-				if (pwd != NULL) {
-					auid = pwd->pw_uid;
-				} else {
-					fprintf(stderr, "%s: "
-						"can't find uid of user %s.\n",
-						argv[0], pwd_string);
-					ret = -1;
-					goto err;
-				}
-			}
-			if (grp_string != NULL) {
-				grp = getgrnam(grp_string);
-				if (grp != NULL)
-					agid = grp->gr_gid;
-				else {
-					fprintf(stderr, "%s: "
-						"can't find gid of group %s.\n",
-						argv[0], grp_string);
-					ret = -1;
-					goto err;
-				}
-			}
-
+			if (parse_uid_gid(optarg, &auid, &agid, argv[0]))
+				goto err;
 			break;
 		case 't':
 			/* set task uid/gid */
-			if (optarg[0] == ':')
-				grp_string = strtok(optarg, ":");
-			else {
-				pwd_string = strtok(optarg, ":");
-				if (pwd_string != NULL)
-					grp_string = strtok(NULL, ":");
-			}
-
-			if (pwd_string != NULL) {
-				pwd = getpwnam(pwd_string);
-				if (pwd != NULL) {
-					tuid = pwd->pw_uid;
-				} else {
-					fprintf(stderr, "%s: "
-						"can't find uid of user %s.\n",
-						argv[0], pwd_string);
-					ret = -1;
-					goto err;
-				}
-			}
-			if (grp_string != NULL) {
-				grp = getgrnam(grp_string);
-				if (grp != NULL)
-					tgid = grp->gr_gid;
-				else {
-					fprintf(stderr, "%s: "
-						"can't find gid of group %s.\n",
-						argv[0], grp_string);
-					ret = -1;
-					goto err;
-				}
-			}
+			if (parse_uid_gid(optarg, &tuid, &tgid, argv[0]))
+				goto err;
 			break;
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
