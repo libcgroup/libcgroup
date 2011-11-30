@@ -197,6 +197,7 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 		 * Use owner permissions as an umask for group and others
 		 * permissions because we trust kernel to initialize owner
 		 * permissions to something useful.
+		 * Keep SUID and SGID bits.
 		 */
 		if (stat(path, &buf) == -1)
 			goto fail;
@@ -204,7 +205,7 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 		gmask = umask >> 3;
 		omask = gmask >> 3;
 
-		mask = umask|gmask|omask;
+		mask = umask|gmask|omask|S_ISUID|S_ISGID|S_ISVTX;
 	}
 
 	if (chmod(path, mode & mask))
