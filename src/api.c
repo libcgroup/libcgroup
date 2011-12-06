@@ -118,6 +118,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Either mount or namespace keyword has to be specified in the configuration file",
 	"This kernel does not support this feature",
 	"Value setting does not succeed",
+	"Failed to remove a non-empty group",
 };
 
 static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
@@ -1924,12 +1925,13 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		return ECGROUPSUBSYSNOTMOUNTED;
 
 	ret = rmdir(path);
-	if (ret != 0 && errno != ENOENT) {
-		last_errno = errno;
-		return ECGOTHER;
-	}
+	if (ret == 0 || errno == ENOENT)
+		return 0;
+	if (errno == EBUSY)
+		return ECGNONEMPTY;
 
-	return 0;
+	last_errno = errno;
+	return ECGOTHER;
 }
 
 /**
@@ -2130,8 +2132,15 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 		 * the group from all of them.
 		 */
 		if (ret != 0 && first_error == 0) {
-			first_errno = last_errno;
-			first_error = ret;
+			/*
+			 * ECGNONEMPTY is more or less not an error, but an
+			 * indication that something was not removed.
+			 * Therefore it should be replaced by any other error.
+			 */
+			if (ret != ECGNONEMPTY || first_error == ECGNONEMPTY) {
+				first_errno = last_errno;
+				first_error = ret;
+			}
 		}
 	}
 

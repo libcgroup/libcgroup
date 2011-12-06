@@ -75,6 +75,8 @@ enum {
 	ECGMOUNTNAMESPACE,
 	ECGROUPUNSUPP,
 	ECGCANTSETVALUE,
+	/** Removing of a group failed because it was not empty. */
+	ECGNONEMPTY,
 };
 
 /**
