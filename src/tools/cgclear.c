@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 		for (i = cfg_files.count-1; i >= 0 ; i--) {
 			ret = cgroup_config_unload_config(cfg_files.items[i],
 					flags);
-			if (ret) {
+			if (ret && ret != ECGNONEMPTY) {
 				report_error(ret, argv[0]);
 				if (!error)
 					error = ret;

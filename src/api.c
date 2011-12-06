@@ -1927,7 +1927,8 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 	ret = rmdir(path);
 	if (ret == 0 || errno == ENOENT)
 		return 0;
-	if (errno == EBUSY)
+
+	if ((flags & CGFLAG_DELETE_EMPTY_ONLY) && (errno == EBUSY))
 		return ECGNONEMPTY;
 
 	last_errno = errno;
