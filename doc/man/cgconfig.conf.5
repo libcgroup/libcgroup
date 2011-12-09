@@ -10,10 +10,13 @@ is a configuration file used by
 to define control groups, their parameters and their mount points.
 The file consists of
 .I mount
-and
+,
 .I group
-sections. These sections can be in arbitrary order and both are optional.
-Any line starting with '#' is considered a comment line and is ignored.
+and
+.I default
+sections. These sections can be in arbitrary order and all of them are
+optional. Any line starting with '#' is considered a comment line and
+is ignored.
 .LP
 .I mount
 section has this form:
@@ -189,6 +192,52 @@ and other special characters.
 If no
 .I group
 section is specified, no groups are created.
+
+.I default
+section has this form:
+.RS
+.nf
+.ft B
+.sp
+default {
+.RS
+.ft B
+perm {
+.RS
+.ft B
+task {
+.RS
+.ft B
+uid = <task user>;
+gid = <task group>;
+fperm = <file permissions>
+.RE
+}
+admin {
+.RS
+uid = <admin name>;
+gid = <admin group>;
+dperm = <directory permissions>
+fperm = <file permissions>
+.RE
+}
+.RE
+}
+.RE
+}
+.ft R
+.fi
+.RE
+
+Content of the
+.B perm
+section has the same form as in
+.I group
+section. The permissions defined here specify owner and permissions of
+groups and files of all groups, which do not have explicitly specified
+their permissions in their
+.I group
+section.
 
 .\"********************************************"
 .SH EXAMPLES
