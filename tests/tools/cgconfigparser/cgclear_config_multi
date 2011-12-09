@@ -44,7 +44,12 @@ grep 1/2/3 <$TMP/groups.log >/dev/null \
 $TOOLSDIR/cgclear -e -l `prepare_config cgclear/cgclear_config_multi_3.conf` \
 	-l `prepare_config cgclear/cgclear_config_multi_2.conf` \
 	-l `prepare_config cgclear/cgclear_config_multi_1.conf` \
-	&& die "STEP2: cgclear should fail!"
+	|| die "STEP2: cgclear failed"
+
+# check that cpu,cpuacct:/1/2 still exists
+$TOOLSDIR/lscgroup > $TMP/groups.log
+grep 1/2 <$TMP/groups.log >/dev/null \
+	|| die "STEP2: cannot find group '1/2 after cgclear"
 
 $TOOLSDIR/cgclear
 

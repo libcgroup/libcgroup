@@ -80,9 +80,12 @@ grep first <$TMP/groups.log >/dev/null \
 $TOOLSDIR/cgclassify -g cpu:first $PID \
 	|| die "STEP4: cgclassify failed"
 
-# try to clear it - cgclear should fail
+# try to clear it - cgclear should not fail and the group should survive
 $TOOLSDIR/cgclear -e -l `prepare_config cgclear/cgclear_config_one.conf` \
-	&& die "STEP4: cgclear did not fail!"
+	|| die "STEP4: cgclear failed"
+$TOOLSDIR/lscgroup > $TMP/groups2.log
+grep first <$TMP/groups2.log >/dev/null \
+	|| die "STEP4: cannot find group 'first' after cgclear"
 
 # cpu:first should survive
 $TOOLSDIR/lscgroup > $TMP/groups.log
@@ -113,9 +116,12 @@ grep first <$TMP/groups.log >/dev/null \
 $TOOLSDIR/cgcreate -g cpu:first/evil \
 	|| die "STEP5: cgcreate failed"
 
-# try to clear it - cgclear should fail
+# try to clear it - cgclear should not fail, the group should survive
 $TOOLSDIR/cgclear -e -l `prepare_config cgclear/cgclear_config_one.conf` \
-	&& die "STEP5: cgclear did not fail!"
+	|| die "STEP5: cgclear failed"
+$TOOLSDIR/lscgroup > $TMP/groups2.log
+grep first <$TMP/groups2.log >/dev/null \
+	|| die "STEP5: cannot find group 'first' after clear"
 
 # cpu:first/evil should survive
 $TOOLSDIR/lscgroup > $TMP/groups.log
