@@ -107,7 +107,7 @@ $TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` 
 
 check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
 check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 646 nobody nobody
-check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www/tasks" 646 nobody nobody
+check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/www/tasks" 644 nobody nobody
 
 check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
 check_perm "STEP5" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
@@ -125,7 +125,7 @@ $TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` 
 
 check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www" 2757 nobody nobody
 check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 7646 nobody nobody
-check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www/tasks" 7646 nobody nobody
+check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/www/tasks" 644 nobody nobody
 
 check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
 check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
@@ -152,6 +152,24 @@ check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
 check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
 check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
 check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
+# STEP8: config file without default section, but with -f, -d and -t
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` -t nobody:nobody -a nobody:nobody -d 757 -f 757 -s 7247 || \
+    die "STEP8: cgconfigparser -l $CONFDIR/permissions_default4.conf failed"
+
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 646 nobody nobody
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/www/tasks" 7246 nobody nobody
+
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP8" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
 
 $TOOLSDIR/cgclear || die "cgclear failed"
 

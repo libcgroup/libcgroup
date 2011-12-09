@@ -51,6 +51,8 @@ static void usage(char *progname)
 			" permissions\n");
 	printf("  -f, --fperm mode		Default group file"\
 			" permissions\n");
+	printf("  -s --tperm mode		Default tasks file"
+			" permissions\n");
 	printf("  -t <tuid>:<tgid>		Default owner of the tasks "
 			"file");
 	exit(2);
@@ -68,12 +70,14 @@ int main(int argc, char *argv[])
 		{"admin", required_argument, NULL, 'a'},
 		{"dperm", required_argument, NULL, 'd'},
 		{"fperm", required_argument, NULL, 'f' },
+		{"tperm", required_argument, NULL, 's' },
 		{0, 0, 0, 0}
 	};
 	uid_t tuid = NO_UID_GID, auid = NO_UID_GID;
 	gid_t tgid = NO_UID_GID, agid = NO_UID_GID;
 	mode_t dir_mode = NO_PERMS;
 	mode_t file_mode = NO_PERMS;
+	mode_t tasks_mode = NO_PERMS;
 	int dirm_change = 0;
 	int filem_change = 0;
 	struct cgroup *default_group = NULL;
@@ -83,7 +87,7 @@ int main(int argc, char *argv[])
 
 	ret = cgroup_string_list_init(&cfg_files, argc/2);
 
-	while ((c = getopt_long(argc, argv, "hl:L:t:a:d:f:", options,
+	while ((c = getopt_long(argc, argv, "hl:L:t:a:d:f:s:", options,
 			NULL)) > 0) {
 		switch (c) {
 		case 'h':
@@ -119,6 +123,10 @@ int main(int argc, char *argv[])
 			filem_change = 1;
 			ret = parse_mode(optarg, &file_mode, argv[0]);
 			break;
+		case 's':
+			filem_change = 1;
+			ret = parse_mode(optarg, &tasks_mode, argv[0]);
+			break;
 		default:
 			usage(argv[0]);
 			break;
@@ -141,7 +149,7 @@ int main(int argc, char *argv[])
 
 	if (dirm_change | filem_change) {
 		cgroup_set_permissions(default_group, dir_mode, file_mode,
-				file_mode);
+				tasks_mode);
 	}
 
 	error = cgroup_config_set_default(default_group);

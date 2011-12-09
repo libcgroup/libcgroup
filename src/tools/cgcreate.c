@@ -52,6 +52,8 @@ static void usage(int status, const char *program_name)
 			"group which should be added\n");
 		fprintf(stdout, "  -h, --help			Display "\
 			"this help\n");
+		fprintf(stdout, "  -s --tperm mode		Tasks "\
+				"file permissions\n");
 		fprintf(stdout, "  -t <tuid>:<tgid>		Set "\
 			"the task permission\n");
 	}
@@ -71,6 +73,7 @@ int main(int argc, char *argv[])
 		{"", required_argument, NULL, 'g'},
 		{"dperm", required_argument, NULL, 'd'},
 		{"fperm", required_argument, NULL, 'f' },
+		{"tperm", required_argument, NULL, 's' },
 		{0, 0, 0, 0},
 	};
 
@@ -87,6 +90,7 @@ int main(int argc, char *argv[])
 	/* permission variables */
 	mode_t dir_mode = NO_PERMS;
 	mode_t file_mode = NO_PERMS;
+	mode_t tasks_mode = NO_PERMS;
 	int dirm_change = 0;
 	int filem_change = 0;
 
@@ -103,7 +107,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:", long_opts, NULL))
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts, NULL))
 		> 0) {
 		switch (c) {
 		case 'h':
@@ -138,6 +142,10 @@ int main(int argc, char *argv[])
 		case 'f':
 			filem_change = 1;
 			ret = parse_mode(optarg, &file_mode, argv[0]);
+			break;
+		case 's':
+			filem_change = 1;
+			ret = parse_mode(optarg, &tasks_mode, argv[0]);
 			break;
 		default:
 			usage(1, argv[0]);
@@ -201,9 +209,9 @@ int main(int argc, char *argv[])
 		}
 
 		/* all variables set so create cgroup */
-		if (dirm_change + filem_change > 0)
+		if (dirm_change | filem_change)
 			cgroup_set_permissions(cgroup, dir_mode, file_mode,
-					file_mode);
+					tasks_mode);
 		ret = cgroup_create_cgroup(cgroup, 0);
 		if (ret) {
 			fprintf(stderr, "%s: "

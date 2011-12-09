@@ -44,7 +44,16 @@ The permissions needs to be specified as octal numbers e.g.
 
 .TP
 .B -f, --fperm=mode
-sets the default permissions of the control groups and tasks files.
+sets the default permissions of the control group files.
+The permissions needs to be specified as octal numbers e.g.
+\fB-f 775\fR.
+The value is not used as given because the current owner's
+permissions are used as an umask (so 777 will set group and
+others permissions to the owners permissions).
+
+.TP
+.B -s, --tperm=mode
+sets the default permissions of the control group tasks files.
 The permissions needs to be specified as octal numbers e.g.
 \fB-f 775\fR.
 The value is not used as given because the current owner's
