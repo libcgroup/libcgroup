@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 	int capacity = argc;
 
 	/* permission variables */
-	mode_t dir_mode = 0;
-	mode_t file_mode = 0;
+	mode_t dir_mode = NO_PERMS;
+	mode_t file_mode = NO_PERMS;
 	int dirm_change = 0;
 	int filem_change = 0;
 

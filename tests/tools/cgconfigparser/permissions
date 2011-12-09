@@ -137,5 +137,23 @@ check_perm "STEP6" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
 
 $TOOLSDIR/cgclear || die "cgclear failed"
 
+# STEP7: config file without default section, but with only -d params (=-f is taken from umask)
+$TOOLSDIR/cgconfigparser -l `prepare_config $CONFDIR/permissions_default4.conf` -t nobody:nobody -a nobody:nobody -d 757 || \
+    die "STEP7: cgconfigparser -l $CONFDIR/permissions_default4.conf failed"
+
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/www" 757 nobody nobody
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/www/cpu.shares" 644 nobody nobody
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/www/tasks" 644 nobody nobody
+
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ftp" 742 root root
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ftp/cpu.shares" 426 root root
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ftp/tasks" 264 root root
+
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh" 757 root nobody
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh/cpu.shares" 426 root nobody
+check_perm "STEP7" "/$TMP/cgroups/cpu/daemons/ssh/tasks" 264 root nobody
+
+$TOOLSDIR/cgclear || die "cgclear failed"
+
 cleanup
 exit 0

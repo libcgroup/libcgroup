@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
 	};
 	uid_t tuid = NO_UID_GID, auid = NO_UID_GID;
 	gid_t tgid = NO_UID_GID, agid = NO_UID_GID;
-	mode_t dir_mode = 0;
-	mode_t file_mode = 0;
+	mode_t dir_mode = NO_PERMS;
+	mode_t file_mode = NO_PERMS;
 	int dirm_change = 0;
 	int filem_change = 0;
 	struct cgroup *default_group = NULL;
