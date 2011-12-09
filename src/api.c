@@ -984,6 +984,15 @@ int cgroup_init(void)
 			 * Check if it is a duplicate
 			 */
 			duplicate = 0;
+
+#ifdef OPAQUE_HIERARCHY
+			/*
+			 * Ignore the opaque hierarchy.
+			 */
+			if (strcmp(mntopt, OPAQUE_HIERARCHY) == 0)
+					continue;
+#endif
+
 			for (j = 0; j < found_mnt; j++) {
 				if (strncmp(mntopt, cg_mount_table[j].name,
 							FILENAME_MAX) == 0) {
