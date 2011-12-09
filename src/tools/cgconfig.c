@@ -37,7 +37,9 @@ static struct cgroup_string_list cfg_files;
 
 static void usage(char *progname)
 {
-	printf("Usage: %s [-l FILE] ...\n", basename(progname));
+	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
+			"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
+			"[-l FILE] [-L directory] ...\n", basename(progname));
 	printf("Parse and load the specified cgroups configuration file\n");
 	printf("\n");
 	printf("  -h, --help			Display this help\n");
@@ -47,14 +49,14 @@ static void usage(char *progname)
 			" configuration files from a directory\n");
 	printf("  -a <tuid>:<tgid>		Default owner of groups files"\
 			" and directories\n");
-	printf("  -d, --dperm mode		Default group directory"\
+	printf("  -d, --dperm=mode		Default group directory"\
 			" permissions\n");
-	printf("  -f, --fperm mode		Default group file"\
+	printf("  -f, --fperm=mode		Default group file"\
 			" permissions\n");
-	printf("  -s --tperm mode		Default tasks file"
+	printf("  -s --tperm=mode		Default tasks file"
 			" permissions\n");
 	printf("  -t <tuid>:<tgid>		Default owner of the tasks "
-			"file");
+			"file\n");
 	exit(2);
 }
 

@@ -21,13 +21,13 @@ allowed to set subsystem parameters and create subgroups.
 The default value is the same as has the parent cgroup.
 
 .TP
-.B -d, --dperm mode
+.B -d, --dperm=mode
 sets the permissions of a control groups directory.
 The permissions needs to be specified as octal numbers e.g.
 \fB-d 775\fR.
 
 .TP
-.B -f, --fperm mode
+.B -f, --fperm=mode
 sets the permissions of the control groups parameters.
 The permissions needs to be specified as octal numbers e.g.
 \fB-f 775\fR.
@@ -48,7 +48,7 @@ multiple times.
 display this help and exit
 
 .TP
-.B -s, --tperm mode
+.B -s, --tperm=mode
 sets the permissions of the control group tasks file.
 The permissions needs to be specified as octal numbers e.g.
 \fB-f 775\fR.
