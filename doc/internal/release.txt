@@ -22,7 +22,8 @@ umber):
 	   errors in dist/libcgroup.spec.in file if something goes wrong.
 	f. Tag the pre-release in git.
 	g. Publish the pre-release libcgroup-X.YY.rcZ.tar.gz and announce it on
-	   the libgroup-devel list.
+	   the libgroup-devel list with a changelog (git shortlog A..B is your
+           friend).
 	h. Test the pre-release and go to a) if new one is needed.
 	During this period, ABI of newly introduced shared symbols is *not*
 	stable and may change, if there is very good reason to break it.
