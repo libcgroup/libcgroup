@@ -109,7 +109,6 @@ const char const *cgroup_strerror_codes[] = {
 	"Cgroup parsing failed",
 	"Cgroup, rules file does not exist",
 	"Cgroup mounting failed",
-	"The config file can not be opened",
 	"Sentinel",
 	"End of File or iterator",
 	"Failed to parse config file",
