@@ -87,7 +87,6 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 	int ret;
 	void *handle;
 	struct cgroup_file_info info;
-	char cgroup_dir_path[FILENAME_MAX];
 	char input_dir_path[FILENAME_MAX];
 	int lvl;
 	int len;
