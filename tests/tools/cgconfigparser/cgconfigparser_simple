@@ -8,11 +8,11 @@ mkdir -p /$TMP/cgroups/cpu 2>/dev/null
 mount -t cgroup -o cpu,cpuacct cpu /$TMP/cgroups/cpu || die "Mount failed"
 
 $TOOLSDIR/cgsnapshot -b $CONFIGDIR/cgsnapshot_blacklist.conf >/$TMP/temp.conf || die "cgsnapshot failed"
-lss_o1=`lssubsys -m`
+lss_o1=`$TOOLSDIR/lssubsys -m`
 $TOOLSDIR/cgclear || die "1st cgclear failed"
 
 $TOOLSDIR/cgconfigparser -l /$TMP/temp.conf || die "cgconfigparser failed"
-lss_o2=`lssubsys -m`
+lss_o2=`$TOOLSDIR/lssubsys -m`
 $TOOLSDIR/cgclear || die "2nd cgclear failed"
 
 if [ "$lss_o1" != "$lss_o2" ]; then
