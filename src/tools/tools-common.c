@@ -263,7 +263,8 @@ err:
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
 		const char *program_name)
 {
-	char *grp_string, *pwd_string;
+	char *grp_string = NULL;
+	char *pwd_string = NULL;
 	struct passwd *pwd;
 	struct group *grp;
 
