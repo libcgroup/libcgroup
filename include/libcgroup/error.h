@@ -59,15 +59,10 @@ enum {
 	ECGROUPNORULES,
 	ECGMOUNTFAIL,
 	/**
-	 * Not an real error, just a auxiliary mark in the enum.
-	 * Please insert further error codes above this.
-	 */
-	ECGSENTINEL,
-	/**
 	 * Not an real error, it just indicates that iterator has come to end
 	 * of sequence and no more items are left.
 	 */
-	ECGEOF,
+	ECGEOF = 23,
 	/** Failed to parse config file (cgconfig.conf). */
 	ECGCONFIGPARSEFAIL,
 	ECGNAMESPACEPATHS,
