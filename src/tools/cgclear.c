@@ -33,7 +33,7 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	} else {
-		printf("%s [-e] [-l config file] [-L directory] ...",
+		printf("%s [-e] [-l config file] [-L directory] ...\n",
 				program_name);
 	}
 }
