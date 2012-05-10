@@ -91,16 +91,16 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 	int lvl;
 	int len;
 
-	ret = cgroup_walk_tree_begin(controller, input_path, 0,
+	strncpy(input_dir_path, input_path, FILENAME_MAX);
+	/* remove problematic  '/' characters from input path */
+	trim_filepath(input_dir_path);
+
+	ret = cgroup_walk_tree_begin(controller, input_dir_path, 0,
 		&handle, &info, &lvl);
 	if (ret != 0)
 		return ret;
 
-	strncpy(input_dir_path, input_path, FILENAME_MAX);
-	/* remove problematic  '/' characters from input path*/
-	trim_filepath(input_dir_path);
-
-	len  = strlen(info.full_path) - strlen(input_dir_path);
+	len  = strlen(info.full_path) - strlen(input_dir_path) - 1;
 	print_info(&info, name, len);
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0)
 		print_info(&info, name, len);
