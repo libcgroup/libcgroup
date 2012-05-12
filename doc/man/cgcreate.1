@@ -5,9 +5,9 @@
 cgcreate \- create new cgroup(s)
 
 .SH SYNOPSIS
-\fBcgcreate\fR [\fB-h\fR] [\fB-s\fR] [\fB-t\fR <\fItuid>:<tgid\fR>]
+\fBcgcreate\fR [\fB-h\fR] [\fB-t\fR <\fItuid>:<tgid\fR>]
 [\fB-a\fR <\fIagid>:<auid\fR>] [\fB-f\fR mode] [\fB-d\fR mode]
-\fB-g\fR <\fIcontrollers>:<path\fR> [\fB-g\fR ...]
+[\fB-s\fR mode] \fB-g\fR <\fIcontrollers>:<path\fR> [\fB-g\fR ...]
 
 .SH DESCRIPTION
 The command creates new cgroup(s) defined by the options
@@ -51,7 +51,7 @@ display this help and exit
 .B -s, --tperm=mode
 sets the permissions of the control group tasks file.
 The permissions needs to be specified as octal numbers e.g.
-\fB-f 775\fR.
+\fB-s 775\fR.
 The value is not used as given because the current owner's
 permissions are used as an umask (so 777 will set group and
 others permissions to the owners permissions).
