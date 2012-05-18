@@ -48,7 +48,7 @@ debug()
 check_mount_fs ()
 {
 	local NUM_MOUNT=0;
-	CGROUP=`cat /proc/mounts|grep -w cgroup|tr -s [:space:]|cut -d" " -f3`;
+	CGROUP=`cat /proc/mounts|grep -w ^cgroup|tr -s [:space:]|cut -d" " -f3`;
 
 	# get first word in case of multiple mounts
 	CGROUP=`echo $CGROUP|cut -d" " -f1`;
@@ -56,7 +56,7 @@ check_mount_fs ()
 	debug "check_mount_fs(): CGROUP is $CGROUP";
 	if [ "$CGROUP" = "cgroup" ]
 	then
-		NUM_MOUNT=`cat /proc/mounts|grep -w cgroup|wc -l`;
+		NUM_MOUNT=`cat /proc/mounts|grep -w ^cgroup|wc -l`;
 		debug "check_mount_fs(): fs mounted at $NUM_MOUNT places";
 
 		if [ $NUM_MOUNT -eq 1 ]
