@@ -16,7 +16,7 @@
 #
 
 # TODO path to config.h have to be set properly
-OPAQUE_HIERARCHY=`grep "OPAQUE_HIERARCHY" ../config.h |\
+OPAQUE_HIERARCHY=`grep "OPAQUE_HIERARCHY" @abs_top_srcdir@/config.h |\
 	 cut -d" " -f3 | sed  's|\"||g'`
 DEBUG=false;		# for debug messages
 FS_MOUNTED=0;		# 0 for not mounted, 1 for mounted, 2 for multimounted
