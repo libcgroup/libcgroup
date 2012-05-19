@@ -21,7 +21,7 @@
 function die()
 {
 	echo $*
-	cgclear
+	@abs_top_srcdir@/libtool --mode=execute @abs_top_srcdir@/src/tools/cgclear
 	if [ -e $TMP/cgrules-backup.conf ]; then
 		mv $TMP/cgrules-backup.conf /etc/cgrules.conf &>/dev/null
 	else
