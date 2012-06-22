@@ -1099,6 +1099,20 @@ static inline pid_t cg_gettid(void)
 	return syscall(__NR_gettid);
 }
 
+static char *cg_concat_path(const char *pref, const char *suf, char *path)
+{
+	if ((suf[strlen(suf)-1] == '/') ||
+		((strlen(suf) == 0) && (pref[strlen(pref)-1] == '/'))) {
+		snprintf(path, FILENAME_MAX, "%s%s", pref,
+			suf+((suf[0] == '/') ? 1 : 0));
+	} else {
+		snprintf(path, FILENAME_MAX, "%s%s/", pref,
+			suf+((suf[0] == '/') ? 1 : 0));
+	}
+	path[FILENAME_MAX-1] = '\0';
+	return path;
+}
+
 
 /* Call with cg_mount_table_lock taken */
 /* path value have to have size at least FILENAME_MAX */
@@ -1125,9 +1139,7 @@ static char *cg_build_path_locked(const char *name, char *path,
 
 				/* FIXME: missing OOM check here! */
 
-				snprintf(path, FILENAME_MAX, "%s%s/",
-					tmp, name);
-				path[FILENAME_MAX-1] = '\0';
+				cg_concat_path(tmp, name, path);
 				free(tmp);
 			}
 			return path;
