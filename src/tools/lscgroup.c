@@ -87,20 +87,25 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 	int ret;
 	void *handle;
 	struct cgroup_file_info info;
+	char cgroup_dir_path[FILENAME_MAX];
 	char input_dir_path[FILENAME_MAX];
 	int lvl;
 	int len;
 
-	strncpy(input_dir_path, input_path, FILENAME_MAX);
-	/* remove problematic  '/' characters from input path */
-	trim_filepath(input_dir_path);
-
-	ret = cgroup_walk_tree_begin(controller, input_dir_path, 0,
+	ret = cgroup_walk_tree_begin(controller, input_path, 0,
 		&handle, &info, &lvl);
 	if (ret != 0)
 		return ret;
 
-	len  = strlen(info.full_path) - strlen(input_dir_path) - 1;
+	strncpy(cgroup_dir_path, info.full_path, FILENAME_MAX);
+	/* remove problematic  '/' characters from cgroup directory path*/
+	trim_filepath(cgroup_dir_path);
+
+	strncpy(input_dir_path, input_path, FILENAME_MAX);
+
+	/* remove problematic  '/' characters from input directory path*/
+	trim_filepath(input_dir_path);
+	len  = strlen(cgroup_dir_path) - strlen(input_dir_path);
 	print_info(&info, name, len);
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0)
 		print_info(&info, name, len);
