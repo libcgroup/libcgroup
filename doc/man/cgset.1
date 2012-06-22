@@ -9,7 +9,7 @@ cgset \- set the parameters of given cgroup(s)
 .SH SYNOPSIS
 \fBcgset\fR [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
 .br
-\fBcgset\fR \fB--copy-from\fR <\fIsource_cgrup_path\fR> <\fBcgroup_path\fR> ...
+\fBcgset\fR \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 Set the parameters of input cgroups.
@@ -26,7 +26,7 @@ the value which should be written to that file.
 This parameter can be used multiple times.
 
 .TP
-.B -copy-from <source_cgrup_path>
+.B -copy-from <source_cgroup_path>
 defines the name of the cgroup whose parameters will be
 copied to the input cgroup.
 
