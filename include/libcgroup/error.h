@@ -62,7 +62,7 @@ enum {
 	 * Not an real error, it just indicates that iterator has come to end
 	 * of sequence and no more items are left.
 	 */
-	ECGEOF = 23,
+	ECGEOF = 50023,
 	/** Failed to parse config file (cgconfig.conf). */
 	ECGCONFIGPARSEFAIL,
 	ECGNAMESPACEPATHS,
