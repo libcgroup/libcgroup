@@ -77,6 +77,7 @@ struct control_value {
 struct cgroup_controller {
 	char name[FILENAME_MAX];
 	struct control_value *values[CG_NV_MAX];
+	struct cgroup *cgroup;
 	int index;
 };
 

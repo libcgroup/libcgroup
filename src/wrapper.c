@@ -83,6 +83,7 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 		return NULL;
 
 	strncpy(controller->name, name, sizeof(controller->name));
+	controller->cgroup = cgroup;
 	controller->index = 0;
 
 	cgroup->controller[cgroup->index] = controller;
