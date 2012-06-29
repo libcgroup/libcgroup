@@ -600,3 +600,10 @@ char *cgroup_get_value_name(struct cgroup_controller *controller, int index)
 		return NULL;
 }
 
+char *cgroup_get_cgroup_name(struct cgroup *cgroup)
+{
+	if (!cgroup)
+		return NULL;
+
+	return cgroup->name;
+}

@@ -565,6 +565,12 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 	int dirm_change, mode_t file_mode, int filem_change);
 
 /**
+ *  Get the name of the cgroup from a given cgroup
+ *  @param cgroup The cgroup whose name is needed
+ */
+char *cgroup_get_cgroup_name(struct cgroup *cgroup);
+
+/**
  * @}
  * @}
  */
