@@ -93,7 +93,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Cgroup has not been created",
 	"Cgroup one of the needed subsystems is not mounted",
 	"Cgroup, request came in from non owner",
-	"Cgroup controllers controllers are bound to different mount points",
+	"Cgroup controllers are bound to different mount points",
 	"Cgroup, operation not allowed",
 	"Cgroup value set exceeds maximum",
 	"Cgroup controller already exists",
