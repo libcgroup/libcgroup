@@ -729,10 +729,12 @@ int main(int argc, char *argv[])
 		case 'b':
 			flags |= FL_BLACK;
 			strncpy(bl_file, optarg, FILENAME_MAX);
+			bl_file[FILENAME_MAX-1] = '\0';
 			break;
 		case 'w':
 			flags |= FL_WHITE;
 			strncpy(wl_file, optarg, FILENAME_MAX);
+			wl_file[FILENAME_MAX-1] = '\0';
 			break;
 		case 't':
 			flags |= FL_STRICT;
