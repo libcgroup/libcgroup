@@ -13,10 +13,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * TODOs:
- *	1. Convert comments to Docbook style.
- *	2. Add more APIs for the control groups.
- *	3. Handle the configuration related APIs.
- *	4. Error handling.
+ *	1. Add more APIs for the control groups.
+ *	2. Handle the configuration related APIs.
  *
  * Code initiated and designed by Dhaval Giani. All faults are most likely
  * his mistake.

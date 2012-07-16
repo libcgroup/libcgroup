@@ -14,9 +14,6 @@
  *
  * TODOs:
  *	1. Implement our own hashing scheme
- *	2. Add namespace support
- *	3. Add support for parsing cgroup filesystem and creating a
- *	   config out of it.
  *
  * Code initiated and designed by Balbir Singh. All faults are most likely
  * his mistake.
