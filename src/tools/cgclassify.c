@@ -38,10 +38,17 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	} else {
-		printf("usage is %s"\
+		printf("Usage: %s"\
 			"[-g <controllers>:<path>]"
 			"[--sticky | --cancel-sticky] <list of pids>\n",
 			program_name);
+		printf("Move running task(s) to given cgroups\n");
+		printf("  -g <controllers>:<path>	Control group "\
+			"to be displayed (-g is optional)\n");
+		printf("  --sticky			cgred daemon "\
+			"does not change pidlist and children tasks\n");
+		printf("  --cancel-sticky			cgred daemon "\
+			"change pidlist and children tasks\n");
 	}
 }
 
@@ -109,6 +116,7 @@ out:
 static struct option longopts[] = {
 	{"sticky", no_argument, NULL, 's'},
 	{"cancel-sticky", no_argument, NULL, 'u'},
+	{"help", no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
 };
 
