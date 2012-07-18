@@ -38,9 +38,9 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	} else {
-		printf("usage is %s "
-			"[-g <list of controllers>:<relative path to cgroup>] "
-			"[--sticky | --cancel-sticky] <list of pids>  \n",
+		printf("usage is %s"\
+			"[-g <controllers>:<path>]"
+			"[--sticky | --cancel-sticky] <list of pids>\n",
 			program_name);
 	}
 }

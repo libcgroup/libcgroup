@@ -42,6 +42,7 @@ static void usage(int status, const char *program_name)
 			"[-s mode] [-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
 			"-g <controllers>:<path> [-g ...]\n",
 			program_name);
+		fprintf(stdout, "Create control group(s)\n");
 		fprintf(stdout, "  -a <tuid>:<tgid>		Owner "\
 			"of the group and all its files\n");
 		fprintf(stdout, "  -d, --dperm=mode		Group "\

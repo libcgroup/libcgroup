@@ -39,16 +39,16 @@ static void usage(int status, const char *program_name)
 			program_name);
 	else {
 		fprintf(stdout, "Usage: %s [-nv] [-r <name>] "\
-			"[-g <controller>] [-a] <path> ...\n", program_name);
+			"[-g <controllers>] [-a] <path> ...\n", program_name);
 		fprintf(stdout, "   or: %s [-nv] [-r <name>] "\
-			"-g <controller>:<path> ...\n", program_name);
+			"-g <controllers>:<path> ...\n", program_name);
 		fprintf(stdout, "Print parameter(s) of given group(s).\n");
 		fprintf(stdout, "  -a, --all			"\
 			"Print info about all relevant controllers\n");
-		fprintf(stdout, "  -g <controller>		"\
-			"Controller which info should be displaied\n");
-		fprintf(stdout, "  -g <controller>:<path>	"\
-			"Control group whih info should be displaied\n");
+		fprintf(stdout, "  -g <controllers>		"\
+			"Controller which info should be displayed\n");
+		fprintf(stdout, "  -g <controllers>:<path>	"\
+			"Control group which info should be displayed\n");
 		fprintf(stdout, "  -h, --help			"\
 			"Display this help\n");
 		fprintf(stdout, "  -n				"\
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
 
 	if (((group_needed == 2) && (argv[optind])) ||
 	    ((group_needed != 2) && (!argv[optind]))) {
-		/* mixed -g <controller>:<path> and <path> or path not set */
+		/* mixed -g <controllers>:<path> and <path> or path not set */
 		usage(1, argv[0]);
 		result = -1;
 		goto err;
