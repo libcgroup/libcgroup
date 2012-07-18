@@ -33,8 +33,16 @@ static void usage(int status, const char *program_name)
 			" try %s -h' for more information.\n",
 			program_name);
 	} else {
-		printf("%s [-e] [-l config file] [-L directory] ...\n",
-				program_name);
+		printf("Usage: %s [-h] [-l FILE] [-L DIR] [-e]\n",
+			program_name);
+		printf("Unload the cgroup filesystem\n");
+		printf("  -h, --help			Display this help\n");
+		printf("  -e, --empty			Remove only empty"\
+			" cgroups\n");
+		printf("  -l, --load=FILE		Parse and load"\
+			"the cgroups configuration file\n");
+		printf("  -L, --load-directory=DIR	Parse and load"\
+			"the cgroups configuration files from a directory\n");
 	}
 }
 
@@ -61,6 +69,7 @@ int main(int argc, char *argv[])
 			{"load", required_argument, 0,  'l' },
 			{"load-directory", required_argument, 0,  'L' },
 			{"only-empty", no_argument, 0,  'e' },
+			{"help", no_argument, 0, 'h'},
 			{ 0, 0, 0, 0}
 	};
 
