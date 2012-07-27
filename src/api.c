@@ -1441,8 +1441,15 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 				cgroup->controller[i]->values[j]->value);
 			free(path);
 			path = NULL;
+			/* don't consider error in files directly written by
+			 * the user as fatal */
+			if (error && !cgroup->controller[i]->values[j]->dirty) {
+				error = 0;
+				continue;
+			}
 			if (error)
 				goto err;
+			cgroup->controller[i]->values[j]->dirty = false;
 		}
 	}
 err:
@@ -2327,7 +2334,7 @@ fill_error:
  */
 int cgroup_get_cgroup(struct cgroup *cgroup)
 {
-	int i;
+	int i, j;
 	char path[FILENAME_MAX];
 	DIR *dir = NULL;
 	struct dirent *ctrl_dir = NULL;
@@ -2421,6 +2428,9 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 				continue;
 
 			error = cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i);
+			for (j = 0; j < cgc->index; j++)
+				cgc->values[j]->dirty = false;
+
 			if (error == ECGFAIL) {
 				closedir(dir);
 				goto unlock_error;

@@ -146,6 +146,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 	strncpy(cntl_value->value, value, sizeof(cntl_value->value));
+	cntl_value->dirty = true;
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
 
@@ -355,6 +356,7 @@ int cgroup_set_value_string(struct cgroup_controller *controller,
 		struct control_value *val = controller->values[i];
 		if (!strcmp(val->name, name)) {
 			strncpy(val->value, value, CG_VALUE_MAX);
+			val->dirty = true;
 			return 0;
 		}
 	}
@@ -404,6 +406,7 @@ int cgroup_set_value_int64(struct cgroup_controller *controller,
 			if (ret >= sizeof(val->value) || ret < 0)
 				return ECGINVAL;
 
+			val->dirty = true;
 			return 0;
 		}
 	}
@@ -452,6 +455,7 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller,
 			if (ret >= sizeof(val->value) || ret < 0)
 				return ECGINVAL;
 
+			val->dirty = true;
 			return 0;
 		}
 	}
@@ -511,6 +515,7 @@ int cgroup_set_value_bool(struct cgroup_controller *controller,
 			if (ret >= sizeof(val->value) || ret < 0)
 				return ECGINVAL;
 
+			val->dirty = true;
 			return 0;
 
 		}

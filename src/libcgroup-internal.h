@@ -71,6 +71,7 @@ __BEGIN_DECLS
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_VALUE_MAX];
+	bool dirty;
 };
 
 struct cgroup_controller {
