@@ -256,7 +256,7 @@ int parse_mode(char *string, mode_t *pmode, const char *program_name)
 
 err:
 	*pmode = 0;
-	fprintf(stdout, "%s wrong mode format %s", program_name, string);
+	fprintf(stdout, "%s wrong mode format %s\n", program_name, string);
 	return -1;
 }
 
