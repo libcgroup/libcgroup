@@ -51,8 +51,8 @@ create_default_groups() {
 	defaultcgroup=
 
         if [ -f /etc/cgrules.conf ]; then
-	    grep -m1 '^\*[[:space:]]\+' /etc/cgrules.conf | \
-		    read user ctrl defaultcgroup
+	    read user ctrl defaultcgroup <<< \
+		    $(grep -m1 '^\*[[:space:]]\+' /etc/cgrules.conf)
             if [ -n "$defaultcgroup" -a "$defaultcgroup" = "*" ]; then
                 log_warning_msg "/etc/cgrules.conf incorrect"
                 log_warning_msg "Overriding it"
