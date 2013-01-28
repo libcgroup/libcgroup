@@ -2690,11 +2690,12 @@ char *cgroup_copy_with_slash(char *input)
 }
 
 /* add controller to a group if it is not exists create it */
-static int add_controller(struct cgroup *group, char *group_name,
+static int add_controller(struct cgroup **pgroup, char *group_name,
 	char controller_name[FILENAME_MAX])
 {
 	int ret = 0;
 	struct cgroup_controller *controller = NULL;
+	struct cgroup *group = pgroup[0];
 
 	if  (group == NULL) {
 		/* it is the first controllerc the group have to be created */
@@ -2703,6 +2704,7 @@ static int add_controller(struct cgroup *group, char *group_name,
 			ret = ECGFAIL;
 			goto end;
 		}
+		pgroup[0] = group;
 	}
 
 	controller = cgroup_add_controller(
@@ -2775,7 +2777,7 @@ static int cgroup_create_template_group(char *orig_group_name,
 
 			if (exist != 0) {
 				/* the cgroup does not exist */
-				ret = add_controller(template_group, group_name,
+				ret = add_controller(&template_group, group_name,
 					tmp->controllers[i]);
 				if  (ret != 0)
 					goto while_end;
