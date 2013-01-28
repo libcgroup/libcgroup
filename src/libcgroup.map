@@ -109,4 +109,5 @@ CGROUP_0.38 {
 CGROUP_0.39 {
 	cgroup_reload_cached_templates;
 	cgroup_init_templates_cache;
+	cgroup_config_create_template_group;
 } CGROUP_0.38;

@@ -18,6 +18,8 @@ __BEGIN_DECLS
 enum cgflags {
 	/** Use cached rules, do not read rules from disk. */
 	CGFLAG_USECACHE = 0x01,
+	/** Use cached templates, do not read templates from disk. */
+	CGFLAG_USE_TEMPLATE_CACHE = 0x02,
 };
 
 /** Flags for cgroup_register_unchanged_process(). */

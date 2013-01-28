@@ -84,6 +84,26 @@ int cgroup_init_templates_cache(char *pathname);
 int cgroup_reload_cached_templates(char *pathname);
 
 /**
+ * Physically create a new control group in kernel, based on given control
+ * group template and configuration file. If given template is not set in
+ * configuration file, then the procedure works create the control group
+ * using  cgroup_create_cgroup() function
+ *
+ * The flags can alter the behavior of this function:
+ * CGFLAG_USE_TEMPLATE_CACHE: Use cached templates instead of
+ * parsing the config file
+ *
+ * @param pathname Name of the configuration file with template definitions
+ * @param cgroup Wanted control group - contains substitute name and wanted
+ * controllers.
+ * @param template_name Template name used for cgroup setting
+ * @param flags Bit flags to change the behavior
+ */
+int cgroup_config_create_template_group(
+	struct cgroup *cgroup, char *template_name,
+	int flags);
+
+/**
  * @}
  * @}
  */

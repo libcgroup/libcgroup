@@ -1501,3 +1501,111 @@ int cgroup_init_templates_cache(char *pathname)
 
 
 }
+
+/*
+ * Create a given cgroup, based on template configuration if it is present
+ * if the template is not present cgroup is creted using cgroup_create_cgroup
+ */
+int cgroup_config_create_template_group(struct cgroup *cgroup,
+	char *template_name, int flags)
+{
+	int ret = 0;
+	int i, j, k;
+	struct cgroup *t_cgroup;
+	char buffer[FILENAME_MAX];
+	struct cgroup *aux_cgroup;
+	struct cgroup_controller *cgc;
+
+	/*
+	 * If the user did not ask for cached rules, we must parse the
+	 * configuration file and prepare template structures now. We
+	 * use CGCONFIG_CONF_FILE by default
+	 */
+	if (!(flags & CGFLAG_USE_TEMPLATE_CACHE)) {
+		if (template_table_index == 0)
+			/* the rules cache is empty */
+			ret = cgroup_init_templates_cache(CGCONFIG_CONF_FILE);
+		else
+			/* cache is not empty */
+			ret = cgroup_reload_cached_templates(
+				CGCONFIG_CONF_FILE);
+		if (ret != 0) {
+			cgroup_dbg("Failed initialize templates cache.\n");
+			return ret;
+		}
+	}
+
+	for (i = 0; cgroup->controller[i] != NULL; i++) {
+		/* for each controller we have to add to cgroup structure
+		 * either template cgroup or empty controller  */
+
+		/* look for relevant template - test name x controller pair */
+		for (j = 0; j < template_table_index; j++) {
+
+			t_cgroup = &template_table[j];
+			if (strcmp(t_cgroup->name, template_name) != 0) {
+				/* template name does not match skip template */
+				continue;
+			}
+
+			/* template name match */
+			for (k = 0; t_cgroup->controller[k] != NULL; k++) {
+				if (strcmp((cgroup->controller[i])->name,
+					(t_cgroup->controller[k])->name) != 0) {
+					/* controller name does not match */
+					continue;
+				}
+
+				/* name and controller match template found */
+				/* variables substituted in template */
+				strncpy(buffer, t_cgroup->name,
+					FILENAME_MAX);
+				strncpy(t_cgroup->name, cgroup->name,
+					FILENAME_MAX);
+
+				ret = cgroup_create_cgroup(t_cgroup, flags);
+
+				strncpy(t_cgroup->name, buffer,
+					FILENAME_MAX);
+				if (ret) {
+					cgroup_dbg("creating group %s, error %d\n",
+					cgroup->name, ret);
+					goto end;
+				} else {
+					/* go to new controller */
+					j = template_table_index;
+					continue;
+				}
+
+			}
+		}
+
+		/* no template is present for given name x controller pair
+		 * add controller to result cgroup */
+		aux_cgroup = cgroup_new_cgroup(cgroup->name);
+		if (ret) {
+			ret = ECGINVAL;
+			fprintf(stderr, "cgroup %s can't be created\n",
+				cgroup->name);
+			goto end;
+		}
+		cgc = cgroup_add_controller(aux_cgroup,
+			(cgroup->controller[i])->name);
+		if (cgc == NULL) {
+			ret = ECGINVAL;
+			fprintf(stderr, "cgroup %s can't be created\n",
+				cgroup->name);
+			goto end;
+		}
+		ret = cgroup_create_cgroup(aux_cgroup, flags);
+		if (ret) {
+			ret = ECGINVAL;
+			fprintf(stderr, "cgroup %s can't be created\n",
+				cgroup->name);
+			goto end;
+		}
+	}
+
+end:
+	return ret;
+}
