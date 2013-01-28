@@ -2635,6 +2635,199 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 	return ret;
 }
 
+/* Procedure the existence of cgroup "prefix" is in subsystem controller_name
+ * return 0 on success
+ */
+int cgroup_exist_in_subsystem(char *controller_name, char *prefix)
+{
+	DIR *dir;
+	char path[FILENAME_MAX];
+	char *ret_path;
+	int ret;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+	ret_path = cg_build_path_locked(prefix, path, controller_name);
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	if (!ret_path) {
+		ret = 1;
+		goto end;
+	}
+
+	dir = opendir(path);
+	if (dir == NULL) {
+		/* cgroup in wanted subsystem does not exist */
+		ret = 1;
+	} else {
+		/* cgroup in wanted subsystem exists */
+		ret = 0;
+		closedir(dir);
+	}
+end:
+	return ret;
+}
+
+/* auxiliary function return a pointer to the string
+ * which is copy of input string and end with the slash
+ */
+char *cgroup_copy_with_slash(char *input)
+{
+	char *output;
+	int len = strlen(input);
+
+	/* if input does not end with '/', allocate one more space for it */
+	if ((input[len-2]) != '/')
+		len = len+1;
+
+	output = (char *)malloc(sizeof(char)*(len));
+	if (output == NULL)
+		return NULL;
+
+	strcpy(output, input);
+	output[len-1] = '/';
+	output[len] = '\0';
+
+	return output;
+}
+
+/* add controller to a group if it is not exists create it */
+static int add_controller(struct cgroup *group, char *group_name,
+	char controller_name[FILENAME_MAX])
+{
+	int ret = 0;
+	struct cgroup_controller *controller = NULL;
+
+	if  (group == NULL) {
+		/* it is the first controllerc the group have to be created */
+		group = cgroup_new_cgroup(group_name);
+		if (group == NULL) {
+			ret = ECGFAIL;
+			goto end;
+		}
+	}
+
+	controller = cgroup_add_controller(
+		group, controller_name);
+	if (controller == NULL) {
+		cgroup_free(&group);
+		ret = ECGFAIL;
+	}
+end:
+	return ret;
+}
+
+
+
+/* create control group based given template
+ * if the group already don't exist
+ * dest is template name with substitute variables
+ * tmp is used cgrules rule
+ */
+static int cgroup_create_template_group(char *orig_group_name,
+	struct cgroup_rule *tmp, int flags)
+{
+
+	char *template_name = NULL;	/* name of the template */
+	char *group_name = NULL;	/* name of the group based on template -
+					   variables are substituted */
+	char *template_position;	/* denotes directory in template path
+					   which is investigated */
+	char *group_position;		/* denotes directory in cgroup path
+					   which is investigated */
+
+	struct cgroup *template_group = NULL;
+	int ret = 0;
+	int i;
+	int exist;
+
+	/* template name and group name have to have '/' sign at the end */
+	template_name = cgroup_copy_with_slash(tmp->destination);
+	if (template_name == NULL) {
+		ret = ECGOTHER;
+		last_errno = errno;
+		goto end;
+	}
+	group_name = cgroup_copy_with_slash(orig_group_name);
+	if (group_name == NULL) {
+		ret = ECGOTHER;
+		last_errno = errno;
+		free(template_name);
+		goto end;
+	}
+
+	/* set start positions */
+	template_position = strchr(template_name, '/');
+	group_position = strchr(group_name, '/');
+
+	/* go recursively through whole path to template group and create given
+	 * directory if it does not exist yet
+	 */
+	while ((group_position != NULL) && (template_position != NULL)) {
+		/* set new subpath */
+		group_position[0] = '\0';
+		template_position[0] = '\0';
+		template_group = NULL;
+
+		/* test for which controllers wanted group does not exist */
+		i = 0;
+		while (tmp->controllers[i] != NULL) {
+			exist = cgroup_exist_in_subsystem(tmp->controllers[i],
+				group_name);
+
+			if (exist != 0) {
+				/* the cgroup does not exist */
+				ret = add_controller(template_group, group_name,
+					tmp->controllers[i]);
+				if  (ret != 0)
+					goto while_end;
+			}
+			i++;
+		}
+
+		if (template_group != NULL) {
+			/*  new group have to be created */
+			if (strcmp(group_name, template_name) == 0) {
+				/* the prefix cgroup without template */
+				ret = cgroup_create_cgroup(template_group, 0);
+			} else {
+				/* TODO: this will be a function which use
+				 * template to create relevant cgroup
+				 * now cgroup_create_cgroup is used
+				ret = cgroup_config_create_template_group(
+					template_group, template_name,
+					0, flags);
+				 */
+				ret = cgroup_create_cgroup(template_group, 0);
+			}
+
+			if (ret != 0) {
+				cgroup_free(&template_group);
+				goto while_end;
+			}
+			cgroup_dbg("Group %s created - based on template %s\n",
+				group_name, template_name);
+
+			cgroup_free(&template_group);
+		}
+		template_position[0] = '/';
+		group_position[0] = '/';
+		template_position = strchr(++template_position, '/');
+		group_position = strchr(++group_position, '/');
+	}
+
+while_end:
+	if (template_position[0] == '\0')
+		template_position[0] = '/';
+	if (group_position[0] == '\0')
+		group_position[0] = '/';
+
+end:
+	if (group_name != NULL)
+		free(group_name);
+	if (template_name != NULL)
+		free(template_name);
+	return ret;
+}
+
 int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 		const char *procname, pid_t pid, int flags)
 {
@@ -2783,7 +2976,14 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 				newdest[j] = tmp->destination[i];
 			}
 		}
+
 		newdest[j] = 0;
+		if (strcmp(newdest, tmp->destination) != 0) {
+			/* destination tag contains templates */
+
+			cgroup_dbg("control group %s is template\n", newdest);
+			ret = cgroup_create_template_group(newdest, tmp, flags);
+		}
 
 		/* Apply the rule */
 		ret = cgroup_change_cgroup_path(newdest,
