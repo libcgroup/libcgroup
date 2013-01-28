@@ -884,6 +884,26 @@ void cgre_flash_rules(int signum)
 		cgroup_print_rules_config(logfile);
 		fprintf(logfile, "\n");
 	}
+
+	/* Ask libcgroup to reload the template rules table. */
+	cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
+}
+
+/**
+ * Catch the SIGUSR1 signal and reload the rules configuration.  This function
+ * makes use of the logfile and flog() to print the new rules.
+ *	@param signum The signal that we caught (always SIGUSR1)
+ */
+void cgre_flash_templates(int signum)
+{
+	/* Current time */
+	time_t tm = time(0);
+
+	flog(LOG_NOTICE, "Reloading templates configuration.");
+	flog(LOG_DEBUG, "Current time: %s", ctime(&tm));
+
+	/* Ask libcgroup to reload the templates table. */
+	cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
 }
 
 /**
@@ -1092,6 +1112,15 @@ int main(int argc, char *argv[])
 		goto finished;
 	}
 
+	/* ask libcgroup to load template rules as well */
+	ret = cgroup_init_templates_cache(CGCONFIG_CONF_FILE);
+	if (ret != 0) {
+		fprintf(stderr, "Error: libcgroup failed to initialize teplate"\
+				"rules from %s. %s\n", CGCONFIG_CONF_FILE,
+				cgroup_strerror(ret));
+		goto finished;
+	}
+
 	/* Now, start the daemon. */
 	ret = cgre_start_daemon(logp, facility, daemon, verbosity);
 	if (ret < 0) {
@@ -1110,6 +1139,18 @@ int main(int argc, char *argv[])
 	if ((ret = sigaction(SIGUSR2, &sa, NULL))) {
 		flog(LOG_ERR, "Failed to set up signal handler for SIGUSR2."
 				" Error: %s", strerror(errno));
+		goto finished;
+	}
+
+	/*
+	 * Set up the signal handler to reload templates cache upon
+	 * reception of a SIGUSR1 signal.
+	 */
+	sa.sa_handler = &cgre_flash_templates;
+	ret = sigaction(SIGUSR1, &sa, NULL);
+	if (ret) {
+		flog(LOG_ERR, "Failed to set up signal handler for SIGUSR1."\
+			" Error: %s", strerror(errno));
 		goto finished;
 	}
 

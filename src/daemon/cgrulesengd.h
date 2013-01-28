@@ -106,6 +106,13 @@ int cgre_start_daemon(const char *logp, const int logf,
 void cgre_flash_rules(int signum);
 
 /**
+ * Catch the SIGUSR1 signal and reload the rules configuration.  This function
+ * makes use of the logfile and flog() to print the new rules.
+ *     @param signum The signal that we caught (always SIGUSR1)
+ */
+void cgre_flash_templates(int signum);
+
+/**
  * Catch the SIGTERM and SIGINT signal so that we can exit gracefully.  Before
  * exiting, this function makes use of the logfile and flog().
  * 	@param signum The signal that we caught (SIGTERM, SIGINT)
