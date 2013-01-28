@@ -37,7 +37,7 @@ int yywrap(void)
 
 %}
 
-%token ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT
+%token ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT TEMPLATE
 
 %union {
 	char *name;
@@ -50,6 +50,9 @@ int yywrap(void)
 %type <val> admin_conf task_conf task_or_admin group_conf group start
 %type <val> namespace namespace_conf default default_conf
 %type <values> namevalue_conf
+%type <val> template template_conf
+%type <val> template_task_or_admin template_task_namevalue_conf
+%type <val> template_admin_namevalue_conf
 %start start
 %%
 
@@ -66,6 +69,10 @@ start   : start group
 	  $$ = $1;
 	}
         | start namespace
+	{
+		$$ = $1;
+	}
+	| start template
 	{
 		$$ = $1;
 	}
@@ -145,6 +152,86 @@ group_conf
 		}
 	}
         ;
+
+template  :     TEMPLATE ID '{' template_conf '}'
+	{
+		$$ = $4;
+		if ($$) {
+			$$ = template_config_insert_cgroup($2);
+			if (!$$) {
+				fprintf(stderr, "parsing failed at line number %d\n",
+					line_no);
+				$$ = ECGOTHER;
+				return $$;
+			}
+		} else {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
+
+
+template_conf
+	:       ID '{' namevalue_conf '}'
+	{
+		$$ = template_config_parse_controller_options($1, $3);
+		cgroup_dictionary_free($3);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	|       template_conf ID '{' namevalue_conf '}'
+	{
+		$$ = template_config_parse_controller_options($2, $4);
+		cgroup_dictionary_free($4);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	|       PERM '{' template_task_or_admin '}'
+	{
+		$$ = $3;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
+
+template_task_or_admin
+	:	TASK '{' template_task_namevalue_conf '}' admin_conf
+	{
+	$$ = $3 && $5;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	|       ADMIN '{' template_admin_namevalue_conf '}' task_conf
+	{
+		$$ = $3 && $5;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+		return $$;
+		}
+	}
+	;
+
 
 namevalue_conf
         :       ID '=' ID ';'
@@ -226,6 +313,53 @@ admin_namevalue_conf
 		}
 	}
         ;
+
+template_task_namevalue_conf
+        :       ID '=' ID ';'
+	{
+		$$ = template_config_group_task_perm($1, $3);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+        |       task_namevalue_conf ID '=' ID ';'
+	{
+		$$ = $1 && template_config_group_task_perm($2, $4);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
+
+template_admin_namevalue_conf
+        :       ID '=' ID ';'
+	{
+		$$ = template_config_group_admin_perm($1, $3);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+        |       admin_namevalue_conf ID '=' ID ';'
+	{
+		$$ = $1 && template_config_group_admin_perm($2, $4);
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+        ;
+
 
 task_or_admin
         :       TASK '{' task_namevalue_conf '}' admin_conf

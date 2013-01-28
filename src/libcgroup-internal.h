@@ -220,6 +220,11 @@ extern __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 int cgroup_config_insert_cgroup(char *cg_name);
 int cgroup_config_parse_controller_options(char *controller,
 		struct cgroup_dictionary *values);
+int template_config_insert_cgroup(char *cg_name);
+int template_config_parse_controller_options(char *controller,
+		struct cgroup_dictionary *values);
+int template_config_group_task_perm(char *perm_type, char *value);
+int template_config_group_admin_perm(char *perm_type, char *value);
 int cgroup_config_group_task_perm(char *perm_type, char *value);
 int cgroup_config_group_admin_perm(char *perm_type, char *value);
 int cgroup_config_insert_into_mount_table(char *name, char *mount_point);

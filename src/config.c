@@ -123,6 +123,16 @@ int cgroup_config_insert_cgroup(char *cg_name)
 }
 
 /*
+ * TODO: This call just sets the name of the template. It will
+ * always be called in the end, because the parser will
+ * work bottom up.
+ */
+int template_config_insert_cgroup(char *cg_name)
+{
+	return 1;
+}
+
+/*
  * This function sets the various controller's control
  * files. It will always append values for cgroup_table_index
  * entry in the cgroup_table. The index is incremented in
@@ -178,6 +188,17 @@ parse_error:
 	cgroup_delete_cgroup(config_cgroup, 1);
 	cgroup_table_index--;
 	return 0;
+}
+
+/* TODO: This function sets the various controller's control
+ * files. It will always append values for config_template_table_index
+ * entry in the config_template_table. The index is incremented in
+ * temlate_config_insert_cgroup
+ */
+int template_config_parse_controller_options(char *controller,
+	struct cgroup_dictionary *values)
+{
+	return 1;
 }
 
 /*
@@ -251,6 +272,14 @@ group_task_error:
 	cgroup_delete_cgroup(config_cgroup, 1);
 	cgroup_table_index--;
 	return 0;
+}
+
+/*
+ * TODO: Sets the tasks file's uid and gid for templates
+ */
+int template_config_group_task_perm(char *perm_type, char *value)
+{
+	return 1;
 }
 
 /*
@@ -332,6 +361,14 @@ admin_error:
 	cgroup_delete_cgroup(config_cgroup, 1);
 	cgroup_table_index--;
 	return 0;
+}
+
+/*
+ * TODO: Set the control file's uid and gid for templates
+ */
+int template_config_group_admin_perm(char *perm_type, char *value)
+{
+	return 1;
 }
 
 /*
