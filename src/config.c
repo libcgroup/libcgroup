@@ -83,6 +83,15 @@ static struct cgroup *config_template_table;
 static int config_template_table_index;
 
 /*
+ * template structures used for templates cache, config_template_table and
+ * cgroup_template_table_index are rewritten  in each cgroup_parse_config
+ * thus not only if we want to reload template cache
+ */
+static struct cgroup *template_table;
+static int template_table_index;
+
+
+/*
  * Needed for the type while mounting cgroupfs.
  */
 #define CGROUP_FILESYSTEM "cgroup"
@@ -1407,4 +1416,88 @@ int cgroup_config_set_default(struct cgroup *new_default)
 	default_group_set = 1;
 
 	return 0;
+}
+
+/**
+ * Reloads the templates list, using the given configuration file.
+ *	@return 0 on success, > 0 on failure
+ */
+int cgroup_reload_cached_templates(char *pathname)
+{
+	int i;
+	int ret = 0;
+
+	if (template_table) {
+		/* template structures have to be free */
+		for (i = 0; i < template_table_index; i++)
+			cgroup_free_controllers(&template_table[i]);
+		free(template_table);
+		template_table = NULL;
+	}
+	template_table_index = 0;
+
+	if (config_template_table_index != 0) {
+		/* config template structures have to be free as well*/
+		cgroup_free_config();
+	}
+
+	/* reloading data to config template structures */
+	cgroup_dbg("Reloading cached templates from %s.\n", pathname);
+	ret = cgroup_parse_config(pathname);
+	if (ret) {
+		cgroup_dbg("Could not reload template cache, error was: %d\n",
+			ret);
+		return ret;
+	}
+
+	/* copy data to templates cache structures */
+	template_table_index = config_template_table_index;
+	template_table = calloc(template_table_index, sizeof(struct cgroup));
+	if (template_table == NULL) {
+		ret = ECGOTHER;
+		return  ret;
+	}
+
+	memcpy(template_table, config_template_table,
+		template_table_index * sizeof(struct cgroup));
+
+	return ret;
+}
+
+/**
+ * Initializes the templates cache.
+ *	@return 0 on success, > 0 on error
+ */
+int cgroup_init_templates_cache(char *pathname)
+{
+	int ret = 0;
+
+	if (config_template_table_index != 0) {
+		/* config structures have to be clean */
+		cgroup_free_config();
+	}
+
+	cgroup_dbg("Loading cached templates from %s.\n", pathname);
+	/* Attempt to read the configuration file and cache the rules. */
+	ret = cgroup_parse_config(pathname);
+	if (ret) {
+		cgroup_dbg("Could not initialize rule cache, error was: %d\n",
+			ret);
+		return ret;
+	}
+
+	/* copy template data to templates cache structures */
+	template_table_index = config_template_table_index;
+	template_table = calloc(template_table_index, sizeof(struct cgroup));
+	if (template_table == NULL) {
+		ret = ECGOTHER;
+		return ret;
+	}
+
+	memcpy(template_table, config_template_table,
+		template_table_index * sizeof(struct cgroup));
+
+	return ret;
+
+
 }

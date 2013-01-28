@@ -105,3 +105,8 @@ CGROUP_0.38 {
        cgroup_config_unload_config;
        cgroup_config_set_default;
 } CGROUP_0.37;
+
+CGROUP_0.39 {
+	cgroup_reload_cached_templates;
+	cgroup_init_templates_cache;
+} CGROUP_0.38;

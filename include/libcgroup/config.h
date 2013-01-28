@@ -74,6 +74,16 @@ int cgroup_config_unload_config(const char *pathname, int flags);
 int cgroup_config_set_default(struct cgroup *new_default);
 
 /**
+ * Initializes the templates cache and load it from file pathname.
+ */
+int cgroup_init_templates_cache(char *pathname);
+
+/**
+ * Reloads the templates list from file pathname.
+ */
+int cgroup_reload_cached_templates(char *pathname);
+
+/**
  * @}
  * @}
  */

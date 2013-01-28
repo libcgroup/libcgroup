@@ -47,6 +47,8 @@ __BEGIN_DECLS
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 
 
+#define CGCONFIG_CONF_FILE		"/etc/cgconfig.conf"
+
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
 
