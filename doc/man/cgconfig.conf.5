@@ -239,6 +239,18 @@ their permissions in their
 .I group
 section.
 
+.I template
+section has the same structure as
+.B group
+section. Template name uses the same templates string as
+.B cgrules.conf
+destination tag (see (\fBcgrules.conf\fR (5)).
+Template definition is used as a control group definition for rules in
+\fBcgrules.conf\fR (5) with the same destination name.
+Templates does not use
+.B default
+section settings.
+
 .\"********************************************"
 .SH EXAMPLES
 .LP
@@ -709,6 +721,48 @@ group can move processes to the
 control group, but they can not move the process out of the group. Only the
 .I operator
 or root can do that.
+
+.SS Example 7
+.LP
+The configuration file:
+
+.LP
+.RS
+.nf
+mount {
+.RS
+cpu = /mnt/cgroups/cpu;
+cpuacct = /mnt/cgroups/cpuacct;
+.RE
+}
+
+group students {
+.RS
+cpuacct{
+}
+cpu {
+}
+.RE
+}
+
+template students/%u {
+.RS
+cpuacct{
+}
+cpu {
+}
+.RE
+}
+
+mkdir /mnt/cgroups/cpu/daemons
+mkdir /mnt/cgroups/cpuacct/daemons
+.fi
+.RE
+
+The situation is the similar as in Example 4. The only difference is template,
+which is used if some rule uses "/students/%u" as a destination.
+
+
 
 .SH RECOMMENDATIONS
 .SS Keep hierarchies separated

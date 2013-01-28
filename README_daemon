@@ -64,9 +64,13 @@ currently supported:
 	--config [FILE]	Read rules configuration from FILE instead of
 			/etc/cgrules.conf
 
-You can ask the daemon to reload the configuration by sending it SIGUSR2.  The
-easiest way to do this is with the 'kill' command:
+You can ask the daemon to reload the rules configuration by sending it SIGUSR2.
+The easiest way to do this is with the 'kill' command:
 	kill -s SIGUSR2 [PID]
+
+You can ask the daemon to reload the templates configuration by sending it
+SIGUSR1. The easiest way to do this is with the 'kill' command:
+	kill -s SIGUSR1 [PID]
 
 TESTING
 =======

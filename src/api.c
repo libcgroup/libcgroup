@@ -2791,14 +2791,10 @@ static int cgroup_create_template_group(char *orig_group_name,
 				/* the prefix cgroup without template */
 				ret = cgroup_create_cgroup(template_group, 0);
 			} else {
-				/* TODO: this will be a function which use
-				 * template to create relevant cgroup
-				 * now cgroup_create_cgroup is used
+				/* use template to create relevant cgroup */
 				ret = cgroup_config_create_template_group(
 					template_group, template_name,
-					0, flags);
-				 */
-				ret = cgroup_create_cgroup(template_group, 0);
+					flags);
 			}
 
 			if (ret != 0) {

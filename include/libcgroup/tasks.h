@@ -128,6 +128,8 @@ void cgroup_print_rules_config(FILE *fp);
  *
  * The flags can alter the behavior of this function:
  * 	CGFLAG_USECACHE: Use cached rules instead of parsing the config file
+ *      CGFLAG_USE_TEMPLATE_CACHE: Use cached templates instead of
+ * parsing the config file
  *
  * This function may NOT be thread safe.
  * @param uid The UID to match.

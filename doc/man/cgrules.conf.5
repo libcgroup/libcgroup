@@ -56,7 +56,7 @@ can be:
 can be:
 .nf
     - path relative to the controller hierarchy (ex. pgrp1/gid1/uid1)
-    - following strings will get expanded
+    - following strings called "\fBtemplates\fR" and will get expanded
 
           %u     username, uid if name resolving fails
           %U     uid
@@ -67,12 +67,24 @@ can be:
 
           '\\' can be used to escape '%'
 .fi
-
 First rule which matches the criteria will be executed.
-
 
 Any text starting with '#' is considered as a start of comment line and is
 ignored.
+
+If the
+.I destination
+contains
+.B template
+string, the control group can be created on-fly. In time when some process wants
+to use the template rule which leads to control group (see
+\fBcgexec\fR (1)) and the control group does not exist, the group is created. The
+template control group parameters can be specified in
+.B cgconfig.conf
+configuration file. See (\fBcgconfig.conf\fR (5)).
+If the template definition is not found there created group have default
+kernel setting.
+
 
 
 .SH EXAMPLES
@@ -109,6 +121,13 @@ All processes in any subsystem belong to the control group default/. Since
 the earliest matched rule is applied, it makes sense to have this line
 at the end of the list. It will put a task which was not mentioned in the
 previous rules to default/ control group.
+
+.nf
+@students	cpu,cpuacct	students/%u
+.fi
+Processes in cpu and cpuacct subsystems started by anybody from students group
+belong to group students/name. Where "name" is user name of owner of the
+process.
 
 
 

@@ -15,6 +15,7 @@ the appropriate control group.
 
 The list of rules is read during the daemon startup is are cached in the daemon's memory.
 The daemon reloads the list of rules when it receives SIGUSR2 signal.
+The daemon reloads the list of templates when it receives SIGUSR1 signal.
 
 The daemon opens a standard unix socket to receive 'sticky' requests from \fBcgexec\fR.
 

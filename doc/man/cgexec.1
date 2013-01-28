@@ -31,6 +31,14 @@ If this option is not used,
 \fBcgexec\fR will automatically place the task in the right
 cgroup based on \fB/etc/cgrules.conf\fR.
 
+If \fB/etc/cgrules.conf\fR configuration file is used, there can be used
+template names. Then the control group name contains
+a template in destination tag (see \fBcgrules.conf\fR (5))
+and if the cgroup does not exist in execution time,
+it is created, based on \fB/etc/cgconfig.conf\fR specification.
+If the specifications are not present the group is created with the default
+kernel values.
+
 .TP
 .B -h, --help
 Display this help and exit.
