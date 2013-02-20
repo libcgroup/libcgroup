@@ -121,6 +121,17 @@ void cgroup_print_rules_config(FILE *fp);
  */
 
 /**
+ * Changes the cgroup of all running PIDs based on the rules in the config
+ * file. If a rules exists for a PID, then the PID is placed in the correct
+ * group.
+ *
+ * This function may be called after creating new control groups to move
+ * running PIDs into the newly created control groups.
+ *	@return 0 on success, < 0 on error
+ */
+int cgroup_change_all_cgroups(void);
+
+/**
  * Changes the cgroup of a program based on the rules in the config file.
  * If a rule exists for the given UID, GID or PROCESS NAME, then the given
  * PID is placed into the correct group.  By default, this function parses

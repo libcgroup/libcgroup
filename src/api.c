@@ -3056,6 +3056,52 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 }
 
 /**
+ * Changes the cgroup of all running PIDs based on the rules in the config
+ * file. If a rules exists for a PID, then the PID is placed in the correct
+ * group.
+ *
+ * This function may be called after creating new control groups to move
+ * running PIDs into the newly created control groups.
+ *	@return 0 on success, < 0 on error
+ */
+int cgroup_change_all_cgroups(void)
+{
+	DIR *dir;
+	struct dirent *pid_dir = NULL;
+	char *path = "/proc/";
+
+	dir = opendir(path);
+	if (!dir)
+		return -ECGOTHER;
+
+	while ((pid_dir = readdir(dir)) != NULL) {
+		int err, pid;
+		uid_t euid;
+		gid_t egid;
+		char *procname = NULL;
+
+		err = sscanf(pid_dir->d_name, "%i", &pid);
+		if (err < 1)
+			continue;
+
+		err = cgroup_get_uid_gid_from_procfs(pid, &euid, &egid);
+		if (err)
+			continue;
+
+		err = cgroup_get_procname_from_procfs(pid, &procname);
+		if (err)
+			continue;
+
+		err = cgroup_change_cgroup_flags(euid, egid, procname, pid, 0);
+		if (err)
+			cgroup_dbg("cgroup change pid %i failed\n", pid);
+	}
+
+	closedir(dir);
+	return 0;
+}
+
+/**
  * Print the cached rules table.  This function should be called only after
  * first calling cgroup_parse_config(), but it will work with an empty rule
  * list.

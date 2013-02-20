@@ -1171,6 +1171,11 @@ int main(int argc, char *argv[])
 	if (logfile && loglevel >= LOG_INFO)
 		cgroup_print_rules_config(logfile);
 
+	/* Scan for running applications with rules */
+	ret = cgroup_change_all_cgroups();
+	if (ret)
+		flog(LOG_WARNING, "Failed to initialize running tasks.");
+
 	flog(LOG_NOTICE, "Started the CGroup Rules Engine Daemon.");
 
 	/* We loop endlesly in this function, unless we encounter an error. */
