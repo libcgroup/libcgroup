@@ -990,7 +990,7 @@ static int cgroup_parse_config(const char *pathname)
 	yyin = fopen(pathname, "re");
 
 	if (!yyin) {
-		cgroup_dbg("Failed to open file %s\n", pathname);
+		cgroup_err("Error: failed to open file %s\n", pathname);
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -1032,7 +1032,7 @@ static int cgroup_parse_config(const char *pathname)
 		/*
 		 * Either yyparse failed or longjmp() was called.
 		 */
-		cgroup_dbg("Failed to parse file %s\n", pathname);
+		cgroup_err("Error: failed to parse file %s\n", pathname);
 		ret = ECGCONFIGPARSEFAIL;
 		goto err;
 	}
