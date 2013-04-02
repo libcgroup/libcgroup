@@ -35,6 +35,10 @@ __BEGIN_DECLS
 /**
  * Initialize libcgroup. Information about mounted hierarchies are examined
  * and cached internally (just what's mounted where, not the groups themselves).
+ *
+ * If the cgroup logging was not set using cgroup_set_logger() or
+ * cgroup_set_default_logger() before calling cgroup_init(), the default logger
+ * is automatically set, logging CGROUP_LOG_ERROR messages.
  */
 int cgroup_init(void);
 

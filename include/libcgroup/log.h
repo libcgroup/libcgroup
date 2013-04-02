@@ -29,6 +29,8 @@ __BEGIN_DECLS
  * @par
  * The logging callback can be set at any time, but setting the callback before
  * any other libcgroup function (including cgroup_init()) is highly recommended.
+ * If no logger is set before cgroup_init() is called, default logger is
+ * automatically set, logging CGROUP_LOG_ERROR messages to stdout.
  *
  * @par Setting log level
  * Some of the functions below set the log level as integer.

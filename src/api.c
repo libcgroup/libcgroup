@@ -854,6 +854,8 @@ int cgroup_init(void)
 	char mntent_buffer[4 * FILENAME_MAX];
 	char *strtok_buffer = NULL;
 
+	cgroup_set_default_logger(-1);
+
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 
 	/* free global variables filled by previous cgroup_init() */
