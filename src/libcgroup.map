@@ -111,4 +111,8 @@ CGROUP_0.39 {
 	cgroup_init_templates_cache;
 	cgroup_config_create_template_group;
 	cgroup_change_all_cgroups;
+	cgroup_set_logger;
+	cgroup_set_default_logger;
+	cgroup_set_loglevel;
+	cgroup_log;
 } CGROUP_0.38;

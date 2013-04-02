@@ -24,6 +24,7 @@
 #include <libcgroup/groups.h>
 #include <libcgroup/tasks.h>
 #include <libcgroup/config.h>
+#include <libcgroup/log.h>
 
 #undef _LIBCGROUP_H_INSIDE
 
