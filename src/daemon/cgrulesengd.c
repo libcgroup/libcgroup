@@ -1027,6 +1027,18 @@ int main(int argc, char *argv[])
 		goto finished;
 	}
 
+	/*
+	 * Check environment variable CGROUP_LOGLEVEL. If it's set to DEBUG,
+	 * set appropriate verbosity level.
+	 */
+	char *level_str = getenv("CGROUP_LOGLEVEL");
+	if (level_str != NULL) {
+		if (cgroup_parse_log_level_str(level_str) == CGROUP_LOG_DEBUG) {
+			verbosity = 4;
+			logp = "-";
+		}
+	}
+
 	while (1) {
 		int c;
 
