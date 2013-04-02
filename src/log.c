@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <strings.h>
 
 static cgroup_logger_callback cgroup_logger;
 static void *cgroup_logger_userdata;
@@ -58,6 +59,29 @@ void cgroup_set_default_logger(int level)
 		cgroup_set_logger(cgroup_default_logger, level, NULL);
 }
 
+int cgroup_parse_log_level_str(const char *levelstr)
+{
+	char *end;
+	long level;
+	errno = 0;
+
+	/* try to parse integer first */
+	level = strtol(levelstr, &end, 10);
+	if (end != levelstr && *end == '\0')
+		return level;
+
+	if (strcasecmp(levelstr, "ERROR") == 0)
+		return CGROUP_LOG_ERROR;
+	if (strcasecmp(levelstr, "WARNING") == 0)
+		return CGROUP_LOG_WARNING;
+	if (strcasecmp(levelstr, "INFO") == 0)
+		return CGROUP_LOG_INFO;
+	if (strcasecmp(levelstr, "DEBUG") == 0)
+		return CGROUP_LOG_DEBUG;
+
+	return CGROUP_DEFAULT_LOGLEVEL;
+}
+
 void cgroup_set_loglevel(int loglevel)
 {
 	if (loglevel != -1)
@@ -65,11 +89,7 @@ void cgroup_set_loglevel(int loglevel)
 	else {
 		char *level_str = getenv("CGROUP_LOGLEVEL");
 		if (level_str != NULL)
-			/*
-			 * TODO: add better loglevel detection, e.g. strings
-			 * instead of plain numbers.
-			 */
-			cgroup_loglevel = atoi(level_str);
+			cgroup_loglevel = cgroup_parse_log_level_str(level_str);
 		else
 			cgroup_loglevel = CGROUP_DEFAULT_LOGLEVEL;
 	}

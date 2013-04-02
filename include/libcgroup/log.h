@@ -131,6 +131,13 @@ extern void cgroup_set_loglevel(int loglevel);
  * This logging automatically benefits from CGROUP_LOGLEVEL env. variable.
  */
 extern void cgroup_log(int loglevel, const char *fmt, ...);
+
+/**
+ * Parse levelstr string for information about desired loglevel. The levelstr
+ * is usually a value of the CGROUP_LOGLEVEL environment variable.
+ * @param levelstr String containing desired loglevel.
+ */
+extern int cgroup_parse_log_level_str(const char *levelstr);
 /**
  * @}
  * @}
