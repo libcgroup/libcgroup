@@ -22,11 +22,10 @@
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 
-#ifdef CGROUP_DEBUG
-#define cgroup_dbg(x...) printf(x)
-#else
-#define cgroup_dbg(x...) do {} while (0)
-#endif
+#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
+#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)
+#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)
+#define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
 
 /**
  * Auxiliary specifier of group, used to store parsed command line options.
