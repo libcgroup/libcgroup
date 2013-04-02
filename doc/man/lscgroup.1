@@ -20,6 +20,12 @@ defines the control groups whose subgroups will be shown.
 If this parameter is not used, the command will
 list all existing cgroups.
 
+.SH ENVIRONMENT VARIABLES
+.TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
 .SH SEE ALSO
 lssubsys (1), cgcreate (1), cgdelete (1),
 cgconfig.conf (5)

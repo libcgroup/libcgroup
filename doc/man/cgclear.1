@@ -37,5 +37,11 @@ specifies that only empty groups should be removed. If a group defined in a
 config file has tasks inside or has a subgroup, it won't be removed. This
 option works only with \fB-l\fR or \fB-L\fR options.
 
+.SH ENVIRONMENT VARIABLES
+.TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
 .SH SEE ALSO
 cgconfigparser(1)

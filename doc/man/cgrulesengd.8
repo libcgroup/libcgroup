@@ -56,6 +56,13 @@ write them to the standard output.
 .B -g <group>|--socket-group=<group>
 Set the owner of cgrulesengd socket. Assumes that \fBcgexec\fR runs with proper
 suid permissions so it can write to the socket when \fBcgexec\fR --sticky is used.
+
+.SH ENVIRONMENT VARIABLES
+.TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
 .SH FILES
 .LP
 .PD .1v

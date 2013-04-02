@@ -30,5 +30,11 @@ This parameter can be used multiple times.
 defines the name of the cgroup whose parameters will be
 copied to the input cgroup.
 
+.SH ENVIRONMENT VARIABLES
+.TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
 .SH SEE ALSO
 cgrules.conf (1), cgcreate (1), cgget (1)

@@ -47,12 +47,15 @@ If this option is used, the daemon of service cgred (cgrulesengd process)
 can automatically change both the specified \fBpidlist\fR and their child
 tasks to the right cgroup based on \fB/etc/cgrules.conf\fR.
 
-.SH FILES
-.LP
-.PD .1v
-.TP 20
-.B /etc/cgrules.conf
+.SH ENVIRONMENT VARIABLES
 .TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
+.SH FILES
+.TP
+.B /etc/cgrules.conf
 default libcgroup configuration file
 
 

@@ -81,12 +81,15 @@ runs command \fBls -l\fR in control group test1
 in controllers cpu and memory and control group 
 test2 in controller swap.
 
-.SH FILES
-.LP
-.PD .1v
-.TP 20
-.B /etc/cgrules.conf
+.SH ENVIRONMENT VARIABLES
 .TP
+.B CGROUP_LOGLEVEL
+controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
+\fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
+
+.SH FILES
+.TP
+.B /etc/cgrules.conf
 default libcgroup configuration file
 
 .SH SEE ALSO
