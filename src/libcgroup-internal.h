@@ -64,12 +64,7 @@ __BEGIN_DECLS
 #define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
 #define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)
 #define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)
-
-#ifdef CGROUP_DEBUG
 #define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
-#else
-#define cgroup_dbg(x...) do {} while (0)
-#endif
 
 #define CGROUP_DEFAULT_LOGLEVEL CGROUP_LOG_ERROR
 
