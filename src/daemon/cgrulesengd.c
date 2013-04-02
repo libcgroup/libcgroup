@@ -556,20 +556,25 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 	caddr_len = sizeof(caddr);
 	fd_client = accept(sk_unix, (struct sockaddr *)&caddr, &caddr_len);
 	if (fd_client < 0) {
-		cgroup_dbg("accept error: %s\n", strerror(errno));
+		flog(LOG_WARNING, "Warning: 'accept' command error: %s\n",
+				strerror(errno));
 		return;
 	}
 	if (read(fd_client, &pid, sizeof(pid)) < 0) {
-		cgroup_dbg("read error: %s\n", strerror(errno));
+		flog(LOG_WARNING, "Warning: 'read' command error: %s\n",
+				strerror(errno));
 		goto close;
 	}
 	sprintf(path, "/proc/%d", pid);
 	if (stat(path, &buff_stat)) {
-		cgroup_dbg("There is not such process (PID: %d)", pid);
+		flog(LOG_WARNING,
+				"Warning: there is no such process (PID: %d)\n",
+				pid);
 		goto close;
 	}
 	if (read(fd_client, &flags, sizeof(flags)) < 0) {
-		cgroup_dbg("read error: %s\n", strerror(errno));
+		flog(LOG_WARNING, "Warning: error reading daemon socket: %s\n",
+				strerror(errno));
 		goto close;
 	}
 	if (flags == CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS) {
@@ -580,7 +585,9 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 	}
 	if (write(fd_client, CGRULE_SUCCESS_STORE_PID,
 			sizeof(CGRULE_SUCCESS_STORE_PID)) < 0) {
-		cgroup_dbg("write error: %s\n", strerror(errno));
+		flog(LOG_WARNING,
+				"Warning: cannot write to daemon socket: %s\n",
+				strerror(errno));
 		goto close;
 	}
 close:
@@ -609,7 +616,8 @@ static int cgre_create_netlink_socket_process_msg(void)
 	 */
 	sk_nl = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_CONNECTOR);
 	if (sk_nl == -1) {
-		cgroup_dbg("socket sk_nl error: %s\n", strerror(errno));
+		flog(LOG_ERR, "Error: error opening netlink socket: %s\n",
+				strerror(errno));
 		return rc;
 	}
 
@@ -619,14 +627,15 @@ static int cgre_create_netlink_socket_process_msg(void)
 	my_nla.nl_pad = 0;
 
 	if (bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla)) < 0) {
-		cgroup_dbg("binding sk_nl error: %s\n", strerror(errno));
+		flog(LOG_ERR, "Error: error binding netlink socket: %s\n",
+				strerror(errno));
 		goto close_and_exit;
 	}
 
 	nl_hdr = (struct nlmsghdr *)buff;
 	cn_hdr = (struct cn_msg *)NLMSG_DATA(nl_hdr);
 	mcop_msg = (enum proc_cn_mcast_op*)&cn_hdr->data[0];
-	cgroup_dbg("sending proc connector: PROC_CN_MCAST_LISTEN... ");
+	flog(LOG_DEBUG, "Sending proc connector: PROC_CN_MCAST_LISTEN...\n");
 	memset(buff, 0, sizeof(buff));
 	*mcop_msg = PROC_CN_MCAST_LISTEN;
 
@@ -643,21 +652,23 @@ static int cgre_create_netlink_socket_process_msg(void)
 	cn_hdr->seq = 0;
 	cn_hdr->ack = 0;
 	cn_hdr->len = sizeof(enum proc_cn_mcast_op);
-	cgroup_dbg("sending netlink message len=%d, cn_msg len=%d\n",
+	flog(LOG_DEBUG, "Sending netlink message len=%d, cn_msg len=%d\n",
 		nl_hdr->nlmsg_len, (int) sizeof(struct cn_msg));
 	if (send(sk_nl, nl_hdr, nl_hdr->nlmsg_len, 0) != nl_hdr->nlmsg_len) {
-		cgroup_dbg("failed to send proc connector mcast ctl op!: %s\n",
-			strerror(errno));
+		flog(LOG_ERR,
+				"Error: failed to send netlink message (mcast ctl op): %s\n",
+				strerror(errno));
 		goto close_and_exit;
 	}
-	cgroup_dbg("sent\n");
+	flog(LOG_DEBUG, "Message sent\n");
 
 	/*
 	 * Setup Unix domain socket.
 	 */
 	sk_unix = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (sk_unix < 0) {
-		cgroup_dbg("socket sk_unix error: %s\n", strerror(errno));
+		flog(LOG_ERR, "Error creating UNIX socket: %s\n",
+				strerror(errno));
 		goto close_and_exit;
 	}
 	memset(&saddr, 0, sizeof(saddr));
@@ -666,27 +677,29 @@ static int cgre_create_netlink_socket_process_msg(void)
 	unlink(CGRULE_CGRED_SOCKET_PATH);
 	if (bind(sk_unix, (struct sockaddr *)&saddr,
 	    sizeof(saddr.sun_family) + strlen(CGRULE_CGRED_SOCKET_PATH)) < 0) {
-		cgroup_dbg("binding sk_unix error: %s\n", strerror(errno));
+		flog(LOG_ERR, "Error binding UNIX socket %s: %s\n",
+				CGRULE_CGRED_SOCKET_PATH, strerror(errno));
 		goto close_and_exit;
 	}
 	if (listen(sk_unix, 1) < 0) {
-		cgroup_dbg("listening sk_unix error: %s\n", strerror(errno));
+		flog(LOG_ERR, "Error listening on UNIX socket %s: %s\n",
+				CGRULE_CGRED_SOCKET_PATH, strerror(errno));
 		goto close_and_exit;
 	}
 
 	/* change the owner */
 	if (chown(CGRULE_CGRED_SOCKET_PATH, socket_user, socket_group) < 0) {
-		cgroup_dbg("Error changing socket owner: %s\n",
-				strerror(errno));
+		flog(LOG_ERR, "Error changing %s socket owner: %s\n",
+				CGRULE_CGRED_SOCKET_PATH, strerror(errno));
 		goto close_and_exit;
 	}
-	cgroup_dbg("Socket %s owner successfully set to %d:%d\n",
+	flog(LOG_DEBUG, "Socket %s owner successfully set to %d:%d\n",
 			CGRULE_CGRED_SOCKET_PATH, (int) socket_user,
 			(int) socket_group);
 
 	if (chmod(CGRULE_CGRED_SOCKET_PATH, 0660) < 0) {
-		cgroup_dbg("Error changing socket owner: %s\n",
-				strerror(errno));
+		flog(LOG_ERR, "Error changing %s socket permissions: %s\n",
+				CGRULE_CGRED_SOCKET_PATH, strerror(errno));
 		goto close_and_exit;
 	}
 
@@ -710,7 +723,7 @@ static int cgre_create_netlink_socket_process_msg(void)
 
 		memcpy(&fds, &readfds, sizeof(fd_set));
 		if (select(sk_max + 1, &fds, NULL, NULL, NULL) < 0) {
-			cgroup_dbg("selecting error: %s\n", strerror(errno));
+			flog(LOG_ERR, "Selecting error: %s\n", strerror(errno));
 			goto close_and_exit;
 		}
 		if (FD_ISSET(sk_nl, &fds)) {
@@ -826,7 +839,7 @@ int cgre_start_daemon(const char *logp, const int logf,
 		/* Change the file mode mask. */
 		umask(0);
 	} else {
-		cgroup_dbg("Not using daemon mode.\n");
+		flog(LOG_DEBUG, "Not using daemon mode.\n");
 		pid = getpid();
 	}
 
@@ -1076,7 +1089,7 @@ int main(int argc, char *argv[])
 				goto finished;
 			}
 			socket_user = pw->pw_uid;
-			cgroup_dbg("Using socket user %s id %d\n",
+			flog(LOG_DEBUG, "Using socket user %s id %d\n",
 					optarg, (int)socket_user);
 			break;
 		case 'g': /* --socket-group */
@@ -1087,7 +1100,7 @@ int main(int argc, char *argv[])
 				goto finished;
 			}
 			socket_group = gr->gr_gid;
-			cgroup_dbg("Using socket group %s id %d\n",
+			flog(LOG_DEBUG, "Using socket group %s id %d\n",
 					optarg, (int)socket_group);
 			break;
 		default:
