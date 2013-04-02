@@ -661,6 +661,8 @@ static int cgroup_config_mount_fs(void)
 		ret = stat(curr->mount.path, &buff);
 
 		if (ret < 0 && errno != ENOENT) {
+			cgroup_err("Error: cannot access %s: %s\n",
+					curr->mount.path, strerror(errno));
 			last_errno = errno;
 			error = ECGOTHER;
 			goto out_err;
@@ -669,10 +671,14 @@ static int cgroup_config_mount_fs(void)
 		if (errno == ENOENT) {
 			ret = cg_mkdir_p(curr->mount.path);
 			if (ret) {
+				cgroup_err("Error: cannot create directory %s\n",
+						curr->mount.path);
 				error = ret;
 				goto out_err;
 			}
 		} else if (!S_ISDIR(buff.st_mode)) {
+			cgroup_err("Error: %s already exists but it is not a directory\n",
+					curr->mount.path);
 			errno = ENOTDIR;
 			last_errno = errno;
 			error = ECGOTHER;
@@ -687,6 +693,9 @@ static int cgroup_config_mount_fs(void)
 				CGROUP_FILESYSTEM, 0, curr->name);
 
 		if (ret < 0) {
+			cgroup_err("Error: cannot mount %s to %s: %s\n",
+					curr->name, curr->mount.path,
+					strerror(errno));
 			error = ECGMOUNTFAIL;
 			goto out_err;
 		}
@@ -1298,6 +1307,9 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 	while (ret == 0) {
 		error = umount(path);
 		if (error) {
+			cgroup_warn("Warning: cannot unmount controller %s on %s: %s\n",
+					mount_info->name, path,
+					strerror(errno));
 			last_errno = errno;
 			ret = ECGOTHER;
 			goto out_error;
@@ -1342,6 +1354,8 @@ int cgroup_unload_cgroups(void)
 			if (error) {
 				/* remember the error and continue unloading
 				 * the rest */
+				cgroup_warn("Warning: cannot clear controller %s\n",
+						info.name);
 				ret = error;
 				error = 0;
 			}

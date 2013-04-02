@@ -148,6 +148,8 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 		break;
 	}
 	if (ret < 0) {
+		cgroup_warn("Warning: cannot change owner of file %s: %s\n",
+				filename, strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 	}
@@ -166,6 +168,8 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 				FTS_NOSTAT, NULL);
 	if (fts == NULL) {
+		cgroup_warn("Warning: cannot open directory %s: %s\n",
+				path, strerror(errno));
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -211,6 +215,8 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 	return 0;
 
 fail:
+	cgroup_warn("Warning: cannot change permissions of file %s: %s\n", path,
+			strerror(errno));
 	last_errno = errno;
 	return ECGOTHER;
 }
@@ -270,6 +276,8 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 	fts = fts_open(fts_path, FTS_PHYSICAL | FTS_NOCHDIR |
 			FTS_NOSTAT, NULL);
 	if (fts == NULL) {
+		cgroup_warn("Warning: cannot open directory %s: %s\n",
+				fts_path, strerror(errno));
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -298,6 +306,8 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 				file_mode, filem_change,
 				owner_is_umask);
 		if (ret) {
+			cgroup_warn("Warning: cannot change file mode %s: %s\n",
+					fts_path, strerror(errno));
 			last_errno = errno;
 			final_ret = ECGOTHER;
 		}
@@ -725,6 +735,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 		if (len_procname) {
 			newrule->procname = strdup(procname);
 			if (!newrule->procname) {
+				cgroup_err("Error: strdup failed to allocate memory %s\n",
+						strerror(errno));
 				free(newrule);
 				last_errno = errno;
 				ret = ECGOTHER;
@@ -873,6 +885,8 @@ int cgroup_init(void)
 	proc_cgroup = fopen("/proc/cgroups", "re");
 
 	if (!proc_cgroup) {
+		cgroup_err("Error: cannot open /proc/cgroups: %s\n",
+				strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
@@ -892,6 +906,8 @@ int cgroup_init(void)
 	}
 	if (!fgets(buf, FILENAME_MAX, proc_cgroup)) {
 		free(buf);
+		cgroup_err("Error: cannot read /proc/cgroups: %s\n",
+				strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
@@ -911,7 +927,10 @@ int cgroup_init(void)
 
 	proc_mount = fopen("/proc/mounts", "re");
 	if (proc_mount == NULL) {
-		ret = ECGFAIL;
+		cgroup_err("Error: cannot open /proc/mounts: %s\n",
+				strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
 		goto unlock_exit;
 	}
 
@@ -1927,6 +1946,9 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		delete_tasks = fopen(path, "re");
 		if (delete_tasks) {
 			ret = cg_move_task_files(delete_tasks, target_tasks);
+			if (ret != 0)
+				cgroup_warn("Warning: removing tasks from %s failed: %s\n",
+						path, cgroup_strerror(ret));
 			fclose(delete_tasks);
 		} else {
 			/*
@@ -1935,6 +1957,8 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 			 * removed.
 			 */
 			if (errno != ENOENT) {
+				cgroup_err("Error: cannot open %s: %s\n",
+						path, strerror(errno));
 				last_errno = errno;
 				ret = ECGOTHER;
 			}
@@ -1957,6 +1981,8 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 	if ((flags & CGFLAG_DELETE_EMPTY_ONLY) && (errno == EBUSY))
 		return ECGNONEMPTY;
 
+	cgroup_warn("Warning: cannot remove directory %s: %s\n",
+			path, strerror(errno));
 	last_errno = errno;
 	return ECGOTHER;
 }
@@ -2128,6 +2154,9 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			parent_tasks = fopen(parent_path, "we");
 			if (!parent_tasks) {
 				if (first_error == 0) {
+					cgroup_warn("Warning: cannot open tasks file %s: %s\n",
+							parent_path,
+							strerror(errno));
 					first_errno = errno;
 					first_error = ECGOTHER;
 				}
