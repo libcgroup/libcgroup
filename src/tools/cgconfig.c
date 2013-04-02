@@ -84,6 +84,8 @@ int main(int argc, char *argv[])
 	int filem_change = 0;
 	struct cgroup *default_group = NULL;
 
+	cgroup_set_default_logger(-1);
+
 	if (argc < 2)
 		usage(argv[0]); /* usage() exits */
 
