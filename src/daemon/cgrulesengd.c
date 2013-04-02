@@ -795,7 +795,7 @@ close_and_exit:
  * Start logging. Opens syslog and/or log file and sets log level.
  * 	@param logp Path of the log file, NULL if no log file was specified
  * 	@param logf Syslog facility, NULL if no facility was specified
- * 	@param logv Log verbosity, 2 is the default, 0 = no logging, 4 = everything
+ * 	@param logv Log verbosity, 1 is the default, 0 = no logging, 4 = everything
  */
 static void cgre_start_log(const char *logp, int logf, int logv)
 {
@@ -804,11 +804,11 @@ static void cgre_start_log(const char *logp, int logf, int logv)
 
 	/* Log levels */
 	int loglevels[] = {
-		LOG_EMERG,		/* -qq */
-		LOG_ERR,		/* -q */
-		LOG_NOTICE,		/* default */
-		LOG_INFO,		/* -v */
-		LOG_DEBUG		/* -vv */
+		LOG_EMERG,		/* -q */
+		LOG_ERR,		/* default */
+		LOG_WARNING,	/* -v */
+		LOG_INFO,		/* -vv */
+		LOG_DEBUG		/* -vvv */
 	};
 
 	/* Set default logging destination if nothing was specified */
@@ -862,7 +862,7 @@ static void cgre_start_log(const char *logp, int logf, int logv)
  * 	@param logp Path of the log file, NULL if no log file was specified
  * 	@param logf Syslog facility, 0 if no facility was specified
  * 	@param daemon False to turn off daemon mode (no fork, leave FDs open)
- * 	@param logv Log verbosity, 2 is the default, 0 = no logging, 5 = everything
+ * 	@param logv Log verbosity, 1 is the default, 0 = no logging, 5 = everything
  * 	@return 0 on success, > 0 on error
  */
 int cgre_start_daemon(const char *logp, const int logf,
@@ -936,7 +936,7 @@ void cgre_flash_rules(int signum)
 	/* Current time */
 	time_t tm = time(0);
 
-	flog(LOG_NOTICE, "Reloading rules configuration\n");
+	flog(LOG_INFO, "Reloading rules configuration\n");
 	flog(LOG_DEBUG, "Current time: %s\n", ctime(&tm));
 
 	/* Ask libcgroup to reload the rules table. */
@@ -962,8 +962,8 @@ void cgre_flash_templates(int signum)
 	/* Current time */
 	time_t tm = time(0);
 
-	flog(LOG_NOTICE, "Reloading templates configuration.");
-	flog(LOG_DEBUG, "Current time: %s", ctime(&tm));
+	flog(LOG_INFO, "Reloading templates configuration.\n");
+	flog(LOG_DEBUG, "Current time: %s\n", ctime(&tm));
 
 	/* Ask libcgroup to reload the templates table. */
 	cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
@@ -979,7 +979,7 @@ void cgre_catch_term(int signum)
 	/* Current time */
 	time_t tm = time(0);
 
-	flog(LOG_NOTICE, "Stopped CGroup Rules Engine Daemon at %s\n",
+	flog(LOG_INFO, "Stopped CGroup Rules Engine Daemon at %s\n",
 			ctime(&tm));
 
 	/* Close the log file, if we opened one */
@@ -1039,7 +1039,7 @@ int main(int argc, char *argv[])
 	int facility = 0;
 
 	/* Verbose level */
-	int verbosity = 2;
+	int verbosity = 1;
 
 	/* For catching signals */
 	struct sigaction sa;
@@ -1226,7 +1226,7 @@ int main(int argc, char *argv[])
 	ret = sigaction(SIGUSR1, &sa, NULL);
 	if (ret) {
 		flog(LOG_ERR, "Failed to set up signal handler for SIGUSR1."\
-			" Error: %s", strerror(errno));
+			" Error: %s\n", strerror(errno));
 		goto finished;
 	}
 
@@ -1253,7 +1253,7 @@ int main(int argc, char *argv[])
 	if (ret)
 		flog(LOG_WARNING, "Failed to initialize running tasks.\n");
 
-	flog(LOG_NOTICE, "Started the CGroup Rules Engine Daemon.\n");
+	flog(LOG_INFO, "Started the CGroup Rules Engine Daemon.\n");
 
 	/* We loop endlesly in this function, unless we encounter an error. */
 	ret =  cgre_create_netlink_socket_process_msg();

@@ -38,18 +38,17 @@ and '\fB-s\fR' are used together, the logs are sent to both destinations.
 Don't fork the daemon, stay in the foreground.
 .TP
 .B -v|--verbose
-Display more log messages. This option can be used twice to enable more verbose log
-messages.
+Display more log messages. This option can be used three times to enable more
+verbose log messages.
 .TP
 .B -q|--quiet
-Display less log messages. This option can be used twice to enable even less log
-messages and to only log errors.
+Display less log messages.
 .TP
 .B -Q|--nolog
 Disable logging.
 .TP
 .B -d|--debug
-Equivalent to '-nvvf -', i.e. don't fork the daemon, display all log messages and
+Equivalent to '-nvvvf -', i.e. don't fork the daemon, display all log messages and
 write them to the standard output.
 .TP
 .B -u <user>|--socket-user=<user>
