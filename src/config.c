@@ -1472,8 +1472,9 @@ int cgroup_reload_cached_templates(char *pathname)
 		return  ret;
 	}
 
-	memcpy(template_table, config_template_table,
-		template_table_index * sizeof(struct cgroup));
+	for (i = 0; i < template_table_index; i++) {
+		cgroup_copy_cgroup(&config_template_table[i], &template_table[i]);
+	}
 
 	return ret;
 }
@@ -1485,6 +1486,7 @@ int cgroup_reload_cached_templates(char *pathname)
 int cgroup_init_templates_cache(char *pathname)
 {
 	int ret = 0;
+	int i;
 
 	if (config_template_table_index != 0) {
 		/* config structures have to be clean */
@@ -1508,8 +1510,9 @@ int cgroup_init_templates_cache(char *pathname)
 		return ret;
 	}
 
-	memcpy(template_table, config_template_table,
-		template_table_index * sizeof(struct cgroup));
+	for (i = 0; i < template_table_index; i++) {
+		cgroup_copy_cgroup(&config_template_table[i], &template_table[i]);
+	}
 
 	return ret;
 
