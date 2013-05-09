@@ -2843,9 +2843,9 @@ static int cgroup_create_template_group(char *orig_group_name,
 	}
 
 while_end:
-	if (template_position[0] == '\0')
+	if ((template_position != NULL ) && (template_position[0] == '\0'))
 		template_position[0] = '/';
-	if (group_position[0] == '\0')
+	if ((group_position != NULL) && (group_position[0] == '\0'))
 		group_position[0] = '/';
 
 end:
