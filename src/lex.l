@@ -31,7 +31,7 @@ jmp_buf parser_error_env;
 %%
 \n	{line_no++;}
 [ \t]	{/* DO NOTHING */}
-^#.*[ \t]*  {/* Comments */}
+^[ \t]*#.*[ \t]*  {/* Comments */}
 ^\*.*[ \t]* {/* Comments */}
 "mount"		{return MOUNT;}
 "task"		{return TASK;}
