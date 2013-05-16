@@ -1292,7 +1292,8 @@ int cg_mkdir_p(const char *path)
 	char *real_path = NULL;
 	int i = 0;
 	char pos;
-	int ret = 0;
+	int ret = 0, stat_ret;
+	struct stat st;
 
 	real_path = strdup(path);
 	if (!real_path) {
@@ -1320,6 +1321,14 @@ int cg_mkdir_p(const char *path)
 				ret = ECGROUPNOTOWNER;
 				goto done;
 			default:
+				/* Check if path exists */
+				real_path[i] = '\0';
+				stat_ret = stat(real_path, &st);
+				real_path[i] = pos;
+				if (stat_ret == 0) {
+					ret = 0;	/* Path exists */
+					break;
+				}
 				ret = ECGROUPNOTALLOWED;
 				goto done;
 			}
