@@ -66,9 +66,6 @@ static __thread char errtext[MAXLEN];
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
 
-/* Check if the rules cache has been loaded or not. */
-static bool cgroup_rules_loaded;
-
 /* List of configuration rules */
 static struct cgroup_rule_list rl;
 
@@ -3238,9 +3235,6 @@ int cgroup_init_rules_cache(void)
 	if (ret) {
 		cgroup_dbg("Could not initialize rule cache, error was: %d\n",
 			ret);
-		cgroup_rules_loaded = false;
-	} else {
-		cgroup_rules_loaded = true;
 	}
 
 	return ret;
