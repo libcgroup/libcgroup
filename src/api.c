@@ -2392,10 +2392,6 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	for (i = 0; i < CG_CONTROLLER_MAX &&
 			cg_mount_table[i].name[0] != '\0'; i++) {
-		/*
-		 * cgc will not leak, since it has to be freed using
-		 * cgroup_free_cgroup
-		 */
 		struct cgroup_controller *cgc;
 		struct stat stat_buffer;
 		int path_len;
