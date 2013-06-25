@@ -610,9 +610,9 @@ static int show_mountpoints(const char *controller)
 
 	while (ret == 0) {
 		if (quote)
-			printf("\t\"%s\" = %s;\n", controller, path);
+			fprintf(of, "\t\"%s\" = %s;\n", controller, path);
 		else
-			printf("\t%s = %s;\n", controller, path);
+			fprintf(of, "\t%s = %s;\n", controller, path);
 		ret = cgroup_get_subsys_mount_point_next(&handle, path);
 	}
 	cgroup_get_subsys_mount_point_end(&handle);
