@@ -137,7 +137,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
 	/* Note: We are using default gid here. Is there a way to determine
 	 * under what egid service will be provided?
 	 */
-	ret = cgroup_change_cgroup_uid_gid(pwd->pw_uid, pwd->pw_gid, pid);
+	ret = cgroup_change_cgroup_uid_gid_flags(pwd->pw_uid,
+		pwd->pw_gid, pid, CGFLAG_USECACHE);
 	if (ret) {
 		if (ctrl & PAM_DEBUG_ARG)
 			pam_syslog(pamh, LOG_ERR, "Change of cgroup for process"
