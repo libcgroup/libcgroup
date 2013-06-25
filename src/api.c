@@ -538,17 +538,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	/* Loop variable. */
 	int i = 0;
 
-	/* Open the configuration file. */
-	pthread_rwlock_wrlock(&rl_lock);
-	fp = fopen(CGRULES_CONF_FILE, "re");
-	if (!fp) {
-		cgroup_err("Error: failed to open configuration file %s: %s\n",
-				CGRULES_CONF_FILE, strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto unlock;
-	}
-
 	/* Determine which list we're using. */
 	if (cache)
 		lst = &rl;
@@ -558,6 +547,15 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	/* If our list already exists, clean it. */
 	if (lst->head)
 		cgroup_free_rule_list(lst);
+
+	/* Open the configuration file. */
+	pthread_rwlock_wrlock(&rl_lock);
+	fp = fopen(CGRULES_CONF_FILE, "re");
+	if (!fp) {
+		cgroup_warn("Warning: failed to open configuration file %s: %s\n",
+				CGRULES_CONF_FILE, strerror(errno));
+		goto unlock;
+	}
 
 	/* Now, parse the configuration file one line at a time. */
 	cgroup_dbg("Parsing configuration file.\n");

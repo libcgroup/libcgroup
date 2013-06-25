@@ -73,10 +73,6 @@ start()
 		log_failure_msg "$servicename is already running with PID `cat ${pidfile}`"
 		return 0
 	fi
-	if [ ! -s $CGRED_CONF ]; then
-		log_failure_msg "not configured"
-		return 6
-	fi
 	if ! grep "^cgroup" /proc/mounts &>/dev/null; then
 		echo
 		log_failure_msg $"Cannot find cgroups, is cgconfig service running?"
