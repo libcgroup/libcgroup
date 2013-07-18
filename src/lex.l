@@ -16,6 +16,8 @@
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 #include "parse.h"
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 int line_no = 1;
 jmp_buf parser_error_env;
 
