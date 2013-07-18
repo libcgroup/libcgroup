@@ -1566,6 +1566,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 	char buffer[FILENAME_MAX];
 	struct cgroup *aux_cgroup;
 	struct cgroup_controller *cgc;
+	int found;
 
 	/*
 	 * If the user did not ask for cached rules, we must parse the
@@ -1590,6 +1591,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 		/* for each controller we have to add to cgroup structure
 		 * either template cgroup or empty controller  */
 
+		found = 0;
 		/* look for relevant template - test name x controller pair */
 		for (j = 0; j < template_table_index; j++) {
 
@@ -1625,11 +1627,15 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				} else {
 					/* go to new controller */
 					j = template_table_index;
+					found = 1;
 					continue;
 				}
 
 			}
 		}
+
+		if (found == 1)
+			continue;
 
 		/* no template is present for given name x controller pair
 		 * add controller to result cgroup */
