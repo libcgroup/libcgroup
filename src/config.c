@@ -1473,7 +1473,24 @@ int cgroup_reload_cached_templates(char *pathname)
 	}
 
 	for (i = 0; i < template_table_index; i++) {
-		cgroup_copy_cgroup(&config_template_table[i], &template_table[i]);
+		cgroup_copy_cgroup(&template_table[i],
+			&config_template_table[i]);
+		strcpy((template_table[i]).name,
+			(config_template_table[i]).name);
+		template_table[i].tasks_uid =
+			config_template_table[i].tasks_uid;
+		template_table[i].tasks_gid =
+			config_template_table[i].tasks_gid;
+		template_table[i].task_fperm =
+			config_template_table[i].task_fperm;
+		template_table[i].control_uid =
+			config_template_table[i].control_uid;
+		template_table[i].control_gid =
+			config_template_table[i].control_gid;
+		template_table[i].control_fperm =
+			config_template_table[i].control_fperm;
+		template_table[i].control_dperm =
+			config_template_table[i].control_dperm;
 	}
 
 	return ret;
@@ -1511,7 +1528,24 @@ int cgroup_init_templates_cache(char *pathname)
 	}
 
 	for (i = 0; i < template_table_index; i++) {
-		cgroup_copy_cgroup(&config_template_table[i], &template_table[i]);
+		cgroup_copy_cgroup(&template_table[i],
+			&config_template_table[i]);
+		strcpy((template_table[i]).name,
+			(config_template_table[i]).name);
+		template_table[i].tasks_uid =
+			config_template_table[i].tasks_uid;
+		template_table[i].tasks_gid =
+			config_template_table[i].tasks_gid;
+		template_table[i].task_fperm =
+			config_template_table[i].task_fperm;
+		template_table[i].control_uid =
+			config_template_table[i].control_uid;
+		template_table[i].control_gid =
+			config_template_table[i].control_gid;
+		template_table[i].control_fperm =
+			config_template_table[i].control_fperm;
+		template_table[i].control_dperm =
+			config_template_table[i].control_dperm;
 	}
 
 	return ret;
