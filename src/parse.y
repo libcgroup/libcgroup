@@ -52,7 +52,8 @@ int yywrap(void)
 %type <values> namevalue_conf
 %type <val> template template_conf
 %type <val> template_task_or_admin template_task_namevalue_conf
-%type <val> template_admin_namevalue_conf
+%type <val> template_admin_namevalue_conf template_task_conf
+%type <val> template_admin_conf
 %start start
 %%
 
@@ -210,7 +211,7 @@ template_conf
 	;
 
 template_task_or_admin
-	:	TASK '{' template_task_namevalue_conf '}' admin_conf
+	:	TASK '{' template_task_namevalue_conf '}' template_admin_conf
 	{
 	$$ = $3 && $5;
 		if (!$$) {
@@ -220,7 +221,7 @@ template_task_or_admin
 			return $$;
 		}
 	}
-	|       ADMIN '{' template_admin_namevalue_conf '}' task_conf
+	|       ADMIN '{' template_admin_namevalue_conf '}' template_task_conf
 	{
 		$$ = $3 && $5;
 		if (!$$) {
@@ -325,7 +326,7 @@ template_task_namevalue_conf
 			return $$;
 		}
 	}
-        |       task_namevalue_conf ID '=' ID ';'
+        |       template_task_namevalue_conf ID '=' ID ';'
 	{
 		$$ = $1 && template_config_group_task_perm($2, $4);
 		if (!$$) {
@@ -348,7 +349,7 @@ template_admin_namevalue_conf
 			return $$;
 		}
 	}
-        |       admin_namevalue_conf ID '=' ID ';'
+        |       template_admin_namevalue_conf ID '=' ID ';'
 	{
 		$$ = $1 && template_config_group_admin_perm($2, $4);
 		if (!$$) {
@@ -397,6 +398,30 @@ admin_conf:	ADMIN '{' admin_namevalue_conf '}'
 	;
 
 task_conf:	TASK '{' task_namevalue_conf '}'
+	{
+		$$ = $3;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
+
+template_admin_conf:	ADMIN '{' template_admin_namevalue_conf '}'
+	{
+		$$ = $3;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n",
+				line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
+
+template_task_conf:	TASK '{' template_task_namevalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
