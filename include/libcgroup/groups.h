@@ -295,7 +295,8 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
 int cgroup_get_cgroup(struct cgroup *cgroup);
 
 /**
- * Copy all controllers, parameters and their values. All existing controllers
+ * Copy all controllers, their parameters and values. Group name, permissions
+ * and ownerships are not coppied. All existing controllers
  * in the source group are discarded.
  *
  * @param dst Destination group.
