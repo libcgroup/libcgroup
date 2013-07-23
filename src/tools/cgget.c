@@ -361,22 +361,22 @@ int main(int argc, char *argv[])
 		case 'g':
 			if (strchr(optarg, ':') == NULL) {
 				/* -g <group> */
-				if (group_needed == 2) {
+				if (group_needed == GR_LIST) {
 					usage(1, argv[0]);
 					result = -1;
 					goto err;
 				}
-				group_needed = 1;
+				group_needed = GR_GROUP;
 				add_record_to_buffer(controllers, optarg,
 					capacity);
 			} else {
 				/* -g <group>:<path> */
-				if (group_needed == 1) {
+				if (group_needed == GR_GROUP) {
 					usage(1, argv[0]);
 					result = -1;
 					goto err;
 				}
-				group_needed = 2;
+				group_needed = GR_LIST;
 				ret = parse_cgroup_spec(cgroup_list, optarg,
 					capacity);
 				if (ret) {
@@ -389,12 +389,12 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'a':
-			if (group_needed == 2) {
+			if (group_needed == GR_LIST) {
 				usage(1, argv[0]);
 				result = -1;
 				goto err;
 			}
-			group_needed = 1;
+			group_needed = GR_GROUP;
 			/* go through cgroups for all possible controllers */
 			mode |=  MODE_SHOW_ALL_CONTROLLERS;
 			break;
@@ -405,8 +405,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (((group_needed == 2) && (argv[optind])) ||
-	    ((group_needed != 2) && (!argv[optind]))) {
+	if (((group_needed == GR_LIST) && (argv[optind])) ||
+	    ((group_needed != GR_LIST) && (!argv[optind]))) {
 		/* mixed -g <controllers>:<path> and <path> or path not set */
 		usage(1, argv[0]);
 		result = -1;
