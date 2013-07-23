@@ -582,7 +582,9 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		ret = cgroup_get_controller_next(&handle, &controller);
 	}
 
-	if (max != 0) {
+	if ((!(flags & FL_LIST) ||
+		(is_ctlr_on_list(controllers, cont_names)))
+		&& (max != 0)) {
 		(controllers[max])[0] = '\0';
 		ret = display_controller_data(
 			controllers, program_name);
