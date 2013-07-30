@@ -556,12 +556,17 @@ struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 		strncpy(con, name_value[i].name, FILENAME_MAX);
 		strtok(con, ".");
 
-		/* add relevant controller */
-		cgc = cgroup_add_controller(src_cgroup, con);
+		/* find out whether we have to add the controller or
+		   cgroup already contains it */
+		cgc = cgroup_get_controller(src_cgroup, con);
 		if (!cgc) {
-			fprintf(stderr, "controller %s can't be add\n",
-					con);
-			goto scgroup_err;
+			/* add relevant controller */
+			cgc = cgroup_add_controller(src_cgroup, con);
+			if (!cgc) {
+				fprintf(stderr, "controller %s can't be add\n",
+						con);
+				goto scgroup_err;
+			}
 		}
 
 		/* add name-value pair to this controller */
