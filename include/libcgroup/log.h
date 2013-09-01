@@ -9,6 +9,8 @@
 #include <features.h>
 #endif
 
+#include <stdarg.h>
+
 __BEGIN_DECLS
 
 /**
