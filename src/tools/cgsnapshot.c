@@ -624,8 +624,46 @@ static int show_mountpoints(const char *controller)
 	return 0;
 }
 
+/* parse whether data about given controller "name" should be displayed.
+ * If yes then the data are printed. "cont_names" is list of controllers
+ * which should be shown.
+ */
+static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
+	char *name)
+{
+	int i;
+
+	/* if there is no controller list show all mounted controllers */
+	if (!(flags & FL_LIST)) {
+		if (show_mountpoints(name)) {
+			/* the controller is not mounted */
+			if ((flags & FL_SILENT) == 0)
+				fprintf(stderr, "ERROR: %s hierarchy "\
+					"not mounted\n", name);
+		}
+		return;
+	}
+
+	/* there is controller list - show wanted mounted controllers only */
+	for (i = 0; i <= CG_CONTROLLER_MAX-1; i++) {
+		if (!strncmp(cont_names[i], name, strlen(name)+1)) {
+			/* controller is on the list */
+			if (show_mountpoints(name)) {
+				/* the controller is not mounted */
+				if ((flags & FL_SILENT) == 0) {
+					fprintf(stderr, "ERROR: %s hierarchy "\
+						"not mounted\n", name);
+				}
+			break;
+			}
+		break;
+		}
+	}
+
+	return;
+}
+
 /* print data about input mount points */
-/* TODO only wanted ones */
 static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	const char *program_name)
 {
@@ -642,16 +680,8 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	while (ret == 0) {
 
 		/* the controller attached to some hierarchy */
-		if  (info.hierarchy != 0) {
-			ret = show_mountpoints(info.name);
-			if (ret != 0) {
-				/* the controller is not mounted */
-				if ((flags &  FL_SILENT) == 0) {
-					fprintf(stderr, "ERROR: %s hierarchy "\
-						"not mounted\n", info.name);
-				}
-			}
-		}
+		if  (info.hierarchy != 0)
+			parse_mountpoint(cont_names, info.name);
 
 		/* next controller */
 		ret = cgroup_get_all_controller_next(&handle, &info);
@@ -664,19 +694,16 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		}
 		final_ret = ret;
 	}
-
 	cgroup_get_all_controller_end(&handle);
 
 	/* process also named hierarchies */
 	ret = cgroup_get_controller_begin(&handle, &mount);
 	while (ret == 0) {
-		if (strncmp(mount.name, "name=", 5) == 0) {
-			ret = show_mountpoints(mount.name);
-			if (ret != 0)
-				break;
-		}
+		if (strncmp(mount.name, "name=", 5) == 0)
+			parse_mountpoint(cont_names, mount.name);
 		ret = cgroup_get_controller_next(&handle, &mount);
 	}
+
 	if (ret != ECGEOF) {
 		if ((flags &  FL_SILENT) != 0) {
 			fprintf(stderr,
