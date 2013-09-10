@@ -121,15 +121,21 @@ int main(int argc, char *argv[])
 			break;
 		case 'd':
 			dirm_change = 1;
-			ret = parse_mode(optarg, &dir_mode, argv[0]);
+			error = parse_mode(optarg, &dir_mode, argv[0]);
+			if (error)
+				goto err;
 			break;
 		case 'f':
 			filem_change = 1;
-			ret = parse_mode(optarg, &file_mode, argv[0]);
+			error = parse_mode(optarg, &file_mode, argv[0]);
+			if (error)
+				goto err;
 			break;
 		case 's':
 			filem_change = 1;
-			ret = parse_mode(optarg, &tasks_mode, argv[0]);
+			error = parse_mode(optarg, &tasks_mode, argv[0]);
+			if (error)
+				goto err;
 			break;
 		default:
 			usage(argv[0]);
