@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 	if (error) {
 		fprintf(stderr, "%s: cannot set default UID and GID: %s\n",
 				argv[0], cgroup_strerror(error));
-		goto err;
+		goto free_cgroup;
 	}
 
 	if (dirm_change | filem_change) {
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 	if (error) {
 		fprintf(stderr, "%s: cannot set config parser defaults: %s\n",
 				argv[0], cgroup_strerror(error));
-		goto err;
+		goto free_cgroup;
 	}
 
 	for (i = 0; i < cfg_files.count; i++) {
@@ -186,8 +186,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-err:
+free_cgroup:
 	cgroup_free(&default_group);
+err:
 	cgroup_string_list_free(&cfg_files);
 	return error;
 }
