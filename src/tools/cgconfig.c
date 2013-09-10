@@ -143,6 +143,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	if (argv[optind]) {
+		usage(1, argv[0]);
+		error = -1;
+		goto err;
+	}
+
 	/* set default permissions */
 	default_group = cgroup_new_cgroup("default");
 	if (!default_group) {
