@@ -89,7 +89,9 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		usage(argv[0]); /* usage() exits */
 
-	ret = cgroup_string_list_init(&cfg_files, argc/2);
+	error = cgroup_string_list_init(&cfg_files, argc/2);
+	if (error)
+		goto err;
 
 	while ((c = getopt_long(argc, argv, "hl:L:t:a:d:f:s:", options,
 			NULL)) > 0) {
@@ -111,12 +113,14 @@ int main(int argc, char *argv[])
 			break;
 		case 'a':
 			/* set admin uid/gid */
-			if (parse_uid_gid(optarg, &auid, &agid, argv[0]))
+			error = parse_uid_gid(optarg, &auid, &agid, argv[0]);
+			if (error)
 				goto err;
 			break;
 		case 't':
 			/* set task uid/gid */
-			if (parse_uid_gid(optarg, &tuid, &tgid, argv[0]))
+			error = parse_uid_gid(optarg, &tuid, &tgid, argv[0]);
+			if (error)
 				goto err;
 			break;
 		case 'd':
@@ -152,6 +156,7 @@ int main(int argc, char *argv[])
 	/* set default permissions */
 	default_group = cgroup_new_cgroup("default");
 	if (!default_group) {
+		error = -1;
 		fprintf(stderr, "%s: cannot create default cgroup\n", argv[0]);
 		goto err;
 	}
