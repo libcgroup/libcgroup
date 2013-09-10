@@ -98,11 +98,11 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 			break;
 		case 'l':
-			ret = cgroup_string_list_add_item(&cfg_files, optarg);
-			if (ret) {
+			error = cgroup_string_list_add_item(&cfg_files, optarg);
+			if (error) {
 				fprintf(stderr, "%s: cannot add file to list,"\
 						" out of memory?\n", argv[0]);
-				exit(1);
+				goto err;
 			}
 			break;
 		case 'L':
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 	error = cgroup_set_uid_gid(default_group, tuid, tgid, auid, agid);
 	if (error) {
 		fprintf(stderr, "%s: cannot set default UID and GID: %s\n",
-				argv[0], cgroup_strerror(ret));
+				argv[0], cgroup_strerror(error));
 		goto err;
 	}
 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 	error = cgroup_config_set_default(default_group);
 	if (error) {
 		fprintf(stderr, "%s: cannot set config parser defaults: %s\n",
-				argv[0], cgroup_strerror(ret));
+				argv[0], cgroup_strerror(error));
 		goto err;
 	}
 
