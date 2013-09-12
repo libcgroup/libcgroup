@@ -35,29 +35,34 @@
 
 static struct cgroup_string_list cfg_files;
 
-static void usage(char *progname)
+static void usage(int status, char *progname)
 {
-	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
+	if (status != 0) {
+		fprintf(stderr, "Wrong input parameters, "\
+			"try %s -h' for more information.\n", progname);
+	} else {
+		printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
 			"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
 			"[-l FILE] [-L DIR] ...\n", basename(progname));
-	printf("Parse and load the specified cgroups configuration file\n");
-	printf("\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -l, --load=FILE		Parse and load the cgroups"\
-			" configuration file\n");
-	printf("  -L, --load-directory=DIR	Parse and load the cgroups"\
-			" configuration files from a directory\n");
-	printf("  -a <tuid>:<tgid>		Default owner of groups files"\
-			" and directories\n");
-	printf("  -d, --dperm=mode		Default group directory"\
-			" permissions\n");
-	printf("  -f, --fperm=mode		Default group file"\
-			" permissions\n");
-	printf("  -s, --tperm=mode		Default tasks file"
-			" permissions\n");
-	printf("  -t <tuid>:<tgid>		Default owner of the tasks "
-			"file\n");
-	exit(2);
+		printf("Parse and load the specified cgroups "\
+			"configuration file\n");
+		printf("\n");
+		printf("  -h, --help			Display this help\n");
+		printf("  -l, --load=FILE		Parse and load "\
+			"the cgroups configuration file\n");
+		printf("  -L, --load-directory=DIR	Parse and load "\
+			"the cgroups configuration files from a directory\n");
+		printf("  -a <tuid>:<tgid>		Default owner of "\
+			"groups files and directories\n");
+		printf("  -d, --dperm=mode		Default group "\
+			"directory permissions\n");
+		printf("  -f, --fperm=mode		Default group file "\
+			"permissions\n");
+		printf("  -s, --tperm=mode		Default tasks file "\
+			"permissions\n");
+		printf("  -t <tuid>:<tgid>		Default owner of "\
+			"the tasks file\n");
+	}
 }
 
 int main(int argc, char *argv[])
@@ -86,8 +91,10 @@ int main(int argc, char *argv[])
 
 	cgroup_set_default_logger(-1);
 
-	if (argc < 2)
-		usage(argv[0]); /* usage() exits */
+	if (argc < 2) {
+		usage(1, argv[0]);
+		return -1;
+	}
 
 	error = cgroup_string_list_init(&cfg_files, argc/2);
 	if (error)
@@ -97,8 +104,9 @@ int main(int argc, char *argv[])
 			NULL)) > 0) {
 		switch (c) {
 		case 'h':
-			usage(argv[0]);
-			break;
+			usage(0, argv[0]);
+			error = 0;
+			goto err;
 		case 'l':
 			error = cgroup_string_list_add_item(&cfg_files, optarg);
 			if (error) {
@@ -142,8 +150,9 @@ int main(int argc, char *argv[])
 				goto err;
 			break;
 		default:
-			usage(argv[0]);
-			break;
+			usage(1, argv[0]);
+			error = -1;
+			goto err;
 		}
 	}
 
