@@ -37,19 +37,17 @@ static void usage(int status, const char *program_name)
 		fprintf(stderr, "Wrong input parameters,"
 			" try %s -h' for more information.\n",
 			program_name);
-	} else {
-		printf("Usage: %s"\
-			"[-g <controllers>:<path>]"
-			"[--sticky | --cancel-sticky] <list of pids>\n",
-			program_name);
-		printf("Move running task(s) to given cgroups\n");
-		printf("  -g <controllers>:<path>	Control group "\
-			"to be displayed (-g is optional)\n");
-		printf("  --sticky			cgred daemon "\
-			"does not change pidlist and children tasks\n");
-		printf("  --cancel-sticky			cgred daemon "\
-			"change pidlist and children tasks\n");
+		return;
 	}
+	printf("Usage: %s [-g <controllers>:<path>] "\
+		"[--sticky | --cancel-sticky] <list of pids>\n", program_name);
+	printf("Move running task(s) to given cgroups\n");
+	printf("  -g <controllers>:<path>	Control group to be displayed "\
+		"(-g is optional)\n");
+	printf("  --sticky			cgred daemon does not change "\
+		"pidlist and children tasks\n");
+	printf("  --cancel-sticky		cgred daemon change pidlist "\
+		"and children tasks\n");
 }
 
 /*
