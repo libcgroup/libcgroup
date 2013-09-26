@@ -37,8 +37,8 @@ static void usage(int status, const char *program_name)
 	printf("Usage: %s [-h] [-l FILE] [-L DIR] [-e]\n",
 		program_name);
 	printf("Unload the cgroup filesystem\n");
-	printf("  -h, --help			Display this help\n");
 	printf("  -e, --empty			Remove only empty cgroups\n");
+	printf("  -h, --help			Display this help\n");
 	printf("  -l, --load=FILE		Parse and load the cgroups "\
 		"configuration file\n");
 	printf("  -L, --load-directory=DIR	Parse and load the cgroups "\
