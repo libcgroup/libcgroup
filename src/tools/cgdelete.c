@@ -35,21 +35,20 @@ static struct option const long_options[] =
 
 static void usage(int status, const char *program_name)
 {
-	if (status != 0)
+	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters,"
 			" try %s --help' for more information.\n",
 			program_name);
-	else {
-		fprintf(stdout, "Usage: %s [-h] [-r] "\
-			"[[-g] <controllers>:<path>] ...\n", program_name);
-		fprintf(stdout, "Remove control group(s)\n");
-		fprintf(stdout, "  -g <controllers>:<path>   "\
-			"Control group to be removed (-g is optional)\n");
-		fprintf(stdout, "  -h, --help                "\
-			"Display this help\n");
-		fprintf(stdout, "  -r, --recursive           "\
-			"Recursively remove all subgroups\n");
+		return;
 	}
+	fprintf(stdout, "Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
+		program_name);
+	fprintf(stdout, "Remove control group(s)\n");
+	fprintf(stdout, "  -g <controllers>:<path>   Control group to be "\
+		"removed (-g is optional)\n");
+	fprintf(stdout, "  -h, --help                Display this help\n");
+	fprintf(stdout, "  -r, --recursive           Recursively remove "\
+		"all subgroups\n");
 }
 
 
