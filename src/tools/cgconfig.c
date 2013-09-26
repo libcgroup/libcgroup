@@ -40,29 +40,28 @@ static void usage(int status, char *progname)
 	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters, "\
 			"try %s -h' for more information.\n", progname);
-	} else {
-		printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
-			"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
-			"[-l FILE] [-L DIR] ...\n", basename(progname));
-		printf("Parse and load the specified cgroups "\
-			"configuration file\n");
-		printf("\n");
-		printf("  -h, --help			Display this help\n");
-		printf("  -l, --load=FILE		Parse and load "\
-			"the cgroups configuration file\n");
-		printf("  -L, --load-directory=DIR	Parse and load "\
-			"the cgroups configuration files from a directory\n");
-		printf("  -a <tuid>:<tgid>		Default owner of "\
-			"groups files and directories\n");
-		printf("  -d, --dperm=mode		Default group "\
-			"directory permissions\n");
-		printf("  -f, --fperm=mode		Default group file "\
-			"permissions\n");
-		printf("  -s, --tperm=mode		Default tasks file "\
-			"permissions\n");
-		printf("  -t <tuid>:<tgid>		Default owner of "\
-			"the tasks file\n");
+		return;
 	}
+	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
+		"[-t <tuid>:<tgid>] [-a <agid>:<auid>] [-l FILE] "\
+		"[-L DIR] ...\n", basename(progname));
+	printf("\n");
+	printf("Parse and load the specified cgroups configuration file\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -l, --load=FILE		Parse and load the cgroups "\
+		"configuration file\n");
+	printf("  -L, --load-directory=DIR	Parse and load the cgroups "\
+		"configuration files from a directory\n");
+	printf("  -a <tuid>:<tgid>		Default owner of groups files "\
+		"and directories\n");
+	printf("  -d, --dperm=mode		Default group directory "\
+		"permissions\n");
+	printf("  -f, --fperm=mode		Default group file "\
+		"permissions\n");
+	printf("  -s, --tperm=mode		Default tasks file "\
+		"permissions\n");
+	printf("  -t <tuid>:<tgid>		Default owner of the tasks "\
+		"file\n");
 }
 
 int main(int argc, char *argv[])
