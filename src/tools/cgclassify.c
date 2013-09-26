@@ -39,15 +39,16 @@ static void usage(int status, const char *program_name)
 			program_name);
 		return;
 	}
-	printf("Usage: %s [-g <controllers>:<path>] "\
+	printf("Usage: %s [[-g] <controllers>:<path>] "\
 		"[--sticky | --cancel-sticky] <list of pids>\n", program_name);
 	printf("Move running task(s) to given cgroups\n");
-	printf("  -g <controllers>:<path>	Control group to be displayed "\
-		"(-g is optional)\n");
-	printf("  --sticky			cgred daemon does not change "\
-		"pidlist and children tasks\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -g <controllers>:<path>	Control group to be used "\
+		"as target\n");
 	printf("  --cancel-sticky		cgred daemon change pidlist "\
 		"and children tasks\n");
+	printf("  --sticky			cgred daemon does not change "\
+		"pidlist and children tasks\n");
 }
 
 /*
