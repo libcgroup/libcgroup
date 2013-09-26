@@ -32,18 +32,17 @@ static void usage(int status, const char *program_name)
 		fprintf(stderr, "Wrong input parameters,"
 			" try %s -h' for more information.\n",
 			program_name);
-	} else {
-		printf("Usage: %s [-h] [-l FILE] [-L DIR] [-e]\n",
-			program_name);
-		printf("Unload the cgroup filesystem\n");
-		printf("  -h, --help			Display this help\n");
-		printf("  -e, --empty			Remove only empty"\
-			" cgroups\n");
-		printf("  -l, --load=FILE		Parse and load"\
-			"the cgroups configuration file\n");
-		printf("  -L, --load-directory=DIR	Parse and load"\
-			"the cgroups configuration files from a directory\n");
+		return;
 	}
+	printf("Usage: %s [-h] [-l FILE] [-L DIR] [-e]\n",
+		program_name);
+	printf("Unload the cgroup filesystem\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -e, --empty			Remove only empty cgroups\n");
+	printf("  -l, --load=FILE		Parse and load the cgroups "\
+		"configuration file\n");
+	printf("  -L, --load-directory=DIR	Parse and load the cgroups "\
+		"configuration files from a directory\n");
 }
 
 static void report_error(int error, const char *program_name)
