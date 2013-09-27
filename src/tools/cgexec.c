@@ -53,6 +53,7 @@ static void usage(int status, const char *program_name)
 	printf("Run the task in given control group(s)\n");
 	printf("  -g <controllers>:<path>	Control group which "\
 		"should be added\n");
+	printf("  -h, --help			Display this help\n");
 	printf("  --sticky			cgred daemon does not "\
 		"change pidlist and children tasks\n");
 }
