@@ -61,21 +61,18 @@ static void usage(int status, const char *program_name)
 			program_name);
 		return;
 	}
-	fprintf(stdout, "Usage: %s [-h] [-s] [-b FILE] "\
-		"[-w FILE] [-f FILE] "\
+	printf("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] "\
 		"[controller] [...]\n", program_name);
-	fprintf(stdout, "Generate the configuration file from "\
-		"the given controllers of control groups\n");
-	fprintf(stdout, "  -b, --blacklist=FILE  Set the blacklist"\
+	printf("Generate the configuration file for given controllers\n");
+	printf("  -b, --blacklist=FILE		Set the blacklist"\
 		" configuration file (default %s)\n", BLACKLIST_CONF);
-	fprintf(stdout, "  -f, --file=FILE       Redirect the output"\
+	printf("  -f, --file=FILE		Redirect the output"\
 		" to output_file\n");
-	fprintf(stdout, "  -h, --help            Display this help\n");
-	fprintf(stdout, "  -s, --silent          Ignore all "\
-		"warnings\n");
-	fprintf(stdout, "  -t, --strict          Don't show the "\
-		"variables which are not on the whitelist\n");
-	fprintf(stdout, "  -w, --whitelist=FILE  Set the whitelist"\
+	printf("  -h, --help			Display this help\n");
+	printf("  -s, --silent			Ignore all warnings\n");
+	printf("  -t, --strict			Don't show variables "\
+		"which are not on the whitelist\n");
+	printf("  -w, --whitelist=FILE		Set the whitelist"\
 		" configuration file (don't used by default)\n");
 }
 
