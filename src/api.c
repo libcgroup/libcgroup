@@ -119,9 +119,9 @@ static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
 static int cg_chown(const char *filename, uid_t owner, gid_t group)
 {
 	if (owner == NO_UID_GID)
-		owner = 0;
+		owner = getuid();
 	if (group == NO_UID_GID)
-		group = 0;
+		group = getgid();
 	return chown(filename, owner, group);
 }
 static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
