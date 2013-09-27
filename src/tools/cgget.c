@@ -33,31 +33,28 @@ enum group{
 
 static void usage(int status, const char *program_name)
 {
-	if (status != 0)
+	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters,"
 			" try %s -h' for more information.\n",
 			program_name);
-	else {
-		fprintf(stdout, "Usage: %s [-nv] [-r <name>] "\
-			"[-g <controllers>] [-a] <path> ...\n", program_name);
-		fprintf(stdout, "   or: %s [-nv] [-r <name>] "\
-			"-g <controllers>:<path> ...\n", program_name);
-		fprintf(stdout, "Print parameter(s) of given group(s).\n");
-		fprintf(stdout, "  -a, --all			"\
-			"Print info about all relevant controllers\n");
-		fprintf(stdout, "  -g <controllers>		"\
-			"Controller which info should be displayed\n");
-		fprintf(stdout, "  -g <controllers>:<path>	"\
-			"Control group which info should be displayed\n");
-		fprintf(stdout, "  -h, --help			"\
-			"Display this help\n");
-		fprintf(stdout, "  -n				"\
-			"Do not print headers\n");
-		fprintf(stdout, "  -r, --variable <name>	"\
-			"Define parameter to display\n");
-		fprintf(stdout, "  -v, --values-only		"\
-			"Print only values, not parameter names\n");
+		return;
 	}
+	printf("Usage: %s [-nv] [-r <name>] [-g <controllers>] "\
+		"[-a] <path> ...\n"\
+		"   or: %s [-nv] [-r <name>] -g <controllers>:<path> ...\n",
+		program_name, program_name);
+	printf("Print parameter(s) of given group(s).\n");
+	printf("  -a, --all			Print info about all relevant "\
+		"controllers\n");
+	printf("  -g <controllers>		Controller which info should "\
+		"be displayed\n");
+	printf("  -g <controllers>:<path>	Control group which info "\
+		"should be displayed\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -n				Do not print headers\n");
+	printf("  -r, --variable  <name>	Define parameter to display\n");
+	printf("  -v, --values-only		Print only values, not "\
+		"parameter names\n");
 }
 
 static int display_record(char *name,
