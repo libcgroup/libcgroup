@@ -41,13 +41,13 @@ static void usage(int status, const char *program_name)
 			program_name);
 		return;
 	}
-	fprintf(stdout, "Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
+	printf("Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
 		program_name);
-	fprintf(stdout, "Remove control group(s)\n");
-	fprintf(stdout, "  -g <controllers>:<path>   Control group to be "\
-		"removed (-g is optional)\n");
-	fprintf(stdout, "  -h, --help                Display this help\n");
-	fprintf(stdout, "  -r, --recursive           Recursively remove "\
+	printf("Remove control group(s)\n");
+	printf("  -g <controllers>:<path>	Control group to be removed "\
+		"(-g is optional)\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -r, --recursive		Recursively remove "\
 		"all subgroups\n");
 }
 
