@@ -42,20 +42,19 @@ static struct option longopts[] = {
 
 static void usage(int status, const char *program_name)
 {
-	if (status != 0)
+	if (status != 0) {
 		fprintf(stderr, "Wrong input parameters,"
 			" try %s --help' for more information.\n",
 			program_name);
-	else {
-		printf("Usage: %s [-h] [-g <controllers>:<path>] "
-			"[--sticky] command [arguments] ...\n",
-			program_name);
-		printf("Run the task in given control groups\n");
-		printf("  -g <controllers>:<path>	Control "\
-			"group which should be added\n");
-		printf("  --sticky			cgred "\
-			"daemon does not change pidlist and children tasks\n");
+		return;
 	}
+	printf("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] "\
+		"command [arguments] ...\n", program_name);
+	printf("Run the task in given control group(s)\n");
+	printf("  -g <controllers>:<path>	Control group which "\
+		"should be added\n");
+	printf("  --sticky			cgred daemon does not "\
+		"change pidlist and children tasks\n");
 }
 
 
