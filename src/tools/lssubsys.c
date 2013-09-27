@@ -37,24 +37,17 @@ static void usage(int status, const char *program_name)
 			program_name);
 		return;
 	}
-	fprintf(stdout, "Usage: %s [-m] [controller] [...]\n",
-		program_name);
-	fprintf(stdout, "Usage: %s -a [-m]\n",
-		program_name);
-	fprintf(stdout, "List information about given controller(s). "\
-		"If no controller is set list information about "\
-		"all mounted controllers.\n");
-	fprintf(stdout, "  -h, --help			"\
-		"Display this help\n");
-	fprintf(stdout, "  -m, --mount-points		"\
-		"Display mount points\n");
-	fprintf(stdout, "  -M, --all-mount-points	"\
-		"Display all mount points\n");
-	fprintf(stdout, "  -a, --all			"\
-		"Display information about all controllers "\
-		"(including not mounted ones)\n");
-	fprintf(stdout, "  -i, --hierarchies		"\
-		"Display information about hierarchies\n");
+	printf("Usage: %s [-i] [-m] [-M] [controller] [...]\n"\
+		"   or: %s [-a] [-i] [-m] [-M]\n", program_name, program_name);
+	printf("List information about given controller(s) If no controller "\
+		"is set list information about all mounted controllers.\n");
+	printf("  -a, --all			Display information "\
+		"about all controllers (including not mounted ones)\n");
+	printf("  -h, --help			Display this help\n");
+	printf("  -i, --hierarchies		Display information about "\
+		"hierarchies\n");
+	printf("  -m, --mount-points		Display mount points\n");
+	printf("  -M, --all-mount-points	Display all mount points\n");
 }
 
 static int print_controller_mount(const char *controller,
