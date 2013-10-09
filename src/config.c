@@ -1612,14 +1612,14 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				/* name and controller match template found */
 				/* variables substituted in template */
 				strncpy(buffer, t_cgroup->name,
-					FILENAME_MAX);
+					FILENAME_MAX-1);
 				strncpy(t_cgroup->name, cgroup->name,
-					FILENAME_MAX);
+					FILENAME_MAX-1);
 
 				ret = cgroup_create_cgroup(t_cgroup, flags);
 
 				strncpy(t_cgroup->name, buffer,
-					FILENAME_MAX);
+					FILENAME_MAX-1);
 				if (ret) {
 					cgroup_dbg("creating group %s, error %d\n",
 					cgroup->name, ret);
