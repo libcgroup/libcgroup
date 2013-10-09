@@ -993,6 +993,8 @@ int cgroup_init(void)
 
 		if (mntopt) {
 			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+			if (!mntopt)
+				continue;
 			/*
 			 * Check if it is a duplicate
 			 */
