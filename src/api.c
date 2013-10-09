@@ -2707,10 +2707,10 @@ char *cgroup_copy_with_slash(char *input)
 	int len = strlen(input);
 
 	/* if input does not end with '/', allocate one more space for it */
-	if ((input[len-2]) != '/')
+	if ((input[len-1]) != '/')
 		len = len+1;
 
-	output = (char *)malloc(sizeof(char)*(len));
+	output = (char *)malloc(sizeof(char)*(len+1));
 	if (output == NULL)
 		return NULL;
 
