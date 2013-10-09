@@ -3303,7 +3303,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		}
 
 		token = strtok_r(controllers, ",", &savedptr);
-		do {
+		while (token) {
 			if (strncmp(controller, token, strlen(controller) + 1)
 								== 0) {
 				*current_path = strdup(cgroup_path);
@@ -3316,7 +3316,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 				goto done;
 			}
 			token = strtok_r(NULL, ",", &savedptr);
-		} while (token);
+		}
 	}
 
 done:
