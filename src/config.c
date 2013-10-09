@@ -1640,7 +1640,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 		/* no template is present for given name x controller pair
 		 * add controller to result cgroup */
 		aux_cgroup = cgroup_new_cgroup(cgroup->name);
-		if (ret) {
+		if (aux_cgroup) {
 			ret = ECGINVAL;
 			fprintf(stderr, "cgroup %s can't be created\n",
 				cgroup->name);
