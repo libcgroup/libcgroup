@@ -3125,7 +3125,8 @@ int cgroup_change_all_cgroups(void)
 		if (err)
 			continue;
 
-		err = cgroup_change_cgroup_flags(euid, egid, procname, pid, 0);
+		err = cgroup_change_cgroup_flags(euid,
+				egid, procname, pid, CGFLAG_USECACHE);
 		if (err)
 			cgroup_dbg("cgroup change pid %i failed\n", pid);
 	}
