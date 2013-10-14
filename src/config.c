@@ -130,7 +130,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 		break;
 	default:
 		return 0;
-		}
+	}
 
 	if (*table_index >= *max - 1) {
 		struct cgroup *newblk;
@@ -151,7 +151,17 @@ int config_insert_cgroup(char *cg_name, int flag)
 		memset(newblk + oldlen, 0, (*max - oldlen) *
 			sizeof(struct cgroup));
 		init_cgroup_table(newblk + oldlen, *max - oldlen);
-		config_cgroup_table = newblk;
+		config_table = newblk;
+		switch (flag) {
+		case CGROUP:
+			config_cgroup_table = config_table;
+			break;
+		case TEMPLATE:
+			config_template_table = config_table;
+			break;
+		default:
+			return 0;
+		}
 		cgroup_dbg("maximum %d\n", *max);
 		cgroup_dbg("reallocated config_table to %p\n",
 			config_table);
