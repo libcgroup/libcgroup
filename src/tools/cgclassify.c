@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 	}
 
 	for (i = optind; i < argc; i++) {
-		pid = (uid_t) strtol(argv[i], &endptr, 10);
+		pid = (pid_t) strtol(argv[i], &endptr, 10);
 		if (endptr[0] != '\0') {
 			/* the input argument was not a number */
 			fprintf(stderr, "Error: %s is not valid pid.\n",
