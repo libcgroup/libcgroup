@@ -2933,11 +2933,11 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 				available = FILENAME_MAX - j - 2;
 				/* Substitution */
 				switch(tmp->destination[++i]) {
-				case 'u':
+				case 'U':
 					written = snprintf(newdest+j, available,
 						"%d", uid);
 					break;
-				case 'U':
+				case 'u':
 					user_info = getpwuid(uid);
 					if(user_info) {
 						written = snprintf(newdest + j,
@@ -2948,11 +2948,11 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 							available, "%d", uid);
 					}
 					break;
-				case 'g':
+				case 'G':
 					written = snprintf(newdest + j,
 						available, "%d", gid);
 					break;
-				case 'G':
+				case 'g':
 					group_info = getgrgid(gid);
 					if(group_info) {
 						written = snprintf(newdest + j,
@@ -2963,11 +2963,11 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 							available, "%d", gid);
 					}
 					break;
-				case 'p':
+				case 'P':
 					written = snprintf(newdest + j,
 						available, "%d", pid);
 					break;
-				case 'P':
+				case 'p':
 					if(procname) {
 						written = snprintf(newdest + j,
 							available, "%s",
