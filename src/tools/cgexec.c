@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 	/* Just for debugging purposes. */
 	uid = geteuid();
 	gid = getegid();
-	cgroup_dbg("My euid and eguid is: %d,%d\n", (int) uid, (int) gid);
+	cgroup_dbg("My euid and egid is: %d,%d\n", (int) uid, (int) gid);
 
 	uid = getuid();
 	gid = getgid();
