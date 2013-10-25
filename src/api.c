@@ -3129,6 +3129,8 @@ int cgroup_change_all_cgroups(void)
 				egid, procname, pid, CGFLAG_USECACHE);
 		if (err)
 			cgroup_dbg("cgroup change pid %i failed\n", pid);
+
+		free(procname);
 	}
 
 	closedir(dir);
