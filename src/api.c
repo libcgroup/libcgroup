@@ -1660,8 +1660,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			 * ignore it specifically if they wish.
 			 */
 			if (error) {
-				cgroup_warn("Warning: failed to set %s: %s (%d)\n",
-					path, cgroup_strerror(error), error);
+				cgroup_err("Error: failed to set %s: %s\n",
+					path, cgroup_strerror(error));
 				retval = ECGCANTSETVALUE;
 				continue;
 			}
