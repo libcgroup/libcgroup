@@ -1460,7 +1460,7 @@ int cgroup_reload_cached_templates(char *pathname)
 	}
 	template_table_index = 0;
 
-	if (config_template_table_index != 0) {
+	if ((config_template_table_index != 0) || (config_table_index != 0)) {
 		/* config template structures have to be free as well*/
 		cgroup_free_config();
 	}
@@ -1515,7 +1515,16 @@ int cgroup_init_templates_cache(char *pathname)
 	int ret = 0;
 	int i;
 
-	if (config_template_table_index != 0) {
+	if (template_table) {
+		/* template structures have to be free */
+		for (i = 0; i < template_table_index; i++)
+			cgroup_free_controllers(&template_table[i]);
+		free(template_table);
+		template_table = NULL;
+	}
+	template_table_index = 0;
+
+	if ((config_template_table_index != 0) || (config_table_index != 0)) {
 		/* config structures have to be clean */
 		cgroup_free_config();
 	}
