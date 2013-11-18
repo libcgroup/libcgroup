@@ -11,5 +11,5 @@ SWIG=swig
 
 libcgroup.c: libcgroup.p $(top_srcdir)/include/libcgroup.h
 	cp libcgroup.p libcgroup.i
-	$(CC) $(INCLUDES) -DSWIG -nostdinc -E $(top_srcdir)/include/libcgroup.h >> libcgroup.i
+	$(CC) $(INCLUDES) -DSWIG -E $(top_srcdir)/include/libcgroup.h >> libcgroup.i
 	$(SWIG) -python -o libcgroup.c libcgroup.i
