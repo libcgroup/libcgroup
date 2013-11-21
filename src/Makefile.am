@@ -3,7 +3,6 @@ BINDINGS_SUBDIR = bindings
 endif
 
 SUBDIRS = . daemon pam tools $(BINDINGS_SUBDIR)
-DIST_SUBDIRS = $(SUBDIRS)
 
 # generate parse.h  from parse.y
 AM_YFLAGS = -d
