@@ -15,7 +15,7 @@
 AC_PREREQ(2.61)
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup], 0.40.rc1)
+AC_INIT([libcgroup], 0.41.rc1)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -23,7 +23,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # set library version, soname is libcgroup.so.MAJOR
 AC_SUBST(LIBRARY_VERSION_MAJOR, 1)
 AC_SUBST(LIBRARY_VERSION_MINOR, 0)
-AC_SUBST(LIBRARY_VERSION_RELEASE, 40)
+AC_SUBST(LIBRARY_VERSION_RELEASE, 41)
 
 # we do not want static libraries
 AC_DISABLE_STATIC
