@@ -15,7 +15,7 @@
 AC_PREREQ(2.61)
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup], 0.41.rc1)
+AC_INIT([libcgroup], 0.41)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
