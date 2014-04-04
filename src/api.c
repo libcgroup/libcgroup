@@ -1897,15 +1897,23 @@ static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
 			break;
 
 		ret = fprintf(output_tasks, "%d", tids);
-		if (ret < 0)
-			break;
+		if (ret < 0) {
+			if (errno == ESRCH)
+				ret = 0;
+			else
+				break;
+		}
 
 		/*
 		 * Flush the file, we need only one process per write() call.
 		 */
 		ret = fflush(output_tasks);
-		if (ret < 0)
-			break;
+		if (ret < 0) {
+			if (errno == ESRCH)
+				ret = 0;
+			else
+				break;
+		}
 	}
 
 	if (ret < 0) {
