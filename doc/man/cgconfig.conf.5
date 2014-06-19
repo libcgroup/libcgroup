@@ -251,6 +251,9 @@ Templates does not use
 .B default
 section settings.
 
+.I /etc/cgconfig.d/
+directory can be used for additional configuration files. cgrulesengd searches this directory for additional templates.
+
 .\"********************************************"
 .SH EXAMPLES
 .LP
@@ -783,10 +786,12 @@ related to them.
 .SH FILES
 .LP
 .PD .1v
-.TP 20
+.TP
 .B /etc/cgconfig.conf
 .TP
 default libcgroup configuration file
+.B /etc/cgconfig.d/
+default libcgroup configuration files directory
 .PD 
 
 .SH SEE ALSO
