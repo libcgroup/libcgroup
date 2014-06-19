@@ -34,6 +34,7 @@
 #include "libcgroup.h"
 #include "cgrulesengd.h"
 #include "../libcgroup-internal.h"
+#include "../tools/tools-common.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -58,6 +59,9 @@
 #include <grp.h>
 
 #define NUM_PER_REALLOCATIOM	(100)
+
+/* list of config files from CGCONFIG_CONF_FILE and CGCONFIG_CONF_DIR */
+static struct cgroup_string_list template_files;
 
 /* Log file, NULL if logging to file is disabled */
 FILE* logfile;
@@ -936,6 +940,8 @@ void cgre_flash_rules(int signum)
 	/* Current time */
 	time_t tm = time(0);
 
+	int fileindex;
+
 	flog(LOG_INFO, "Reloading rules configuration\n");
 	flog(LOG_DEBUG, "Current time: %s\n", ctime(&tm));
 
@@ -949,7 +955,7 @@ void cgre_flash_rules(int signum)
 	}
 
 	/* Ask libcgroup to reload the template rules table. */
-	cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
+	cgroup_load_templates_cache_from_files(&fileindex);
 }
 
 /**
@@ -962,11 +968,13 @@ void cgre_flash_templates(int signum)
 	/* Current time */
 	time_t tm = time(0);
 
+	int fileindex;
+
 	flog(LOG_INFO, "Reloading templates configuration.\n");
 	flog(LOG_DEBUG, "Current time: %s\n", ctime(&tm));
 
 	/* Ask libcgroup to reload the templates table. */
-	cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
+	cgroup_load_templates_cache_from_files(&fileindex);
 }
 
 /**
@@ -1068,6 +1076,8 @@ int main(int argc, char *argv[])
 		{"socket-group", required_argument, NULL, 'g'},
 		{NULL, 0, NULL, 0}
 	};
+
+	int fileindex;
 
 	/* Make sure the user is root. */
 	if (getuid() != 0) {
@@ -1180,6 +1190,25 @@ int main(int argc, char *argv[])
 	}
 
 	/* Ask libcgroup to load the configuration rules. */
+	ret = cgroup_string_list_init(&template_files,
+		CGCONFIG_CONF_FILES_LIST_MINIMUM_SIZE);
+	if (ret) {
+		fprintf(stderr, "%s: cannot init file list, out of memory?\n",
+			argv[0]);
+		goto finished_without_temp_files;
+	}
+	/* first add CGCONFIG_CONF_FILE into file list */
+	ret = cgroup_string_list_add_item(&template_files, CGCONFIG_CONF_FILE);
+	if (ret) {
+		fprintf(stderr, "%s: cannot add file to list, out of memory?\n"
+			, argv[0]);
+		goto finished;
+	}
+
+	/* then read CGCONFIG_CONF_DIR directory for additional config files */
+	cgroup_string_list_add_directory(&template_files, CGCONFIG_CONF_DIR,
+		argv[0]);
+
 	if ((ret = cgroup_init_rules_cache()) != 0) {
 		fprintf(stderr, "Error: libcgroup failed to initialize rules"
 				"cache from %s. %s\n", CGRULES_CONF_FILE,
@@ -1188,11 +1217,18 @@ int main(int argc, char *argv[])
 	}
 
 	/* ask libcgroup to load template rules as well */
-	ret = cgroup_init_templates_cache(CGCONFIG_CONF_FILE);
+	cgroup_templates_cache_set_source_files(&template_files);
+	ret = cgroup_load_templates_cache_from_files(&fileindex);
 	if (ret != 0) {
-		fprintf(stderr, "Error: libcgroup failed to initialize teplate"\
-				"rules from %s. %s\n", CGCONFIG_CONF_FILE,
-				cgroup_strerror(ret));
+		if (fileindex < 0) {
+			fprintf(stderr, "Error: Template source files ");
+			fprintf(stderr, "have not been set\n");
+		} else {
+			fprintf(stderr, "Error: Failed to initialize template");
+			fprintf(stderr, "rules from %s. ",
+				template_files.items[fileindex]);
+			fprintf(stderr, "%s\n", cgroup_strerror(-ret));
+		}
 		goto finished;
 	}
 
@@ -1259,6 +1295,9 @@ int main(int argc, char *argv[])
 	ret =  cgre_create_netlink_socket_process_msg();
 
 finished:
+	cgroup_string_list_free(&template_files);
+
+finished_without_temp_files:
 	if (logfile && logfile != stdout)
 		fclose(logfile);
 

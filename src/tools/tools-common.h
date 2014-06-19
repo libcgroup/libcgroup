@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include <libcgroup.h>
-#include <libcgroup-internal.h>
+#include "../libcgroup-internal.h"
 
 #define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
 #define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)

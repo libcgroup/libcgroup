@@ -48,6 +48,9 @@ __BEGIN_DECLS
 
 
 #define CGCONFIG_CONF_FILE		"/etc/cgconfig.conf"
+/* Minimum number of file in template file list for cgrulesengd */
+#define CGCONFIG_CONF_FILES_LIST_MINIMUM_SIZE   4
+#define CGCONFIG_CONF_DIR               "/etc/cgconfig.d"
 
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
