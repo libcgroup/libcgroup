@@ -84,10 +84,31 @@ int cgroup_init_templates_cache(char *pathname);
 int cgroup_reload_cached_templates(char *pathname);
 
 /**
+ * Load the templates cache from files. Before calling this function,
+ * cgroup_templates_cache_set_source_files has to be called first.
+ * @param file_index index of file which was unable to be parsed
+ * @return 0 on success, > 0 on error
+ */
+int cgroup_load_templates_cache_from_files(int *file_index);
+
+/**
+ * Setting source files of templates. This function has to be called before
+ * any call of cgroup_load_templates_cache_from_files.
+ * @param tmpl_files
+ */
+struct cgroup_string_list;
+void cgroup_templates_cache_set_source_files(
+	struct cgroup_string_list *tmpl_files);
+
+/**
  * Physically create a new control group in kernel, based on given control
  * group template and configuration file. If given template is not set in
  * configuration file, then the procedure works create the control group
  * using  cgroup_create_cgroup() function
+ *
+ * Templates are loaded using cgroup_load_templates_cache_from_files
+ * function, which must be preceded by cgroup_templates_cache_set_source_files
+ * call.
  *
  * The flags can alter the behavior of this function:
  * CGFLAG_USE_TEMPLATE_CACHE: Use cached templates instead of

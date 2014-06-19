@@ -41,6 +41,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "tools/tools-common.h"
+
 unsigned int MAX_CGROUPS = 64;	/* NOTE: This value changes dynamically */
 unsigned int MAX_TEMPLATES = 64;
 				/* NOTE: This value changes dynamically */
@@ -89,6 +91,7 @@ static int config_template_table_index;
  */
 static struct cgroup *template_table;
 static int template_table_index;
+static struct cgroup_string_list *template_files;
 
 
 /*
@@ -1572,6 +1575,161 @@ int cgroup_init_templates_cache(char *pathname)
 
 }
 
+/**
+ * Setting source files of templates. This function has to be called before
+ * any call of cgroup_load_templates_cache_from_files.
+ * @param tmpl_files
+ */
+void cgroup_templates_cache_set_source_files(
+	struct cgroup_string_list *tmpl_files)
+{
+	template_files = tmpl_files;
+}
+
+/**
+ * Appending cgroup templates parsed by parser to template_table
+ * @param offset number of templates already in the table
+ */
+int cgroup_add_cgroup_templates(int offset)
+{
+	int i, ti, ret;
+
+	for (i = 0; i < config_template_table_index; i++) {
+		ti = i + offset;
+		ret = cgroup_copy_cgroup(&template_table[ti],
+			&config_template_table[i]);
+		if (ret)
+			return ret;
+
+		strcpy((template_table[ti]).name,
+			(config_template_table[i]).name);
+		template_table[ti].tasks_uid =
+			config_template_table[i].tasks_uid;
+		template_table[ti].tasks_gid =
+			config_template_table[i].tasks_gid;
+		template_table[ti].task_fperm =
+			config_template_table[i].task_fperm;
+		template_table[ti].control_uid =
+			config_template_table[i].control_uid;
+		template_table[ti].control_gid =
+			config_template_table[i].control_gid;
+		template_table[ti].control_fperm =
+			config_template_table[i].control_fperm;
+		template_table[ti].control_dperm =
+			config_template_table[i].control_dperm;
+	}
+
+	return 0;
+}
+
+/**
+ * Expand template table based on new number of parsed templates, i.e.
+ * on value of config_template_table_index.
+ * Change value of template_table_index.
+ * @return 0 on success, < 0 on error
+ */
+int cgroup_expand_template_table(void)
+{
+	int i;
+
+	template_table = realloc(template_table,
+		(template_table_index + config_template_table_index)
+		*sizeof(struct cgroup));
+
+	if (template_table == NULL)
+		return -ECGOTHER;
+
+	for (i = 0; i < config_template_table_index; i++)
+		template_table[i + template_table_index].index = 0;
+
+	template_table_index += config_template_table_index;
+
+	return 0;
+}
+
+/**
+ * Load the templates cache from files. Before calling this function,
+ * cgroup_templates_cache_set_source_files has to be called first.
+ * @param file_index index of file which was unable to be parsed
+ * @return 0 on success, > 0 on error
+ */
+int cgroup_load_templates_cache_from_files(int *file_index)
+{
+	int ret;
+	int i, j;
+	int template_table_last_index;
+	char *pathname;
+
+	if (!template_files) {
+		/* source files has not been set */
+		cgroup_dbg("Template source files have not been set. ");
+		cgroup_dbg("Using only %s\n", CGCONFIG_CONF_FILE);
+
+		if (template_table_index == 0)
+			/* the rules cache is empty */
+			return cgroup_init_templates_cache(
+				CGCONFIG_CONF_FILE);
+		else
+			/* cache is not empty */
+			return cgroup_reload_cached_templates(
+				CGCONFIG_CONF_FILE);
+	}
+
+	if (template_table) {
+		/* template structures have to be free */
+		for (i = 0; i < template_table_index; i++)
+			cgroup_free_controllers(&template_table[i]);
+		free(template_table);
+		template_table = NULL;
+	}
+	template_table_index = 0;
+
+	if ((config_template_table_index != 0) || (config_table_index != 0)) {
+		/* config structures have to be clean before parsing */
+		cgroup_free_config();
+	}
+
+	for (j = 0; j < template_files->count; j++) {
+		pathname = template_files->items[j];
+
+		cgroup_dbg("Parsing templates from %s.\n", pathname);
+		/* Attempt to read the configuration file
+		 * and cache the rules. */
+		ret = cgroup_parse_config(pathname);
+		if (ret) {
+			cgroup_dbg("Could not initialize rule cache, ");
+			cgroup_dbg("error was: %d\n", ret);
+			*file_index = j;
+			return ret;
+		}
+
+		if (config_template_table_index > 0) {
+			template_table_last_index = template_table_index;
+			ret = cgroup_expand_template_table();
+			if (ret) {
+				cgroup_dbg("Could not expand template table, ");
+				cgroup_dbg("error was: %d\n", -ret);
+				*file_index = j;
+				return -ret;
+			}
+
+			/* copy template data to templates cache structures */
+			cgroup_dbg("Copying templates to template table ");
+			cgroup_dbg("from %s.\n", pathname);
+			ret = cgroup_add_cgroup_templates(
+				template_table_last_index);
+			if (ret) {
+				cgroup_dbg("Unable to copy cgroup\n");
+				*file_index = j;
+				return ret;
+			}
+			cgroup_dbg("Templates to template table copied\n");
+		}
+	}
+
+	return 0;
+}
+
 /*
  * Create a given cgroup, based on template configuration if it is present
  * if the template is not present cgroup is creted using cgroup_create_cgroup
@@ -1593,13 +1751,22 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 	 * use CGCONFIG_CONF_FILE by default
 	 */
 	if (!(flags & CGFLAG_USE_TEMPLATE_CACHE)) {
-		if (template_table_index == 0)
-			/* the rules cache is empty */
-			ret = cgroup_init_templates_cache(CGCONFIG_CONF_FILE);
-		else
-			/* cache is not empty */
-			ret = cgroup_reload_cached_templates(
-				CGCONFIG_CONF_FILE);
+		int fileindex;
+
+		/* the rules cache is empty */
+		ret = cgroup_load_templates_cache_from_files(
+			&fileindex);
+		if (ret != 0) {
+			if (fileindex < 0) {
+				cgroup_dbg("Error: Template source files ");
+				cgroup_dbg("have not been set\n");
+			} else {
+			    cgroup_dbg("Error: Failed to load template");
+			    cgroup_dbg("rules from %s. ",
+				    template_files->items[fileindex]);
+			}
+		}
+
 		if (ret != 0) {
 			cgroup_dbg("Failed initialize templates cache.\n");
 			return ret;

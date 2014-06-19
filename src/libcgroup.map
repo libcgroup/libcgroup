@@ -117,3 +117,8 @@ CGROUP_0.39 {
 	cgroup_log;
 	cgroup_parse_log_level_str;
 } CGROUP_0.38;
+
+CGROUP_0.40 {
+	cgroup_templates_cache_set_source_files;
+	cgroup_load_templates_cache_from_files;
+} CGROUP_0.39;
