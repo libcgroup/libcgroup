@@ -53,6 +53,7 @@ __BEGIN_DECLS
 #define CGCONFIG_CONF_DIR               "/etc/cgconfig.d"
 
 #define CGRULES_CONF_FILE       "/etc/cgrules.conf"
+#define CGRULES_CONF_DIR        "/etc/cgrules.d"
 #define CGRULES_MAX_FIELDS_PER_LINE		3
 
 #define CGROUP_BUFFER_LEN (5 * FILENAME_MAX)

@@ -473,17 +473,19 @@ static char *cg_skip_unused_charactors_in_rule(char *rule)
  * The cache parameter alters the behavior of this function.  If true, this
  * function will read the entire configuration file and store the results in
  * rl (global rules list).  If false, this function will only parse until it
- * finds a rule matching the given UID or GID.  It will store this rule in rl,
+ * finds a rule matching the given UID or GID.  It will store this rule in trl,
  * as well as any children rules (rules that begin with a %) that it has.
  *
  * This function is NOT thread safe!
+ *	@param filename configuration file to parse
  *	@param cache True to cache rules, else false
  *	@param muid If cache is false, the UID to match against
  *	@param mgid If cache is false, the GID to match against
  *	@return 0 on success, -1 if no cache and match found, > 0 on error.
  * TODO: Make this function thread safe!
+ *
  */
-static int cgroup_parse_rules(bool cache, uid_t muid,
+static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 					  gid_t mgid, const char *mprocname)
 {
 	/* File descriptor for the configuration file */
@@ -544,21 +546,19 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	else
 		lst = &trl;
 
-	/* If our list already exists, clean it. */
-	if (lst->head)
-		cgroup_free_rule_list(lst);
-
 	/* Open the configuration file. */
-	pthread_rwlock_wrlock(&rl_lock);
-	fp = fopen(CGRULES_CONF_FILE, "re");
+	fp = fopen(filename, "re");
 	if (!fp) {
 		cgroup_warn("Warning: failed to open configuration file %s: %s\n",
-				CGRULES_CONF_FILE, strerror(errno));
-		goto unlock;
+				filename, strerror(errno));
+
+		ret = ECGRULESPARSEFAIL;  /* originally ret = 0, but */
+					  /* this is parse fail, not success */
+		goto finish;
 	}
 
 	/* Now, parse the configuration file one line at a time. */
-	cgroup_dbg("Parsing configuration file.\n");
+	cgroup_dbg("Parsing configuration file %s.\n", filename);
 	while (fgets(buff, sizeof(buff), fp) != NULL) {
 		linenum++;
 
@@ -804,8 +804,143 @@ parsefail:
 
 close:
 	fclose(fp);
-unlock:
+finish:
+	return ret;
+}
+
+/**
+ * Parse CGRULES_CONF_FILE and all files in CGRULES_CONF_FILE_DIR.
+ * If CGRULES_CONF_FILE_DIR does not exists or can not be read,
+ * parse only CGRULES_CONF_FILE. This way we keep the back compatibility.
+ *
+ * Original description of this function moved to cgroup_parse_rules_file.
+ * Also cloned and all occurences of file changed to files.
+ *
+ * Parse the configuration files that maps UID/GIDs to cgroups.  If ever the
+ * configuration files are modified, applications should call this function to
+ * load the new configuration rules.  The function caller is responsible for
+ * calling free() on each rule in the list.
+ *
+ * The cache parameter alters the behavior of this function.  If true, this
+ * function will read the entire content of all configuration files and store
+ * the results in rl (global rules list).  If false, this function will only
+ * parse until it finds a file and a rule matching the given UID or GID.
+ * The remaining files are skipped. It will store this rule in trl,
+ * as well as any children rules (rules that begin with a %) that it has.
+ *
+ * Files can be read in an random order so the first match must not be
+ * dependent on it. Thus construct the rules the way not to break
+ * this assumption.
+ *
+ * This function is NOT thread safe!
+ *	@param cache True to cache rules, else false
+ *	@param muid If cache is false, the UID to match against
+ *	@param mgid If cache is false, the GID to match against
+ *	@return 0 on success, -1 if no cache and match found, > 0 on error.
+ * TODO: Make this function thread safe!
+ */
+static int cgroup_parse_rules(bool cache, uid_t muid,
+					  gid_t mgid, const char *mprocname)
+{
+	int ret;
+
+	/* Pointer to the list that we're using */
+	struct cgroup_rule_list *lst = NULL;
+
+	/* Directory variables */
+	DIR *d;
+	struct dirent *item;
+	const char *dirname = CGRULES_CONF_DIR;
+	char *tmp;
+	int sret;
+
+	/* Determine which list we're using. */
+	if (cache)
+		lst = &rl;
+	else
+		lst = &trl;
+
+	/* If our list already exists, clean it. */
+	if (lst->head)
+		cgroup_free_rule_list(lst);
+
+	pthread_rwlock_wrlock(&rl_lock);
+
+	/* Parse CGRULES_CONF_FILE configuration file (back compatibility). */
+	ret = cgroup_parse_rules_file(CGRULES_CONF_FILE,
+		cache, muid, mgid, mprocname);
+
+	/*
+	 * if match (ret = -1), stop parsing other files, just return
+	 * or ret > 0 => error
+	 */
+	if (ret != 0) {
+		pthread_rwlock_unlock(&rl_lock);
+		return ret;
+	}
+
+	/* Continue parsing */
+	d = opendir(dirname);
+	if (!d) {
+		cgroup_warn("Warning: Failed to open directory %s: %s\n",
+				dirname, strerror(errno));
+
+		/*
+		 * Cannot read directory. However, CGRULES_CONF_FILE is
+		 * succesfully parsed. Thus return as a success
+		 * for back compatibility.
+		 */
+		pthread_rwlock_unlock(&rl_lock);
+
+		return 0;
+	}
+
+	/* read all files from CGRULES_CONF_FILE_DIR */
+	do {
+		item = readdir(d);
+		if (item && (item->d_type == DT_REG
+				|| item->d_type == DT_LNK)) {
+
+			sret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
+			if (sret < 0) {
+				cgroup_err("Out of memory\n");
+
+				/*
+				 * Cannot read directory. However, CGRULES_CONF_FILE is
+				 * succesfully parsed. Thus return as a success
+				 * for back compatibility.
+				 */
+				ret = 0;
+				goto unlock_list;
+			}
+
+			cgroup_dbg("Parsing cgrules file: %s\n", tmp);
+			ret = cgroup_parse_rules_file(tmp,
+				cache, muid, mgid, mprocname);
+
+			free(tmp);
+
+			/* match with cache disabled? */
+			if (ret != 0)
+				goto unlock_list;
+		}
+		if (!item && errno) {
+			cgroup_warn("Warning: cannot read %s: %s\n",
+					dirname, strerror(errno));
+			/*
+			 * Cannot read an item. But continue for
+			 * back compatibility as a success.
+			 */
+			ret = 0;
+			goto unlock_list;
+		}
+	} while (item != NULL);
+
+unlock_list:
+	closedir(d);
+
 	pthread_rwlock_unlock(&rl_lock);
+
 	return ret;
 }
 
