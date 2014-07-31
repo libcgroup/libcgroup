@@ -150,6 +150,16 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 						const char *name);
 
 /**
+ * Attach all mounted controllers to given cgroup. This function just modifies
+ * internal libcgroup structure, not the kernel control group.
+ *
+ * @param cgroup
+ * @return zero or error number
+ */
+int cgroup_add_all_controllers(struct cgroup *cgroup);
+
+
+/**
  * Return appropriate controller from given group.
  * The controller must be added before using cgroup_add_controller() or loaded
  * from kernel using cgroup_get_cgroup().

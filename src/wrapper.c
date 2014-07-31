@@ -92,6 +92,56 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 	return controller;
 }
 
+int cgroup_add_all_controllers(struct cgroup *cgroup)
+{
+	int ret;
+	void *handle;
+	struct controller_data info;
+	struct cgroup_controller *cgc;
+
+	/* go through the controller list */
+	ret = cgroup_get_all_controller_begin(&handle, &info);
+	if ((ret != 0) && (ret != ECGEOF)) {
+		fprintf(stderr, "cannot read controller data: %s\n",
+			cgroup_strerror(ret));
+		return ret;
+	}
+
+	while (ret == 0) {
+		if (info.hierarchy == 0) {
+			/* the controller is not attached to any hierarchy
+			   skip it */
+			goto next;
+		}
+
+		/* add mounted controller to cgroup structure */
+		cgc = cgroup_add_controller(cgroup, info.name);
+		if (!cgc) {
+			ret = ECGINVAL;
+			fprintf(stderr, "controller %s can't be add\n",
+				info.name);
+		}
+
+next:
+		ret = cgroup_get_all_controller_next(&handle, &info);
+		if (ret && ret != ECGEOF)
+			goto end;
+	}
+
+end:
+	cgroup_get_all_controller_end(&handle);
+
+	if (ret == ECGEOF)
+		ret = 0;
+
+	if (ret)
+		fprintf(stderr,
+			"cgroup_get_controller_begin/next failed (%s)\n",
+			cgroup_strerror(ret));
+
+	return ret;
+}
+
 void cgroup_free_controllers(struct cgroup *cgroup)
 {
 	int i, j;

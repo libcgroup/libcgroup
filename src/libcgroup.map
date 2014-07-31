@@ -122,3 +122,10 @@ CGROUP_0.40 {
 	cgroup_templates_cache_set_source_files;
 	cgroup_load_templates_cache_from_files;
 } CGROUP_0.39;
+
+CGROUP_0.41 {
+} CGROUP_0.40;
+
+CGROUP_0.42 {
+	cgroup_add_all_controllers;
+} CGROUP_0.41;
