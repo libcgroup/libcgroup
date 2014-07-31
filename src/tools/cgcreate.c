@@ -54,7 +54,6 @@ static void usage(int status, const char *program_name)
 	printf("  -t <tuid>:<tgid>		Owner of the tasks file\n");
 }
 
-
 int main(int argc, char *argv[])
 {
 	int ret = 0;
@@ -195,16 +194,29 @@ int main(int argc, char *argv[])
 		/* add controllers to the new cgroup */
 		j = 0;
 		while (cgroup_list[i]->controllers[j]) {
-			cgc = cgroup_add_controller(cgroup,
-				cgroup_list[i]->controllers[j]);
-			if (!cgc) {
-				ret = ECGINVAL;
-				fprintf(stderr, "%s: "
-					"controller %s can't be add\n",
-					argv[0],
+			if (strcmp(cgroup_list[i]->controllers[j], "*") == 0) {
+				/* it is meta character, add all controllers */
+				ret = cgroup_add_all_controllers(cgroup);
+				if (ret != 0) {
+					ret = ECGINVAL;
+					fprintf(stderr, "%s: can't add ",
+						argv[0]);
+					fprintf(stderr, "all controllers\n");
+					cgroup_free(&cgroup);
+					goto err;
+				}
+			} else {
+				cgc = cgroup_add_controller(cgroup,
 					cgroup_list[i]->controllers[j]);
-				cgroup_free(&cgroup);
-				goto err;
+				if (!cgc) {
+					ret = ECGINVAL;
+					fprintf(stderr, "%s: ", argv[0]);
+					fprintf(stderr, "controller %s",
+						cgroup_list[i]->controllers[j]);
+					fprintf(stderr, "can't be add\n");
+					cgroup_free(&cgroup);
+					goto err;
+				}
 			}
 			j++;
 		}
