@@ -1,0 +1,50 @@
+.\" Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
+.\" Written by Jan Chaloupka <jchaloup@redhat.com>
+
+.TH CGRULES.D  5 2014-07-14 "Linux" "libcgroup Manual"
+.SH NAME
+cgrules.d \- libcgroup configuration files directory
+.SH DESCRIPTION
+.B "cgrules.d"
+configuration files directory is used by
+.B libcgroups
+and contains additional configuration files with the same syntax as
+\fBcgconfig.conf\fR (5).
+
+Files are parsed in an arbitrary order.
+If the cache is disabled, the searching algorithm of  \fBcgrulesengd\fR (8)
+tries the first match.
+If there are two rules which match the criteria for a given process,
+and each rule is in a separate file, then there is no guarantee which one
+is chosen. If you want to control the given order of the rules, put them
+in one configuration file.
+
+
+\fB/etc/cgconfig.conf\fR is parsed as the first file. After success,
+all files from /etc/cgconfig.d are parsed as well (in an arbitrary order).
+If some file from the directory ends up with a parsing error,
+the process is stopped. With cache enabled, all successfully processed
+rules
+are kept in the cache. With cache disabled,
+matching is stopped and ends with a 'not found' result.
+
+If \fB/etc/cgrules.d\fR is empty, \fBcgrulesengd\fR (8) acts
+in a backwards compatibility mode.
+
+.SH FILES
+.LP
+.PD .1v
+.TP 20
+.B /etc/cgrules.d
+.RS 4
+default libcgroup configuration files directory
+.RE
+.B /etc/cgconfig.conf
+.RS 4
+default libcgroup configuration file
+.RE
+.PD .
+
+
+.SH SEE ALSO
+cgconfig.conf (5), cgrulesengd (8)

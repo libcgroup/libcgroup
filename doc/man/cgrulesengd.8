@@ -10,10 +10,11 @@ cgrulesengd \- control group rules daemon
 .SH DESCRIPTION
 \fBcgrulesengd\fR is a daemon, which distributes processes to control groups. When
 any process changes its effective UID or GID, \fBcgrulesengd\fR inspects the list
-of rules loaded from the \fIcgrules.conf\fR file and moves the process to
-the appropriate control group.
+of rules loaded from the \fIcgrules.conf\fR file and files in \fIcgrules.d\fR
+(see \fBcgrules.d\fR (5) for potential conflicts) directory
+and moves the process to the appropriate control group.
 
-The list of rules is read during the daemon startup is are cached in the daemon's memory.
+The list of rules is read during the daemon startup and cached in the daemon's memory.
 The daemon reloads the list of rules when it receives SIGUSR2 signal.
 The daemon reloads the list of templates when it receives SIGUSR1 signal.
 
@@ -67,14 +68,23 @@ controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 .PD .1v
 .TP
 .B /etc/cgrules.conf
-.TP
+.RS 6
 the default libcgroup configuration file
+.RE
+.B /etc/cgrules.d
+.RS 6
+the default libcgroup configuration files directory
+.RE
 .TP
 .B /etc/cgconfig.conf
+.RS 6
 the default templates file
+.RE
 .TP
 .B /etc/cgconfig.d/
+.RS 6
 the default templates directory
+.RE
 
 .SH SEE ALSO
-cgrules.conf (5)
+cgrules.conf (5), cgrules.d (5)

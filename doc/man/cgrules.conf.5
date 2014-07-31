@@ -85,7 +85,7 @@ configuration file. See (\fBcgconfig.conf\fR (5)).
 If the template definition is not found there created group have default
 kernel setting.
 
-
+To create a hierarchy of configuration files, use \fB/etc/cgrules.d\fR directory.
 
 .SH EXAMPLES
 .nf
@@ -136,13 +136,19 @@ process.
 .PD .1v
 .TP 20
 .B /etc/cgrules.conf
-.TP
+.RS 6
 default libcgroup configuration file
-.PD .
+.RE
+.TP 20
+.B /etc/cgrules.d
+.RS 6
+default libcgroup configuration files directory
+.RE
+.PD
 
 
 .SH SEE ALSO
-cgconfig.conf (5), cgclassify (1), cgred.conf (5)
+cgconfig.conf (5), cgclassify (1), cgred.conf (5), cgrules.d (5)
 
 .SH BUGS
 
