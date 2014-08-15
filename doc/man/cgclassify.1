@@ -57,7 +57,25 @@ controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 .TP
 .B /etc/cgrules.conf
 default libcgroup configuration file
+.TP
+.B /etc/cgrules.d
+default libcgroup configuration files directory
 
+.SH EXAMPLES
+.TP
+.B cgclassify -g cpu:student 1234
+moves process with pid number 1234 to control group student in cpu hierarchy.
+
+.TP
+.B cgclassify 1234
+moves process with pid number 1234 to control groups based on
+\fB/etc/cgrules.conf\fR configuration file.
+
+.TP
+.B cgclassify --sticky -g cpu:/student 1234
+moves process with pid number 1234 to control group student in cpu hierarchy.
+The daemon of service cgred does not change cgroups of pid 1234 and its children
+(based on \fB/etc/cgrules.conf\fR).
 
 .SH SEE ALSO
 cgrules.conf (5), cgexec (1)

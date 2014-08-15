@@ -8,7 +8,7 @@ cgsnapshot \- generate the configuration file for given controllers
 
 .SH SYNOPSIS
 \fBcgsnapshot\fR [\fB-h\fR] [\fB-s\fR] [\fB-t\fR] [\fB-b\fR \fIfile\fR]
-[\fB-w\fR \fIfile\fR] [\fB-f\fR \fIoutput_file\fR]  [\fBcontroller\fR] [...]
+[\fB-w\fR \fIfile\fR] [\fB-f\fR \fIoutput_file\fR] [\fBcontroller\fR] [...]
 
 .SH DESCRIPTION
 \fBcgsnapshot\fR
@@ -95,6 +95,19 @@ default whitelist
 .TP
 .B /etc/cgconfig.conf
 default libcgroup configuration file
+
+.SH EXAMPLES
+.TP
+.B cgsnapshot -s -f /etc/cgconfig.conf.cgsnapshot
+create configuration file which contains all mounted controllers and all
+control groups which are on the actual system
+
+.TP
+.B cgsnapshot -s -f /etc/cgconfig.conf.cgsnapshot cpu
+create configuration file which contains hierarchy containing cpu controller and all its
+control groups on the actual system
+
+
 
 .SH SEE ALSO
 cgconfig.conf (5)

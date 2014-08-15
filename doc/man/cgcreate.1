@@ -70,7 +70,14 @@ The default value is the same as has the parent cgroup.
 controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 \fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
 
-.SH FILES
+.SH EXAMPLES
+.TP
+.B cgcreate -g *:student devices:teacher
+create control group student in all mounted hierarchies and create
+control group teacher in hierarchy containing controller devices.
+
+
+
 
 .SH SEE ALSO
 cgrules.conf (5)

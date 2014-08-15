@@ -26,6 +26,21 @@ list all existing cgroups.
 controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 \fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
 
+.SH EXAMPLES
+.TP
+.B lscgroup -g cpu:/
+list all cgroups which are in hierarchy containing cpu controller
+
+.TP
+.B lscgroup -g cpu:/student
+list all cgroups which are in hierarchy containing cpu controller
+in subgroup student
+
+.TP
+.B lscgroup
+list all cgroups which in all hierarchies
+
+
 .SH SEE ALSO
 lssubsys (1), cgcreate (1), cgdelete (1),
 cgconfig.conf (5)

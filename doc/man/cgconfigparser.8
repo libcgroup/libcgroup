@@ -74,5 +74,19 @@ of this group have write access to the file.
 controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 \fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
 
+.SH FILES
+.TP
+.B /etc/cgconfig.conf
+default libcgroup configuration file
+.TP
+.B /etc/cgconfig.d/
+default libcgroup configuration files directory
+
+.SH EXAMPLES
+.TP
+.B cgconfigparser -l /etc/cgconfig.conf
+setup control group file system based on \fB/etc/cgconfig.conf\fR configuration file
+
+
 .SH SEE ALSO
 cgconfig.conf (5)

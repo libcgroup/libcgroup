@@ -43,5 +43,24 @@ option works only with \fB-l\fR or \fB-L\fR options.
 controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 \fBINFO\fR, \fBWARNING\fR or \fBERROR\fR.
 
+.SH FILES
+.TP
+.B /etc/cgconfig.conf
+default templates file
+.TP
+.B /etc/cgconfig.d/
+default templates files directory
+.RE
+
+
+.SH EXAMPLES
+.TP
+.B cgclear
+unload the whole cgroup filesystem
+
+.TP
+.B cgclear -l /etc/cgconfig.conf
+unload a subsystem of cgroup filesystem based on \fB/etc/cgconfig.conf\fR definition.
+
 .SH SEE ALSO
-cgconfigparser(1)
+cgconfigparser(1), cgconfig.conf(5)
