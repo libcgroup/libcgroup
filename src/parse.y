@@ -45,9 +45,9 @@ int yywrap(void)
 	int val;
 	struct cgroup_dictionary *values;
 }
-%type <name> ID
+%type <name> ID DEFAULT
 %type <val> mountvalue_conf mount task_namevalue_conf admin_namevalue_conf
-%type <val> admin_conf task_conf task_or_admin group_conf group start
+%type <val> admin_conf task_conf task_or_admin group_conf group start group_name
 %type <val> namespace namespace_conf default default_conf
 %type <values> namevalue_conf
 %type <val> template template_conf
@@ -99,7 +99,7 @@ default_conf
 	}
 	;
 
-group   :       GROUP ID '{' group_conf '}'
+group   :       GROUP group_name '{' group_conf '}'
 	{
 		$$ = $4;
 		if ($$) {
@@ -118,6 +118,16 @@ group   :       GROUP ID '{' group_conf '}'
 		}
 	}
         ;
+
+group_name
+	:	ID
+	{
+		$$ = $1;
+	}
+	|	DEFAULT
+	{
+		$$ = $1;
+	}
 
 group_conf
         :       ID '{' namevalue_conf '}'
