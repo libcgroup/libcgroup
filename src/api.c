@@ -1495,13 +1495,18 @@ static int cg_create_control_group(const char *path)
  */
 static int cg_set_control_value(char *path, const char *val)
 {
-	FILE *control_file = NULL;
+	int ctl_file;
+	char *str_val;
+	char *str_val_start;
+	char *pos;
+	size_t len;
+
 	if (!cg_test_mounted_fs())
 		return ECGROUPNOTMOUNTED;
 
-	control_file = fopen(path, "r+e");
+	ctl_file = open(path, O_RDWR | O_CLOEXEC);
 
-	if (!control_file) {
+	if (ctl_file == -1) {
 		if (errno == EPERM) {
 			/*
 			 * We need to set the correct error value, does the
@@ -1512,6 +1517,7 @@ static int cg_set_control_value(char *path, const char *val)
 			 */
 			char *path_dir_end;
 			char *tasks_path;
+			FILE *control_file;
 
 			path_dir_end = strrchr(path, '/');
 			if (path_dir_end == NULL)
@@ -1543,15 +1549,47 @@ static int cg_set_control_value(char *path, const char *val)
 		return ECGROUPVALUENOTEXIST;
 	}
 
-	if (fprintf(control_file, "%s", val) < 0) {
+	/* Split the multiline value into lines. */
+	/* One line is a special case of multiline value. */
+	str_val = strdup(val);
+	if (str_val == NULL) {
 		last_errno = errno;
-		fclose(control_file);
+		close(ctl_file);
 		return ECGOTHER;
 	}
-	if (fclose(control_file) < 0) {
+
+	str_val_start = str_val;
+	pos = str_val;
+
+	do {
+		str_val = pos;
+		pos = strchr(str_val, '\n');
+
+		if (pos) {
+			*pos = '\0';
+			++pos;
+		}
+
+		len = strlen(str_val);
+		if (len > 0) {
+			if (write(ctl_file, str_val, len) == -1) {
+				last_errno = errno;
+				free(str_val_start);
+				close(ctl_file);
+				return ECGOTHER;
+			}
+		} else
+			cgroup_warn("Warning: skipping empty line for %s\n",
+				path);
+	} while(pos);
+
+	if (close(ctl_file)) {
 		last_errno = errno;
+		free(str_val_start);
 		return ECGOTHER;
 	}
+
+	free(str_val_start);
 	return 0;
 }
 
