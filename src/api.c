@@ -3293,10 +3293,13 @@ int cgroup_change_all_cgroups(void)
 		return -ECGOTHER;
 
 	while ((pid_dir = readdir(dir)) != NULL) {
-		int err, pid;
+		int err, pid, tid;
 		uid_t euid;
 		gid_t egid;
 		char *procname = NULL;
+		DIR *tdir;
+		struct dirent *tid_dir = NULL;
+		char tpath[FILENAME_MAX] = { '\0' };
 
 		err = sscanf(pid_dir->d_name, "%i", &pid);
 		if (err < 1)
@@ -3310,11 +3313,24 @@ int cgroup_change_all_cgroups(void)
 		if (err)
 			continue;
 
-		err = cgroup_change_cgroup_flags(euid,
-				egid, procname, pid, CGFLAG_USECACHE);
-		if (err)
-			cgroup_dbg("cgroup change pid %i failed\n", pid);
+		snprintf(tpath, FILENAME_MAX, "%s%d/task/", path, pid);
 
+		tdir = opendir(tpath);
+		if (!tdir)
+			continue;
+
+		while ((tid_dir = readdir(tdir)) != NULL) {
+			err = sscanf(tid_dir->d_name, "%i", &tid);
+			if (err < 1)
+				continue;
+
+			err = cgroup_change_cgroup_flags(euid,
+					egid, procname, tid, CGFLAG_USECACHE);
+			if (err)
+				cgroup_dbg("cgroup change tid %i failed\n", tid);
+		}
+
+		closedir(tdir);
 		free(procname);
 	}
 
