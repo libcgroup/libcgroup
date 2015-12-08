@@ -2775,13 +2775,17 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid,
 			/* Get the group data. */
 			sp = &(rule->username[1]);
 			grp = getgrnam(sp);
-			if (!grp)
+			if (!grp) {
+				rule = rule->next;
 				continue;
+			}
 
 			/* Get the data for UID. */
 			usr = getpwuid(uid);
-			if (!usr)
+			if (!usr) {
+				rule = rule->next;
 				continue;
+			}
 
 			/* If UID is a member of group, we matched. */
 			for (i = 0; grp->gr_mem[i]; i++) {
