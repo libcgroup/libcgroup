@@ -889,9 +889,6 @@ int cgre_start_daemon(const char *logp, const int logf,
 		} else if (pid > 0) {
 			exit(EXIT_SUCCESS);
 		}
-
-		/* Change the file mode mask. */
-		umask(0);
 	} else {
 		flog(LOG_DEBUG, "Not using daemon mode\n");
 		pid = getpid();
