@@ -3253,7 +3253,12 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 				const char *const controllers[])
 {
 	int ret;
+	int nr;
 	struct cgroup cgroup;
+	DIR *dir;
+	struct dirent *task_dir = NULL;
+	char path[FILENAME_MAX];
+	pid_t tid;
 
 	if (!cgroup_initialized) {
 		cgroup_warn("Warning: libcgroup is not initialized\n");
@@ -3264,11 +3269,42 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 	ret = cg_prepare_cgroup(&cgroup, pid, dest, controllers);
 	if (ret)
 		return ret;
-	/* Add task to cgroup */
+	/* Add process to cgroup */
 	ret = cgroup_attach_task_pid(&cgroup, pid);
-	if (ret)
+	if (ret) {
 		cgroup_warn("Warning: cgroup_attach_task_pid failed: %d\n",
 				ret);
+		goto finished;
+	}
+
+	/* Add all threads to cgroup */
+	snprintf(path, FILENAME_MAX, "/proc/%d/task/", pid);
+	dir = opendir(path);
+	if (!dir) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto finished;
+	}
+
+	while ((task_dir = readdir(dir)) != NULL) {
+		nr = sscanf(task_dir->d_name, "%i", &tid);
+		if (nr < 1)
+			continue;
+
+		if (tid == pid)
+			continue;
+
+		ret = cgroup_attach_task_pid(&cgroup, tid);
+		if (ret) {
+			cgroup_warn("Warning: cgroup_attach_task_pid failed: %d\n",
+					ret);
+			break;
+		}
+	}
+
+	closedir(dir);
+
+finished:
 	cgroup_free_controllers(&cgroup);
 	return ret;
 }
@@ -3293,13 +3329,10 @@ int cgroup_change_all_cgroups(void)
 		return -ECGOTHER;
 
 	while ((pid_dir = readdir(dir)) != NULL) {
-		int err, pid, tid;
+		int err, pid;
 		uid_t euid;
 		gid_t egid;
 		char *procname = NULL;
-		DIR *tdir;
-		struct dirent *tid_dir = NULL;
-		char tpath[FILENAME_MAX] = { '\0' };
 
 		err = sscanf(pid_dir->d_name, "%i", &pid);
 		if (err < 1)
@@ -3313,24 +3346,11 @@ int cgroup_change_all_cgroups(void)
 		if (err)
 			continue;
 
-		snprintf(tpath, FILENAME_MAX, "%s%d/task/", path, pid);
+		err = cgroup_change_cgroup_flags(euid,
+				egid, procname, pid, CGFLAG_USECACHE);
+		if (err)
+			cgroup_dbg("cgroup change pid %i failed\n", pid);
 
-		tdir = opendir(tpath);
-		if (!tdir)
-			continue;
-
-		while ((tid_dir = readdir(tdir)) != NULL) {
-			err = sscanf(tid_dir->d_name, "%i", &tid);
-			if (err < 1)
-				continue;
-
-			err = cgroup_change_cgroup_flags(euid,
-					egid, procname, tid, CGFLAG_USECACHE);
-			if (err)
-				cgroup_dbg("cgroup change tid %i failed\n", tid);
-		}
-
-		closedir(tdir);
 		free(procname);
 	}
 
