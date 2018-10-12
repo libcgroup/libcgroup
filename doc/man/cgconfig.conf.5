@@ -43,7 +43,9 @@ can be found in
 .I /proc/cgroups
 file. Named hierarchy can be specified as controller
 \fB"name=<somename>"\fR. Do not forget to use double quotes around
-this controller name (see examples below).
+this controller name (see examples below). Apart from named hierarchy,
+additional mount options may be specified by putting the controller and
+the options in quotes. Options supported are \fB nosuid, noexec\fR and\fB nodev\fR.
 
 .B Libcgroup
 merges all subsystems mounted to the same directory (see
@@ -765,6 +767,26 @@ mkdir /mnt/cgroups/cpuacct/daemons
 The situation is the similar as in Example 4. The only difference is template,
 which is used if some rule uses "/students/%u" as a destination.
 
+.SS Example 8
+.LP
+The configuration file:
+
+.LP
+.RS
+.nf
+mount {
+.RS
+"cpu,nodev,nosuid,noexec" = /mnt/cgroups/cpu;
+.RE
+}
+
+.fi
+.RE
+
+This is the same as
+mount -t cgroup cgroup -o nodev,nosuid,noexec,cpu /mnt/cgroups/cpu
+It mounts the cpu controller with MS_NODEV, MS_NOSUID and MS_NOEXEC
+options passed.
 
 
 .SH RECOMMENDATIONS

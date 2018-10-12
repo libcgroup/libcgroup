@@ -629,13 +629,16 @@ void cgroup_config_cleanup_namespace_table(void)
  * Add necessary options for mount. Currently only 'none' option is added
  * for mounts with only 'name=xxx' and without real controller.
  */
-static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount)
+static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
+						unsigned long *flags)
 {
 	char *save = NULL;
 	char *opts = strdup(mount->name);
 	char *token;
 	int name_only = 1;
+	char *controller= NULL;
 
+	*flags = 0;
 	if (opts == NULL)
 		return ECGFAIL;
 
@@ -643,12 +646,39 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount)
 	while (token != NULL) {
 		if (strncmp(token, "name=", 5) != 0) {
 			name_only = 0;
-			break;
+
+			if (!controller) {
+				controller = strdup(token);
+				if (controller == NULL)
+					break;
+				strncpy(mount->name, controller, sizeof(mount->name));
+			}
+
+			if (strncmp(token, "nodev", strlen("nodev")) == 0) {
+				*flags |= MS_NODEV;
+			}
+			if (strncmp(token, "noexec", strlen("noexec")) == 0) {
+				*flags |= MS_NOEXEC;
+			}
+			if (strncmp(token, "nosuid", strlen("nosuid")) == 0) {
+				*flags |= MS_NOSUID;
+			}
+
+		} else if (!name_only) {
+			/*
+			 * We have controller + name=, do the right thing, since
+			 * we are rebuuilding mount->name
+			 */
+			strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
+			strncat(mount->name, token,
+					FILENAME_MAX - strlen(mount->name) - 1);
 		}
 		token = strtok_r(NULL, ",", &save);
 	}
 
+	free(controller);
 	free(opts);
+
 	if (name_only) {
 		strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
 		strncat(mount->name, "none",
@@ -667,6 +697,7 @@ static int cgroup_config_mount_fs(void)
 	struct stat buff;
 	int i;
 	int error;
+	unsigned long flags;
 
 	for (i = 0; i < config_table_index; i++) {
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
@@ -698,12 +729,12 @@ static int cgroup_config_mount_fs(void)
 			goto out_err;
 		}
 
-		error = cgroup_config_ajdust_mount_options(curr);
+		error = cgroup_config_ajdust_mount_options(curr, &flags);
 		if (error)
 			goto out_err;
 
 		ret = mount(CGROUP_FILESYSTEM, curr->mount.path,
-				CGROUP_FILESYSTEM, 0, curr->name);
+				CGROUP_FILESYSTEM, flags, curr->name);
 
 		if (ret < 0) {
 			cgroup_err("Error: cannot mount %s to %s: %s\n",
