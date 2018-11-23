@@ -60,11 +60,11 @@ int main(int argc, char *argv[])
 	if (fs_mounted) {
 		ctl1 = atoi(argv[2]);
 		ctl2 = atoi(argv[3]);
-		strncpy(mountpoint, argv[4], sizeof(mountpoint));
+		strncpy(mountpoint, argv[4], sizeof(mountpoint) - 1);
 		cgroup_dbg("C:DBG: mountpoint1 as recieved from script=%s\n",
 								 mountpoint);
 		if (fs_mounted == FS_MULTI_MOUNTED) {
-			strncpy(mountpoint2, argv[5], sizeof(mountpoint2));
+			strncpy(mountpoint2, argv[5], sizeof(mountpoint2) - 1);
 			cgroup_dbg("C:DBG: mountpoint2 as recieved from "
 					"script=%s\n", mountpoint2);
 		}

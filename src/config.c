@@ -171,7 +171,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 	}
 
 	config_cgroup = &config_table[*table_index];
-	strncpy(config_cgroup->name, cg_name, FILENAME_MAX);
+	strncpy(config_cgroup->name, cg_name, FILENAME_MAX - 1);
 
 	/*
 	 * Since this will be the last part to be parsed.
@@ -1772,7 +1772,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 	int i, j, k;
 	struct cgroup *t_cgroup;
 	char buffer[FILENAME_MAX];
-	struct cgroup *aux_cgroup;
+	struct cgroup *aux_cgroup = NULL;
 	struct cgroup_controller *cgc;
 	int found;
 
@@ -1881,5 +1881,6 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 	}
 
 end:
+	cgroup_free(&aux_cgroup);
 	return ret;
 }

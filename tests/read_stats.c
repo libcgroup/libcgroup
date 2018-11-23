@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	}
 
 	root_len = strlen(info.full_path) - 1;
-	strncpy(cgroup_path, info.path, FILENAME_MAX);
+	strncpy(cgroup_path, info.path, FILENAME_MAX - 1);
 	ret = read_stats(cgroup_path, controller);
 	if (ret < 0)
 		exit(EXIT_FAILURE);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 			ECGEOF) {
 		if (info.type != CGROUP_FILE_TYPE_DIR)
 			continue;
-		strncpy(cgroup_path, info.full_path + root_len, FILENAME_MAX);
+		strncpy(cgroup_path, info.full_path + root_len, FILENAME_MAX - 1);
 		strcat(cgroup_path, "/");
 		ret = read_stats(cgroup_path, controller);
 		if (ret < 0)

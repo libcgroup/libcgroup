@@ -3770,14 +3770,14 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(cgroup_stat->name, token, FILENAME_MAX);
+	strncpy(cgroup_stat->name, token, FILENAME_MAX - 1);
 
 	token = strtok_r(NULL, " ", &saveptr);
 	if (!token) {
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(cgroup_stat->value, token, CG_VALUE_MAX);
+	strncpy(cgroup_stat->value, token, CG_VALUE_MAX - 1);
 
 out_free:
 	free(line);
@@ -4034,9 +4034,9 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 		goto out_unlock;
 	}
 
-	strncpy(info->name, cg_mount_table[*pos].name, FILENAME_MAX);
+	strncpy(info->name, cg_mount_table[*pos].name, FILENAME_MAX - 1);
 
-	strncpy(info->path, cg_mount_table[*pos].mount.path, FILENAME_MAX);
+	strncpy(info->path, cg_mount_table[*pos].mount.path, FILENAME_MAX - 1);
 
 	(*pos)++;
 	*handle = pos;

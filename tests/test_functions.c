@@ -139,7 +139,7 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	char group[FILENAME_MAX];
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 
-	strncpy(group, grpname, sizeof(group));
+	strncpy(group, grpname, sizeof(group) - 1);
 	retval = set_controller(ctl, controller_name, control_file);
 	if (retval) {
 		fprintf(stderr, "Setting controller failled\n");

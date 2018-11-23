@@ -428,6 +428,7 @@ static int display_cgroup_data(struct cgroup *group,
 				goto err;
 			}
 			fprintf(of, "\t\t%s=\"%s\";\n", output_name, value);
+			free(value);
 		}
 		fprintf(of, "\t}\n");
 	}

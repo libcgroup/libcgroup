@@ -48,7 +48,7 @@ struct cgroup *cgroup_new_cgroup(const char *name)
 		return NULL;
 
 	init_cgroup(cgroup);
-	strncpy(cgroup->name, name, sizeof(cgroup->name));
+	strncpy(cgroup->name, name, sizeof(cgroup->name) - 1);
 
 	return cgroup;
 }
@@ -82,7 +82,7 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 	if (!controller)
 		return NULL;
 
-	strncpy(controller->name, name, sizeof(controller->name));
+	strncpy(controller->name, name, sizeof(controller->name) - 1);
 	controller->cgroup = cgroup;
 	controller->index = 0;
 
@@ -603,7 +603,7 @@ struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 			goto scgroup_err;
 		}
 
-		strncpy(con, name_value[i].name, FILENAME_MAX);
+		strncpy(con, name_value[i].name, FILENAME_MAX - 1);
 		strtok(con, ".");
 
 		/* find out whether we have to add the controller or
