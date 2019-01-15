@@ -231,9 +231,8 @@ int main(int argc, char *argv[])
 		/* modify cgroup based on values of the new one */
 		ret = cgroup_modify_cgroup(cgroup);
 		if (ret) {
-			fprintf(stderr, "%s: "
-				"the group can't be modified\n",
-				argv[0]);
+			fprintf(stderr, "%s: cgroup modify error: %s \n",
+				argv[0], cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
