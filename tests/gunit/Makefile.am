@@ -35,4 +35,5 @@ check_LTLIBRARIES = libgtest.la
 check_PROGRAMS = gtest
 TESTS = gtest
 
-gtest_SOURCES = gtest.cpp
+gtest_SOURCES = gtest.cpp \
+		001-path.cpp
