@@ -477,9 +477,13 @@ int cgre_process_event(const struct proc_event *ev, const int type)
 	}
 	ret = cgroup_change_cgroup_flags(euid, egid, procname, pid,
 						 CGFLAG_USECACHE);
-	if ((ret == ECGOTHER) && (errno == ESRCH)) {
-		/* A process finished already and that is not a problem. */
-		ret = 0;
+	if (ret == ECGOTHER) {
+		/* A process finished already but we may have missed changing it,
+		 * make sure to apply to forked children. */
+		if (cgroup_get_last_errno() == ESRCH || cgroup_get_last_errno() == ENOENT)
+			ret = cgre_store_parent_info(pid);
+		else
+			ret = 0;
 	} else if (ret) {
 		flog(LOG_WARNING,
 			"Cgroup change for PID: %d, UID: %d, GID: %d, PROCNAME: %s FAILED! (Error Code: %d)\n",
