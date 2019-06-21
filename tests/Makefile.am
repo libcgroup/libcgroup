@@ -1,4 +1,4 @@
-SUBDIRS = gunit tools
+SUBDIRS = ftests gunit tools
 
 INCLUDES = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/src/.libs/libcgroup.la
