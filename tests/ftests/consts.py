@@ -18,3 +18,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
+
+DEFAULT_LOG_FILE = 'libcgroup-ftests.log'
+
+LOG_CRITICAL = 1
+LOG_WARNING = 5
+LOG_DEBUG = 8
+DEFAULT_LOG_LEVEL = 5
