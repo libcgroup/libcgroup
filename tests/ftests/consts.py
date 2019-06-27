@@ -39,3 +39,9 @@ DEFAULT_CONTAINER_CFG_PATH=os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     'default.conf')
 TEMP_CONTAINER_CFG_FILE='tmp.conf'
+
+TESTS_RUN_ALL = -1
+TESTS_RUN_ALL_SUITES = "allsuites"
+TEST_PASSED = "passed"
+TEST_FAILED = "failed"
+TEST_SKIPPED = "skipped"
