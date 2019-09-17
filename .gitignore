@@ -25,3 +25,5 @@ install-sh
 aclocal.m4
 ylwrap
 *.pc
+googletest/
+googletest/*
