@@ -21,15 +21,16 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_srcdir)/src \
-	      -I$(top_srcdir)/googletest/googletest/include \
-	      -I$(top_srcdir)/googletest/googletest \
+	      -I$(top_builddir)/googletest/googletest/include \
+	      -I$(top_builddir)/googletest/googletest \
 	      -std=c++11
-LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la \
+LDADD = ../../src/.libs/libcgroupfortesting.la \
 	libgtest.la
 
-libgtest_la_SOURCES = $(top_srcdir)/googletest/googletest/src/gtest-all.cc
-libgtest_la_CPPFLAGS = -I$(top_srcdir)/googletest/googletest/include \
-		       -I$(top_srcdir)/googletest/googletest
+libgtest_la_SOURCES = ../../googletest/googletest/src/gtest-all.cc
+libgtest_la_CPPFLAGS = -I$(top_builddir)/googletest/googletest/include \
+		       -I$(top_builddir)/googletest/googletest
+libgtest_la_LDFLAGS = -lpthread
 
 check_LTLIBRARIES = libgtest.la
 check_PROGRAMS = gtest

@@ -8,6 +8,14 @@ if [ -f .git/hooks/pre-commit.sample -a ! -f .git/hooks/pre-commit ] ; then
 	echo "Activated pre-commit hook."
 fi
 
+# configure googletest
+git submodule update --init --recursive
+pushd googletest
+git checkout release-1.8.1
+cmake .
+make
+popd
+
 aclocal
 libtoolize -c
 autoconf
