@@ -51,7 +51,7 @@ class Run(object):
         else:
             Log.log_debug(
                 "run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}\n\tstderr = {}".format(
-                ''.join(command), ret, out, err))
+                ' '.join(command), ret, out, err))
 
         if ret != 0:
             raise RunError("Command '{}' failed".format(''.join(command)),

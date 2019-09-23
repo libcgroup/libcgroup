@@ -41,11 +41,6 @@ class Container(object):
         else:
             self.arch = consts.DEFAULT_CONTAINER_ARCH
 
-        if cfg_path:
-            self.cfg_path = cfg_path
-        else:
-            self.cfg_path = consts.DEFAULT_CONTAINER_CFG_PATH
-
         if distro:
             self.distro = distro
         else:
@@ -58,38 +53,50 @@ class Container(object):
 
         ftest_dir = os.path.dirname(os.path.abspath(__file__))
         tests_dir = os.path.dirname(ftest_dir)
-        libcg_dir = os.path.dirname(tests_dir)
+        # save off the path to the libcgroup source code
+        self.libcg_dir = os.path.dirname(tests_dir)
 
-        self.tmp_cfg_path = os.path.join(ftest_dir, consts.TEMP_CONTAINER_CFG_FILE)
-        try:
-            Run.run(['rm', '-f', self.tmp_cfg_path])
-        except:
-            pass
-
-        Run.run(['cp', self.cfg_path, self.tmp_cfg_path])
-
-        conf_line = 'lxc.arch = {}'.format(self.arch)
-        Run.run(['echo', conf_line, '>>', self.tmp_cfg_path], shell_bool=True)
-
-        conf_line = 'lxc.mount.entry = {} {} none bind,ro 0 0'.format(
-                    libcg_dir, consts.LIBCG_MOUNT_POINT)
-        Run.run(['echo', conf_line, '>>', self.tmp_cfg_path], shell_bool=True)
-
-        if not self.privileged:
-            conf_line = 'lxc.idmap = u 0 100000 65536'
-            Run.run(['echo', conf_line, '>>', self.tmp_cfg_path], shell_bool=True)
-            conf_line = 'lxc.idmap = g 0 100000 65536'
-            Run.run(['echo', conf_line, '>>', self.tmp_cfg_path], shell_bool=True)
 
     def __str__(self):
         out_str = "{}".format(self.name)
         out_str += "\n\tdistro = {}".format(self.distro)
         out_str += "\n\trelease = {}".format(self.release)
         out_str += "\n\tarch = {}".format(self.arch)
-        out_str += "\n\tcfg_path = {}".format(self.cfg_path)
         out_str += "\n\tstop_timeout = {}".format(self.stop_timeout)
 
         return out_str
+
+    # configure the container to meet our needs
+    def config(self):
+        ftest_dir = os.path.dirname(os.path.abspath(__file__))
+        tests_dir = os.path.dirname(ftest_dir)
+        libcg_dir = os.path.dirname(tests_dir)
+
+        # map our UID and GID to the same UID/GID in the container
+        cmd = 'printf "uid {} 1000\ngid {} 1000" | sudo lxc config set {} raw.idmap -'.format(
+              os.getuid(), os.getgid(), self.name)
+        Run.run(cmd, shell_bool=True)
+
+        # add the libcgroup root directory (where we did the build) into
+        # the container
+        cmd2 = list()
+        if self.privileged:
+            cmd2.append('sudo')
+        cmd2.append('lxc')
+        cmd2.append('config')
+        cmd2.append('device')
+        cmd2.append('add')
+        cmd2.append(self.name)
+        cmd2.append('libcgsrc') # arbitrary name of device
+        cmd2.append('disk')
+        # to appease gcov, mount the libcgroup source at the same path as we
+        # built it.  This can be worked around someday by using
+        # GCOV_PREFIX_STRIP, but that was more difficult to setup than just
+        # doing this initially
+        cmd2.append('source={}'.format(self.libcg_dir))
+        cmd2.append('path={}'.format(self.libcg_dir))
+
+        return Run.run(cmd2)
 
     def create(self):
         cmd = list()
@@ -97,71 +104,27 @@ class Container(object):
         if self.privileged:
             cmd.append('sudo')
 
-        cmd.append('lxc-create')
-        cmd.append('-t')
-        cmd.append( 'download')
+        cmd.append('lxc')
+        cmd.append('init')
 
-        cmd.append('-n')
+        cmd.append('{}:{}'.format(self.distro, self.release))
+
         cmd.append(self.name)
-
-        if self.privileged:
-            cmd.append('sudo')
-        cmd.append('-f')
-        cmd.append(self.tmp_cfg_path)
-
-        cmd.append('--')
-
-        cmd.append('-d')
-        cmd.append(self.distro)
-
-        cmd.append('-r')
-        cmd.append(self.release)
-
-        cmd.append('-a')
-        cmd.append(self.arch)
 
         return Run.run(cmd)
 
-    def destroy(self):
+    def delete(self):
         cmd = list()
 
         if self.privileged:
             cmd.append('sudo')
 
-        cmd.append('lxc-destroy')
+        cmd.append('lxc')
+        cmd.append('delete')
 
-        cmd.append('-n')
         cmd.append(self.name)
 
         return Run.run(cmd)
-
-    def info(self, cfgname):
-        cmd = list()
-
-        if self.privileged:
-            cmd.append('sudo')
-
-        cmd.append('lxc-info')
-
-        cmd.append('--config={}'.format(cfgname))
-
-        cmd.append('-n')
-        cmd.append(self.name)
-
-        return Run.run(cmd)
-
-    def rootfs(self):
-        # try to read lxc.rootfs.path first
-        ret = self.info('lxc.rootfs.path')
-        if len(ret.strip()) > 0:
-            return ret.decode()
-
-        # older versions of lxc used lxc.rootfs.  Try that.
-        ret = self.info('lxc.rootfs')
-        if len(ret.strip()) == 0:
-            # we failed to get the rootfs
-            raise ContainerError('Failed to get the rootfs')
-        return ret.decode()
 
     def run(self, cntnr_cmd):
         cmd = list()
@@ -169,14 +132,14 @@ class Container(object):
         if self.privileged:
             cmd.append('sudo')
 
-        cmd.append('lxc-attach')
+        cmd.append('lxc')
+        cmd.append('exec')
 
-        cmd.append('-n')
         cmd.append(self.name)
 
         cmd.append('--')
 
-        # concatenate the lxc-attach command with the command to be run
+        # concatenate the lxc exec command with the command to be run
         # inside the container
         if isinstance(cntnr_cmd, str):
             cmd.append(cntnr_cmd)
@@ -193,35 +156,30 @@ class Container(object):
         if self.privileged:
             cmd.append('sudo')
 
-        cmd.append('lxc-start')
-        cmd.append('-d')
+        cmd.append('lxc')
+        cmd.append('start')
 
-        cmd.append('-n')
         cmd.append(self.name)
 
         return Run.run(cmd)
 
-    def stop(self, kill=True):
+    def stop(self, force=True):
         cmd = list()
 
         if self.privileged:
             cmd.append('sudo')
 
-        cmd.append('lxc-stop')
+        cmd.append('lxc')
+        cmd.append('stop')
 
-        cmd.append('-n')
         cmd.append(self.name)
 
-        if kill:
-            cmd.append('-k')
+        if force:
+            cmd.append('-f')
         else:
-            cmd.append('-t')
+            cmd.append('--timeout')
             cmd.append(str(self.stop_timeout))
 
-        return Run.run(cmd)
-
-    def version(self):
-        cmd = ['lxc-create', '--version']
         return Run.run(cmd)
 
 class ContainerError(Exception):

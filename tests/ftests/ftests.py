@@ -41,9 +41,6 @@ def parse_args():
     parser.add_argument('-n', '--name',
                         help='name of the container',
                         required=False, type=str, default=None)
-    parser.add_argument('-f', '--config',
-                        help='initial configuration file',
-                        required=False, type=str, default=None)
     parser.add_argument('-d', '--distro',
                         help='linux distribution to use as a template',
                         required=False, type=str, default=None)
@@ -70,9 +67,6 @@ def parse_args():
     parser.add_argument('-s', '--suite',
                         help='Test suite to run, e.g. cpuset', required=False,
                         default=consts.TESTS_RUN_ALL_SUITES, type=str)
-    parser.add_argument('-u', '--unpriv',
-                        help='Run the tests in an unprivileged container',
-                        required=False, action="store_true")
     parser.add_argument('-v', '--verbose',
                         help='Print all information about this test run',
                         default=True, required=False, action="store_false")
@@ -83,11 +77,54 @@ def parse_args():
         log.log_level = config.args.loglevel
     if config.args.logfile:
         log.log_file = config.args.logfile
-    if config.args.unpriv:
-        raise ValueError('Unprivileged containers are not currently supported')
-        config.container.privileged = False
 
     return config
+
+# this function maps the container UID to the host UID.  By doing
+# this, we can write to a bind-mounted device - and thus generate
+# code coverage data in the LXD container
+def update_host_subuid():
+    subuid_line1 = 'lxd:{}:1'.format(os.getuid())
+    subuid_line2 = 'root:{}:1'.format(os.getuid())
+    found_line1 = False
+    found_line2 = False
+
+    with open('/etc/subuid') as ufile:
+        for line in ufile.readlines():
+            if line.strip() == subuid_line1:
+                found_line1 = True
+            elif line.strip() == subuid_line2:
+                found_line2 = True
+
+    if not found_line1:
+        Run.run('sudo sh -c "echo {} >> /etc/subuid"'.format(
+                subuid_line1), shell_bool=True)
+    if not found_line2:
+        Run.run('sudo sh -c "echo {} >> /etc/subuid"'.format(
+                subuid_line2), shell_bool=True)
+
+# this function maps the container GID to the host GID.  By doing
+# this, we can write to a bind-mounted device - and thus generate
+# code coverage data in the LXD container
+def update_host_subgid():
+    subgid_line1 = 'lxd:{}:1'.format(os.getgid())
+    subgid_line2 = 'root:{}:1'.format(os.getgid())
+    found_line1 = False
+    found_line2 = False
+
+    with open('/etc/subgid') as ufile:
+        for line in ufile.readlines():
+            if line.strip() == subgid_line1:
+                found_line1 = True
+            elif line.strip() == subgid_line2:
+                found_line2 = True
+
+    if not found_line1:
+        Run.run('sudo sh -c "echo {} >> /etc/subgid"'.format(
+                subgid_line1), shell_bool=True)
+    if not found_line2:
+        Run.run('sudo sh -c "echo {} >> /etc/subgid"'.format(
+                subgid_line2), shell_bool=True)
 
 def setup(config, do_teardown=True, record_time=False):
     global setup_time
@@ -101,19 +138,18 @@ def setup(config, do_teardown=True, record_time=False):
             # log but ignore all exceptions
             Log.log_debug(e)
 
+    # this command initializes the lxd storage, networking, etc.
+    Run.run(['sudo', 'lxd', 'init', '--auto'])
+    update_host_subuid()
+    update_host_subgid()
+
     config.container.create()
-
-    # make the /libcg directory in the container's rootfs
-    rootfs = config.container.rootfs()
-    container_rootfs_path = rootfs.split('=')[1].strip()
-    Run.run(['sudo', 'mkdir', os.path.join(container_rootfs_path,
-                                   consts.LIBCG_MOUNT_POINT)])
-
+    config.container.config()
     config.container.start()
 
     # add the libcgroup library to the container's ld
     echo_cmd = ['bash', '-c', 'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'.format(
-               os.path.join('/', consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
+               os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
     config.container.run(echo_cmd)
     config.container.run('ldconfig')
     if record_time:
@@ -240,7 +276,7 @@ def teardown(config, record_time=False):
         # log but ignore all exceptions
         Log.log_debug(e)
     try:
-        config.container.destroy()
+        config.container.delete()
     except Exception as e:
         # log but ignore all exceptions
         Log.log_debug(e)

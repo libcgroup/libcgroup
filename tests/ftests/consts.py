@@ -28,11 +28,13 @@ LOG_WARNING = 5
 LOG_DEBUG = 8
 DEFAULT_LOG_LEVEL = 5
 
-LIBCG_MOUNT_POINT = 'libcg'
+ftest_dir = os.path.dirname(os.path.abspath(__file__))
+tests_dir = os.path.dirname(ftest_dir)
+LIBCG_MOUNT_POINT = os.path.dirname(tests_dir)
 
-DEFAULT_CONTAINER_NAME = 'test_libcg'
-DEFAULT_CONTAINER_DISTRO = 'oracle'
-DEFAULT_CONTAINER_RELEASE = '7'
+DEFAULT_CONTAINER_NAME = 'TestLibcg'
+DEFAULT_CONTAINER_DISTRO = 'ubuntu'
+DEFAULT_CONTAINER_RELEASE = '18.04'
 DEFAULT_CONTAINER_ARCH = 'amd64'
 DEFAULT_CONTAINER_STOP_TIMEOUT = 5
 DEFAULT_CONTAINER_CFG_PATH=os.path.join(

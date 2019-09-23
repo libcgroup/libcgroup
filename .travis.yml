@@ -37,6 +37,7 @@ addons:
   apt:
     packages:
       - lxc
+      - lxd
 
 # perform the build and fail immediately on error
 install:

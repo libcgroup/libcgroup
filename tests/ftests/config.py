@@ -32,7 +32,7 @@ class Config(object):
         else:
             # Use the default container settings
             self.container = Container(name=consts.DEFAULT_CONTAINER_NAME,
-                stop_timeout=args.timeout, arch=None, cfg_path=args.config,
+                stop_timeout=args.timeout, arch=None,
                 distro=args.distro, release=args.release)
 
         self.ftest_dir = os.path.dirname(os.path.abspath(__file__))

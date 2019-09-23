@@ -27,8 +27,8 @@ class Cgroup(object):
     @staticmethod
     def build_cmd_path(in_container, cmd):
         if in_container:
-            return os.path.join('/', consts.LIBCG_MOUNT_POINT,
-                                'src/tools/.libs/{}'.format(cmd))
+            return os.path.join(consts.LIBCG_MOUNT_POINT,
+                                'src/tools/{}'.format(cmd))
         else:
             return cmd
 
