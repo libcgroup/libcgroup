@@ -16,11 +16,9 @@ cmake .
 make
 popd
 
-aclocal
-libtoolize -c
-autoconf
-autoheader
-automake --foreign --add-missing --copy
+test -d m4 || mkdir m4
+autoreconf -fi
+rm -fr autom4te.cache
 
 CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var
 

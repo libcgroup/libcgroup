@@ -2,6 +2,9 @@ patches/*
 *.o
 *.lo
 *.la
+*.gcda
+*.gcno
+*.gcov
 stamp-*
 *.cache
 .deps/

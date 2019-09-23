@@ -36,13 +36,27 @@ compiler:
 addons:
   apt:
     packages:
+      - lcov
       - lxc
       - lxd
+
+before_install:
+  # see https://github.com/eddyxu/cpp-coveralls
+  - pip install --user cpp-coveralls
 
 # perform the build and fail immediately on error
 install:
   - ./bootstrap.sh
+  - make clean
+  # enable code coverage
+  - CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage
   - make
 
 script:
   - make check
+
+after_failure:
+  - cat tests/ftests/test-suite.log
+
+after_success:
+  - coveralls --exclude tests --exclude googletest --exclude samples --gcov-options '\-lp'
