@@ -154,14 +154,14 @@ class Container(object):
         # try to read lxc.rootfs.path first
         ret = self.info('lxc.rootfs.path')
         if len(ret.strip()) > 0:
-            return ret
+            return ret.decode()
 
         # older versions of lxc used lxc.rootfs.  Try that.
         ret = self.info('lxc.rootfs')
         if len(ret.strip()) == 0:
             # we failed to get the rootfs
             raise ContainerError('Failed to get the rootfs')
-        return ret.decode('ascii')
+        return ret.decode()
 
     def run(self, cntnr_cmd):
         cmd = list()
