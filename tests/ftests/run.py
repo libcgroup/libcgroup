@@ -54,8 +54,8 @@ class Run(object):
                 ''.join(command), ret, out, err))
 
         if ret != 0:
-            raise RunError("Command '{}' failed".format(''.join(command),
-                           command, ret, out, err))
+            raise RunError("Command '{}' failed".format(''.join(command)),
+                           command, ret, out, err)
 
         return out
 
@@ -69,6 +69,7 @@ class RunError(Exception):
         self.stderr = stderr
 
     def __str__(self):
-        out_str = "RunError:\n\tmessage = {}\n\tret = {}".format(self.message, self.ret)
+        out_str = "RunError:\n\tcommand = {}\n\tret = {}".format(
+                  self.command, self.ret)
         out_str += "\n\tstdout = {}\n\tstderr = {}".format(self.stdout, self.stderr)
         return out_str
