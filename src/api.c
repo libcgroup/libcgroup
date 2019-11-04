@@ -116,6 +116,12 @@ const char const *cgroup_strerror_codes[] = {
 
 static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
+#ifndef UNIT_TEST
+static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+					    char *controller_list[],
+					    int list_len);
+#endif
+
 static int cg_chown(const char *filename, uid_t owner, gid_t group)
 {
 	if (owner == NO_UID_GID)
@@ -2795,6 +2801,150 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 	return ret;
 }
 
+static int cgroup_find_matching_destination(char *cgroup_list[],
+					    const char * const rule_dest,
+					    int *matching_index)
+{
+	size_t rule_strlen = strlen(rule_dest);
+	int ret = -ENODATA;
+	int i;
+
+	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
+		if (cgroup_list[i] == NULL)
+			break;
+
+		if (rule_dest[rule_strlen - 1] == '/') {
+			/*
+			 * Avoid a weird corner case where given a rule dest
+			 * like 'folder/', we _don't_ want to match 'folder1'
+			 */
+			if (strlen(cgroup_list[i]) >= rule_strlen &&
+			    cgroup_list[i][rule_strlen - 1] != '/')
+				continue;
+
+			/*
+			 * Strip off the '/' at the end of the rule, as the
+			 * destination from the cgroup_list will not have a
+			 * trailing '/'
+			 */
+			rule_strlen--;
+		}
+
+		if (strncmp(rule_dest, cgroup_list[i],
+			    rule_strlen) == 0) {
+			*matching_index = i;
+			ret = 0;
+			break;
+		}
+
+	}
+
+	return ret;
+}
+
+static int cgroup_find_matching_controller(char * const *rule_controllers,
+					   const char * const pid_controller,
+					   int *matching_index)
+{
+	int ret = -ENODATA;
+	int i;
+
+	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
+		if (rule_controllers[i] == NULL)
+			break;
+
+		if (strlen(rule_controllers[i]) != strlen(pid_controller))
+			continue;
+
+		if (strncmp(pid_controller, rule_controllers[i],
+			    strlen(pid_controller)) == 0) {
+			*matching_index = i;
+			ret = 0;
+			break;
+		}
+
+	}
+
+	return ret;
+}
+
+/**
+ * Evaluates if rule is an ignore rule and the pid/procname match this rule.
+ * If rule is an ignore rule and the pid/procname match this rule, then this
+ * function returns true.  Otherwise it returns false.
+ *
+ *	@param rule Rule being evaluated
+ *	@param pid PID of the process being compared
+ *	@param procname Process name of the process being compared
+ *	@return True if the rule is an ignore rule and this pid/procname
+ *		match the rule.  False otherwise
+ */
+static bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
+				       pid_t pid, const char * const procname)
+{
+	char *controller_list[MAX_MNT_ELEMENTS] = { '\0' };
+	char *cgroup_list[MAX_MNT_ELEMENTS] = { '\0' };
+	char *token, *saveptr;
+	bool found_match = false;
+	int rule_matching_controller_idx;
+	int cgroup_list_matching_idx;
+	int ret, i;
+
+	if (!rule->is_ignore)
+		/* immediately return if the 'ignore' option is not set */
+		return false;
+
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list,
+					       controller_list,
+					       MAX_MNT_ELEMENTS);
+	if (ret < 0)
+		goto out;
+
+	ret = cgroup_find_matching_destination(cgroup_list, rule->destination,
+					       &cgroup_list_matching_idx);
+	if (ret < 0)
+		/* no cgroups matched */
+		goto out;
+
+
+	token = strtok_r(controller_list[cgroup_list_matching_idx],
+			 ",", &saveptr);
+	while (token != NULL) {
+
+		ret = cgroup_find_matching_controller(rule->controllers,
+				token, &rule_matching_controller_idx);
+		if (ret == 0)
+			/* we found a matching controller */
+			break;
+
+		token = strtok_r(NULL, ",", &saveptr);
+	}
+
+	if (!rule->procname) {
+		/*
+		 * The rule procname is empty, thus it's a wildcard and all
+		 * processes match.
+		 */
+		found_match = true;
+		goto out;
+	}
+
+	if (!strcmp(rule->procname, procname)) {
+		found_match = true;
+		goto out;
+	}
+
+out:
+	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
+		if (controller_list[i])
+			free(controller_list[i]);
+		if (cgroup_list[i])
+			free(cgroup_list[i]);
+	}
+
+	return found_match;
+}
+
 static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid,
 				gid_t gid, struct cgroup_rule *rule)
 {
@@ -2873,7 +3023,7 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid,
  * TODO: Determine thread-safeness and fix if not safe.
  */
 static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
-				gid_t gid, const char *procname)
+				gid_t gid, pid_t pid, const char *procname)
 {
 	/* Return value */
 	struct cgroup_rule *ret = rl.head;
@@ -2884,6 +3034,21 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 		ret = cgroup_find_matching_rule_uid_gid(uid, gid, ret);
 		if (!ret)
 			break;
+		if (cgroup_compare_ignore_rule(ret, pid, procname))
+			/*
+			 * This pid matched a rule that instructs the cgrules
+			 * daemon to ignore this process.
+			 */
+			break;
+		if (ret->is_ignore) {
+			/*
+			 * The rule currently being examined is an ignore
+			 * rule, but it didn't match this pid.  Move on to
+			 * the next rule
+			 */
+			ret = ret->next;
+			continue;
+		}
 		if (!procname)
 			/* If procname is NULL, return a rule matching
 			 * UID or GID */
@@ -3151,7 +3316,7 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 		tmp = trl.head;
 	} else {
 		/* Find the first matching rule in the cached list. */
-		tmp = cgroup_find_matching_rule(uid, gid, procname);
+		tmp = cgroup_find_matching_rule(uid, gid, pid, procname);
 		if (!tmp) {
 			cgroup_dbg("No rule found to match PID: %d, UID: %d, "
 				"GID: %d\n", pid, uid, gid);
@@ -3161,6 +3326,16 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 	}
 	cgroup_dbg("Found matching rule %s for PID: %d, UID: %d, GID: %d\n",
 			tmp->username, pid, uid, gid);
+
+	if (tmp->is_ignore) {
+		/*
+		 * This rule has instructed us that this pid is not to be
+		 * processed and should be ignored
+		 */
+		cgroup_dbg("Matching rule is an ignore rule\n");
+		ret = 0;
+		goto finished;
+	}
 
 	/* If we are here, then we found a matching rule, so execute it. */
 	do {
