@@ -303,6 +303,9 @@ int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 				     char *controller_list[],
 				     int list_len);
 
+bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
+				pid_t pid, const char * const procname);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS

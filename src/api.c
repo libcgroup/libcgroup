@@ -2879,7 +2879,7 @@ static int cgroup_find_matching_controller(char * const *rule_controllers,
  *	@return True if the rule is an ignore rule and this pid/procname
  *		match the rule.  False otherwise
  */
-static bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
+STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
 				       pid_t pid, const char * const procname)
 {
 	char *controller_list[MAX_MNT_ELEMENTS] = { '\0' };
