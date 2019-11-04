@@ -23,7 +23,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_srcdir)/src \
 	      -I$(top_builddir)/googletest/googletest/include \
 	      -I$(top_builddir)/googletest/googletest \
-	      -std=c++11
+	      -std=c++11 \
+	      -DSTATIC= \
+	      -DUNIT_TEST
 LDADD = ../../src/.libs/libcgroupfortesting.la \
 	libgtest.la
 

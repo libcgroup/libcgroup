@@ -283,6 +283,15 @@ extern void cgroup_dictionary_iterator_end(void **handle);
  */
 int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
 
+/**
+ * Functions that are defined as STATIC can be placed within the UNIT_TEST
+ * ifdef.  This will allow them to be included in the unit tests while
+ * remaining static in a normal libcgroup library build.
+ */
+#ifdef UNIT_TEST
+
+#endif /* UNIT_TEST */
+
 __END_DECLS
 
 #endif
