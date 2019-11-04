@@ -2801,6 +2801,34 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 	return ret;
 }
 
+/**
+ * Determines if the rule is a wildcard rule and if so, compares the
+ * wildcard rule against the new process.  If the new process matches
+ * the wildcard rule, then this function returns true.  Otherwise it
+ * returns false.
+ *
+ *	@param rule_procname The procname field of the rule
+ *	@param procname The name of the new process
+ *	@return True if the procname matches the rule.  False otherwise
+ */
+static bool cgroup_compare_wildcard_procname(const char * const rule_procname,
+					     const char * const procname)
+{
+	size_t rule_strlen = strlen(rule_procname);
+
+	if (rule_procname[rule_strlen - 1] != '*')
+		/* this rule does not end in a wildcard */
+		return false;
+
+	/* compare the two strings up to the asterisk */
+	if (strncmp(rule_procname, procname, rule_strlen - 1) != 0)
+		/* the strings did not match */
+		return false;
+
+	/* all checks passed.  the wildcarded process matched this rule */
+	return true;
+}
+
 static int cgroup_find_matching_destination(char *cgroup_list[],
 					    const char * const rule_dest,
 					    int *matching_index)
@@ -2934,6 +2962,10 @@ STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
 		goto out;
 	}
 
+	if (cgroup_compare_wildcard_procname(rule->procname, procname)) {
+		found_match = true;
+	}
+
 out:
 	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
 		if (controller_list[i])
@@ -3062,6 +3094,8 @@ static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid,
 		base = cgroup_basename(procname);
 		if (!strcmp(ret->procname, base))
 			/* Check a rule of basename. */
+			break;
+		if (cgroup_compare_wildcard_procname(ret->procname, procname))
 			break;
 		ret = ret->next;
 		free(base);
