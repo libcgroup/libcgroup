@@ -4189,6 +4189,109 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 }
 
 /**
+ * Given a pid, this function will return the controllers and cgroups that
+ * the pid is a member of.  The caller is expected to allocate the
+ * controller_list[] and cgroup_list[] arrays as well as null each entry in
+ * the arrays.  This function will allocate the necessary memory for each
+ * string within the arrays.
+ *
+ *	@param pid The process id
+ *	@param cgroup_list[] An array of char pointers to hold the cgroups
+ *	@param controller_list[] An array of char pointers to hold the list
+ *	       of controllers
+ *	@param list_len The size of the arrays
+ */
+static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+					    char *controller_list[],
+					    int list_len)
+{
+	char path[FILENAME_MAX];
+	char buf[4092];
+	char *stok_buff = NULL;
+	int ret = 0;
+	size_t buff_len;
+	int idx = 0;
+	FILE *f;
+
+	sprintf(path, "/proc/%d/cgroup", pid);
+	f = fopen(path, "re");
+	if (!f)
+		return ECGROUPNOTEXIST;
+
+	while (fgets(buf, sizeof(buf), f)) {
+		/*
+		 * Each line in /proc/{pid}/cgroup is like the following:
+		 *
+		 * {cg#}:{controller}:{cgname}
+		 *
+		 * e.g.
+		 * 7:devices:/user.slice
+		 */
+
+		/* read in the cgroup number.  we don't care about it */
+		stok_buff = strtok(buf, ":");
+		/* read in the controller name */
+		stok_buff = strtok(NULL, ":");
+
+		/*
+		 * after this point, we have allocated memory.  if we return
+		 * an error code after this, it's up to us to free the
+		 * memory we allocated
+		 */
+		controller_list[idx] = strndup(stok_buff,
+					       strlen(stok_buff) + 1);
+
+		/* read in the cgroup name */
+		stok_buff = strtok(NULL, ":");
+
+		if (stok_buff == NULL) {
+			/*
+			 * An empty controller is reported on some kernels.
+			 * It may look like this:
+			 * 0::/user.slice/user-1000.slice/session-1.scope
+			 *
+			 * Ignore this controller and move on.  Note that we
+			 * need to free the controller list entry we made.
+			 */
+			free(controller_list[idx]);
+			controller_list[idx] = NULL;
+			continue;
+		}
+
+		buff_len = strlen(stok_buff);
+		if (stok_buff[buff_len - 1] == '\n')
+			/* Don't copy the trailing newline char */
+			buff_len--;
+
+		/* read in the cgroup name */
+		if (buff_len > 1) {
+			/*
+			 * Strip off the leading '/' for every cgroup but
+			 * the root cgroup
+			 */
+			cgroup_list[idx] = malloc(buff_len);
+			snprintf(cgroup_list[idx], buff_len, "%s",
+				 &stok_buff[1]);
+		} else {
+			/*
+			 * Retain the leading '/' since we're in the root
+			 * cgroup
+			 */
+			cgroup_list[idx] = strndup(stok_buff, buff_len);
+		}
+
+		idx++;
+		if (idx >= list_len) {
+			cgroup_warn("Maximum mount elements reached.  "
+				    "Consider increasing MAX_MNT_ELEMENTS\n");
+			break;
+		}
+	}
+	fclose(f);
+	return ret;
+}
+
+/**
  * Get process name from /proc/<pid>/status file.
  * @param pid: The process id
  * @param pname_status : The process name
