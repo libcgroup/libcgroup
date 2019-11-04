@@ -40,4 +40,5 @@ TESTS = gtest
 
 gtest_SOURCES = gtest.cpp \
 		001-path.cpp \
-		002-cgroup_parse_rules_options.cpp
+		002-cgroup_parse_rules_options.cpp \
+		003-cg_get_cgroups_from_proc_cgroups.cpp

@@ -4201,7 +4201,7 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
  *	       of controllers
  *	@param list_len The size of the arrays
  */
-static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 					    char *controller_list[],
 					    int list_len)
 {
@@ -4213,7 +4213,11 @@ static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 	int idx = 0;
 	FILE *f;
 
+#ifdef UNIT_TEST
+	sprintf(path, "%s", TEST_PROC_PID_CGROUP_FILE);
+#else
 	sprintf(path, "/proc/%d/cgroup", pid);
+#endif
 	f = fopen(path, "re");
 	if (!f)
 		return ECGROUPNOTEXIST;

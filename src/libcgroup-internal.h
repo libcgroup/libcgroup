@@ -294,8 +294,14 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
  */
 #ifdef UNIT_TEST
 
+#define TEST_PROC_PID_CGROUP_FILE "test-procpidcgroup"
+
 int cgroup_parse_rules_options(char *options,
 			       struct cgroup_rule * const rule);
+
+int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+				     char *controller_list[],
+				     int list_len);
 
 #endif /* UNIT_TEST */
 
