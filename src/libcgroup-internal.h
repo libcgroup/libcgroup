@@ -34,6 +34,7 @@ __BEGIN_DECLS
 
 #define CG_NV_MAX 100
 #define CG_CONTROLLER_MAX 100
+#define CG_OPTIONS_MAX 100
 /* Max number of mounted hierarchies. Event if one controller is mounted per
  * hier, it can not exceed CG_CONTROLLER_MAX
  */
@@ -46,6 +47,8 @@ __BEGIN_DECLS
 
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 
+/* Definitions for the cgrules options field */
+#define CGRULE_OPTION_IGNORE		"ignore"
 
 #define CGCONFIG_CONF_FILE		"/etc/cgconfig.conf"
 /* Minimum number of file in template file list for cgrulesengd */
@@ -129,6 +132,7 @@ struct cgroup_rules_data {
 struct cgroup_rule {
 	uid_t uid;
 	gid_t gid;
+	bool is_ignore;
 	char *procname;
 	char username[LOGIN_NAME_MAX];
 	char destination[FILENAME_MAX];

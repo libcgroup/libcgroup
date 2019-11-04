@@ -465,6 +465,48 @@ static char *cg_skip_unused_charactors_in_rule(char *rule)
 }
 
 /**
+ * Parse the options field in the rule from the cgrules configuration file
+ *
+ *	@param options Comma-separated string of options
+ *	@param rule Rule that will contain the parsed options
+ *	@return 0 on success, -EINVAL if the options are invalid
+ * TODO: Make this function thread safe!
+ *
+ */
+static int cgroup_parse_rules_options(char *options,
+				      struct cgroup_rule * const rule)
+{
+	char *stok_buff = NULL;
+	size_t cmp_len;
+	int ret = 0;
+
+	stok_buff = strtok(options, ",");
+	if (!stok_buff) {
+		cgroup_err("Error: failed to parse options: %s\n",
+			   options);
+		return -EINVAL;
+	}
+
+	do {
+		cmp_len = min(strlen(stok_buff), strlen(CGRULE_OPTION_IGNORE));
+		if (strlen(stok_buff) == strlen(CGRULE_OPTION_IGNORE) &&
+		    strncmp(stok_buff, CGRULE_OPTION_IGNORE, cmp_len) == 0) {
+			rule->is_ignore = true;
+			continue;
+		}
+
+		/*
+		 * "ignore" is the only currently supported option.  raise
+		 * an error if we get here
+		 */
+		cgroup_err("Error: Unsupported option: %s\n", stok_buff);
+		ret = -EINVAL;
+		break;
+	} while ((stok_buff = strtok(NULL, ",")));
+
+	return ret;
+}
+/**
  * Parse the configuration file that maps UID/GIDs to cgroups.  If ever the
  * configuration file is modified, applications should call this function to
  * load the new configuration rules.  The function caller is responsible for
@@ -517,10 +559,12 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 	char user[LOGIN_NAME_MAX] = { '\0' };
 	char controllers[CG_CONTROLLER_MAX] = { '\0' };
 	char destination[FILENAME_MAX] = { '\0' };
+	char options[CG_OPTIONS_MAX] = { '\0' };
 	uid_t uid = CGRULE_INVALID;
 	gid_t gid = CGRULE_INVALID;
 	size_t len_username;
 	int len_procname;
+	bool has_options = false;
 
 	/* The current line number */
 	unsigned int linenum = 0;
@@ -581,13 +625,19 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		 * there's an error in the configuration file.
 		 */
 		skipped = false;
-		i = sscanf(itr, "%s%s%s", key, controllers, destination);
-		if (i != 3) {
+		i = sscanf(itr, "%s%s%s%s", key, controllers, destination,
+			   options);
+		if (i < 3) {
 			cgroup_err(
 					"Error: failed to parse configuration file on line %d\n",
 					linenum);
 			goto parsefail;
+		} else if (i == 3) {
+			has_options = false;
+		} else if (i == 4) {
+			has_options = true;
 		}
+
 		procname = strchr(key, ':');
 		if (procname) {
 			/* <user>:<procname>  <subsystem>  <destination> */
@@ -724,6 +774,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 
 		newrule->uid = uid;
 		newrule->gid = gid;
+		newrule->is_ignore = false;
 		len_username = min(len_username,
 					sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
@@ -742,6 +793,13 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		}
 		strncpy(newrule->destination, destination,
 			sizeof(newrule->destination) - 1);
+
+		if (has_options) {
+			ret = cgroup_parse_rules_options(options, newrule);
+			if (ret < 0)
+				goto destroyrule;
+		}
+
 		newrule->next = NULL;
 
 		/* Parse the controller list, and add that to newrule too. */
@@ -3408,6 +3466,11 @@ void cgroup_print_rules_config(FILE *fp)
 			if (itr->controllers[i])
 				fprintf(fp, "    %s\n", itr->controllers[i]);
 		}
+		fprintf(fp, "  OPTIONS:\n");
+		if (itr->is_ignore)
+			fprintf(fp, "    IS_IGNORE: True\n");
+		else
+			fprintf(fp, "    IS_IGNORE: False\n");
 		fprintf(fp, "\n");
 		itr = itr->next;
 	}
