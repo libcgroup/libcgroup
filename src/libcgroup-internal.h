@@ -294,6 +294,9 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
  */
 #ifdef UNIT_TEST
 
+int cgroup_parse_rules_options(char *options,
+			       struct cgroup_rule * const rule);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS

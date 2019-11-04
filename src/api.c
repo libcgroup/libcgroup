@@ -473,7 +473,7 @@ static char *cg_skip_unused_charactors_in_rule(char *rule)
  * TODO: Make this function thread safe!
  *
  */
-static int cgroup_parse_rules_options(char *options,
+STATIC int cgroup_parse_rules_options(char *options,
 				      struct cgroup_rule * const rule)
 {
 	char *stok_buff = NULL;
