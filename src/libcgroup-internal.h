@@ -28,7 +28,7 @@ __BEGIN_DECLS
 #include <setjmp.h>
 
 /* Maximum number of mount points/controllers */
-#define MAX_MNT_ELEMENTS	8
+#define MAX_MNT_ELEMENTS	16
 /* Estimated number of groups created */
 #define MAX_GROUP_ELEMENTS	128
 
