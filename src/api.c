@@ -2811,7 +2811,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
  *	@param procname The name of the new process
  *	@return True if the procname matches the rule.  False otherwise
  */
-static bool cgroup_compare_wildcard_procname(const char * const rule_procname,
+STATIC bool cgroup_compare_wildcard_procname(const char * const rule_procname,
 					     const char * const procname)
 {
 	size_t rule_strlen = strlen(rule_procname);

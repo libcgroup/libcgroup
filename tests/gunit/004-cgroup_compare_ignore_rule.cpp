@@ -338,3 +338,47 @@ TEST_F(CgroupCompareIgnoreRuleTest, RootDestinationNoMatch)
 	ret = cgroup_compare_ignore_rule(&rule, pid, procname);
 	ASSERT_EQ(ret, false);
 }
+
+TEST_F(CgroupCompareIgnoreRuleTest, WildcardProcnameSimpleMatch)
+{
+	char proc_file_contents[] =
+		"7:cpuacct:/MatchCgroup";
+	char rule_controller[] = "cpuacct";
+	char rule_procname[] = "ssh*";
+	char procname[] = "sshd";
+	struct cgroup_rule rule;
+	pid_t pid = 1234;
+	bool ret;
+
+	CreateCgroupProcFile(proc_file_contents);
+
+	rule.procname = rule_procname;
+	rule.is_ignore = true;
+	rule.controllers[0] = rule_controller;
+	sprintf(rule.destination, "MatchCgroup");
+
+	ret = cgroup_compare_ignore_rule(&rule, pid, procname);
+	ASSERT_EQ(ret, true);
+}
+
+TEST_F(CgroupCompareIgnoreRuleTest, WildcardProcnameNoMatch)
+{
+	char proc_file_contents[] =
+		"7:cpuacct:/AnotherCgroup";
+	char rule_controller[] = "cpuacct";
+	char rule_procname[] = "httpd*";
+	char procname[] = "httpx";
+	struct cgroup_rule rule;
+	pid_t pid = 1234;
+	bool ret;
+
+	CreateCgroupProcFile(proc_file_contents);
+
+	rule.procname = rule_procname;
+	rule.is_ignore = true;
+	rule.controllers[0] = rule_controller;
+	sprintf(rule.destination, "AnotherCgroup");
+
+	ret = cgroup_compare_ignore_rule(&rule, pid, procname);
+	ASSERT_EQ(ret, false);
+}
