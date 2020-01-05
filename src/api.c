@@ -4098,7 +4098,7 @@ int cgroup_read_value_begin(const char *controller, const char *path,
 {
 	int ret = 0;
 	char *ret_c = NULL;
-	char stat_file[FILENAME_MAX];
+	char stat_file[FILENAME_MAX + sizeof(name)];
 	char stat_path[FILENAME_MAX];
 	FILE *fp;
 
