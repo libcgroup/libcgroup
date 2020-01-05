@@ -81,7 +81,7 @@ __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
-const char const *cgroup_strerror_codes[] = {
+const char * const cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
 	"Cgroup is not mounted",
 	"Cgroup does not exist",
