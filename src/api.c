@@ -2257,7 +2257,7 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name,
 	void *handle;
 	struct cgroup_file_info info;
 	int level, group_len;
-	char child_name[FILENAME_MAX];
+	char child_name[FILENAME_MAX + 1];
 
 	cgroup_dbg("Recursively removing %s:%s\n", controller, cgroup_name);
 
