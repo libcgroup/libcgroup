@@ -264,7 +264,7 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
  */
 static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 		int dirm_change, mode_t file_mode, int filem_change,
-		int owner_is_umask, const char const **ignore_list)
+		int owner_is_umask, const char * const *ignore_list)
 {
 	int ret = 0;
 	int final_ret =0;
