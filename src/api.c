@@ -4173,7 +4173,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 				void **handle, struct cgroup_stat *cgroup_stat)
 {
 	int ret = 0;
-	char stat_file[FILENAME_MAX];
+	char stat_file[FILENAME_MAX + sizeof(".stat")];
 	char stat_path[FILENAME_MAX];
 	FILE *fp;
 
