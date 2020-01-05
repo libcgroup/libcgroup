@@ -1009,11 +1009,11 @@ void cgre_catch_term(int signum)
  */
 static int cgre_parse_syslog_facility(const char *arg)
 {
-    if (arg == NULL)
-	return 0;
+	if (arg == NULL)
+		return 0;
 
-    if (strlen(arg) > 1)
-	return 0;
+	if (strlen(arg) > 1)
+		return 0;
 
 	switch (arg[0]) {
 	case '0':
