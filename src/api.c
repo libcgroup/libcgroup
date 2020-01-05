@@ -114,7 +114,7 @@ const char * const cgroup_strerror_codes[] = {
 	"Failed to remove a non-empty group",
 };
 
-static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
+static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
 #ifndef UNIT_TEST
 static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
