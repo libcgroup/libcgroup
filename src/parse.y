@@ -45,9 +45,9 @@ int yywrap(void)
 	int val;
 	struct cgroup_dictionary *values;
 }
-%type <name> ID DEFAULT
+%type <name> ID DEFAULT group_name
 %type <val> mountvalue_conf mount task_namevalue_conf admin_namevalue_conf
-%type <val> admin_conf task_conf task_or_admin group_conf group start group_name
+%type <val> admin_conf task_conf task_or_admin group_conf group start
 %type <val> namespace namespace_conf default default_conf
 %type <values> namevalue_conf
 %type <val> template template_conf
