@@ -3227,6 +3227,7 @@ static int cgroup_create_template_group(char *orig_group_name,
 		ret = ECGOTHER;
 		last_errno = errno;
 		free(template_name);
+		template_name = NULL;
 		goto end;
 	}
 
