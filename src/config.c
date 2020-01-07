@@ -652,6 +652,7 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
 				if (controller == NULL)
 					break;
 				strncpy(mount->name, controller, sizeof(mount->name));
+				mount->name[sizeof(mount->name)-1] = '\0';
 			}
 
 			if (strncmp(token, "nodev", strlen("nodev")) == 0) {
