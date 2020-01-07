@@ -1372,7 +1372,7 @@ out_error:
 int cgroup_unload_cgroups(void)
 {
 	int error = 0;
-	void *ctrl_handle;
+	void *ctrl_handle = NULL;
 	int ret = 0;
 	char *curr_path = NULL;
 	struct cgroup_mount_point info;
