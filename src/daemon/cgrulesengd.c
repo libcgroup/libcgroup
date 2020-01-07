@@ -792,9 +792,9 @@ static int cgre_create_netlink_socket_process_msg(void)
 	}
 
 close_and_exit:
-	if (sk_nl > 0)
+	if (sk_nl >= 0)
 		close(sk_nl);
-	if (sk_unix > 0)
+	if (sk_unix >= 0)
 		close(sk_unix);
 	return rc;
 }
