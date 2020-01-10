@@ -652,6 +652,7 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
 				if (controller == NULL)
 					break;
 				strncpy(mount->name, controller, sizeof(mount->name));
+				mount->name[sizeof(mount->name)-1] = '\0';
 			}
 
 			if (strncmp(token, "nodev", strlen("nodev")) == 0) {
@@ -1372,7 +1373,7 @@ out_error:
 int cgroup_unload_cgroups(void)
 {
 	int error = 0;
-	void *ctrl_handle;
+	void *ctrl_handle = NULL;
 	int ret = 0;
 	char *curr_path = NULL;
 	struct cgroup_mount_point info;

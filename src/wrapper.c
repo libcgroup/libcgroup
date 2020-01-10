@@ -196,7 +196,9 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 		return ECGCONTROLLERCREATEFAILED;
 
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
+	cntl_value->name[sizeof(cntl_value->name)-1] = '\0';
 	strncpy(cntl_value->value, value, sizeof(cntl_value->value));
+	cntl_value->value[sizeof(cntl_value->value)-1] = '\0';
 	cntl_value->dirty = true;
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
@@ -407,6 +409,7 @@ int cgroup_set_value_string(struct cgroup_controller *controller,
 		struct control_value *val = controller->values[i];
 		if (!strcmp(val->name, name)) {
 			strncpy(val->value, value, CG_VALUE_MAX);
+			val->value[sizeof(val->value)-1] = '\0';
 			val->dirty = true;
 			return 0;
 		}

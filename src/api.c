@@ -81,7 +81,7 @@ __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
-const char const *cgroup_strerror_codes[] = {
+const char * const cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
 	"Cgroup is not mounted",
 	"Cgroup does not exist",
@@ -114,7 +114,7 @@ const char const *cgroup_strerror_codes[] = {
 	"Failed to remove a non-empty group",
 };
 
-static const char const *cgroup_ignored_tasks_files[] = { "tasks", NULL };
+static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
 #ifndef UNIT_TEST
 static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
@@ -264,7 +264,7 @@ int cg_chmod_file(FTS *fts, FTSENT *ent, mode_t dir_mode,
  */
 static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 		int dirm_change, mode_t file_mode, int filem_change,
-		int owner_is_umask, const char const **ignore_list)
+		int owner_is_umask, const char * const *ignore_list)
 {
 	int ret = 0;
 	int final_ret =0;
@@ -2257,7 +2257,7 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name,
 	void *handle;
 	struct cgroup_file_info info;
 	int level, group_len;
-	char child_name[FILENAME_MAX];
+	char child_name[FILENAME_MAX + 1];
 
 	cgroup_dbg("Recursively removing %s:%s\n", controller, cgroup_name);
 
@@ -3227,6 +3227,7 @@ static int cgroup_create_template_group(char *orig_group_name,
 		ret = ECGOTHER;
 		last_errno = errno;
 		free(template_name);
+		template_name = NULL;
 		goto end;
 	}
 
@@ -4098,7 +4099,7 @@ int cgroup_read_value_begin(const char *controller, const char *path,
 {
 	int ret = 0;
 	char *ret_c = NULL;
-	char stat_file[FILENAME_MAX];
+	char stat_file[FILENAME_MAX + sizeof(name)];
 	char stat_path[FILENAME_MAX];
 	FILE *fp;
 
@@ -4173,7 +4174,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 				void **handle, struct cgroup_stat *cgroup_stat)
 {
 	int ret = 0;
-	char stat_file[FILENAME_MAX];
+	char stat_file[FILENAME_MAX + sizeof(".stat")];
 	char stat_path[FILENAME_MAX];
 	FILE *fp;
 
