@@ -27,9 +27,15 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -DSTATIC= \
 	      -DUNIT_TEST
 LDADD = ../../src/.libs/libcgroupfortesting.la \
-	libgtest.la
+	$(top_srcdir)/googletest/googletest/lib/libgtest.la \
+	$(top_srcdir)/googletest/googletest/lib/libgtest_main.la
 
-libgtest_la_SOURCES = ../../googletest/googletest/src/gtest-all.cc
+EXTRA_DIST = $(top_srcdir)/googletest/googletest/lib/libgtest.la \
+	     $(top_srcdir)/googletest/googletest/lib/libgtest_main.la \
+	     $(top_srcdir)/googletest/googletest/lib/.libs \
+	     $(top_srcdir)/googletest/googletest/include
+
+libgtest_la_SOURCES = libcgroup_unittest.map
 libgtest_la_CPPFLAGS = -I$(top_builddir)/googletest/googletest/include \
 		       -I$(top_builddir)/googletest/googletest
 libgtest_la_LDFLAGS = -lpthread
