@@ -11,8 +11,8 @@ fi
 # configure googletest
 git submodule update --init --recursive
 pushd googletest
-git checkout release-1.8.1
-cmake .
+autoreconf -i
+./configure
 make
 popd
 
