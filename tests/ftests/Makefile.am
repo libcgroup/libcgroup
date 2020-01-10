@@ -21,6 +21,8 @@
 
 TESTS = 001-cgget-basic_cgget.py
 
+EXTRA_DIST = *.py README.md default.conf
+
 clean-local: clean-local-check
 .PHONY: clean-local-check
 clean-local-check:
