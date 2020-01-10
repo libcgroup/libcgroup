@@ -15,7 +15,7 @@
 AC_PREREQ([2.69])
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup],[0.42.rc1])
+AC_INIT([libcgroup],[0.42])
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])
@@ -30,7 +30,7 @@ AC_SUBST(LIBRARY_VERSION_MINOR, 0)
 AC_SUBST(LIBRARY_VERSION_RELEASE, 42)
 
 # we do not want static libraries
-AC_DISABLE_STATIC
+#AC_DISABLE_STATIC
 
 AM_PROG_AR
 LT_INIT
