@@ -26,21 +26,13 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -std=c++11 \
 	      -DSTATIC= \
 	      -DUNIT_TEST
-LDADD = ../../src/.libs/libcgroupfortesting.la \
-	$(top_srcdir)/googletest/googletest/lib/libgtest.la \
-	$(top_srcdir)/googletest/googletest/lib/libgtest_main.la
+LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la
 
-EXTRA_DIST = $(top_srcdir)/googletest/googletest/lib/libgtest.la \
-	     $(top_srcdir)/googletest/googletest/lib/libgtest_main.la \
-	     $(top_srcdir)/googletest/googletest/lib/.libs \
-	     $(top_srcdir)/googletest/googletest/include
+EXTRA_DIST = $(top_srcdir)/googletest/googletest/libgtest.so \
+	     $(top_srcdir)/googletest/googletest/libgtest_main.so \
+	     $(top_srcdir)/googletest/googletest/include \
+	     libcgroup_unittest.map
 
-libgtest_la_SOURCES = libcgroup_unittest.map
-libgtest_la_CPPFLAGS = -I$(top_builddir)/googletest/googletest/include \
-		       -I$(top_builddir)/googletest/googletest
-libgtest_la_LDFLAGS = -lpthread
-
-check_LTLIBRARIES = libgtest.la
 check_PROGRAMS = gtest
 TESTS = gtest
 
@@ -50,3 +42,5 @@ gtest_SOURCES = gtest.cpp \
 		003-cg_get_cgroups_from_proc_cgroups.cpp \
 		004-cgroup_compare_ignore_rule.cpp \
 		005-cgroup_compare_wildcard_procname.cpp
+gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
+		-rpath $(abs_top_builddir)/googletest/googletest
