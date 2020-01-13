@@ -117,7 +117,7 @@ TEST_F(CgroupCompareIgnoreRuleTest, CombinedControllers)
 		"13:cpu,cpuacct:/containercg";
 	char rule_controller[] = "cpuacct";
 	char procname[] = "docker";
-	struct cgroup_rule rule;
+	struct cgroup_rule rule = {0};
 	pid_t pid = 6789;
 	bool ret;
 
