@@ -1753,7 +1753,7 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 		}
 
 		dst_val = dst->values[i];
-		strncpy(dst_val->value, src_val->value, CG_VALUE_MAX);
+		strncpy(dst_val->value, src_val->value, CG_CONTROL_VALUE_MAX);
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
 		dst_val->dirty = src_val->dirty;
 	}
@@ -2486,7 +2486,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
 
-	*value = calloc(CG_VALUE_MAX, 1);
+	*value = calloc(CG_CONTROL_VALUE_MAX, 1);
 	if (!*value) {
 		fclose(ctrl_file);
 		last_errno = errno;
@@ -2497,7 +2497,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 	 * using %as crashes when we try to read from files like
 	 * memory.stat
 	 */
-	ret = fread(*value, 1, CG_VALUE_MAX-1, ctrl_file);
+	ret = fread(*value, 1, CG_CONTROL_VALUE_MAX-1, ctrl_file);
 	if (ret < 0) {
 		free(*value);
 		*value = NULL;

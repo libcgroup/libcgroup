@@ -151,8 +151,8 @@ int main(int argc, char *argv[])
 				goto err;
 			}
 
-			strncpy(name_value[nv_number].value, buf, CG_VALUE_MAX);
-			name_value[nv_number].value[CG_VALUE_MAX-1] = '\0';
+			strncpy(name_value[nv_number].value, buf, CG_CONTROL_VALUE_MAX);
+			name_value[nv_number].value[CG_CONTROL_VALUE_MAX-1] = '\0';
 
 			nv_number++;
 			break;
