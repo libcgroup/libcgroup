@@ -2715,6 +2715,30 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			}
 		}
 		closedir(dir);
+
+		if (! strcmp(cgc->name, "memory")) {
+			/*
+			 * Make sure that memory.limit_in_bytes is placed before
+			 * memory.memsw.limit_in_bytes in the list of values
+			 */
+			int memsw_limit = -1;
+			int mem_limit = -1;
+
+			for (j = 0; j < cgc->index; j++) {
+				if (! strcmp(cgc->values[j]->name,
+								"memory.memsw.limit_in_bytes"))
+					memsw_limit = j;
+				else if (! strcmp(cgc->values[j]->name,
+									"memory.limit_in_bytes"))
+					mem_limit = j;
+			}
+
+			if (memsw_limit >= 0 && memsw_limit < mem_limit) {
+				struct control_value *val = cgc->values[memsw_limit];
+				cgc->values[memsw_limit] = cgc->values[mem_limit];
+				cgc->values[mem_limit] = val;
+			}
+		}
 	}
 
 	/* Check if the group really exists or not */
