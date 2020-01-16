@@ -1751,6 +1751,7 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 		dst_val = dst->values[i];
 		strncpy(dst_val->value, src_val->value, CG_VALUE_MAX);
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+		dst_val->dirty = src_val->dirty;
 	}
 err:
 	return ret;
