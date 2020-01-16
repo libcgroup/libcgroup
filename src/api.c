@@ -1382,12 +1382,15 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 	if (!tasks) {
 		switch (errno) {
 		case EPERM:
-			return ECGROUPNOTOWNER;
+			ret = ECGROUPNOTOWNER;
+			break;
 		case ENOENT:
-			return ECGROUPNOTEXIST;
+			ret = ECGROUPNOTEXIST;
+			break;
 		default:
-			return ECGROUPNOTALLOWED;
+			ret = ECGROUPNOTALLOWED;
 		}
+		goto err;
 	}
 	ret = fprintf(tasks, "%d", tid);
 	if (ret < 0) {
@@ -1406,7 +1409,8 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 err:
 	cgroup_warn("Warning: cannot write tid %d to %s:%s\n",
 			tid, path, strerror(errno));
-	fclose(tasks);
+	if (tasks)
+		fclose(tasks);
 	return ret;
 }
 
