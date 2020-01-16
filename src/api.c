@@ -688,7 +688,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = CGRULE_INVALID;
 				gid = grp->gr_gid;
 			} else {
-				cgroup_dbg("Warning: Entry for %s not"
+				cgroup_warn("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", itr, linenum);
 				skipped = true;
@@ -705,7 +705,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = pwd->pw_uid;
 				gid = CGRULE_INVALID;
 			} else {
-				cgroup_dbg("Warning: Entry for %s not"
+				cgroup_warn("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", user, linenum);
 				skipped = true;
