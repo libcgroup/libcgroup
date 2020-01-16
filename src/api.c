@@ -4601,12 +4601,16 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid,
 
 	while (c != EOF) {
 		c = fgetc(f);
-		if ((c != EOF) && (c != '\0')) {
+		if ((c != EOF) && (c != '\0') && (len < FILENAME_MAX - 1)) {
 			buf_pname[len] = c;
 			len++;
 			continue;
 		}
 		buf_pname[len] = '\0';
+
+		if (len == FILENAME_MAX - 1)
+			while ((c != EOF) && (c != '\0'))
+				c = fgetc(f);
 
 		/*
 		 * The taken process name from /proc/<pid>/status is
