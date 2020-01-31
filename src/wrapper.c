@@ -182,10 +182,10 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 	if (!controller)
 		return ECGINVAL;
 
-	if (controller->index >= CG_VALUE_MAX)
+	if (controller->index >= CG_NV_MAX)
 		return ECGMAXVALUESEXCEEDED;
 
-	for (i = 0; i < controller->index && i < CG_VALUE_MAX; i++) {
+	for (i = 0; i < controller->index && i < CG_NV_MAX; i++) {
 		if (!strcmp(controller->values[i]->name, name))
 			return ECGVALUEEXISTS;
 	}
@@ -194,6 +194,13 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 
 	if (!cntl_value)
 		return ECGCONTROLLERCREATEFAILED;
+
+	if (strlen(value) >= sizeof(cntl_value->value)) {
+		fprintf(stderr, "value exceeds the maximum of %d characters\n",
+			sizeof(cntl_value->value) - 1);
+		free(cntl_value);
+		return ECGCONFIGPARSEFAIL;
+	}
 
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 	cntl_value->name[sizeof(cntl_value->name)-1] = '\0';

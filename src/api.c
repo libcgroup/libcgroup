@@ -688,7 +688,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = CGRULE_INVALID;
 				gid = grp->gr_gid;
 			} else {
-				cgroup_dbg("Warning: Entry for %s not"
+				cgroup_warn("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", itr, linenum);
 				skipped = true;
@@ -705,7 +705,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = pwd->pw_uid;
 				gid = CGRULE_INVALID;
 			} else {
-				cgroup_dbg("Warning: Entry for %s not"
+				cgroup_warn("Warning: Entry for %s not"
 						"found.  Skipping rule on line"
 						" %d.\n", user, linenum);
 				skipped = true;
@@ -1382,12 +1382,15 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 	if (!tasks) {
 		switch (errno) {
 		case EPERM:
-			return ECGROUPNOTOWNER;
+			ret = ECGROUPNOTOWNER;
+			break;
 		case ENOENT:
-			return ECGROUPNOTEXIST;
+			ret = ECGROUPNOTEXIST;
+			break;
 		default:
-			return ECGROUPNOTALLOWED;
+			ret = ECGROUPNOTALLOWED;
 		}
+		goto err;
 	}
 	ret = fprintf(tasks, "%d", tid);
 	if (ret < 0) {
@@ -1406,7 +1409,8 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 err:
 	cgroup_warn("Warning: cannot write tid %d to %s:%s\n",
 			tid, path, strerror(errno));
-	fclose(tasks);
+	if (tasks)
+		fclose(tasks);
 	return ret;
 }
 
@@ -1749,8 +1753,9 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 		}
 
 		dst_val = dst->values[i];
-		strncpy(dst_val->value, src_val->value, CG_VALUE_MAX);
+		strncpy(dst_val->value, src_val->value, CG_CONTROL_VALUE_MAX);
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+		dst_val->dirty = src_val->dirty;
 	}
 err:
 	return ret;
@@ -2481,7 +2486,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
 
-	*value = calloc(CG_VALUE_MAX, 1);
+	*value = calloc(CG_CONTROL_VALUE_MAX, 1);
 	if (!*value) {
 		fclose(ctrl_file);
 		last_errno = errno;
@@ -2492,7 +2497,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 	 * using %as crashes when we try to read from files like
 	 * memory.stat
 	 */
-	ret = fread(*value, 1, CG_VALUE_MAX-1, ctrl_file);
+	ret = fread(*value, 1, CG_CONTROL_VALUE_MAX-1, ctrl_file);
 	if (ret < 0) {
 		free(*value);
 		*value = NULL;
@@ -2715,6 +2720,30 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			}
 		}
 		closedir(dir);
+
+		if (! strcmp(cgc->name, "memory")) {
+			/*
+			 * Make sure that memory.limit_in_bytes is placed before
+			 * memory.memsw.limit_in_bytes in the list of values
+			 */
+			int memsw_limit = -1;
+			int mem_limit = -1;
+
+			for (j = 0; j < cgc->index; j++) {
+				if (! strcmp(cgc->values[j]->name,
+								"memory.memsw.limit_in_bytes"))
+					memsw_limit = j;
+				else if (! strcmp(cgc->values[j]->name,
+									"memory.limit_in_bytes"))
+					mem_limit = j;
+			}
+
+			if (memsw_limit >= 0 && memsw_limit < mem_limit) {
+				struct control_value *val = cgc->values[memsw_limit];
+				cgc->values[memsw_limit] = cgc->values[mem_limit];
+				cgc->values[mem_limit] = val;
+			}
+		}
 	}
 
 	/* Check if the group really exists or not */
@@ -4577,12 +4606,16 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid,
 
 	while (c != EOF) {
 		c = fgetc(f);
-		if ((c != EOF) && (c != '\0')) {
+		if ((c != EOF) && (c != '\0') && (len < FILENAME_MAX - 1)) {
 			buf_pname[len] = c;
 			len++;
 			continue;
 		}
 		buf_pname[len] = '\0';
+
+		if (len == FILENAME_MAX - 1)
+			while ((c != EOF) && (c != '\0'))
+				c = fgetc(f);
 
 		/*
 		 * The taken process name from /proc/<pid>/status is

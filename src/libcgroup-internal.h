@@ -32,6 +32,9 @@ __BEGIN_DECLS
 /* Estimated number of groups created */
 #define MAX_GROUP_ELEMENTS	128
 
+/* Maximum length of a value */
+#define CG_CONTROL_VALUE_MAX 4096
+
 #define CG_NV_MAX 100
 #define CG_CONTROLLER_MAX 100
 #define CG_OPTIONS_MAX 100
@@ -80,7 +83,7 @@ __BEGIN_DECLS
 
 struct control_value {
 	char name[FILENAME_MAX];
-	char value[CG_VALUE_MAX];
+	char value[CG_CONTROL_VALUE_MAX];
 	bool dirty;
 };
 
