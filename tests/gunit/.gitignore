@@ -1,6 +1,0 @@
-*.log
-*.o
-*.trs
-
-gtest
-libgtest.la
