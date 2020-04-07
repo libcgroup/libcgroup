@@ -2,3 +2,6 @@
 	path = googletest
 	url = https://github.com/google/googletest.git
 	fetchRecurseSubmodules = true
+[submodule "tests"]
+	path = tests
+	url = https://github.com/libcgroup/libcgroup-tests.git
