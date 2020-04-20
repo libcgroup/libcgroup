@@ -41,6 +41,7 @@ gtest_SOURCES = gtest.cpp \
 		002-cgroup_parse_rules_options.cpp \
 		003-cg_get_cgroups_from_proc_cgroups.cpp \
 		004-cgroup_compare_ignore_rule.cpp \
-		005-cgroup_compare_wildcard_procname.cpp
+		005-cgroup_compare_wildcard_procname.cpp \
+		006-cgroup_get_cgroup.cpp
 gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
 		-rpath $(abs_top_builddir)/googletest/googletest
