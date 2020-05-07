@@ -24,6 +24,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_builddir)/googletest/googletest/include \
 	      -I$(top_builddir)/googletest/googletest \
 	      -std=c++11 \
+	      -Wno-write-strings \
 	      -DSTATIC= \
 	      -DUNIT_TEST
 LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la
@@ -42,6 +43,7 @@ gtest_SOURCES = gtest.cpp \
 		003-cg_get_cgroups_from_proc_cgroups.cpp \
 		004-cgroup_compare_ignore_rule.cpp \
 		005-cgroup_compare_wildcard_procname.cpp \
-		006-cgroup_get_cgroup.cpp
+		006-cgroup_get_cgroup.cpp \
+		007-cgroup_process_v1_mount.cpp
 gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
 		-rpath $(abs_top_builddir)/googletest/googletest
