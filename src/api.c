@@ -1315,7 +1315,8 @@ static int cg_test_mounted_fs(void)
 		goto done;
 	}
 
-	while (strcmp(ent->mnt_type, "cgroup") != 0) {
+	while (strcmp(ent->mnt_type, "cgroup") != 0 &&
+	       strcmp(ent->mnt_type, "cgroup2") != 0) {
 		ent = getmntent_r(proc_mount, temp_ent, mntent_buff,
 						sizeof(mntent_buff));
 		if (ent == NULL) {
