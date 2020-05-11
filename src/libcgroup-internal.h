@@ -22,6 +22,7 @@ __BEGIN_DECLS
 #include <fts.h>
 #include <libcgroup.h>
 #include <limits.h>
+#include <mntent.h>
 #include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -317,6 +318,9 @@ bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule,
 
 bool cgroup_compare_wildcard_procname(const char * const rule_procname,
 				      const char * const procname);
+
+int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
+			  int *mnt_tbl_idx);
 
 #endif /* UNIT_TEST */
 

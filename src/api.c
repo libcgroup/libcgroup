@@ -1047,7 +1047,7 @@ int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
  *	@param ent File system description of cgroup mount being processed
  *	@param mnt_tbl_idx cg_mount_table index
  */
-static int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
+STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 				 int *mnt_tbl_idx)
 {
 	char *strtok_buffer = NULL, *mntopt = NULL;
