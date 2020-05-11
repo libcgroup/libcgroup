@@ -63,6 +63,12 @@ static __thread char errtext[MAXLEN];
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
+/* cgroup v2 controllers file */
+#define CGV2_CONTROLLERS_FILE "cgroup.controllers"
+
+/* maximum line length when reading the cgroup.controllers file */
+#define LL_MAX			100
+
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
 
@@ -1149,6 +1155,91 @@ out:
 }
 
 /**
+ * Process a cgroup v2 mount and add it to cg_mount_table if it's not a
+ * duplicate.
+ *
+ *	@param ent File system description of cgroup mount being processed
+ *	@param mnt_tbl_idx cg_mount_table index
+ */
+static int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
+{
+	char cgroup_controllers_path[FILENAME_MAX];
+	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller;
+	int ret = 0, i, duplicate;
+	FILE *fp = NULL;
+
+	/* determine what v2 controllers are available on this mount */
+	snprintf(cgroup_controllers_path, FILENAME_MAX, "%s/%s", ent->mnt_dir,
+		 CGV2_CONTROLLERS_FILE);
+
+	fp = fopen(cgroup_controllers_path, "re");
+	if (!fp) {
+		ret = ECGOTHER;
+		goto out;
+	}
+
+	ret_c = fgets(line, LL_MAX, fp);
+	if (ret_c == NULL) {
+		ret = ECGEOF;
+		goto out;
+	}
+
+	/* remove the trailing newline */
+	ret_c[strlen(ret_c) - 1] = '\0';
+
+	/*
+	 * cgroup.controllers returns a list of available controllers in
+	 * the following format:
+	 * 	cpuset cpu io memory pids rdma
+	 */
+	controller = strtok_r(ret_c, " ", &stok_buff);
+	do {
+		/* do not have duplicates in mount table */
+		duplicate = 0;
+
+		for  (i = 0; i < *mnt_tbl_idx; i++) {
+			if (strncmp(cg_mount_table[i].name, controller,
+					FILENAME_MAX) == 0) {
+				duplicate = 1;
+				break;
+			}
+		}
+
+		if (duplicate) {
+			cgroup_dbg("controller %s is already mounted on %s\n",
+				controller, cg_mount_table[i].mount.path);
+
+			ret = cg_add_duplicate_mount(&cg_mount_table[i],
+					ent->mnt_dir);
+			if (ret)
+				break;
+
+			continue;
+		}
+
+		/* this controller is not in the mount table.  add it */
+		strncpy(cg_mount_table[*mnt_tbl_idx].name,
+			controller, FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
+		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
+			ent->mnt_dir, FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
+			'\0';
+		cg_mount_table[*mnt_tbl_idx].version = CGROUP_V2;
+		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
+		cgroup_dbg("Found cgroup option %s, count %d\n",
+			controller, *mnt_tbl_idx);
+		(*mnt_tbl_idx)++;
+	} while ((controller = strtok_r(NULL, " ", &stok_buff)));
+
+out:
+	if (fp)
+		fclose(fp);
+
+	return ret;
+}
+
+/**
  * cgroup_init(), initializes the MOUNT_POINT.
  *
  * This code is theoretically thread safe now. Its not really tested
@@ -1255,6 +1346,18 @@ int cgroup_init(void)
 						    &found_mnt);
 			if (ret)
 				goto unlock_exit;
+		}
+		else if (strcmp(ent->mnt_type, "cgroup2") == 0) {
+			ret = cgroup_process_v2_mnt(ent, &found_mnt);
+			if (ret == ECGEOF) {
+				/* The controllers file was empty.  Ignore and
+				 * move on.
+				 */
+				ret = 0;
+				continue;
+			} else if (ret) {
+				goto unlock_exit;
+			}
 		}
 	}
 
