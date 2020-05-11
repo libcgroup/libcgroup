@@ -112,6 +112,11 @@ struct cg_mount_point {
 	struct cg_mount_point *next;
 };
 
+enum cg_version_t {
+	CGROUP_V1,
+	CGROUP_V2,
+};
+
 struct cg_mount_table_s {
 	/** Controller name. */
 	char name[FILENAME_MAX];
@@ -120,6 +125,7 @@ struct cg_mount_table_s {
 	 */
 	struct cg_mount_point mount;
 	int index;
+	enum cg_version_t version;
 };
 
 struct cgroup_rules_data {
