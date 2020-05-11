@@ -1161,7 +1161,7 @@ out:
  *	@param ent File system description of cgroup mount being processed
  *	@param mnt_tbl_idx cg_mount_table index
  */
-static int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
+STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 {
 	char cgroup_controllers_path[FILENAME_MAX];
 	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller;
