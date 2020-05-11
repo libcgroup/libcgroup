@@ -1034,6 +1034,120 @@ int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
 }
 
 /**
+ * Process a cgroup v1 mount and add it to cg_mount_table if it's not a
+ * duplicate.
+ *
+ *	@param controllers List of controllers from /proc/cgroups
+ *	@param ent File system description of cgroup mount being processed
+ *	@param mnt_tbl_idx cg_mount_table index
+ */
+static int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
+				 int *mnt_tbl_idx)
+{
+	char *strtok_buffer = NULL, *mntopt = NULL;
+	int duplicate = 0;
+	int i, j, ret = 0;
+
+	for (i = 0; controllers[i] != NULL; i++) {
+		mntopt = hasmntopt(ent, controllers[i]);
+
+		if (!mntopt)
+			continue;
+
+		cgroup_dbg("found %s in %s\n", controllers[i], ent->mnt_opts);
+
+		/* do not have duplicates in mount table */
+		duplicate = 0;
+		for  (j = 0; j < *mnt_tbl_idx; j++) {
+			if (strncmp(controllers[i],
+				    cg_mount_table[j].name,
+				    FILENAME_MAX) == 0) {
+				duplicate = 1;
+				break;
+			}
+		}
+
+		if (duplicate) {
+			cgroup_dbg("controller %s is already mounted on %s\n",
+				mntopt, cg_mount_table[j].mount.path);
+			ret = cg_add_duplicate_mount(&cg_mount_table[j],
+					ent->mnt_dir);
+			if (ret)
+				goto out;
+			/* continue with next controller */
+			continue;
+		}
+
+		strncpy(cg_mount_table[*mnt_tbl_idx].name,
+			controllers[i], FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
+		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
+			ent->mnt_dir, FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
+			'\0';
+		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
+		cgroup_dbg("Found cgroup option %s, count %d\n",
+			ent->mnt_opts, *mnt_tbl_idx);
+		(*mnt_tbl_idx)++;
+	}
+
+	/*
+	 * Doesn't match the controller.
+	 * Check if it is a named hierarchy.
+	 */
+	mntopt = hasmntopt(ent, "name");
+
+	if (mntopt) {
+		mntopt = strtok_r(mntopt, ",", &strtok_buffer);
+		if (!mntopt)
+			goto out;
+		/*
+		 * Check if it is a duplicate
+		 */
+		duplicate = 0;
+
+#ifdef OPAQUE_HIERARCHY
+		/*
+		 * Ignore the opaque hierarchy.
+		 */
+		if (strcmp(mntopt, OPAQUE_HIERARCHY) == 0)
+			goto out;
+#endif
+
+		for (j = 0; j < *mnt_tbl_idx; j++) {
+			if (strncmp(mntopt, cg_mount_table[j].name,
+						FILENAME_MAX) == 0) {
+				duplicate = 1;
+				break;
+			}
+		}
+
+		if (duplicate) {
+			cgroup_dbg("controller %s is already mounted on %s\n",
+				mntopt, cg_mount_table[j].mount.path);
+			ret = cg_add_duplicate_mount(&cg_mount_table[j],
+					ent->mnt_dir);
+			goto out;
+		}
+
+		strncpy(cg_mount_table[*mnt_tbl_idx].name,
+			mntopt, FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
+		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
+			ent->mnt_dir, FILENAME_MAX);
+		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
+			'\0';
+		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
+		cgroup_dbg("Found cgroup option %s, count %d\n",
+			ent->mnt_opts, *mnt_tbl_idx);
+		(*mnt_tbl_idx)++;
+	}
+
+out:
+	return ret;
+}
+
+/**
  * cgroup_init(), initializes the MOUNT_POINT.
  *
  * This code is theoretically thread safe now. Its not really tested
@@ -1053,13 +1167,9 @@ int cgroup_init(void)
 	char subsys_name[FILENAME_MAX];
 	int hierarchy, num_cgroups, enabled;
 	int i = 0;
-	int j;
-	int duplicate = 0;
-	char *mntopt = NULL;
 	int err;
 	char *buf = NULL;
 	char mntent_buffer[4 * FILENAME_MAX];
-	char *strtok_buffer = NULL;
 
 	cgroup_set_default_logger(-1);
 
@@ -1139,103 +1249,11 @@ int cgroup_init(void)
 	while ((ent = getmntent_r(proc_mount, temp_ent,
 					mntent_buffer,
 					sizeof(mntent_buffer))) != NULL) {
-		if (strcmp(ent->mnt_type, "cgroup"))
-			continue;
-
-		for (i = 0; controllers[i] != NULL; i++) {
-			mntopt = hasmntopt(ent, controllers[i]);
-
-			if (!mntopt)
-				continue;
-
-			cgroup_dbg("found %s in %s\n", controllers[i], ent->mnt_opts);
-
-			/* do not have duplicates in mount table */
-			duplicate = 0;
-			for  (j = 0; j < found_mnt; j++) {
-				if (strncmp(controllers[i],
-							cg_mount_table[j].name,
-							FILENAME_MAX) == 0) {
-					duplicate = 1;
-					break;
-				}
-			}
-			if (duplicate) {
-				cgroup_dbg("controller %s is already mounted on %s\n",
-					mntopt, cg_mount_table[j].mount.path);
-				ret = cg_add_duplicate_mount(&cg_mount_table[j],
-						ent->mnt_dir);
-				if (ret)
-					goto unlock_exit;
-				/* continue with next controller */
-				continue;
-			}
-
-			strncpy(cg_mount_table[found_mnt].name,
-				controllers[i], FILENAME_MAX);
-			cg_mount_table[found_mnt].name[FILENAME_MAX-1] = '\0';
-			strncpy(cg_mount_table[found_mnt].mount.path,
-				ent->mnt_dir, FILENAME_MAX);
-			cg_mount_table[found_mnt].mount.path[FILENAME_MAX-1] =
-				'\0';
-			cg_mount_table[found_mnt].mount.next = NULL;
-			cgroup_dbg("Found cgroup option %s, count %d\n",
-				ent->mnt_opts, found_mnt);
-			found_mnt++;
-		}
-
-		/*
-		 * Doesn't match the controller.
-		 * Check if it is a named hierarchy.
-		 */
-		mntopt = hasmntopt(ent, "name");
-
-		if (mntopt) {
-			mntopt = strtok_r(mntopt, ",", &strtok_buffer);
-			if (!mntopt)
-				continue;
-			/*
-			 * Check if it is a duplicate
-			 */
-			duplicate = 0;
-
-#ifdef OPAQUE_HIERARCHY
-			/*
-			 * Ignore the opaque hierarchy.
-			 */
-			if (strcmp(mntopt, OPAQUE_HIERARCHY) == 0)
-					continue;
-#endif
-
-			for (j = 0; j < found_mnt; j++) {
-				if (strncmp(mntopt, cg_mount_table[j].name,
-							FILENAME_MAX) == 0) {
-					duplicate = 1;
-					break;
-				}
-			}
-
-			if (duplicate) {
-				cgroup_dbg("controller %s is already mounted on %s\n",
-					mntopt, cg_mount_table[j].mount.path);
-				ret = cg_add_duplicate_mount(&cg_mount_table[j],
-						ent->mnt_dir);
-				if (ret)
-					goto unlock_exit;
-				continue;
-			}
-
-			strncpy(cg_mount_table[found_mnt].name,
-				mntopt, FILENAME_MAX);
-			cg_mount_table[found_mnt].name[FILENAME_MAX-1] = '\0';
-			strncpy(cg_mount_table[found_mnt].mount.path,
-				ent->mnt_dir, FILENAME_MAX);
-			cg_mount_table[found_mnt].mount.path[FILENAME_MAX-1] =
-				'\0';
-			cg_mount_table[found_mnt].mount.next = NULL;
-			cgroup_dbg("Found cgroup option %s, count %d\n",
-				ent->mnt_opts, found_mnt);
-			found_mnt++;
+		if (strcmp(ent->mnt_type, "cgroup") == 0) {
+			ret = cgroup_process_v1_mnt(controllers, ent,
+						    &found_mnt);
+			if (ret)
+				goto unlock_exit;
 		}
 	}
 
