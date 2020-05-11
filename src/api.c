@@ -2688,25 +2688,27 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		 * Get the uid and gid information
 		 */
 
-		ret = asprintf(&control_path, "%s/tasks", path);
+		if (cg_mount_table[i].version == CGROUP_V1) {
+			ret = asprintf(&control_path, "%s/tasks", path);
 
-		if (ret < 0) {
-			last_errno = errno;
-			error = ECGOTHER;
-			goto unlock_error;
-		}
+			if (ret < 0) {
+				last_errno = errno;
+				error = ECGOTHER;
+				goto unlock_error;
+			}
 
-		if (stat(control_path, &stat_buffer)) {
-			last_errno = errno;
+			if (stat(control_path, &stat_buffer)) {
+				last_errno = errno;
+				free(control_path);
+				error = ECGOTHER;
+				goto unlock_error;
+			}
+
+			cgroup->tasks_uid = stat_buffer.st_uid;
+			cgroup->tasks_gid = stat_buffer.st_gid;
+
 			free(control_path);
-			error = ECGOTHER;
-			goto unlock_error;
 		}
-
-		cgroup->tasks_uid = stat_buffer.st_uid;
-		cgroup->tasks_gid = stat_buffer.st_gid;
-
-		free(control_path);
 
 		cgc = cgroup_add_controller(cgroup,
 				cg_mount_table[i].name);
