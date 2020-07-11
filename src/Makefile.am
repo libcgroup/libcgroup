@@ -1,5 +1,7 @@
 @CODE_COVERAGE_RULES@
 
+BUILT_SOURCES = parse.c parse.h
+
 if WITH_BINDINGS
 BINDINGS_SUBDIR = bindings
 endif
