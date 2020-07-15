@@ -1784,6 +1784,57 @@ static int cg_set_control_value(char *path, const char *val)
 	return 0;
 }
 
+/**
+ * Walk the settings in controller and write their values to disk
+ *
+ * @param base The full path to the base of this cgroup
+ * @param controller The controller whose values are being updated
+ */
+STATIC int cgroup_set_values_recursive(const char * const base,
+	const struct cgroup_controller * const controller)
+{
+	char *path = NULL;
+	int error = 0, ret, j;
+
+	for (j = 0; j < controller->index; j++) {
+		ret = asprintf(&path, "%s%s", base,
+			       controller->values[j]->name);
+		if (ret < 0) {
+			last_errno = errno;
+			error = ECGOTHER;
+			goto err;
+		}
+		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
+			   controller->values[j]->value, ret);
+		error = cg_set_control_value(path,
+				controller->values[j]->value);
+
+		free(path);
+		path = NULL;
+
+		/* don't consider error in files directly written by
+		 * the user as fatal */
+		if (ret && !controller->values[j]->dirty) {
+			ret = 0;
+			continue;
+		}
+		if (ret)
+			goto err;
+
+		controller->values[j]->dirty = false;
+	}
+
+err:
+	/* As currently written, path should always be null as we are exiting
+	 * this function, but let's check just in case, and free it if it's
+	 * non-null
+	 */
+	if (path)
+		free(path);
+
+	return error;
+}
+
 /** cgroup_modify_cgroup modifies the cgroup control files.
  * struct cgroup *cgroup: The name will be the cgroup to be modified.
  * The values will be the values to be modified, those not mentioned
@@ -1797,10 +1848,9 @@ static int cg_set_control_value(char *path, const char *val)
 
 int cgroup_modify_cgroup(struct cgroup *cgroup)
 {
-	char *path, base[FILENAME_MAX];
+	char base[FILENAME_MAX];
 	int i;
 	int error = 0;
-	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1817,32 +1867,14 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	}
 
 	for (i = 0; i < cgroup->index; i++) {
-		int j;
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		for (j = 0; j < cgroup->controller[i]->index; j++) {
-			ret = asprintf(&path, "%s%s", base,
-				cgroup->controller[i]->values[j]->name);
-			if (ret < 0) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-			error = cg_set_control_value(path,
-				cgroup->controller[i]->values[j]->value);
-			free(path);
-			path = NULL;
-			/* don't consider error in files directly written by
-			 * the user as fatal */
-			if (error && !cgroup->controller[i]->values[j]->dirty) {
-				error = 0;
-				continue;
-			}
-			if (error)
-				goto err;
-			cgroup->controller[i]->values[j]->dirty = false;
-		}
+
+		error = cgroup_set_values_recursive(base,
+				cgroup->controller[i]);
+		if (error)
+			goto err;
 	}
 err:
 	return error;
@@ -1939,7 +1971,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	char *fts_path[2];
 	char *base = NULL;
 	char *path = NULL;
-	int i, j, k;
+	int i, k;
 	int error = 0;
 	int retval = 0;
 	int ret;
@@ -2001,36 +2033,10 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		for (j = 0; j < cgroup->controller[k]->index; j++) {
-			ret = snprintf(path, FILENAME_MAX, "%s%s", base,
-					cgroup->controller[k]->values[j]->name);
-			cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
-				cgroup->controller[k]->values[j]->value, ret);
-			if (ret < 0 || ret >= FILENAME_MAX) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-			error = cg_set_control_value(path,
-				cgroup->controller[k]->values[j]->value);
-			/*
-			 * Should we undo, what we've done in the loops above?
-			 * An error should not be treated as fatal, since we
-			 * have several read-only files and several files that
-			 * are only conditionally created in the child.
-			 *
-			 * A middle ground would be to track that there
-			 * was an error and return a diagnostic value--
-			 * callers don't get context for the error, but can
-			 * ignore it specifically if they wish.
-			 */
-			if (error) {
-				cgroup_err("Error: failed to set %s: %s\n",
-					path, cgroup_strerror(error));
-				retval = ECGCANTSETVALUE;
-				continue;
-			}
-		}
+		error = cgroup_set_values_recursive(base,
+				cgroup->controller[k]);
+		if (error)
+			goto err;
 
 		if (!ignore_ownership) {
 			ret = snprintf(path, FILENAME_MAX, "%s/tasks", base);

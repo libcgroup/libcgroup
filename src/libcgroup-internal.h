@@ -324,6 +324,9 @@ int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 
 int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx);
 
+int cgroup_set_values_recursive(const char * const base,
+	const struct cgroup_controller * const controller);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS
