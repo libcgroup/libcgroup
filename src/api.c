@@ -1958,6 +1958,46 @@ err:
 	return ret;
 }
 
+/**
+ * Chown and chmod the tasks file in cg_path
+ *
+ * @param uid The UID that will own the tasks file
+ * @param gid The GID that will own the tasks file
+ * @param fperm The permissions to place on the tasks file
+ */
+STATIC int cgroup_chown_chmod_tasks(const char * const cg_path,
+		uid_t uid, gid_t gid, mode_t fperm)
+{
+	int ret, error;
+	char *tasks_path = NULL;
+
+	tasks_path = (char *)malloc(FILENAME_MAX);
+	if (tasks_path == NULL)
+		return ECGOTHER;
+
+	ret = snprintf(tasks_path, FILENAME_MAX, "%s/tasks", cg_path);
+	if (ret < 0 || ret >= FILENAME_MAX) {
+		last_errno = errno;
+		error = ECGOTHER;
+		goto err;
+	}
+
+	error = cg_chown(tasks_path, uid, gid);
+	if (!error && fperm != NO_PERMS)
+		error = cg_chmod_path(tasks_path, fperm, 1);
+
+	if (error) {
+		last_errno = errno;
+		error = ECGOTHER;
+	}
+
+err:
+	if (tasks_path)
+		free(tasks_path);
+
+	return error;
+}
+
 /** cgroup_create_cgroup creates a new control group.
  * struct cgroup *cgroup: The control group to be created
  *
@@ -1974,7 +2014,6 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	int i, k;
 	int error = 0;
 	int retval = 0;
-	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -2039,24 +2078,11 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			goto err;
 
 		if (!ignore_ownership) {
-			ret = snprintf(path, FILENAME_MAX, "%s/tasks", base);
-			if (ret < 0 || ret >= FILENAME_MAX) {
-				last_errno = errno;
-				error = ECGOTHER;
+			error = cgroup_chown_chmod_tasks(base,
+					cgroup->tasks_uid, cgroup->tasks_gid,
+					cgroup->task_fperm);
+			if (error)
 				goto err;
-			}
-			error = cg_chown(path, cgroup->tasks_uid,
-							cgroup->tasks_gid);
-			if (!error && cgroup->task_fperm != NO_PERMS)
-				error = cg_chmod_path(path, cgroup->task_fperm,
-						1);
-
-			if (error) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-
 		}
 		free(base);
 		base = NULL;

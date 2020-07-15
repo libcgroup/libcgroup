@@ -327,6 +327,9 @@ int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx);
 int cgroup_set_values_recursive(const char * const base,
 	const struct cgroup_controller * const controller);
 
+int cgroup_chown_chmod_tasks(const char * const cg_path,
+			     uid_t uid, gid_t gid, mode_t fperm);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS
