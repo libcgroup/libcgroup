@@ -1,0 +1,131 @@
+/**
+ * libcgroup googletest for cgroup_set_values_recursive()
+ *
+ * Copyright (c) 2020 Oracle and/or its affiliates.
+ * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ */
+
+/*
+ * This library is free software; you can redistribute it and/or modify it
+ * under the terms of version 2.1 of the GNU Lesser General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, see <http://www.gnu.org/licenses>.
+ */
+
+#include <ftw.h>
+
+#include "gtest/gtest.h"
+
+#include "libcgroup-internal.h"
+
+static const char * const PARENT_DIR = "test009cgroup/";
+
+static const char * const NAMES[] = {
+	"cpu.weight",
+	"cpu.weight.nice",
+	"cpu.foo",
+	"cpu.bar"
+};
+static const int NAMES_CNT = sizeof(NAMES) / sizeof(NAMES[0]);
+
+static const char * const VALUES[] = {
+	"999",
+	"15",
+	"random",
+	"data"
+};
+static const int VALUES_CNT = sizeof(VALUES) / sizeof(VALUES[0]);
+
+
+class SetValuesRecursiveTest : public ::testing::Test {
+	protected:
+
+	void SetUp() override {
+		char tmp_path[FILENAME_MAX];
+		int ret, i;
+		FILE *f;
+
+		ASSERT_EQ(NAMES_CNT, VALUES_CNT);
+
+		ret = mkdir(PARENT_DIR, S_IRWXU | S_IRWXG | S_IRWXO);
+		ASSERT_EQ(ret, 0);
+
+		for (i = 0; i < NAMES_CNT; i++) {
+			memset(tmp_path, 0, sizeof(tmp_path));
+			ret = snprintf(tmp_path, FILENAME_MAX - 1, "%s%s",
+				       PARENT_DIR, NAMES[i]);
+			ASSERT_GT(ret, 0);
+
+			f = fopen(tmp_path, "w");
+			fclose(f);
+		}
+	}
+
+	/*
+	 * https://stackoverflow.com/questions/5467725/how-to-delete-a-directory-and-its-contents-in-posix-c
+	 */
+	static int unlink_cb(const char *fpath, const struct stat *sb, int typeflag,
+		      struct FTW *ftwbuf)
+	{
+		return remove(fpath);
+	}
+
+	int rmrf(const char * const path)
+	{
+		return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
+	}
+
+	void TearDown() override {
+		int ret;
+
+		ret = rmrf(PARENT_DIR);
+		ASSERT_EQ(ret, 0);
+	}
+};
+
+TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
+{
+	char tmp_path[FILENAME_MAX], buf[4092];
+	struct cgroup_controller ctrlr = {0};
+	int ret, i;
+	FILE *f;
+
+	ret = snprintf(ctrlr.name, FILENAME_MAX - 1, "cpu");
+	ASSERT_GT(ret, 0);
+
+	for (i = 0; i < NAMES_CNT; i++) {
+		ctrlr.values[i] = (struct control_value *)calloc(1,
+					sizeof(struct control_value));
+		ASSERT_NE(ctrlr.values[i], nullptr);
+
+		strncpy(ctrlr.values[i]->name, NAMES[i], FILENAME_MAX);
+		strncpy(ctrlr.values[i]->value, VALUES[i],
+			CG_CONTROL_VALUE_MAX);
+		ctrlr.values[i]->dirty = false;
+		ctrlr.index++;
+	}
+
+	ret = cgroup_set_values_recursive(PARENT_DIR, &ctrlr);
+	ASSERT_EQ(ret, 0);
+
+	for (i = 0; i < NAMES_CNT; i++) {
+		memset(tmp_path, 0, sizeof(tmp_path));
+		ret = snprintf(tmp_path, FILENAME_MAX - 1, "%s%s",
+			       PARENT_DIR, NAMES[i]);
+		ASSERT_GT(ret, 0);
+
+		f = fopen(tmp_path, "r");
+		ASSERT_NE(f, nullptr);
+
+		while (fgets(buf, sizeof(buf), f))
+			ASSERT_STREQ(buf, VALUES[i]);
+		fclose(f);
+	}
+}
