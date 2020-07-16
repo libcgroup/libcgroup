@@ -131,6 +131,7 @@ class CgroupGetCgroupTest : public ::testing::Test {
 				 "%s", CONTROLLERS[i]);
 			snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
 				 "%s/%s", PARENT_DIR, CONTROLLERS[i]);
+			cg_mount_table[i].version = CGROUP_V1;
 
 			ret = mkdir(cg_mount_table[i].mount.path, MODE);
 			ASSERT_EQ(ret, 0);
