@@ -48,6 +48,7 @@ gtest_SOURCES = gtest.cpp \
 		008-cgroup_process_v2_mount.cpp \
 		009-cgroup_set_values_recursive.cpp \
 		010-cgroup_chown_chmod_tasks.cpp \
-		011-cgroupv2_subtree_control.cpp
+		011-cgroupv2_subtree_control.cpp \
+		012-cgroup_create_cgroup.cpp
 gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
 		-rpath $(abs_top_builddir)/googletest/googletest
