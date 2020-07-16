@@ -5306,4 +5306,23 @@ int cgroup_get_subsys_mount_point_end(void **handle)
 	return 0;
 }
 
+int cgroup_get_controller_version(const char * const controller,
+		enum cg_version_t * const version)
+{
+	int i;
 
+	if (!version)
+		return ECGINVAL;
+
+	*version = CGROUP_UNK;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, controller,
+				sizeof(cg_mount_table[i].name)) == 0) {
+			*version = cg_mount_table[i].version;
+			return 0;
+		}
+	}
+
+	return ECGROUPNOTEXIST;
+}
