@@ -340,6 +340,9 @@ int cgroup_set_values_recursive(const char * const base,
 int cgroup_chown_chmod_tasks(const char * const cg_path,
 			     uid_t uid, gid_t gid, mode_t fperm);
 
+int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
+			     bool enable);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS

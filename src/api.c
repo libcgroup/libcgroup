@@ -63,8 +63,9 @@ static __thread char errtext[MAXLEN];
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-/* cgroup v2 controllers file */
+/* cgroup v2 files */
 #define CGV2_CONTROLLERS_FILE "cgroup.controllers"
+#define CGV2_SUBTREE_CTRL_FILE "cgroup.subtree_control"
 
 /* maximum line length when reading the cgroup.controllers file */
 #define LL_MAX			100
@@ -1832,6 +1833,55 @@ err:
 	if (path)
 		free(path);
 
+	return error;
+}
+
+/**
+ * Enable/Disable a controller in the cgroup v2 subtree_control file
+ *
+ * @param path Directory that contains the subtree_control file
+ * @param ctrl_name Name of the controller to be enabled/disabled
+ * @param enable Enable/Disable the given controller
+ */
+STATIC int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
+				    bool enable)
+{
+	char *path_copy = NULL;
+	char *value = NULL;
+	int ret, error = ECGOTHER;
+
+	if (!path || !ctrl_name)
+		return ECGOTHER;
+
+	value = (char *)malloc(FILENAME_MAX);
+	if (!value)
+		goto out;
+
+	path_copy = (char *)malloc(FILENAME_MAX);
+	if (!path_copy)
+		goto out;
+
+	ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path,
+		       CGV2_SUBTREE_CTRL_FILE);
+	if (ret < 0)
+		goto out;
+
+	if (enable)
+		ret = snprintf(value, FILENAME_MAX, "+%s", ctrl_name);
+	else
+		ret = snprintf(value, FILENAME_MAX, "-%s", ctrl_name);
+	if (ret < 0)
+		goto out;
+
+	error = cg_set_control_value(path_copy, value);
+	if (error)
+		goto out;
+
+out:
+	if (value)
+		free(value);
+	if (path_copy)
+		free(path_copy);
 	return error;
 }
 
