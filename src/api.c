@@ -1885,6 +1885,66 @@ out:
 	return error;
 }
 
+/**
+ * Recursively enable/disable a controller in the cgv2 subtree_control file
+ *
+ * @param path Directory that contains the subtree_control file
+ * @param ctrl_name Name of the controller to be enabled/disabled
+ * @param enable Enable/Disable the given controller
+ */
+STATIC int cgroupv2_subtree_control_recursive(char *path,
+					      const char *ctrl_name,
+					      bool enable)
+{
+	char *path_copy, *tmp_path, *stok_buff = NULL;
+	bool found_mount = false;
+	size_t mount_len;
+	int i, error = 0;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, ctrl_name,
+		    sizeof(cg_mount_table[i].name)) == 0) {
+			found_mount = true;
+			break;
+		}
+	}
+
+	if (!found_mount)
+		return ECGROUPSUBSYSNOTMOUNTED;
+
+	path_copy = strdup(path);
+	if (!path_copy)
+		return ECGOTHER;
+
+	/* Null terminate the path_copy to match the string length of the
+	 * controller mount.  We'll incrementally build up the string,
+	 * subdir by subdir, and enable the subtree control file each step
+	 * of the way
+	 */
+	mount_len = strlen(cg_mount_table[i].mount.path);
+	path_copy[mount_len] = '\0';
+
+	tmp_path = strtok_r(&path[mount_len], "/", &stok_buff);
+	do {
+		if (tmp_path) {
+			strcat(path_copy, "/");
+			strcat(path_copy, tmp_path);
+		}
+
+		error = cg_create_control_group(path_copy);
+		if (error)
+			goto out;
+
+		error = cgroupv2_subtree_control(path_copy, ctrl_name, enable);
+		if (error)
+			goto out;
+	} while ((tmp_path = strtok_r(NULL, "/", &stok_buff)));
+
+out:
+	free(path_copy);
+	return error;
+}
+
 /** cgroup_modify_cgroup modifies the cgroup control files.
  * struct cgroup *cgroup: The name will be the cgroup to be modified.
  * The values will be the values to be modified, those not mentioned
