@@ -2118,6 +2118,7 @@ err:
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
+	enum cg_version_t version;
 	char *fts_path[2];
 	char *base = NULL;
 	char *path = NULL;
@@ -2154,6 +2155,29 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup->controller[k]->name))
 			continue;
 
+		error = cgroup_get_controller_version(
+			cgroup->controller[k]->name, &version);
+		if (error)
+			goto err;
+
+		if (version == CGROUP_V2) {
+			char *parent, *dname;
+
+			parent = strdup(path);
+			if (!parent) {
+				error = ECGOTHER;
+				goto err;
+			}
+
+			dname = dirname(parent);
+
+			error = cgroupv2_subtree_control_recursive(dname,
+					cgroup->controller[k]->name, true);
+			free(parent);
+			if (error)
+				goto err;
+		}
+
 		error = cg_create_control_group(path);
 		if (error)
 			goto err;
@@ -2187,7 +2211,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		if (!ignore_ownership) {
+		if (!ignore_ownership && version == CGROUP_V1) {
 			error = cgroup_chown_chmod_tasks(base,
 					cgroup->tasks_uid, cgroup->tasks_gid,
 					cgroup->task_fperm);
