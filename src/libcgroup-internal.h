@@ -114,6 +114,7 @@ struct cg_mount_point {
 };
 
 enum cg_version_t {
+	CGROUP_UNK = 0,
 	CGROUP_V1,
 	CGROUP_V2,
 };
@@ -298,6 +299,15 @@ extern void cgroup_dictionary_iterator_end(void **handle);
 int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
 
 /**
+ * Get the cgroup version of a controller.  Version is set to CGROUP_UNK
+ * if the version cannot be determined.
+ *
+ * @param controller The controller of interest
+ * @param version The version of the controller
+ */
+int cgroup_get_controller_version(const char * const controller,
+		enum cg_version_t * const version);
+/**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
  * remaining static in a normal libcgroup library build.
@@ -323,6 +333,15 @@ int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 			  int *mnt_tbl_idx);
 
 int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx);
+
+int cgroup_set_values_recursive(const char * const base,
+	const struct cgroup_controller * const controller);
+
+int cgroup_chown_chmod_tasks(const char * const cg_path,
+			     uid_t uid, gid_t gid, mode_t fperm);
+
+int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
+			     bool enable);
 
 #endif /* UNIT_TEST */
 

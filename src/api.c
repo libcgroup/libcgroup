@@ -63,8 +63,9 @@ static __thread char errtext[MAXLEN];
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-/* cgroup v2 controllers file */
+/* cgroup v2 files */
 #define CGV2_CONTROLLERS_FILE "cgroup.controllers"
+#define CGV2_SUBTREE_CTRL_FILE "cgroup.subtree_control"
 
 /* maximum line length when reading the cgroup.controllers file */
 #define LL_MAX			100
@@ -1784,6 +1785,166 @@ static int cg_set_control_value(char *path, const char *val)
 	return 0;
 }
 
+/**
+ * Walk the settings in controller and write their values to disk
+ *
+ * @param base The full path to the base of this cgroup
+ * @param controller The controller whose values are being updated
+ */
+STATIC int cgroup_set_values_recursive(const char * const base,
+	const struct cgroup_controller * const controller)
+{
+	char *path = NULL;
+	int error = 0, ret, j;
+
+	for (j = 0; j < controller->index; j++) {
+		ret = asprintf(&path, "%s%s", base,
+			       controller->values[j]->name);
+		if (ret < 0) {
+			last_errno = errno;
+			error = ECGOTHER;
+			goto err;
+		}
+		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
+			   controller->values[j]->value, ret);
+		error = cg_set_control_value(path,
+				controller->values[j]->value);
+
+		free(path);
+		path = NULL;
+
+		/* don't consider error in files directly written by
+		 * the user as fatal */
+		if (ret && !controller->values[j]->dirty) {
+			ret = 0;
+			continue;
+		}
+		if (ret)
+			goto err;
+
+		controller->values[j]->dirty = false;
+	}
+
+err:
+	/* As currently written, path should always be null as we are exiting
+	 * this function, but let's check just in case, and free it if it's
+	 * non-null
+	 */
+	if (path)
+		free(path);
+
+	return error;
+}
+
+/**
+ * Enable/Disable a controller in the cgroup v2 subtree_control file
+ *
+ * @param path Directory that contains the subtree_control file
+ * @param ctrl_name Name of the controller to be enabled/disabled
+ * @param enable Enable/Disable the given controller
+ */
+STATIC int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
+				    bool enable)
+{
+	char *path_copy = NULL;
+	char *value = NULL;
+	int ret, error = ECGOTHER;
+
+	if (!path || !ctrl_name)
+		return ECGOTHER;
+
+	value = (char *)malloc(FILENAME_MAX);
+	if (!value)
+		goto out;
+
+	path_copy = (char *)malloc(FILENAME_MAX);
+	if (!path_copy)
+		goto out;
+
+	ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path,
+		       CGV2_SUBTREE_CTRL_FILE);
+	if (ret < 0)
+		goto out;
+
+	if (enable)
+		ret = snprintf(value, FILENAME_MAX, "+%s", ctrl_name);
+	else
+		ret = snprintf(value, FILENAME_MAX, "-%s", ctrl_name);
+	if (ret < 0)
+		goto out;
+
+	error = cg_set_control_value(path_copy, value);
+	if (error)
+		goto out;
+
+out:
+	if (value)
+		free(value);
+	if (path_copy)
+		free(path_copy);
+	return error;
+}
+
+/**
+ * Recursively enable/disable a controller in the cgv2 subtree_control file
+ *
+ * @param path Directory that contains the subtree_control file
+ * @param ctrl_name Name of the controller to be enabled/disabled
+ * @param enable Enable/Disable the given controller
+ */
+STATIC int cgroupv2_subtree_control_recursive(char *path,
+					      const char *ctrl_name,
+					      bool enable)
+{
+	char *path_copy, *tmp_path, *stok_buff = NULL;
+	bool found_mount = false;
+	size_t mount_len;
+	int i, error = 0;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, ctrl_name,
+		    sizeof(cg_mount_table[i].name)) == 0) {
+			found_mount = true;
+			break;
+		}
+	}
+
+	if (!found_mount)
+		return ECGROUPSUBSYSNOTMOUNTED;
+
+	path_copy = strdup(path);
+	if (!path_copy)
+		return ECGOTHER;
+
+	/* Null terminate the path_copy to match the string length of the
+	 * controller mount.  We'll incrementally build up the string,
+	 * subdir by subdir, and enable the subtree control file each step
+	 * of the way
+	 */
+	mount_len = strlen(cg_mount_table[i].mount.path);
+	path_copy[mount_len] = '\0';
+
+	tmp_path = strtok_r(&path[mount_len], "/", &stok_buff);
+	do {
+		if (tmp_path) {
+			strcat(path_copy, "/");
+			strcat(path_copy, tmp_path);
+		}
+
+		error = cg_create_control_group(path_copy);
+		if (error)
+			goto out;
+
+		error = cgroupv2_subtree_control(path_copy, ctrl_name, enable);
+		if (error)
+			goto out;
+	} while ((tmp_path = strtok_r(NULL, "/", &stok_buff)));
+
+out:
+	free(path_copy);
+	return error;
+}
+
 /** cgroup_modify_cgroup modifies the cgroup control files.
  * struct cgroup *cgroup: The name will be the cgroup to be modified.
  * The values will be the values to be modified, those not mentioned
@@ -1797,10 +1958,9 @@ static int cg_set_control_value(char *path, const char *val)
 
 int cgroup_modify_cgroup(struct cgroup *cgroup)
 {
-	char *path, base[FILENAME_MAX];
+	char base[FILENAME_MAX];
 	int i;
 	int error = 0;
-	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1817,32 +1977,14 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	}
 
 	for (i = 0; i < cgroup->index; i++) {
-		int j;
 		if (!cg_build_path(cgroup->name, base,
 			cgroup->controller[i]->name))
 			continue;
-		for (j = 0; j < cgroup->controller[i]->index; j++) {
-			ret = asprintf(&path, "%s%s", base,
-				cgroup->controller[i]->values[j]->name);
-			if (ret < 0) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-			error = cg_set_control_value(path,
-				cgroup->controller[i]->values[j]->value);
-			free(path);
-			path = NULL;
-			/* don't consider error in files directly written by
-			 * the user as fatal */
-			if (error && !cgroup->controller[i]->values[j]->dirty) {
-				error = 0;
-				continue;
-			}
-			if (error)
-				goto err;
-			cgroup->controller[i]->values[j]->dirty = false;
-		}
+
+		error = cgroup_set_values_recursive(base,
+				cgroup->controller[i]);
+		if (error)
+			goto err;
 	}
 err:
 	return error;
@@ -1926,6 +2068,46 @@ err:
 	return ret;
 }
 
+/**
+ * Chown and chmod the tasks file in cg_path
+ *
+ * @param uid The UID that will own the tasks file
+ * @param gid The GID that will own the tasks file
+ * @param fperm The permissions to place on the tasks file
+ */
+STATIC int cgroup_chown_chmod_tasks(const char * const cg_path,
+		uid_t uid, gid_t gid, mode_t fperm)
+{
+	int ret, error;
+	char *tasks_path = NULL;
+
+	tasks_path = (char *)malloc(FILENAME_MAX);
+	if (tasks_path == NULL)
+		return ECGOTHER;
+
+	ret = snprintf(tasks_path, FILENAME_MAX, "%s/tasks", cg_path);
+	if (ret < 0 || ret >= FILENAME_MAX) {
+		last_errno = errno;
+		error = ECGOTHER;
+		goto err;
+	}
+
+	error = cg_chown(tasks_path, uid, gid);
+	if (!error && fperm != NO_PERMS)
+		error = cg_chmod_path(tasks_path, fperm, 1);
+
+	if (error) {
+		last_errno = errno;
+		error = ECGOTHER;
+	}
+
+err:
+	if (tasks_path)
+		free(tasks_path);
+
+	return error;
+}
+
 /** cgroup_create_cgroup creates a new control group.
  * struct cgroup *cgroup: The control group to be created
  *
@@ -1936,13 +2118,13 @@ err:
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
+	enum cg_version_t version;
 	char *fts_path[2];
 	char *base = NULL;
 	char *path = NULL;
-	int i, j, k;
+	int i, k;
 	int error = 0;
 	int retval = 0;
-	int ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -1973,6 +2155,29 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 				cgroup->controller[k]->name))
 			continue;
 
+		error = cgroup_get_controller_version(
+			cgroup->controller[k]->name, &version);
+		if (error)
+			goto err;
+
+		if (version == CGROUP_V2) {
+			char *parent, *dname;
+
+			parent = strdup(path);
+			if (!parent) {
+				error = ECGOTHER;
+				goto err;
+			}
+
+			dname = dirname(parent);
+
+			error = cgroupv2_subtree_control_recursive(dname,
+					cgroup->controller[k]->name, true);
+			free(parent);
+			if (error)
+				goto err;
+		}
+
 		error = cg_create_control_group(path);
 		if (error)
 			goto err;
@@ -2001,56 +2206,17 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		if (error)
 			goto err;
 
-		for (j = 0; j < cgroup->controller[k]->index; j++) {
-			ret = snprintf(path, FILENAME_MAX, "%s%s", base,
-					cgroup->controller[k]->values[j]->name);
-			cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
-				cgroup->controller[k]->values[j]->value, ret);
-			if (ret < 0 || ret >= FILENAME_MAX) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-			error = cg_set_control_value(path,
-				cgroup->controller[k]->values[j]->value);
-			/*
-			 * Should we undo, what we've done in the loops above?
-			 * An error should not be treated as fatal, since we
-			 * have several read-only files and several files that
-			 * are only conditionally created in the child.
-			 *
-			 * A middle ground would be to track that there
-			 * was an error and return a diagnostic value--
-			 * callers don't get context for the error, but can
-			 * ignore it specifically if they wish.
-			 */
-			if (error) {
-				cgroup_err("Error: failed to set %s: %s\n",
-					path, cgroup_strerror(error));
-				retval = ECGCANTSETVALUE;
-				continue;
-			}
-		}
+		error = cgroup_set_values_recursive(base,
+				cgroup->controller[k]);
+		if (error)
+			goto err;
 
-		if (!ignore_ownership) {
-			ret = snprintf(path, FILENAME_MAX, "%s/tasks", base);
-			if (ret < 0 || ret >= FILENAME_MAX) {
-				last_errno = errno;
-				error = ECGOTHER;
+		if (!ignore_ownership && version == CGROUP_V1) {
+			error = cgroup_chown_chmod_tasks(base,
+					cgroup->tasks_uid, cgroup->tasks_gid,
+					cgroup->task_fperm);
+			if (error)
 				goto err;
-			}
-			error = cg_chown(path, cgroup->tasks_uid,
-							cgroup->tasks_gid);
-			if (!error && cgroup->task_fperm != NO_PERMS)
-				error = cg_chmod_path(path, cgroup->task_fperm,
-						1);
-
-			if (error) {
-				last_errno = errno;
-				error = ECGOTHER;
-				goto err;
-			}
-
 		}
 		free(base);
 		base = NULL;
@@ -5274,4 +5440,23 @@ int cgroup_get_subsys_mount_point_end(void **handle)
 	return 0;
 }
 
+int cgroup_get_controller_version(const char * const controller,
+		enum cg_version_t * const version)
+{
+	int i;
 
+	if (!version)
+		return ECGINVAL;
+
+	*version = CGROUP_UNK;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strncmp(cg_mount_table[i].name, controller,
+				sizeof(cg_mount_table[i].name)) == 0) {
+			*version = cg_mount_table[i].version;
+			return 0;
+		}
+	}
+
+	return ECGROUPNOTEXIST;
+}
