@@ -13,7 +13,7 @@ git submodule update --init --recursive
 
 # configure libcgroup-tests
 pushd tests
-git checkout issues/cgcreate
+git checkout master
 popd
 
 # configure googletest
