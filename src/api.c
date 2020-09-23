@@ -1885,6 +1885,72 @@ err:
 }
 
 /**
+ * Check if the requested cgroup controller is enabled on this subtree
+ *
+ * @param path Cgroup directory
+ * @param ctrl_name Name of the controller to check
+ * @param output parameter that indicates whether the controller is enabled\
+ */
+STATIC int cgroupv2_get_subtree_control(const char *path,
+					const char *ctrl_name,
+					bool * const enabled)
+{
+	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c;
+	int ret, error = ECGROUPNOTMOUNTED;
+	char buffer[FILENAME_MAX];
+	FILE *fp = NULL;
+
+	if (!path || !ctrl_name || !enabled)
+		return ECGOTHER;
+
+	*enabled = false;
+
+	path_copy = (char *)malloc(FILENAME_MAX);
+	if (!path_copy)
+		goto out;
+
+       ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path,
+                      CGV2_SUBTREE_CTRL_FILE);
+       if (ret < 0)
+               goto out;
+
+	fp = fopen(path_copy, "re");
+	if (!fp) {
+		cgroup_warn("Warning: fopen failed\n");
+		last_errno = errno;
+		goto out;
+	}
+
+	ret_c = fgets(buffer, sizeof(buffer), fp);
+	if (ret_c == NULL)
+		/* The subtree control file is empty */
+		goto out;
+
+	/* remove the trailing newline */
+	ret_c[strlen(ret_c) - 1] = '\0';
+
+	/* Split the enabled controllers by " " and evaluate if the requested
+	 * controller is enabled.
+	 */
+	token = strtok_r(buffer, " ", &saveptr);
+	do {
+		if (strncmp(ctrl_name, token, FILENAME_MAX) == 0) {
+			error = 0;
+			*enabled = true;
+			break;
+		}
+	} while ((token = strtok_r(NULL, " ", &saveptr)));
+
+out:
+	if (path_copy)
+		free(path_copy);
+	if (fp)
+		fclose(fp);
+
+	return error;
+}
+
+/**
  * Enable/Disable a controller in the cgroup v2 subtree_control file
  *
  * @param path Directory that contains the subtree_control file
