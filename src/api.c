@@ -1497,6 +1497,50 @@ char *cg_build_path(const char *name, char *path, const char *type)
 	return path;
 }
 
+/**
+ * Build the path to the tasks or cgroup.procs file
+ *
+ * @param path Output variable that will contain the path.  Must be
+              of size FILENAME_MAX or larger
+ * @param path_sz Size of the path string
+ * @param cg_name Cgroup name
+ * @param ctrl_name Controller name
+ */
+STATIC int cgroup_build_tasks_procs_path(char * const path,
+				size_t path_sz, const char * const cg_name,
+				const char * const ctrl_name)
+{
+	enum cg_version_t version;
+	int err = ECGOTHER;
+
+	if (!cg_build_path(cg_name, path, ctrl_name))
+		goto error;
+
+	err = cgroup_get_controller_version(ctrl_name, &version);
+	if (err)
+		goto error;
+
+	switch (version) {
+	case CGROUP_V1:
+		strncat(path, "tasks", path_sz - strlen(path));
+		err = 0;
+		break;
+	case CGROUP_V2:
+		strncat(path, "cgroup.procs", path_sz - strlen(path));
+		err = 0;
+		break;
+	default:
+		err = ECGOTHER;
+		break;
+	}
+
+error:
+	if (err)
+		path[0] = '\0';
+
+	return err;
+}
+
 static int __cgroup_attach_task_pid(char *path, pid_t tid)
 {
 	int ret = 0;
@@ -1559,10 +1603,12 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for (i = 0; i < CG_CONTROLLER_MAX &&
 				cg_mount_table[i].name[0] != '\0'; i++) {
-			if (!cg_build_path_locked(NULL, path,
-						cg_mount_table[i].name))
-				continue;
-			strncat(path, "/tasks", sizeof(path) - strlen(path));
+			ret = cgroup_build_tasks_procs_path(path,
+				sizeof(path), cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret) {
 				pthread_rwlock_unlock(&cg_mount_table_lock);
@@ -1580,10 +1626,12 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		}
 
 		for (i = 0; i < cgroup->index; i++) {
-			if (!cg_build_path(cgroup->name, path,
-					cgroup->controller[i]->name))
-				continue;
-			strncat(path, "/tasks", sizeof(path) - strlen(path));
+			ret = cgroup_build_tasks_procs_path(path,
+				sizeof(path), cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret)
 				return ret;

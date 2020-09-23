@@ -343,6 +343,10 @@ int cgroup_chown_chmod_tasks(const char * const cg_path,
 int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
 			     bool enable);
 
+int cgroup_build_tasks_procs_path(char * const path,
+				  size_t path_sz, const char * const cg_name,
+				  const char * const ctrl_name);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS
