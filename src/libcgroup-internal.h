@@ -350,6 +350,10 @@ int cgroup_build_tasks_procs_path(char * const path,
 int cgroupv2_get_subtree_control(const char *path,
 				 const char *ctrl_name,
 				 bool * const enabled);
+
+int cgroupv2_controller_enabled(const char * const cg_name,
+				const char * const ctrl_name);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS

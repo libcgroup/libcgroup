@@ -127,6 +127,10 @@ static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 					    char *controller_list[],
 					    int list_len);
+
+static int cgroupv2_get_subtree_control(const char *path,
+					const char *ctrl_name,
+					bool * const enabled);
 #endif
 
 static int cg_chown(const char *filename, uid_t owner, gid_t group)
@@ -1541,6 +1545,53 @@ error:
 	return err;
 }
 
+STATIC int cgroupv2_controller_enabled(const char * const cg_name,
+				       const char * const ctrl_name)
+{
+	char path[FILENAME_MAX] = {0};
+	char *parent = NULL, *dname;
+	enum cg_version_t version;
+	bool enabled;
+	int error;
+
+	error = cgroup_get_controller_version(ctrl_name, &version);
+	if (error)
+		return error;
+
+	if (version != CGROUP_V2)
+		return 0;
+
+	if (strncmp(cg_name, "/", strlen(cg_name)) == 0)
+		/*
+		 * The root cgroup has been requested.  All version 2
+		 * controllers are enabled on the root cgroup
+		 */
+		return 0;
+
+	if (!cg_build_path(cg_name, path, ctrl_name))
+		goto err;
+
+	parent = strdup(path);
+	if (!parent) {
+		error = ECGOTHER;
+		goto err;
+	}
+
+	dname = dirname(parent);
+
+	error = cgroupv2_get_subtree_control(dname, ctrl_name, &enabled);
+	if (error)
+		goto err;
+
+	if (enabled)
+		error = 0;
+err:
+	if (parent)
+		free(parent);
+
+	return error;
+}
+
 static int __cgroup_attach_task_pid(char *path, pid_t tid)
 {
 	int ret = 0;
@@ -1592,7 +1643,7 @@ err:
  */
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
-	char path[FILENAME_MAX];
+	char path[FILENAME_MAX] = {0};
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -1603,6 +1654,11 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for (i = 0; i < CG_CONTROLLER_MAX &&
 				cg_mount_table[i].name[0] != '\0'; i++) {
+			ret = cgroupv2_controller_enabled(cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = cgroup_build_tasks_procs_path(path,
 				sizeof(path), cgroup->name,
 				cgroup->controller[i]->name);
@@ -1626,6 +1682,11 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		}
 
 		for (i = 0; i < cgroup->index; i++) {
+			ret = cgroupv2_controller_enabled(cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = cgroup_build_tasks_procs_path(path,
 				sizeof(path), cgroup->name,
 				cgroup->controller[i]->name);
