@@ -127,6 +127,10 @@ static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 					    char *controller_list[],
 					    int list_len);
+
+static int cgroupv2_get_subtree_control(const char *path,
+					const char *ctrl_name,
+					bool * const enabled);
 #endif
 
 static int cg_chown(const char *filename, uid_t owner, gid_t group)
@@ -1497,6 +1501,97 @@ char *cg_build_path(const char *name, char *path, const char *type)
 	return path;
 }
 
+/**
+ * Build the path to the tasks or cgroup.procs file
+ *
+ * @param path Output variable that will contain the path.  Must be
+              of size FILENAME_MAX or larger
+ * @param path_sz Size of the path string
+ * @param cg_name Cgroup name
+ * @param ctrl_name Controller name
+ */
+STATIC int cgroup_build_tasks_procs_path(char * const path,
+				size_t path_sz, const char * const cg_name,
+				const char * const ctrl_name)
+{
+	enum cg_version_t version;
+	int err = ECGOTHER;
+
+	if (!cg_build_path(cg_name, path, ctrl_name))
+		goto error;
+
+	err = cgroup_get_controller_version(ctrl_name, &version);
+	if (err)
+		goto error;
+
+	switch (version) {
+	case CGROUP_V1:
+		strncat(path, "tasks", path_sz - strlen(path));
+		err = 0;
+		break;
+	case CGROUP_V2:
+		strncat(path, "cgroup.procs", path_sz - strlen(path));
+		err = 0;
+		break;
+	default:
+		err = ECGOTHER;
+		break;
+	}
+
+error:
+	if (err)
+		path[0] = '\0';
+
+	return err;
+}
+
+STATIC int cgroupv2_controller_enabled(const char * const cg_name,
+				       const char * const ctrl_name)
+{
+	char path[FILENAME_MAX] = {0};
+	char *parent = NULL, *dname;
+	enum cg_version_t version;
+	bool enabled;
+	int error;
+
+	error = cgroup_get_controller_version(ctrl_name, &version);
+	if (error)
+		return error;
+
+	if (version != CGROUP_V2)
+		return 0;
+
+	if (strncmp(cg_name, "/", strlen(cg_name)) == 0)
+		/*
+		 * The root cgroup has been requested.  All version 2
+		 * controllers are enabled on the root cgroup
+		 */
+		return 0;
+
+	if (!cg_build_path(cg_name, path, ctrl_name))
+		goto err;
+
+	parent = strdup(path);
+	if (!parent) {
+		error = ECGOTHER;
+		goto err;
+	}
+
+	dname = dirname(parent);
+
+	error = cgroupv2_get_subtree_control(dname, ctrl_name, &enabled);
+	if (error)
+		goto err;
+
+	if (enabled)
+		error = 0;
+err:
+	if (parent)
+		free(parent);
+
+	return error;
+}
+
 static int __cgroup_attach_task_pid(char *path, pid_t tid)
 {
 	int ret = 0;
@@ -1548,7 +1643,7 @@ err:
  */
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
-	char path[FILENAME_MAX];
+	char path[FILENAME_MAX] = {0};
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -1559,10 +1654,17 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for (i = 0; i < CG_CONTROLLER_MAX &&
 				cg_mount_table[i].name[0] != '\0'; i++) {
-			if (!cg_build_path_locked(NULL, path,
-						cg_mount_table[i].name))
-				continue;
-			strncat(path, "/tasks", sizeof(path) - strlen(path));
+			ret = cgroupv2_controller_enabled(cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
+			ret = cgroup_build_tasks_procs_path(path,
+				sizeof(path), cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret) {
 				pthread_rwlock_unlock(&cg_mount_table_lock);
@@ -1580,10 +1682,17 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		}
 
 		for (i = 0; i < cgroup->index; i++) {
-			if (!cg_build_path(cgroup->name, path,
-					cgroup->controller[i]->name))
-				continue;
-			strncat(path, "/tasks", sizeof(path) - strlen(path));
+			ret = cgroupv2_controller_enabled(cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
+			ret = cgroup_build_tasks_procs_path(path,
+				sizeof(path), cgroup->name,
+				cgroup->controller[i]->name);
+			if (ret)
+				return ret;
+
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret)
 				return ret;
@@ -1832,6 +1941,72 @@ err:
 	 */
 	if (path)
 		free(path);
+
+	return error;
+}
+
+/**
+ * Check if the requested cgroup controller is enabled on this subtree
+ *
+ * @param path Cgroup directory
+ * @param ctrl_name Name of the controller to check
+ * @param output parameter that indicates whether the controller is enabled\
+ */
+STATIC int cgroupv2_get_subtree_control(const char *path,
+					const char *ctrl_name,
+					bool * const enabled)
+{
+	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c;
+	int ret, error = ECGROUPNOTMOUNTED;
+	char buffer[FILENAME_MAX];
+	FILE *fp = NULL;
+
+	if (!path || !ctrl_name || !enabled)
+		return ECGOTHER;
+
+	*enabled = false;
+
+	path_copy = (char *)malloc(FILENAME_MAX);
+	if (!path_copy)
+		goto out;
+
+       ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path,
+                      CGV2_SUBTREE_CTRL_FILE);
+       if (ret < 0)
+               goto out;
+
+	fp = fopen(path_copy, "re");
+	if (!fp) {
+		cgroup_warn("Warning: fopen failed\n");
+		last_errno = errno;
+		goto out;
+	}
+
+	ret_c = fgets(buffer, sizeof(buffer), fp);
+	if (ret_c == NULL)
+		/* The subtree control file is empty */
+		goto out;
+
+	/* remove the trailing newline */
+	ret_c[strlen(ret_c) - 1] = '\0';
+
+	/* Split the enabled controllers by " " and evaluate if the requested
+	 * controller is enabled.
+	 */
+	token = strtok_r(buffer, " ", &saveptr);
+	do {
+		if (strncmp(ctrl_name, token, FILENAME_MAX) == 0) {
+			error = 0;
+			*enabled = true;
+			break;
+		}
+	} while ((token = strtok_r(NULL, " ", &saveptr)));
+
+out:
+	if (path_copy)
+		free(path_copy);
+	if (fp)
+		fclose(fp);
 
 	return error;
 }
