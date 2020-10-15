@@ -2659,9 +2659,10 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		/*
 		 * Open tasks file of the group to delete.
 		 */
-		if (!cg_build_path(cgroup_name, path, controller))
+		ret = cgroup_build_tasks_procs_path(path, sizeof(path),
+						    cgroup_name, controller);
+		if (ret != 0)
 			return ECGROUPSUBSYSNOTMOUNTED;
-		strncat(path, "tasks", sizeof(path) - strlen(path));
 
 		delete_tasks = fopen(path, "re");
 		if (delete_tasks) {
@@ -2861,15 +2862,15 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 
 		if (parent_name) {
 			/* tasks need to be moved, pre-open target tasks file */
-			if (!cg_build_path(parent_name, parent_path,
-					cgroup->controller[i]->name)) {
+			ret = cgroup_build_tasks_procs_path(parent_path,
+					sizeof(parent_path), parent_name,
+					cgroup->controller[i]);
+			if (ret != 0) {
 				if (first_error == 0)
 					first_error = ECGFAIL;
 				free(parent_name);
 				continue;
 			}
-			strncat(parent_path, "/tasks", sizeof(parent_path)
-					- strlen(parent_path));
 
 			parent_tasks = fopen(parent_path, "we");
 			if (!parent_tasks) {
