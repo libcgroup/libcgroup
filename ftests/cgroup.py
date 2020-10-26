@@ -20,10 +20,15 @@
 #
 
 import consts
+from enum import Enum
 import os
 from run import Run
 
-class Cgroup(object):
+class Cgroup(Enum):
+    CGROUP_UNK = 0
+    CGROUP_V1 = 1
+    CGROUP_V2 = 2
+
     @staticmethod
     def build_cmd_path(in_container, cmd):
         if in_container:
@@ -170,3 +175,22 @@ class Cgroup(object):
             ret = Run.run(cmd)
 
         return ret
+
+    @staticmethod
+    def version(controller):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup':
+                    for option in line.split()[3].split(','):
+                        if option == controller:
+                            return Cgroup.CGROUP_V1
+                elif line.split()[0] == 'cgroup2':
+                    with open(os.path.join(mnt_path, 'cgroup.controllers'), 'r') as ctrlf:
+                        controllers = ctrlf.readline()
+                        for ctrl in controllers.split():
+                            if ctrl == controller:
+                                return Cgroup.CGROUP_V2
+
+        return Cgroup.CGROUP_UNK
