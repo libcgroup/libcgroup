@@ -250,10 +250,10 @@ def run_tests(config):
         print("\t---------------------------------------------------------")
         time_str = "{0: 2.2f}".format(setup_time)
         print('\t{}{}'.format('{0: <35}'.format('setup'), '{0: >15}'.format(time_str)))
-        for test in passed_tests:
-            time_str = "{0: 2.2f}".format(test[1])
-            print('\t{}{}'.format('{0: <35}'.format(test[0]), '{0: >15}'.format(time_str)))
-        for test in failed_tests:
+
+        all_tests = passed_tests + skipped_tests + failed_tests
+        all_tests.sort()
+        for test in all_tests:
             time_str = "{0: 2.2f}".format(test[1])
             print('\t{}{}'.format('{0: <35}'.format(test[0]), '{0: >15}'.format(time_str)))
         time_str = "{0: 2.2f}".format(teardown_time)
