@@ -60,4 +60,4 @@ after_failure:
   - cat tests/gunit/test-suite.log
 
 after_success:
-  - coveralls --exclude tests --exclude googletest --exclude samples --gcov-options '\-lp'
+  - coveralls --exclude tests --exclude googletest --exclude samples --exclude src/lex.l --exclude parse.y --gcov-options '\-lp'
