@@ -227,16 +227,16 @@ def run_tests(config):
     print("-----------------------------------------------------------------")
     print("Test Results:")
     date_str = datetime.datetime.now().strftime('%b %d %H:%M:%S')
-    print('\t{}{}'.format('{0: <30}'.format("Run Date:"), '{0: >15}'.format(date_str)))
+    print('\t{}{}'.format('{0: <35}'.format("Run Date:"), '{0: >15}'.format(date_str)))
 
     test_str = "{} test(s)".format(passed_cnt)
-    print('\t{}{}'.format('{0: <30}'.format("Passed:"), '{0: >15}'.format(test_str)))
+    print('\t{}{}'.format('{0: <35}'.format("Passed:"), '{0: >15}'.format(test_str)))
 
     test_str = "{} test(s)".format(skipped_cnt)
-    print('\t{}{}'.format('{0: <30}'.format("Skipped:"), '{0: >15}'.format(test_str)))
+    print('\t{}{}'.format('{0: <35}'.format("Skipped:"), '{0: >15}'.format(test_str)))
 
     test_str = "{} test(s)".format(failed_cnt)
-    print('\t{}{}'.format('{0: <30}'.format("Failed:"), '{0: >15}'.format(test_str)))
+    print('\t{}{}'.format('{0: <35}'.format("Failed:"), '{0: >15}'.format(test_str)))
 
     for test in failed_tests:
         print("\t\tTest:\t\t\t\t{} - {}".format(test[0], str(failure_cause)))
@@ -246,18 +246,18 @@ def run_tests(config):
     global teardown_time
     if config.args.verbose:
         print("Timing Results:")
-        print('\t{}{}'.format('{0: <30}'.format("Test"), '{0: >15}'.format("Time (sec)")))
+        print('\t{}{}'.format('{0: <35}'.format("Test"), '{0: >15}'.format("Time (sec)")))
         print("\t---------------------------------------------------------")
         time_str = "{0: 2.2f}".format(setup_time)
-        print('\t{}{}'.format('{0: <30}'.format('setup'), '{0: >15}'.format(time_str)))
+        print('\t{}{}'.format('{0: <35}'.format('setup'), '{0: >15}'.format(time_str)))
         for test in passed_tests:
             time_str = "{0: 2.2f}".format(test[1])
-            print('\t{}{}'.format('{0: <30}'.format(test[0]), '{0: >15}'.format(time_str)))
+            print('\t{}{}'.format('{0: <35}'.format(test[0]), '{0: >15}'.format(time_str)))
         for test in failed_tests:
             time_str = "{0: 2.2f}".format(test[1])
-            print('\t{}{}'.format('{0: <30}'.format(test[0]), '{0: >15}'.format(time_str)))
+            print('\t{}{}'.format('{0: <35}'.format(test[0]), '{0: >15}'.format(time_str)))
         time_str = "{0: 2.2f}".format(teardown_time)
-        print('\t{}{}'.format('{0: <30}'.format('teardown'), '{0: >15}'.format(time_str)))
+        print('\t{}{}'.format('{0: <35}'.format('teardown'), '{0: >15}'.format(time_str)))
 
         total_run_time = setup_time + teardown_time
         for test in passed_tests:
@@ -266,7 +266,7 @@ def run_tests(config):
             total_run_time += test[1]
         total_str = "{0: 5.2f}".format(total_run_time)
         print("\t---------------------------------------------------------")
-        print('\t{}{}'.format('{0: <30}'.format("Total Run Time"), '{0: >15}'.format(total_str)))
+        print('\t{}{}'.format('{0: <35}'.format("Total Run Time"), '{0: >15}'.format(total_str)))
 
     return [passed_cnt, failed_cnt, skipped_cnt]
 
