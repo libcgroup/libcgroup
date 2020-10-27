@@ -29,6 +29,7 @@ import datetime
 import log
 from log import Log
 import os
+from process import Process
 from run import Run
 import sys
 import time
@@ -273,6 +274,9 @@ def run_tests(config):
 def teardown(config, record_time=False):
     global teardown_time
     start_time = time.time()
+
+    Process.join_children()
+
     try:
         config.container.stop()
     except Exception as e:
