@@ -147,6 +147,9 @@ def setup(config, do_teardown=True, record_time=False):
     config.container.config()
     config.container.start()
 
+    # LXC on Ubuntu 20.04 put sed in a different spot.  Add a symlink
+    config.container.run(['ln', '-s', '/bin/sed', '/usr/bin/sed'])
+
     # add the libcgroup library to the container's ld
     echo_cmd = ['bash', '-c', 'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'.format(
                os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
