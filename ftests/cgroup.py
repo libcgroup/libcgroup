@@ -194,3 +194,24 @@ class Cgroup(Enum):
                                 return Cgroup.CGROUP_V2
 
         return Cgroup.CGROUP_UNK
+
+    @staticmethod
+    def classify(config, controller, cgname, pid_list, sticky=False,
+                 cancel_sticky=False, in_container=True):
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path(in_container, 'cgclassify'))
+        cmd.append('-g')
+        cmd.append('{}:{}'.format(controller, cgname))
+
+        if isinstance(pid_list, str):
+            cmd.append(pid_list)
+        elif isinstance(pid_list, int):
+            cmd.append(str(pid_list))
+        elif isinstance(pid_list, list):
+            for pid in pid_list:
+                cmd.append(pid)
+
+        if in_container:
+            config.container.run(cmd)
+        else:
+            Run.run(cmd)
