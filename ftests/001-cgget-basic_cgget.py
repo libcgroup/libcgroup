@@ -63,5 +63,5 @@ def main(config):
 if __name__ == '__main__':
     config = ftests.parse_args()
     # this test was invoked directly.  run only it
-    config.test_num = int(os.path.basename(__file__).split('-')[0])
+    config.args.num = int(os.path.basename(__file__).split('-')[0])
     sys.exit(ftests.main(config))
