@@ -24,6 +24,7 @@ from cgroup import Cgroup
 import consts
 import ftests
 import os
+from process import Process
 import sys
 
 CONTROLLER = 'cpuset'
@@ -39,6 +40,17 @@ def setup(config):
     Cgroup.create(config, CONTROLLER, PARENT)
     Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD))
     Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD, GRANDCHILD))
+
+    version = Cgroup.version(CONTROLLER)
+    if version == Cgroup.CGROUP_V1:
+        # cgdelete in a cgroup v1 controller should be able to move a process
+        # from a child cgroup to its parent.
+        #
+        # Moving a process from a child cgroup to its parent isn't (easily)
+        # supported in cgroup v2 because of cgroup v2's restriction that
+        # processes only be located in leaf cgroups
+        Process.create_process_in_cgroup(config, CONTROLLER,
+                                         os.path.join(PARENT, CHILD, GRANDCHILD))
 
 def test(config):
     Cgroup.delete(config, CONTROLLER, PARENT, recursive=True)
