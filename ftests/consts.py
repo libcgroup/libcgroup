@@ -37,10 +37,6 @@ DEFAULT_CONTAINER_DISTRO = 'ubuntu'
 DEFAULT_CONTAINER_RELEASE = '18.04'
 DEFAULT_CONTAINER_ARCH = 'amd64'
 DEFAULT_CONTAINER_STOP_TIMEOUT = 5
-DEFAULT_CONTAINER_CFG_PATH=os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'default.conf')
-TEMP_CONTAINER_CFG_FILE='tmp.conf'
 
 TESTS_RUN_ALL = -1
 TESTS_RUN_ALL_SUITES = "allsuites"
