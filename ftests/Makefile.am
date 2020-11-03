@@ -20,7 +20,8 @@
 #
 
 TESTS = 001-cgget-basic_cgget_v1.py \
-	002-cgdelete-recursive_delete.py
+	002-cgdelete-recursive_delete.py \
+	003-cgget-basic_cgget_v2.py
 
 EXTRA_DIST = *.py README.md default.conf
 
