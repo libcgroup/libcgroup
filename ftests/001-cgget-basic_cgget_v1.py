@@ -32,6 +32,17 @@ CGNAME="001cgget"
 SETTING='cpu.shares'
 VALUE='512'
 
+def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
+    # This test was written for a cgroup v1 cpu controller only
+    if Cgroup.version('cpu') != Cgroup.CGROUP_V1:
+        result = consts.TEST_SKIPPED
+        cause = "This test requires the cgroup v1 cpu controller"
+
+    return result, cause
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
     Cgroup.set(config, CGNAME, SETTING, VALUE)
@@ -54,6 +65,10 @@ def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
 
 def main(config):
+    [result, cause] = prereqs(config)
+    if result != consts.TEST_PASSED:
+        return [result, cause]
+
     setup(config)
     [result, cause] = test(config)
     teardown(config)
@@ -63,5 +78,5 @@ def main(config):
 if __name__ == '__main__':
     config = ftests.parse_args()
     # this test was invoked directly.  run only it
-    config.test_num = int(os.path.basename(__file__).split('-')[0])
+    config.args.num = int(os.path.basename(__file__).split('-')[0])
     sys.exit(ftests.main(config))

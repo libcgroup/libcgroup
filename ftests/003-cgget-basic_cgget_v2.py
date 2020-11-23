@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Cgroup recursive cgdelete functionality test
+# Basic cgget functionality test
 #
 # Copyright (c) 2020 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
@@ -24,41 +24,44 @@ from cgroup import Cgroup
 import consts
 import ftests
 import os
-from process import Process
 import sys
 
-CONTROLLER = 'cpuset'
-PARENT = '002cgdelete'
-CHILD = 'childcg'
-GRANDCHILD = 'grandchildcg'
+CONTROLLER='cpuset'
+CGNAME="003cgget"
+
+SETTING='cpuset.mems'
+VALUE='0'
 
 def prereqs(config):
-    # This test should run on both cgroup v1 and v2
-    return consts.TEST_PASSED, None
+    result = consts.TEST_PASSED
+    cause = None
+
+    if Cgroup.version('cpuset') != Cgroup.CGROUP_V2:
+        result = consts.TEST_SKIPPED
+        cause = "This test requires the cgroup v2 cpuset controller"
+
+    return result, cause
 
 def setup(config):
-    Cgroup.create(config, CONTROLLER, PARENT)
-    Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD))
-    Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD, GRANDCHILD))
-
-    version = Cgroup.version(CONTROLLER)
-    if version == Cgroup.CGROUP_V1:
-        # cgdelete in a cgroup v1 controller should be able to move a process
-        # from a child cgroup to its parent.
-        #
-        # Moving a process from a child cgroup to its parent isn't (easily)
-        # supported in cgroup v2 because of cgroup v2's restriction that
-        # processes only be located in leaf cgroups
-        Process.create_process_in_cgroup(config, CONTROLLER,
-                                         os.path.join(PARENT, CHILD, GRANDCHILD))
+    Cgroup.create(config, CONTROLLER, CGNAME)
+    Cgroup.set(config, CGNAME, SETTING, VALUE)
 
 def test(config):
-    Cgroup.delete(config, CONTROLLER, PARENT, recursive=True)
+    result = consts.TEST_PASSED
+    cause = None
 
-    return consts.TEST_PASSED, None
+    value = Cgroup.get(config, controller=None, cgname=CGNAME,
+                       setting=SETTING, print_headers=False,
+                       values_only=True)
+
+    if value != VALUE:
+        result = consts.TEST_FAILED
+        cause = "cgget expected {} but received {}".format(VALUE, value)
+
+    return result, cause
 
 def teardown(config):
-    pass
+    Cgroup.delete(config, CONTROLLER, CGNAME)
 
 def main(config):
     [result, cause] = prereqs(config)

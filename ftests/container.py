@@ -126,7 +126,7 @@ class Container(object):
 
         return Run.run(cmd)
 
-    def run(self, cntnr_cmd):
+    def run(self, cntnr_cmd, shell_bool=False):
         cmd = list()
 
         if self.privileged:
@@ -148,7 +148,7 @@ class Container(object):
         else:
             raise ContainerError('Unsupported command type')
 
-        return Run.run(cmd).decode('ascii')
+        return Run.run(cmd, shell_bool=shell_bool).decode('ascii')
 
     def start(self):
         cmd = list()
