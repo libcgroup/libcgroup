@@ -18,13 +18,48 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-dist: bionic
-sudo: false
+jobs:
+  include:
+  # test cgroup v1 on Ubuntu 18.04
+  - name: "Cgroup v1 Job"
+    stage: test
+    os: linux
+    dist: bionic
+    sudo: false
+    arch: amd64
+    before_install:
+      # see https://github.com/eddyxu/cpp-coveralls
+      - 'pip install --user cpp-coveralls'
+
+  # test a mixed system on Ubuntu 20.04
+  #     cgroup v1 controllers - blkio, cpu, cpuacct, devices, io, freezer,
+  #                             hugetlb, memory, net_cls, net_prio, rdma
+  #     cgroup v2 controllers - cpuset
+  - name: "Cgroup v2 Job"
+    stage: test
+    os: linux
+    dist: focal
+    sudo: required
+    virt: vm
+    arch: amd64
+    before_install:
+      # unmount the cpuset v1 controller.  This should make it available
+      # in the v2 hierarchy after all references have been freed
+      - 'sudo umount /sys/fs/cgroup/cpuset'
+      # wait for the references to the cpuset controller to go away
+      - 'sleep 30'
+      - 'cat /sys/fs/cgroup/unified/cgroup.controllers'
+      - 'sudo su -c "echo +cpuset > /sys/fs/cgroup/unified/cgroup.subtree_control"'
+      - 'cat /sys/fs/cgroup/unified/cgroup.subtree_control'
+
+      # see https://github.com/eddyxu/cpp-coveralls
+      - 'pip install --user cpp-coveralls'
 
 git:
   submodules: false
 
 notifications:
+  webhooks: https://coveralls.io/webhook?repo_token=xarVjTxWrquIbY9thhmlIY4qez6bL4zEHUr2E
   email:
     on_success: always
     on_failure: always
@@ -39,10 +74,6 @@ addons:
       - lcov
       - lxc
       - lxd
-
-before_install:
-  # see https://github.com/eddyxu/cpp-coveralls
-  - pip install --user cpp-coveralls
 
 # perform the build and fail immediately on error
 install:
@@ -60,4 +91,5 @@ after_failure:
   - cat tests/gunit/test-suite.log
 
 after_success:
-  - coveralls --exclude tests --exclude googletest --exclude samples --gcov-options '\-lp'
+  - coverage combine
+  - COVERALLS_PARALLEL=true coveralls --exclude tests --exclude googletest --exclude samples --exclude src/lex.l --exclude parse.y --gcov-options '\-lp'
