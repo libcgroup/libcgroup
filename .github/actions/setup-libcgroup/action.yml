@@ -1,0 +1,34 @@
+#
+# Action to setup the libcgroup directory
+#
+# Copyright (c) 2020 Oracle and/or its affiliates.
+# Author: Tom Hromatka <tom.hromatka@oracle.com>
+#
+
+#
+# This library is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License as
+# published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this library; if not, see <http://www.gnu.org/licenses>.
+#
+
+name: Setup the libcgroup directory
+description: "Install dependencies, git clone, bootstrap, configure, and make libcgroup"
+runs:
+  using: "composite"
+  steps:
+  - run: sudo apt-get install libpam-dev lcov
+    shell: bash
+  - run: ./bootstrap.sh
+    shell: bash
+  - run: CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage
+    shell: bash
+  - run: make
+    shell: bash
