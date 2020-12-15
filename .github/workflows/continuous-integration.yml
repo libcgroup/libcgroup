@@ -1,0 +1,118 @@
+#
+# Continuous Integration Workflow for libcgroup
+#
+# Copyright (c) 2020 Oracle and/or its affiliates.
+# Author: Tom Hromatka <tom.hromatka@oracle.com>
+#
+
+#
+# This library is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License as
+# published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this library; if not, see <http://www.gnu.org/licenses>.
+#
+
+name: Continuous Integration
+on: ["push", "pull_request"]
+
+jobs:
+  unittests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run unit tests
+      run: |
+        pushd tests/gunit
+        make check
+        popd
+    - name: Collate code coverage results
+      run: lcov -d . -c > lcov.info
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
+        flag-name: "Unit Tests"
+        parallel: True
+
+  functionaltestsv1:
+    name: Cgroup v1 Functional Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install container dependencies
+      run: sudo apt-get install lxc lxd
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run functional tests
+      run: make check
+    - name: Collate code coverage results
+      run: lcov -d . -c > lcov.info
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
+        flag-name: "Cgroup v1 Functional Tests"
+        parallel: True
+
+  functionaltestsv2:
+    name: Cgroup v2 Functional Tests
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Mount cpuset cgroup v2 controller
+      run: |
+        # unmount the cpuset v1 controller.  This should make it available
+        # in the v2 hierarchy after all references have been freed
+        sudo umount /sys/fs/cgroup/cpuset
+        # wait for the references to the cpuset controller to go away
+        sleep 30
+        cat /sys/fs/cgroup/unified/cgroup.controllers
+        sudo su -c "echo +cpuset > /sys/fs/cgroup/unified/cgroup.subtree_control"
+        cat /sys/fs/cgroup/unified/cgroup.subtree_control
+    - name: Install container dependencies
+      run: sudo apt-get install lxc lxd
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run functional tests
+      run: make check
+    - name: Collate code coverage results
+      run: lcov -d . -c > lcov.info
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
+        flag-name: "Cgroup v2 Functional Tests"
+        parallel: True
+
+  finalize:
+    name: Finalize the test run
+    needs: [unittests, functionaltestsv1, functionaltestsv2]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Finalize code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: True
