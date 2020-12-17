@@ -245,3 +245,98 @@ class Cgroup(object):
             config.container.run(cmd)
         else:
             Run.run(cmd)
+
+    @staticmethod
+    # given a stdout of cgsnapshot-like data, create a dictionary of cgroup objects
+    def snapshot_to_dict(cgsnapshot_stdout):
+        cgdict = dict()
+
+        class parsemode(Enum):
+            UNKNOWN = 0
+            GROUP = 1
+            CONTROLLER = 2
+            SETTING = 3
+
+        mode = parsemode.UNKNOWN
+
+        for line in cgsnapshot_stdout.splitlines():
+            line = line.strip()
+
+            if mode == parsemode.UNKNOWN:
+                if line.startswith("#"):
+                    continue
+
+                elif line.startswith("group") and line.endswith("{"):
+                    cg_name = line.split()[1]
+                    if cg_name in cgdict:
+                        # We already have a cgroup with this name.  This block
+                        # of text contains the next controller for this cgroup
+                        cg = cgdict[cg_name]
+                    else:
+                        cg = Cgroup(cg_name)
+
+                    mode = parsemode.GROUP
+
+            elif mode == parsemode.GROUP:
+                if line.endswith("{"):
+                    ctrl_name = line.split()[0]
+                    cg.controllers[ctrl_name] = Controller(ctrl_name)
+
+                    mode = parsemode.CONTROLLER
+                elif line.endswith("}"):
+                    # we've found the end of this group
+                    cgdict[cg_name] = cg
+
+                    mode = parsemode.UNKNOWN
+
+            elif mode == parsemode.CONTROLLER:
+                if line.endswith("\";"):
+                    # this is a setting on a single line
+                    setting = line.split("=")[0]
+                    value = line.split("=")[1]
+
+                    cg.controllers[ctrl_name].settings[setting] = value
+
+                elif line.endswith("}"):
+                    # we've found the end of this controller
+                    mode = parsemode.GROUP
+
+                else:
+                    # this is a multi-line setting
+                    setting = line.split("=")[0]
+                    value = "{}\n".format(line.split("=")[1])
+                    mode = parsemode.SETTING
+
+            elif mode == parsemode.SETTING:
+                if line.endswith("\";"):
+                    # this is the last line of the multi-line setting
+                    value += line
+
+                    cg.controllers[ctrl_name].settings[setting] = value
+                    mode = parsemode.CONTROLLER
+
+                else:
+                    value += "{}\n".format(line)
+
+        return cgdict
+
+    @staticmethod
+    def snapshot(config, controller=None, in_container=True):
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path(in_container, 'cgsnapshot'))
+        if controller is not None:
+            cmd.append(controller)
+
+        if in_container:
+            # if we're running in a container, it's unlikely that libcgroup
+            # was installed and thus /etc/cgsnapshot_blacklist.conf likely
+            # doesn't exist.  Let's make it
+            config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+
+        if in_container:
+            res = config.container.run(cmd)
+        else:
+            res = Run.run(cmd)
+
+        # convert the cgsnapshot stdout to a dict of cgroup objects
+        return Cgroup.snapshot_to_dict(res)
