@@ -20,7 +20,7 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup
+from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
 import os
@@ -36,8 +36,7 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    # This test was written for a cgroup v1 cpu controller only
-    if Cgroup.version('cpu') != Cgroup.CGROUP_V1:
+    if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
         cause = "This test requires the cgroup v1 cpu controller"
 
