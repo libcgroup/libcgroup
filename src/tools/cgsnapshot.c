@@ -205,8 +205,8 @@ int is_on_list(char *name, struct black_list_type *list)
 /* Display permissions record for the given group
  * defined by path
  */
-static int display_permissions(const char *path,
-		const char *program_name)
+static int display_permissions(const char *path, const char * const cg_name,
+			       const char * const ctrl_name)
 {
 	int ret;
 	struct stat sba;
@@ -226,10 +226,14 @@ static int display_permissions(const char *path,
 
 	/* tasks permissions record */
 	/* get tasks file statistic */
-	strncpy(tasks_path, path, FILENAME_MAX);
-	tasks_path[FILENAME_MAX-1] = '\0';
-	strncat(tasks_path, "/tasks", FILENAME_MAX - strlen(tasks_path) - 1);
-	tasks_path[FILENAME_MAX-1] = '\0';
+	ret = cgroup_build_tasks_procs_path(tasks_path, sizeof(tasks_path),
+					    cg_name, ctrl_name);
+	if (ret) {
+		fprintf(stderr, "ERROR: can't build tasks/procs path: %d\n",
+			ret);
+		return -1;
+	}
+
 	ret = stat(tasks_path, &sbt);
 	if (ret) {
 		fprintf(stderr, "ERROR: can't read statistics about %s\n",
@@ -319,13 +323,13 @@ static int display_cgroup_data(struct cgroup *group,
 	/* print the  group definition header */
 	fprintf(of, "group %s {\n", group->name);
 
-	/* display the permission tags */
-	ret = display_permissions(group_path, program_name);
-	if (ret)
-		return ret;
-
 	/* for all wanted controllers display controllers tag */
 	while (controller[i][0] != '\0') {
+		/* display the permission tags */
+		ret = display_permissions(group_path, group->name,
+					  controller[i]);
+		if (ret)
+			return ret;
 
 		group_controller = cgroup_get_controller(group, controller[i]);
 		if (group_controller == NULL) {
