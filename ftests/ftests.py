@@ -304,10 +304,10 @@ def main(config):
 
     if failed_cnt > 0:
         return failed_cnt
-    if skipped_cnt > 0:
-        return AUTOMAKE_SKIPPED
     if passed_cnt > 0:
         return AUTOMAKE_PASSED
+    if skipped_cnt > 0:
+        return AUTOMAKE_SKIPPED
 
     return AUTOMAKE_HARD_ERROR
 
