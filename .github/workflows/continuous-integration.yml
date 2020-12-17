@@ -65,7 +65,7 @@ jobs:
     - name: Run functional tests
       run: make check
     - name: Display test logs
-      run: cat tests/ftests/test-suite.log
+      run: cat tests/ftests/ftests.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
@@ -107,7 +107,7 @@ jobs:
     - name: Run functional tests
       run: make check
     - name: Display test logs
-      run: cat tests/ftests/test-suite.log
+      run: cat tests/ftests/ftests.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
