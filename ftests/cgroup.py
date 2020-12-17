@@ -20,9 +20,11 @@
 #
 
 import consts
+from controller import Controller
 from enum import Enum
 import os
 from run import Run
+import utils
 
 class CgroupVersion(Enum):
     CGROUP_UNK = 0
@@ -50,6 +52,32 @@ class CgroupVersion(Enum):
         return CgroupVersion.CGROUP_UNK
 
 class Cgroup(object):
+    # This class is analogous to libcgroup's struct cgroup
+    def __init__(self, name):
+        self.name = name
+        # self.controllers maps to
+        # struct cgroup_controller *controller[CG_CONTROLLER_MAX];
+        self.controllers = dict()
+
+    def __str__(self):
+        out_str = "Cgroup {}\n".format(self.name)
+        for ctrl_key in self.controllers:
+            out_str += utils.indent(str(self.controllers[ctrl_key]), 4)
+
+        return out_str
+
+    def __eq__(self, other):
+        if not isinstance(other, Cgroup):
+            return False
+
+        if not self.name == other.name:
+            return False
+
+        if self.controllers != other.controllers:
+            return False
+
+        return True
+
     @staticmethod
     def build_cmd_path(in_container, cmd):
         if in_container:
