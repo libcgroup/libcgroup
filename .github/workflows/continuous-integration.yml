@@ -38,6 +38,8 @@ jobs:
         pushd tests/gunit
         make check
         popd
+    - name: Display test logs
+      run: cat tests/gunit/test-suite.log
     - name: Collate code coverage results
       run: lcov -d . -c > lcov.info
     - name: Upload code coverage results
@@ -62,6 +64,14 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: make check
+    - name: Display test logs
+      run: cat tests/ftests/test-suite.log
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v1 test logs
+        path: tests/ftests/*.log
     - name: Collate code coverage results
       run: lcov -d . -c > lcov.info
     - name: Upload code coverage results
@@ -96,6 +106,14 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: make check
+    - name: Display test logs
+      run: cat tests/ftests/test-suite.log
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v2 test logs
+        path: tests/ftests/*.log
     - name: Collate code coverage results
       run: lcov -d . -c > lcov.info
     - name: Upload code coverage results
