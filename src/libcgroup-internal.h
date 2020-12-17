@@ -307,6 +307,20 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
  */
 int cgroup_get_controller_version(const char * const controller,
 		enum cg_version_t * const version);
+
+/**
+ * Build the path to the tasks or cgroup.procs file
+ *
+ * @param path Output variable that will contain the path.  Must be
+              of size FILENAME_MAX or larger
+ * @param path_sz Size of the path string
+ * @param cg_name Cgroup name
+ * @param ctrl_name Controller name
+ */
+int cgroup_build_tasks_procs_path(char * const path,
+				  size_t path_sz, const char * const cg_name,
+				  const char * const ctrl_name);
+
 /**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
@@ -342,10 +356,6 @@ int cgroup_chown_chmod_tasks(const char * const cg_path,
 
 int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
 			     bool enable);
-
-int cgroup_build_tasks_procs_path(char * const path,
-				  size_t path_sz, const char * const cg_name,
-				  const char * const ctrl_name);
 
 int cgroupv2_get_subtree_control(const char *path,
 				 const char *ctrl_name,
