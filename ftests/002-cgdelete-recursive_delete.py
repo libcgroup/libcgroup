@@ -20,7 +20,7 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup
+from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
 import os
@@ -41,8 +41,8 @@ def setup(config):
     Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD))
     Cgroup.create(config, CONTROLLER, os.path.join(PARENT, CHILD, GRANDCHILD))
 
-    version = Cgroup.version(CONTROLLER)
-    if version == Cgroup.CGROUP_V1:
+    version = CgroupVersion.get_version(CONTROLLER)
+    if version == CgroupVersion.CGROUP_V1:
         # cgdelete in a cgroup v1 controller should be able to move a process
         # from a child cgroup to its parent.
         #

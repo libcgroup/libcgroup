@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #
-# Basic cgget functionality test
+# Basic cgsnapshot functionality test
 #
-# Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2020 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -26,37 +26,39 @@ import ftests
 import os
 import sys
 
-CONTROLLER='cpu'
-CGNAME="001cgget"
-
-SETTING='cpu.shares'
-VALUE='512'
+CONTROLLER='cpuset'
+CGNAME="005cgsnapshot"
+CGSNAPSHOT = """group 005cgsnapshot {
+                    cpuset {
+                            cpuset.cpus.partition="member";
+                            cpuset.mems="";
+                            cpuset.cpus="";
+                    }
+            }"""
 
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
+    if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 cpu controller"
+        cause = "This test requires the cgroup v2 cpuset controller"
 
     return result, cause
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
-    Cgroup.set(config, CGNAME, SETTING, VALUE)
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    value = Cgroup.get(config, controller=None, cgname=CGNAME,
-                       setting=SETTING, print_headers=False,
-                       values_only=True)
+    expected = Cgroup.snapshot_to_dict(CGSNAPSHOT)
+    actual = Cgroup.snapshot(config, controller=CONTROLLER)
 
-    if value != VALUE:
+    if expected[CGNAME] != actual[CGNAME]:
         result = consts.TEST_FAILED
-        cause = "cgget expected {} but received {}".format(VALUE, value)
+        cause = "Expected cgsnapshot result did not equal actual cgsnapshot"
 
     return result, cause
 

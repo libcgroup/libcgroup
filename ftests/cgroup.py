@@ -20,14 +20,63 @@
 #
 
 import consts
+from controller import Controller
 from enum import Enum
 import os
 from run import Run
+import utils
 
-class Cgroup(Enum):
+class CgroupVersion(Enum):
     CGROUP_UNK = 0
     CGROUP_V1 = 1
     CGROUP_V2 = 2
+
+    # given a controller name, get the cgroup version of the controller
+    @staticmethod
+    def get_version(controller):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup':
+                    for option in line.split()[3].split(','):
+                        if option == controller:
+                            return CgroupVersion.CGROUP_V1
+                elif line.split()[0] == 'cgroup2':
+                    with open(os.path.join(mnt_path, 'cgroup.controllers'), 'r') as ctrlf:
+                        controllers = ctrlf.readline()
+                        for ctrl in controllers.split():
+                            if ctrl == controller:
+                                return CgroupVersion.CGROUP_V2
+
+        return CgroupVersion.CGROUP_UNK
+
+class Cgroup(object):
+    # This class is analogous to libcgroup's struct cgroup
+    def __init__(self, name):
+        self.name = name
+        # self.controllers maps to
+        # struct cgroup_controller *controller[CG_CONTROLLER_MAX];
+        self.controllers = dict()
+
+    def __str__(self):
+        out_str = "Cgroup {}\n".format(self.name)
+        for ctrl_key in self.controllers:
+            out_str += utils.indent(str(self.controllers[ctrl_key]), 4)
+
+        return out_str
+
+    def __eq__(self, other):
+        if not isinstance(other, Cgroup):
+            return False
+
+        if not self.name == other.name:
+            return False
+
+        if self.controllers != other.controllers:
+            return False
+
+        return True
 
     @staticmethod
     def build_cmd_path(in_container, cmd):
@@ -177,25 +226,6 @@ class Cgroup(Enum):
         return ret
 
     @staticmethod
-    def version(controller):
-        with open('/proc/mounts', 'r') as mntf:
-            for line in mntf.readlines():
-                mnt_path = line.split()[1]
-
-                if line.split()[0] == 'cgroup':
-                    for option in line.split()[3].split(','):
-                        if option == controller:
-                            return Cgroup.CGROUP_V1
-                elif line.split()[0] == 'cgroup2':
-                    with open(os.path.join(mnt_path, 'cgroup.controllers'), 'r') as ctrlf:
-                        controllers = ctrlf.readline()
-                        for ctrl in controllers.split():
-                            if ctrl == controller:
-                                return Cgroup.CGROUP_V2
-
-        return Cgroup.CGROUP_UNK
-
-    @staticmethod
     def classify(config, controller, cgname, pid_list, sticky=False,
                  cancel_sticky=False, in_container=True):
         cmd = list()
@@ -215,3 +245,98 @@ class Cgroup(Enum):
             config.container.run(cmd)
         else:
             Run.run(cmd)
+
+    @staticmethod
+    # given a stdout of cgsnapshot-like data, create a dictionary of cgroup objects
+    def snapshot_to_dict(cgsnapshot_stdout):
+        cgdict = dict()
+
+        class parsemode(Enum):
+            UNKNOWN = 0
+            GROUP = 1
+            CONTROLLER = 2
+            SETTING = 3
+
+        mode = parsemode.UNKNOWN
+
+        for line in cgsnapshot_stdout.splitlines():
+            line = line.strip()
+
+            if mode == parsemode.UNKNOWN:
+                if line.startswith("#"):
+                    continue
+
+                elif line.startswith("group") and line.endswith("{"):
+                    cg_name = line.split()[1]
+                    if cg_name in cgdict:
+                        # We already have a cgroup with this name.  This block
+                        # of text contains the next controller for this cgroup
+                        cg = cgdict[cg_name]
+                    else:
+                        cg = Cgroup(cg_name)
+
+                    mode = parsemode.GROUP
+
+            elif mode == parsemode.GROUP:
+                if line.endswith("{"):
+                    ctrl_name = line.split()[0]
+                    cg.controllers[ctrl_name] = Controller(ctrl_name)
+
+                    mode = parsemode.CONTROLLER
+                elif line.endswith("}"):
+                    # we've found the end of this group
+                    cgdict[cg_name] = cg
+
+                    mode = parsemode.UNKNOWN
+
+            elif mode == parsemode.CONTROLLER:
+                if line.endswith("\";"):
+                    # this is a setting on a single line
+                    setting = line.split("=")[0]
+                    value = line.split("=")[1]
+
+                    cg.controllers[ctrl_name].settings[setting] = value
+
+                elif line.endswith("}"):
+                    # we've found the end of this controller
+                    mode = parsemode.GROUP
+
+                else:
+                    # this is a multi-line setting
+                    setting = line.split("=")[0]
+                    value = "{}\n".format(line.split("=")[1])
+                    mode = parsemode.SETTING
+
+            elif mode == parsemode.SETTING:
+                if line.endswith("\";"):
+                    # this is the last line of the multi-line setting
+                    value += line
+
+                    cg.controllers[ctrl_name].settings[setting] = value
+                    mode = parsemode.CONTROLLER
+
+                else:
+                    value += "{}\n".format(line)
+
+        return cgdict
+
+    @staticmethod
+    def snapshot(config, controller=None, in_container=True):
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path(in_container, 'cgsnapshot'))
+        if controller is not None:
+            cmd.append(controller)
+
+        if in_container:
+            # if we're running in a container, it's unlikely that libcgroup
+            # was installed and thus /etc/cgsnapshot_blacklist.conf likely
+            # doesn't exist.  Let's make it
+            config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+
+        if in_container:
+            res = config.container.run(cmd)
+        else:
+            res = Run.run(cmd)
+
+        # convert the cgsnapshot stdout to a dict of cgroup objects
+        return Cgroup.snapshot_to_dict(res)
