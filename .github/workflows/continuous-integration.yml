@@ -39,6 +39,7 @@ jobs:
         make check
         popd
     - name: Display test logs
+      if: ${{ always() }}
       run: cat tests/gunit/test-suite.log
     - name: Collate code coverage results
       run: lcov -d . -c > lcov.info
@@ -65,6 +66,7 @@ jobs:
     - name: Run functional tests
       run: make check
     - name: Display test logs
+      if: ${{ always() }}
       run: cat tests/ftests/ftests.sh.log
     - name: Archive test logs
       if: ${{ always() }}
@@ -107,6 +109,7 @@ jobs:
     - name: Run functional tests
       run: make check
     - name: Display test logs
+      if: ${{ always() }}
       run: cat tests/ftests/ftests.sh.log
     - name: Archive test logs
       if: ${{ always() }}
