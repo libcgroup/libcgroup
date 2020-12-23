@@ -1501,18 +1501,9 @@ char *cg_build_path(const char *name, char *path, const char *type)
 	return path;
 }
 
-/**
- * Build the path to the tasks or cgroup.procs file
- *
- * @param path Output variable that will contain the path.  Must be
-              of size FILENAME_MAX or larger
- * @param path_sz Size of the path string
- * @param cg_name Cgroup name
- * @param ctrl_name Controller name
- */
-STATIC int cgroup_build_tasks_procs_path(char * const path,
-				size_t path_sz, const char * const cg_name,
-				const char * const ctrl_name)
+int cgroup_build_tasks_procs_path(char * const path,
+				  size_t path_sz, const char * const cg_name,
+				  const char * const ctrl_name)
 {
 	enum cg_version_t version;
 	int err = ECGOTHER;

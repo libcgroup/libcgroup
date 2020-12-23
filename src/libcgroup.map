@@ -129,3 +129,7 @@ CGROUP_0.41 {
 CGROUP_0.42 {
 	cgroup_add_all_controllers;
 } CGROUP_0.41;
+
+CGROUP_0.43 {
+	cgroup_build_tasks_procs_path;
+} CGROUP_0.42;
