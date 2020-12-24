@@ -215,9 +215,9 @@ def run_tests(config):
                         if ret == consts.TEST_PASSED:
                             passed_tests.append([filename, run_time])
                         elif ret == consts.TEST_FAILED:
-                            failed_tests.append([filename, run_time])
+                            failed_tests.append([filename, run_time, failure_cause])
                         elif ret == consts.TEST_SKIPPED:
-                            skipped_tests.append([filename, run_time])
+                            skipped_tests.append([filename, run_time, failure_cause])
                         else:
                             raise ValueException('Unexpected ret: {}'.format(ret))
 
@@ -240,7 +240,7 @@ def run_tests(config):
     print('\t{}{}'.format('{0: <35}'.format("Failed:"), '{0: >15}'.format(test_str)))
 
     for test in failed_tests:
-        print("\t\tTest:\t\t\t\t{} - {}".format(test[0], str(failure_cause)))
+        print("\t\tTest:\t\t\t\t{} - {}".format(test[0], str(test[2])))
     print("-----------------------------------------------------------------")
 
     global setup_time
