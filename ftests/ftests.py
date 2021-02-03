@@ -141,6 +141,7 @@ def update_host_subgid():
 
 def setup(config, do_teardown=True, record_time=False):
     global setup_time
+
     start_time = time.time()
     if do_teardown:
         # belt and suspenders here.  In case a previous run wasn't properly
@@ -289,7 +290,7 @@ def teardown(config, record_time=False):
     global teardown_time
     start_time = time.time()
 
-    Process.join_children()
+    config.process.join_children(config)
 
     if config.args.container:
         try:

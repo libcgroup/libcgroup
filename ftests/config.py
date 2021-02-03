@@ -22,6 +22,8 @@
 import consts
 from container import Container
 import os
+from process import Process
+import utils
 
 class Config(object):
     def __init__(self, args, container=None):
@@ -36,6 +38,8 @@ class Config(object):
                     stop_timeout=args.timeout, arch=None,
                     distro=args.distro, release=args.release)
 
+        self.process = Process()
+
         self.ftest_dir = os.path.dirname(os.path.abspath(__file__))
         self.libcg_dir = os.path.dirname(self.ftest_dir)
 
@@ -44,12 +48,12 @@ class Config(object):
         self.verbose = False
 
     def __str__(self):
-        out_str = "Configuration"
+        out_str = "Configuration\n"
         if self.args.container:
-            out_str += "\n\tcontainer = {}".format(self.container)
+            out_str += utils.indent(str(self.container), 4)
+        out_str += utils.indent(str(self.process), 4)
 
         return out_str
-
 
 class ConfigError(Exception):
     def __init__(self, message):

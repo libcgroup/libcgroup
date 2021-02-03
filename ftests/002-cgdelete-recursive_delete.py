@@ -2,7 +2,7 @@
 #
 # Cgroup recursive cgdelete functionality test
 #
-# Copyright (c) 2020 Oracle and/or its affiliates.
+# Copyright (c) 2020-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -49,7 +49,7 @@ def setup(config):
         # Moving a process from a child cgroup to its parent isn't (easily)
         # supported in cgroup v2 because of cgroup v2's restriction that
         # processes only be located in leaf cgroups
-        Process.create_process_in_cgroup(config, CONTROLLER,
+        config.process.create_process_in_cgroup(config, CONTROLLER,
                                          os.path.join(PARENT, CHILD, GRANDCHILD))
 
 def test(config):
