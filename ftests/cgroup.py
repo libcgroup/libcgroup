@@ -90,6 +90,9 @@ class Cgroup(object):
             controller_list = [controller_list]
 
         cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgcreate'))
 
         controllers_and_path = '{}:{}'.format(
@@ -109,6 +112,9 @@ class Cgroup(object):
             controller_list = [controller_list]
 
         cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgdelete'))
 
         if recursive:
@@ -128,6 +134,9 @@ class Cgroup(object):
     @staticmethod
     def set(config, cgname, setting, value):
         cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgset'))
 
         if isinstance(setting, str) and isinstance(value, str):
@@ -226,6 +235,9 @@ class Cgroup(object):
     def classify(config, controller, cgname, pid_list, sticky=False,
                  cancel_sticky=False):
         cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgclassify'))
         cmd.append('-g')
         cmd.append('{}:{}'.format(controller, cgname))
