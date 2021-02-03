@@ -2,7 +2,7 @@
 #
 # Basic cgsnapshot functionality test
 #
-# Copyright (c) 2020 Oracle and/or its affiliates.
+# Copyright (c) 2020-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -61,6 +61,12 @@ def prereqs(config):
     if CgroupVersion.get_version('memory') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
         cause = "This test requires the cgroup v1 memory controller"
+        return result, cause
+
+    if not config.args.container:
+        result = consts.TEST_SKIPPED
+        cause = "This test must be run within a container"
+        return result, cause
 
     return result, cause
 
