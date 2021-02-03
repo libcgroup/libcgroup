@@ -227,7 +227,7 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd)
+            ret = Run.run(cmd).decode('ascii')
 
         return ret
 
@@ -265,6 +265,9 @@ class Cgroup(object):
             GROUP = 1
             CONTROLLER = 2
             SETTING = 3
+            PERM = 4
+            ADMIN = 5
+            TASK = 6
 
         mode = parsemode.UNKNOWN
 
@@ -287,7 +290,9 @@ class Cgroup(object):
                     mode = parsemode.GROUP
 
             elif mode == parsemode.GROUP:
-                if line.endswith("{"):
+                if line.startswith("perm {"):
+                    mode = parsemode.PERM
+                elif line.endswith("{"):
                     ctrl_name = line.split()[0]
                     cg.controllers[ctrl_name] = Controller(ctrl_name)
 
@@ -327,6 +332,19 @@ class Cgroup(object):
                 else:
                     value += "{}\n".format(line)
 
+            elif mode == parsemode.PERM:
+                if line.startswith("admin {"):
+                    mode = parsemode.ADMIN
+                elif line.startswith("task {"):
+                    mode = parsemode.TASK
+                elif line.endswith("}"):
+                    mode = parsemode.GROUP
+
+            elif mode == parsemode.ADMIN or mode == parsemode.TASK:
+                # todo - handle these modes
+                if line.endswith("}"):
+                    mode = parsemode.PERM
+
         return cgdict
 
     @staticmethod
@@ -345,7 +363,7 @@ class Cgroup(object):
         if config.args.container:
             res = config.container.run(cmd)
         else:
-            res = Run.run(cmd)
+            res = Run.run(cmd).decode('ascii')
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
