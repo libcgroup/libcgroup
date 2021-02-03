@@ -336,11 +336,11 @@ class Cgroup(object):
         if controller is not None:
             cmd.append(controller)
 
+        # ensure the deny list file exists
         if config.args.container:
-            # if we're running in a container, it's unlikely that libcgroup
-            # was installed and thus /etc/cgsnapshot_blacklist.conf likely
-            # doesn't exist.  Let's make it
             config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+        else:
+            Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
 
         if config.args.container:
             res = config.container.run(cmd)
