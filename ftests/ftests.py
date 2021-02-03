@@ -2,7 +2,7 @@
 #
 # Main entry point for the libcgroup functional tests
 #
-# Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2019-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -68,6 +68,18 @@ def parse_args():
     parser.add_argument('-s', '--suite',
                         help='Test suite to run, e.g. cpuset', required=False,
                         default=consts.TESTS_RUN_ALL_SUITES, type=str)
+
+    container_parser = parser.add_mutually_exclusive_group(required=False)
+    container_parser.add_argument('--container', action='store_true',
+                        help='Run the tests in a container. '
+                        'Note that some tests cannot be run in a container.',
+                        dest='container')
+    container_parser.add_argument('--no-container', action='store_false',
+                        help='Do not run the tests in a container. '
+                        'Note that some tests are destructive and will modify your cgroup hierarchy.',
+                        dest='container')
+    parser.set_defaults(container=True)
+
     parser.add_argument('-v', '--verbose',
                         help='Print all information about this test run',
                         default=True, required=False, action="store_false")
@@ -139,23 +151,25 @@ def setup(config, do_teardown=True, record_time=False):
             # log but ignore all exceptions
             Log.log_debug(e)
 
-    # this command initializes the lxd storage, networking, etc.
-    Run.run(['sudo', 'lxd', 'init', '--auto'])
-    update_host_subuid()
-    update_host_subgid()
+    if config.args.container:
+        # this command initializes the lxd storage, networking, etc.
+        Run.run(['sudo', 'lxd', 'init', '--auto'])
+        update_host_subuid()
+        update_host_subgid()
 
-    config.container.create()
-    config.container.config()
-    config.container.start()
+        config.container.create()
+        config.container.config()
+        config.container.start()
 
-    # LXC on Ubuntu 20.04 put sed in a different spot.  Add a symlink
-    config.container.run(['ln', '-s', '/bin/sed', '/usr/bin/sed'])
+        # LXC on Ubuntu 20.04 put sed in a different spot.  Add a symlink
+        config.container.run(['ln', '-s', '/bin/sed', '/usr/bin/sed'])
 
-    # add the libcgroup library to the container's ld
-    echo_cmd = ['bash', '-c', 'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'.format(
-               os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
-    config.container.run(echo_cmd)
-    config.container.run('ldconfig')
+        # add the libcgroup library to the container's ld
+        echo_cmd = ['bash', '-c', 'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'.format(
+                   os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
+        config.container.run(echo_cmd)
+        config.container.run('ldconfig')
+
     if record_time:
         setup_time = time.time() - start_time
 
@@ -277,16 +291,17 @@ def teardown(config, record_time=False):
 
     Process.join_children()
 
-    try:
-        config.container.stop()
-    except Exception as e:
-        # log but ignore all exceptions
-        Log.log_debug(e)
-    try:
-        config.container.delete()
-    except Exception as e:
-        # log but ignore all exceptions
-        Log.log_debug(e)
+    if config.args.container:
+        try:
+            config.container.stop()
+        except Exception as e:
+            # log but ignore all exceptions
+            Log.log_debug(e)
+        try:
+            config.container.delete()
+        except Exception as e:
+            # log but ignore all exceptions
+            Log.log_debug(e)
 
     if record_time:
         teardown_time = time.time() - start_time

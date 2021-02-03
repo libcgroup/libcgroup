@@ -1,7 +1,7 @@
 #
 # Cgroup class for the libcgroup functional tests
 #
-# Copyright (c) 2020 Oracle and/or its affiliates.
+# Copyright (c) 2020-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -28,16 +28,16 @@ children = list()
 
 class Process(object):
     @staticmethod
-    def __infinite_loop(config, sleep_time=1, in_container=True):
+    def __infinite_loop(config, sleep_time=1):
         cmd = ['nohup', 'perl', '-e', '\'while(1){{sleep({})}};\''.format(sleep_time), '&']
 
-        if in_container:
+        if config.args.container:
             config.container.run(cmd, shell_bool=True)
         else:
             Run.run(cmd, shell_bool=True)
 
     @staticmethod
-    def create_process(config, in_container=True):
+    def create_process(config):
         # To allow for multiple processes to be created, each new process
         # sleeps for a different amount of time.  This lets us uniquely find
         # each process later in this function
@@ -53,7 +53,7 @@ class Process(object):
 
         # get the PID of the newly spawned infinite loop
         cmd = 'ps x | grep perl | grep "sleep({})" | awk \'{{print $1}}\''.format(sleep_time)
-        if in_container:
+        if config.args.container:
             pid = config.container.run(cmd, shell_bool=True)
         else:
             pid = Run.run(cmd, shell_bool=True)
@@ -66,10 +66,9 @@ class Process(object):
 
     # Create a simple process in the requested cgroup
     @staticmethod
-    def create_process_in_cgroup(config, controller, cgname, in_container=True):
-        child_pid = Process.create_process(config, in_container=in_container)
-        Cgroup.classify(config, controller, cgname, child_pid,
-                        in_container=in_container)
+    def create_process_in_cgroup(config, controller, cgname):
+        child_pid = Process.create_process(config)
+        Cgroup.classify(config, controller, cgname, child_pid)
 
     # The caller will block until all children are stopped.
     @staticmethod
