@@ -1460,8 +1460,8 @@ static char *cg_concat_path(const char *pref, const char *suf, char *path)
 
 /* Call with cg_mount_table_lock taken */
 /* path value have to have size at least FILENAME_MAX */
-static char *cg_build_path_locked(const char *name, char *path,
-						const char *type)
+char *cg_build_path_locked(const char *name, char *path,
+			   const char *type)
 {
 	int i;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {

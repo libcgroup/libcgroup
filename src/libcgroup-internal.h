@@ -322,6 +322,20 @@ int cgroup_build_tasks_procs_path(char * const path,
 				  const char * const ctrl_name);
 
 /**
+ * Build the full path to the controller/setting
+ *
+ * @param setting Cgroup virtual filename/setting (optional)
+ * @param path Output variable to contain the concatenated path
+ * @param controller Cgroup controller name
+ *
+ * @return If successful, a valid pointer to the concatenated path
+ *
+ * @note The cg_mount_table_lock must be held prior to calling this function
+ */
+char *cg_build_path_locked(const char *setting, char *path,
+			   const char *controller);
+
+/**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
  * remaining static in a normal libcgroup library build.
