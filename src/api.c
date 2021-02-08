@@ -2965,8 +2965,8 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 /*
  * Call this function with required locks taken.
  */
-static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
-			struct cgroup_controller *cgc, int cg_index)
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
+		    struct cgroup_controller *cgc, int cg_index)
 {
 	char *ctrl_name = NULL;
 	char *ctrl_file = NULL;

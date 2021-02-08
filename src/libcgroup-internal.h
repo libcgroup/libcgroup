@@ -19,6 +19,7 @@
 __BEGIN_DECLS
 
 #include "config.h"
+#include <dirent.h>
 #include <fts.h>
 #include <libcgroup.h>
 #include <limits.h>
@@ -334,6 +335,20 @@ int cgroup_build_tasks_procs_path(char * const path,
  */
 char *cg_build_path_locked(const char *setting, char *path,
 			   const char *controller);
+
+/**
+ * Given a cgroup controller and a setting within it, populate the setting's
+ * value
+ *
+ * @param ctrl_dir dirent representation of the setting, e.g. memory.stat
+ * @param cgroup current cgroup
+ * @param cgc current cgroup controller
+ * @param cg_index Index into the cg_mount_table of the cgroup
+ *
+ * @note The cg_mount_table_lock must be held prior to calling this function
+ */
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
+		    struct cgroup_controller *cgc, int cg_index);
 
 /**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
