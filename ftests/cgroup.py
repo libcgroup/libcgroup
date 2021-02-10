@@ -185,7 +185,7 @@ class Cgroup(object):
     #         cgget -g memory:tomcgroup/tomcgroup
     def get(config, controller=None, cgname=None, setting=None,
             print_headers=True, values_only=False,
-            all_controllers=False):
+            all_controllers=False, cghelp=False):
         cmd = list()
         cmd.append(Cgroup.build_cmd_path('cgget'))
 
@@ -232,6 +232,9 @@ class Cgroup(object):
             elif isinstance(cgname, list):
                 for cg in cgname:
                     cmd.append(cg)
+
+        if cghelp:
+            cmd.append('-h')
 
         if config.args.container:
             ret = config.container.run(cmd)
