@@ -41,8 +41,8 @@ class Run(object):
         out, err = subproc.communicate()
         ret = subproc.returncode
 
-        out = out.strip()
-        err = err.strip()
+        out = out.strip().decode('ascii')
+        err = err.strip().decode('ascii')
 
         if shell_bool:
             Log.log_debug(

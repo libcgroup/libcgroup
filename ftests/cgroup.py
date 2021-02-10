@@ -236,7 +236,7 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd).decode('ascii')
+            ret = Run.run(cmd)
 
         return ret
 
@@ -372,7 +372,7 @@ class Cgroup(object):
         if config.args.container:
             res = config.container.run(cmd)
         else:
-            res = Run.run(cmd).decode('ascii')
+            res = Run.run(cmd)
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)

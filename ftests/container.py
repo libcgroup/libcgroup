@@ -148,7 +148,7 @@ class Container(object):
         else:
             raise ContainerError('Unsupported command type')
 
-        return Run.run(cmd, shell_bool=shell_bool).decode('ascii')
+        return Run.run(cmd, shell_bool=shell_bool)
 
     def start(self):
         cmd = list()
