@@ -53,7 +53,7 @@ class Run(object):
                 "run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}\n\tstderr = {}".format(
                 ' '.join(command), ret, out, err))
 
-        if ret != 0:
+        if ret != 0 or len(err) > 0:
             raise RunError("Command '{}' failed".format(''.join(command)),
                            command, ret, out, err)
 

@@ -24,7 +24,7 @@ from controller import Controller
 from enum import Enum
 import multiprocessing as mp
 import os
-from run import Run
+from run import Run, RunError
 import time
 import utils
 
@@ -236,7 +236,13 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd)
+            try:
+                ret = Run.run(cmd)
+            except RunError as re:
+                if "profiling" in re.stderr:
+                    ret = re.stdout
+                else:
+                    raise re
 
         return ret
 
@@ -365,14 +371,23 @@ class Cgroup(object):
 
         # ensure the deny list file exists
         if config.args.container:
-            config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+            try:
+                config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+            except RunError as re:
+                if re.ret == 0 and "unable to resolve host" in re.stderr:
+                    pass
         else:
             Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
 
-        if config.args.container:
-            res = config.container.run(cmd)
-        else:
-            res = Run.run(cmd)
+        try:
+            if config.args.container:
+                res = config.container.run(cmd)
+            else:
+                res = Run.run(cmd)
+        except RunError as re:
+            if re.ret == 0 and \
+               "neither blacklisted nor whitelisted" in re.stderr:
+                res = re.stdout
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
