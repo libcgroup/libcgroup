@@ -135,4 +135,6 @@ CGROUP_0.43 {
 	cg_build_path_locked;
 	cgroup_fill_cgc;
 	cgroup_test_subsys_mounted;
+	cg_mount_table;
+	cg_mount_table_lock;
 } CGROUP_0.42;

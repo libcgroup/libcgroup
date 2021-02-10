@@ -2180,9 +2180,35 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 		dst_val = dst->values[i];
 		strncpy(dst_val->value, src_val->value, CG_CONTROL_VALUE_MAX);
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+
+		if (src_val->multiline_value) {
+			dst_val->multiline_value =
+				strdup(src_val->multiline_value);
+			if (!dst_val->multiline_value) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				goto err;
+			}
+		} else {
+			dst_val->multiline_value = NULL;
+		}
+
 		dst_val->dirty = src_val->dirty;
 	}
+
+	return ret;
+
 err:
+	dst->index = 0;
+	for (i = 0; i < src->index; i++) {
+		if (dst->values[i]) {
+			if (dst->values[i]->multiline_value)
+				free(dst->values[i]->multiline_value);
+
+			free(dst->values[i]);
+		}
+	}
+
 	return ret;
 }
 

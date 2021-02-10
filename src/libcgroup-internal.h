@@ -86,6 +86,9 @@ __BEGIN_DECLS
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_CONTROL_VALUE_MAX];
+
+	/* cgget uses this field for values that span multiple lines */
+	char *multiline_value;
 	bool dirty;
 };
 

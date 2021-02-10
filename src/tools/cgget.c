@@ -1,17 +1,18 @@
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 
+#include <dirent.h>
+#include <getopt.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <getopt.h>
 
 #include "tools-common.h"
 
 #define MODE_SHOW_HEADERS		1
 #define MODE_SHOW_NAMES			2
-#define MODE_SHOW_ALL_CONTROLLERS	4
 
 #define LL_MAX				100
 
@@ -23,13 +24,6 @@ static struct option const long_options[] =
 	{"values-only", no_argument, NULL, 'v'},
 	{NULL, 0, NULL, 0}
 };
-
-enum group{
-    GR_NOTSET = 0,	/* 0 .. path not specified -g<g>  or -a not used */
-    GR_GROUP,		/* 1 .. path not specified -g<g>  or -a used */
-    GR_LIST		/* 2 .. path specified using -g<g>:<p> */
-};
-
 
 static void usage(int status, const char *program_name)
 {
@@ -57,46 +51,454 @@ static void usage(int status, const char *program_name)
 		"parameter names\n");
 }
 
-static int display_record(char *name,
-	struct cgroup_controller *group_controller,
-	const char *group_name, const char *program_name, int mode)
+static int get_controller_from_name(const char * const name,
+                                    char **controller)
 {
-	int ret = 0;
-	void *handle;
-	char line[LL_MAX];
-	int ind = 0;
+	char *dot;
 
-	if (mode & MODE_SHOW_NAMES)
-		printf("%s: ", name);
+	*controller = strdup(name);
+	if (*controller == NULL)
+		return ECGOTHER;
 
-	/* start the reading of the variable value */
-	ret = cgroup_read_value_begin(group_controller->name,
-		group_name, name, &handle, line, LL_MAX);
-
-	if (ret == ECGEOF) {
-		printf("\n");
-		goto read_end;
+	dot = strchr(*controller, '.');
+	if (dot == NULL) {
+		fprintf(stderr, "cgget: error parsing parameter name\n" \
+			" '%s'", name);
+		return ECGINVAL;
 	}
 
-	if (ret != 0)
+	*dot = '\0';
+	return 0;
+}
+
+static int create_cg(struct cgroup **cg_list[], int * const cg_list_len)
+{
+	*cg_list = realloc(*cg_list,
+			((*cg_list_len) + 1) * sizeof(struct cgroup *));
+	if ((*cg_list) == NULL)
+		return ECGCONTROLLERCREATEFAILED;
+	memset(&(*cg_list)[*cg_list_len], 0, sizeof(struct cgroup *));
+
+	(*cg_list)[*cg_list_len] = cgroup_new_cgroup("");
+	if ((*cg_list)[*cg_list_len] == NULL)
+		return ECGCONTROLLERCREATEFAILED;
+
+	(*cg_list_len)++;
+	return 0;
+}
+
+static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
+{
+	struct cgroup_mount_point controller;
+	struct cgroup_controller *cgc;
+	struct cgroup *cg = NULL;
+	void *handle;
+	int ret = 0;
+
+	if ((*cg_list_len) == 0) {
+		ret = create_cg(cg_list, cg_list_len);
+		if (ret)
+			goto out;
+	}
+
+	/* if "-r" was provided, then we know that the cgroup(s) will be an
+	 * optarg at the end with no flag.  Let's temporarily populate the
+	 * first cgroup with the requested control values.
+	 */
+	cg = (*cg_list)[0];
+
+	ret = cgroup_get_controller_begin(&handle, &controller);
+	while (ret == 0) {
+		cgc = cgroup_get_controller(cg, controller.name);
+		if (!cgc) {
+			cgc = cgroup_add_controller(cg, controller.name);
+			if (!cgc) {
+				ret = ECGCONTROLLERCREATEFAILED;
+				goto out;
+			}
+		}
+
+		ret = cgroup_get_controller_next(&handle, &controller);
+	}
+	if (ret == ECGEOF)
+		/* we successfully reached the end of the controller list;
+		 * this is not an error
+		 */
+		ret = 0;
+
+	cgroup_get_controller_end(&handle);
+
+	return ret;
+
+out:
+	cgroup_get_controller_end(&handle);
+	return ret;
+}
+
+static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
+			const char * const cntl_value)
+{
+	char *cntl_value_controller = NULL;
+	struct cgroup_controller *cgc;
+	struct cgroup *cg = NULL;
+	int ret = 0;
+
+	if ((*cg_list_len) == 0) {
+		ret = create_cg(cg_list, cg_list_len);
+		if (ret)
+			goto out;
+	}
+
+	/* if "-r" was provided, then we know that the cgroup(s) will be an
+	 * optarg at the end with no flag.  Let's temporarily populate the
+	 * first cgroup with the requested control values.
+	 */
+	cg = (*cg_list)[0];
+
+	ret = get_controller_from_name(cntl_value, &cntl_value_controller);
+	if (ret)
+		goto out;
+
+	cgc = cgroup_get_controller(cg, cntl_value_controller);
+	if (!cgc) {
+		cgc = cgroup_add_controller(cg, cntl_value_controller);
+		if (!cgc) {
+			ret = ECGCONTROLLERCREATEFAILED;
+			goto out;
+		}
+	}
+
+	ret = cgroup_add_value_string(cgc, cntl_value, NULL);
+
+out:
+	if (cntl_value_controller)
+		free(cntl_value_controller);
+	return ret;
+}
+
+static int parse_g_flag_no_colon(struct cgroup **cg_list[],
+		int * const cg_list_len, const char * const ctrl_str)
+{
+	struct cgroup_controller *cgc;
+	struct cgroup *cg = NULL;
+	int ret = 0;
+
+	if ((*cg_list_len) > 1) {
+		ret = ECGMAXVALUESEXCEEDED;
+		goto out;
+	}
+
+	if ((*cg_list_len) == 0) {
+		ret = create_cg(cg_list, cg_list_len);
+		if (ret)
+			goto out;
+	}
+
+	/* if "-g <controller>" was provided, then we know that the cgroup(s)
+	 * will be an optarg at the end with no flag.  Let's temporarily
+	 * populate the first cgroup with the requested control values.
+	 */
+	cg = *cg_list[0];
+
+	cgc = cgroup_get_controller(cg, ctrl_str);
+	if (!cgc) {
+		cgc = cgroup_add_controller(cg, ctrl_str);
+		if (!cgc) {
+			ret = ECGCONTROLLERCREATEFAILED;
+			goto out;
+		}
+	}
+
+out:
+	return ret;
+}
+
+static int split_cgroup_name(const char * const ctrl_str, char *cg_name)
+{
+	char *colon;
+
+	colon = strchr(ctrl_str, ':');
+	if (colon == NULL) {
+		/* ctrl_str doesn't contain a ":" */
+		cg_name[0] = '\0';
+		return ECGINVAL;
+	}
+
+	strncpy(cg_name, &colon[1], FILENAME_MAX - 1);
+
+	return 0;
+}
+
+static int split_controllers(const char * const in,
+			     char **ctrl[], int * const ctrl_len)
+{
+	char *copy, *tok, *colon, *saveptr = NULL;
+	char **tmp;
+	int ret = 0;
+
+	copy = strdup(in);
+	if (!copy)
+		goto out;
+	saveptr = copy;
+
+	colon = strchr(copy, ':');
+	if (colon)
+		colon[0] = '\0';
+
+	while ((tok = strtok_r(copy, ",", &copy))) {
+		tmp = realloc(*ctrl, sizeof(char *) * ((*ctrl_len) + 1));
+		if (!tmp) {
+			ret = ECGOTHER;
+			goto out;
+		}
+
+		*ctrl = tmp;
+		(*ctrl)[*ctrl_len] = strdup(tok);
+		if ((*ctrl)[*ctrl_len] == NULL) {
+			ret = ECGOTHER;
+			goto out;
+		}
+
+		(*ctrl_len)++;
+	}
+
+out:
+	if (saveptr)
+		free(saveptr);
+	return ret;
+}
+
+static int parse_g_flag_with_colon(struct cgroup **cg_list[],
+		int * const cg_list_len, const char * const ctrl_str)
+{
+	struct cgroup_controller *cgc;
+	struct cgroup *cg = NULL;
+	char **controllers = NULL;
+	int controllers_len = 0;
+	int i, ret = 0;
+
+	ret = create_cg(cg_list, cg_list_len);
+	if (ret)
+		goto out;
+
+	cg = (*cg_list)[(*cg_list_len) - 1];
+
+	ret = split_cgroup_name(ctrl_str, cg->name);
+	if (ret)
+		goto out;
+
+	ret = split_controllers(ctrl_str, &controllers, &controllers_len);
+	if (ret)
+		goto out;
+
+	for (i = 0; i < controllers_len; i++) {
+		cgc = cgroup_get_controller(cg, controllers[i]);
+		if (!cgc) {
+			cgc = cgroup_add_controller(cg, controllers[i]);
+			if (!cgc) {
+				ret = ECGCONTROLLERCREATEFAILED;
+				goto out;
+			}
+		}
+	}
+
+out:
+	for (i = 0; i < controllers_len; i++)
+		free(controllers[i]);
+	return ret;
+}
+
+static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
+			  int * const cg_list_len, bool first_cg_is_dummy)
+{
+	struct cgroup *cg = NULL;
+	int ret = 0;
+
+	/* The first cgroup was temporarily populated and requires
+	 * the user to provide a cgroup name as an opt */
+	if (argv[optind] == NULL && first_cg_is_dummy) {
+		usage(1, argv[0]);
+		exit(-1);
+	}
+
+	/* The user has provided a cgroup and controller via the
+	 * -g <controller>:<cgroup> flag and has also provided a cgroup via
+	 * the optind.  This was not supported by the previous cgget
+	 * implementation.  Continue that approach.
+	 *
+	 * Example of a command that will hit this code:
+	 * 	$ cgget -g cpu:mycgroup mycgroup
+	 */
+	if (argv[optind] != NULL && (*cg_list_len) > 0 &&
+	    strcmp((*cg_list)[0]->name, "") != 0) {
+		usage(1, argv[0]);
+		exit(-1);
+	}
+
+	while (argv[optind] != NULL) {
+		cg = (*cg_list)[(*cg_list_len) - 1];
+
+		if (strlen(cg->name) == 0) {
+			/* this cgroup was created based upon control/value
+			 * pairs or with a -g <controller> option.  we'll
+			 * populate it with the parameter provided by the
+			 * user
+			 */
+			strncpy(cg->name, argv[optind], sizeof(cg->name) - 1);
+		} else {
+			ret = create_cg(cg_list, cg_list_len);
+			if (ret)
+				goto out;
+
+			ret = cgroup_copy_cgroup((*cg_list)[(*cg_list_len) - 1],
+						 (*cg_list)[(*cg_list_len) - 2]);
+			if (ret)
+				goto out;
+
+			strncpy((*cg_list)[(*cg_list_len) - 1]->name,
+				argv[optind],
+				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
+		}
+
+		optind++;
+	}
+
+out:
+	return ret;
+}
+
+static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
+		      int * const cg_list_len, int * const mode)
+{
+	bool do_not_fill_controller = false;
+	bool fill_controller = false;
+	bool first_cgroup_is_dummy = false;
+	int ret = 0;
+	int c;
+
+	/* Parse arguments. */
+	while ((c = getopt_long(argc, argv, "r:hnvg:a", long_options, NULL))
+		> 0) {
+		switch (c) {
+		case 'h':
+			usage(0, argv[0]);
+			exit(0);
+		case 'n':
+			/* Do not show headers. */
+			*mode = (*mode) & (INT_MAX ^ MODE_SHOW_HEADERS);
+			break;
+		case 'v':
+			/* Do not show parameter names. */
+			*mode = (*mode) & (INT_MAX ^ MODE_SHOW_NAMES);
+			break;
+		case 'r':
+			do_not_fill_controller = true;
+			first_cgroup_is_dummy = true;
+			ret = parse_r_flag(cg_list, cg_list_len, optarg);
+			if (ret)
+				goto err;
+			break;
+		case 'g':
+			fill_controller = true;
+			if (strchr(optarg, ':') == NULL) {
+				first_cgroup_is_dummy = true;
+				ret = parse_g_flag_no_colon(cg_list,
+					cg_list_len, optarg);
+				if (ret)
+					goto err;
+			} else {
+				ret = parse_g_flag_with_colon(cg_list,
+					cg_list_len, optarg);
+				if (ret)
+					goto err;
+			}
+			break;
+		case 'a':
+			fill_controller = true;
+			ret = parse_a_flag(cg_list, cg_list_len);
+			if (ret)
+				goto err;
+			break;
+		default:
+			usage(1, argv[0]);
+			exit(1);
+		}
+	}
+
+	/* Don't allow '-r' and ('-g' or '-a') */
+	if (fill_controller && do_not_fill_controller) {
+		usage(1, argv[0]);
+		exit(1);
+	}
+
+	ret = parse_opt_args(argc, argv, cg_list, cg_list_len,
+			     first_cgroup_is_dummy);
+	if (ret)
+		goto err;
+
+err:
+	return ret;
+}
+
+static int get_cv_value(struct control_value * const cv,
+			const char * const cg_name,
+			const char * const controller_name)
+{
+	bool is_multiline = false;
+	char tmp_line[LL_MAX];
+	void *handle, *tmp;
+	int ret;
+
+	ret = cgroup_read_value_begin(controller_name, cg_name, cv->name,
+			&handle, tmp_line, LL_MAX);
+	if (ret == ECGEOF)
+		goto read_end;
+	if (ret != 0) {
+		if (ret == ECGOTHER) {
+			int tmp_ret;
+
+			/* to maintain compatibility with an earlier version
+			 * of cgget, try to determine if the failure was due
+			 * to an invalid controller
+			 */
+			tmp_ret = cgroup_test_subsys_mounted(controller_name);
+			if (tmp_ret == 0)
+				fprintf(stderr, "cgget: cannot find controller " \
+					"'%s' in group '%s'\n", controller_name,
+					cg_name);
+			else
+				fprintf(stderr, "variable file read failed %s\n",
+					cgroup_strerror(ret));
+		}
+
+		goto end;
+	}
+
+	/* remove the newline character */
+	tmp_line[strcspn(tmp_line, "\n")] = '\0';
+
+	strncpy(cv->value, tmp_line, CG_CONTROL_VALUE_MAX - 1);
+	cv->multiline_value = strdup(cv->value);
+	if (cv->multiline_value == NULL)
 		goto end;
 
-	printf("%s", line);
-	if (line[strlen(line)-1] == '\n')
-		/* if value continue on the next row. indent it */
-		ind = 1;
+	while((ret = cgroup_read_value_next(&handle, tmp_line, LL_MAX)) == 0) {
+		if (ret == 0) {
+			is_multiline = true;
+			cv->value[0] = '\0';
 
+			/* remove the newline character */
+			tmp_line[strcspn(tmp_line, "\n")] = '\0';
 
-	/* read iteratively the whole value  */
-	while ((ret = cgroup_read_value_next(&handle, line, LL_MAX)) == 0) {
-		if (ind == 1)
-			printf("\t");
-		printf("%s", line);
-		ind = 0;
+			tmp = realloc(cv->multiline_value, sizeof(char) *
+				(strlen(cv->multiline_value) + strlen(tmp_line) + 3));
+			if (tmp == NULL)
+				goto end;
 
-		/* if value continue on the next row. indent it */
-		if (line[strlen(line)-1] == '\n')
-			ind = 1;
+			cv->multiline_value = tmp;
+			strcat(cv->multiline_value, "\n\t");
+			strcat(cv->multiline_value, tmp_line);
+		}
 	}
 
 read_end:
@@ -105,209 +507,213 @@ read_end:
 		ret = 0;
 
 end:
-	if (ret != 0)
-		fprintf(stderr, "variable file read failed %s\n",
-			cgroup_strerror(ret));
+	if (is_multiline == false && cv->multiline_value) {
+		free(cv->multiline_value);
+		cv->multiline_value = NULL;
+	}
+
 	return ret;
 }
 
-
-
-static int display_name_values(char **names, const char* group_name,
-		const char *program_name, int mode)
+static int indent_multiline_value(struct control_value * const cv)
 {
-	int i;
-	struct cgroup_controller *group_controller = NULL;
-	struct cgroup *group = NULL;
-	int ret = 0;
-	char *controller = NULL, *dot;
+	char tmp_val[CG_CONTROL_VALUE_MAX] = {0};
+	char *tok, *saveptr = NULL;
 
-	group = cgroup_new_cgroup(group_name);
-	if (group == NULL) {
-		fprintf(stderr, "%s: cannot create group '%s'\n", program_name,
-				group_name);
-		return -1;
-	}
-	ret = cgroup_get_cgroup(group);
-	if (ret != 0) {
-		fprintf(stderr, "%s: cannot read group '%s': %s\n",
-				program_name, group_name, cgroup_strerror(ret));
-		goto err;
+	tok = strtok_r(cv->value, "\n", &saveptr);
+	strcat(tmp_val, tok);
+	/* don't indent the first value */
+	while ((tok = strtok_r(NULL, "\n", &saveptr))) {
+		strcat(tmp_val, "\n\t");
+		strcat(tmp_val, tok);
 	}
 
-	i = 0;
-	while (names[i] != NULL) {
-		/* Parse the controller out of 'controller.parameter'. */
-		free(controller);
-		controller = strdup(names[i]);
-		if (controller == NULL) {
-			fprintf(stderr, "%s: out of memory\n", program_name);
-			ret = -1;
-			goto err;
-		}
-		dot = strchr(controller, '.');
-		if (dot == NULL) {
-			fprintf(stderr, "%s: error parsing parameter name\n" \
-					" '%s'", program_name, names[i]);
-			ret = -1;
-			goto err;
-		}
-		*dot = '\0';
+	cv->multiline_value = strdup(tmp_val);
+	if (!cv->multiline_value)
+		return ECGOTHER;
 
-		/* Find appropriate controller. */
-		group_controller = cgroup_get_controller(group, controller);
-		if (group_controller == NULL) {
-			fprintf(stderr, "%s: cannot find controller " \
-					"'%s' in group '%s'\n", program_name,
-					controller, group_name);
-			ret = -1;
-			goto err;
-		}
+	return 0;
+}
 
-		/* Finally read the parameter value.*/
-		ret = display_record(names[i], group_controller,
-			group_name, program_name, mode);
-		if (ret != 0)
-			goto err;
-		i++;
+static int fill_empty_controller(struct cgroup * const cg,
+				 struct cgroup_controller * const cgc)
+{
+	struct dirent *ctrl_dir = NULL;
+	char path[FILENAME_MAX];
+	bool found_mount = false;
+	int i, path_len, ret = 0;
+	DIR *dir = NULL;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
+	for (i = 0; i < CG_CONTROLLER_MAX &&
+			cg_mount_table[i].name[0] != '\0'; i++) {
+		if (strlen(cgc->name) == strlen(cg_mount_table[i].name) &&
+		    strncmp(cgc->name, cg_mount_table[i].name,
+			    strlen(cgc->name)) == 0) {
+			found_mount = true;
+			break;
+		}
 	}
-err:
-	if (controller)
-		free(controller);
-	if (group)
-		cgroup_free(&group);
+
+	if (found_mount == false)
+		goto out;
+
+	if (!cg_build_path_locked(NULL, path,
+				  cg_mount_table[i].name)) {
+		goto out;
+	}
+
+	path_len = strlen(path);
+	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
+
+	if (access(path, F_OK))
+		goto out;
+
+	if (!cg_build_path_locked(cg->name, path,
+		cg_mount_table[i].name))
+		goto out;
+
+	dir = opendir(path);
+	if (!dir) {
+		ret = ECGOTHER;
+		goto out;
+	}
+
+	while ((ctrl_dir = readdir(dir)) != NULL) {
+		/*
+		 * Skip over non regular files
+		 */
+		if (ctrl_dir->d_type != DT_REG)
+			continue;
+
+		ret = cgroup_fill_cgc(ctrl_dir, cg, cgc, i);
+		if (ret == ECGFAIL) {
+			closedir(dir);
+			goto out;
+		}
+
+		if (cgc->index > 0) {
+			cgc->values[cgc->index - 1]->dirty = false;
+
+			/* previous versions of cgget indented the second and
+			 * all subsequent lines.  continue that behavior
+			 */
+			if (strchr(cgc->values[cgc->index - 1]->value, '\n')) {
+				ret = indent_multiline_value(
+					cgc->values[cgc->index - 1]);
+				if (ret)
+					goto out;
+			}
+		}
+	}
+
+	closedir(dir);
+
+out:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }
 
-static int display_controller_values(char **controllers, const char *group_name,
-	const char *program_name, int mode)
+static int get_controller_values(struct cgroup * const cg,
+				 struct cgroup_controller * const cgc)
 {
-	struct cgroup *group = NULL;
-	struct cgroup_controller *group_controller = NULL;
-	char *name;
-	int i, j;
-	int name_count;
-	int ret = 0;
-	int result = 0;
-
-	/* initialize group_name variable */
-	group = cgroup_new_cgroup(group_name);
-	if (group == NULL) {
-		fprintf(stderr, "%s:cannot create group '%s'\n",
-			program_name, group_name);
-		return -1;
-	}
-
-	ret = cgroup_get_cgroup(group);
-	if (ret != 0) {
-		if (!(mode & MODE_SHOW_ALL_CONTROLLERS))
-			fprintf(stderr, "%s: cannot read group '%s': %s\n",
-				program_name, group_name, cgroup_strerror(ret));
-	}
-
-	/* for all wanted controllers */
-	j = 0;
-	while (controllers[j] != NULL) {
-		/* read the controller group data */
-		group_controller = cgroup_get_controller(group, controllers[j]);
-		if (group_controller == NULL) {
-			if (!(mode & MODE_SHOW_ALL_CONTROLLERS)) {
-				fprintf(stderr, "%s: cannot find controller "\
-					"'%s' in group '%s'\n", program_name,
-					controllers[j], group_name);
-				result = -1;
-			}
-		}
-
-		/* for each variable of given group print the statistic */
-		name_count = cgroup_get_value_name_count(group_controller);
-		for (i = 0; i < name_count; i++) {
-			name = cgroup_get_value_name(group_controller, i);
-			if (name != NULL) {
-				ret = display_record(name, group_controller,
-					group_name, program_name, mode);
-				if (ret) {
-					result = ret;
-					goto err;
-				}
-			}
-		}
-		j = j+1;
-	}
-
-err:
-	cgroup_free(&group);
-	return result;
-
-}
-
-static int display_values(char **controllers, int max, const char *group_name,
-	char **names, int mode, const char *program_name)
-{
-	int ret, result = 0;
-
-	/* display the directory if needed */
-	if (mode & MODE_SHOW_HEADERS)
-		printf("%s:\n", group_name);
-
-	/* display all wanted variables */
-	if (names[0] != NULL) {
-		ret = display_name_values(names, group_name, program_name,
-			mode);
-		if (ret)
-			result = ret;
-	}
-
-	/* display all wanted controllers */
-	if (controllers[0] != NULL) {
-		ret = display_controller_values(controllers, group_name,
-			program_name, mode);
-		if (ret)
-			result = ret;
-	}
-
-	/* separate each group with empty line. */
-	if (mode & MODE_SHOW_HEADERS)
-		printf("\n");
-
-	return result;
-}
-
-int add_record_to_buffer(char **buffer, char *record, int capacity)
-{
+	int ret;
 	int i;
 
-	/* find first free entry inside the cgroup data array */
-	for (i = 0; i < capacity; i++) {
-		if (!buffer[i])
+	for (i = 0; i < cgc->index; i++) {
+		ret = get_cv_value(cgc->values[i], cg->name, cgc->name);
+		if (ret)
+			goto out;
+	}
+
+	if (cgc->index == 0) {
+		/* fill the entire controller since no values were provided */
+		ret = fill_empty_controller(cg, cgc);
+		if (ret)
+			goto out;
+	}
+
+out:
+	return ret;
+}
+
+static int get_cgroup_values(struct cgroup * const cg)
+{
+	int ret;
+	int i;
+
+	for (i = 0; i < cg->index; i++) {
+		ret = get_controller_values(cg, cg->controller[i]);
+		if (ret)
 			break;
 	}
 
-	if (i < capacity) {
-		buffer[i] = strdup(record);
-		if (buffer[i] == NULL)
-			return 1;
-		return 0;
-	}
-	return 1;
+	return ret;
 }
 
+static int get_values(struct cgroup *cg_list[], int cg_list_len)
+{
+	int ret;
+	int i;
+
+	for (i = 0; i < cg_list_len; i++) {
+		ret = get_cgroup_values(cg_list[i]);
+		if (ret)
+			break;
+	}
+
+	return ret;
+}
+
+void print_control_values(const struct control_value * const cv, int mode)
+{
+	if (mode & MODE_SHOW_NAMES)
+		printf("%s: ", cv->name);
+
+	if (cv->multiline_value)
+		printf("%s\n", cv->multiline_value);
+	else
+		printf("%s\n", cv->value);
+}
+
+void print_controller(const struct cgroup_controller * const cgc, int mode)
+{
+	int i;
+
+	for (i = 0; i < cgc->index; i++) {
+		print_control_values(cgc->values[i], mode);
+	}
+}
+
+static void print_cgroup(const struct cgroup * const cg, int mode)
+{
+	int i;
+
+	if (mode & MODE_SHOW_HEADERS)
+		printf("%s:\n", cg->name);
+
+	for (i = 0; i < cg->index; i++)
+		print_controller(cg->controller[i], mode);
+
+	if (mode & MODE_SHOW_HEADERS)
+		printf("\n");
+}
+
+static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
+{
+	int i;
+
+	for (i = 0; i < cg_list_len; i++) {
+		print_cgroup(cg_list[i], mode);
+	}
+}
 
 int main(int argc, char *argv[])
 {
-	int ret = 0;
-	int result = 0;
-	int c, i;
-	int group_needed = GR_NOTSET;
-
-	int capacity = argc + CG_CONTROLLER_MAX; /* maximal number of records */
-	struct cgroup_group_spec **cgroup_list; /* list of all groups */
-	char **names;			/* list of wanted variable names */
-	char **controllers;		/* list of wanted controllers*/
-
-	void *handle;
-	struct cgroup_mount_point controller;
-
+	struct cgroup **cg_list = NULL;
+	int cg_list_len = 0;
+	int ret = 0, i;
 	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
 
 	/* No parameter on input? */
@@ -316,151 +722,26 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	names = (char **)calloc(capacity+1, sizeof(char *));
-	controllers = (char **)calloc(capacity+1, sizeof(char *));
-	cgroup_list = (struct cgroup_group_spec **)calloc(capacity,
-		sizeof(struct cgroup_group_spec *));
-	if ((names == NULL) || (controllers == NULL) ||
-		(cgroup_list == NULL)) {
-		fprintf(stderr, "%s: out of memory\n", argv[0]);
-		ret = -1;
-		goto err_free;
-	}
-
-	/* Parse arguments. */
-	while ((c = getopt_long(argc, argv, "r:hnvg:a", long_options, NULL))
-		> 0) {
-		switch (c) {
-		case 'h':
-			usage(0, argv[0]);
-			result = 0;
-			goto err;
-			break;
-
-		case 'n':
-			/* Do not show headers. */
-			mode = mode & (INT_MAX ^ MODE_SHOW_HEADERS);
-			break;
-
-		case 'v':
-			/* Do not show parameter names. */
-			mode = mode & (INT_MAX ^ MODE_SHOW_NAMES);
-			break;
-
-		case 'r':
-			/* Add name to buffer. */
-			ret = add_record_to_buffer(names, optarg, capacity);
-			if (ret) {
-				result = ret;
-				goto err;
-			}
-			break;
-		case 'g':
-			if (strchr(optarg, ':') == NULL) {
-				/* -g <group> */
-				if (group_needed == GR_LIST) {
-					usage(1, argv[0]);
-					result = -1;
-					goto err;
-				}
-				group_needed = GR_GROUP;
-				add_record_to_buffer(controllers, optarg,
-					capacity);
-			} else {
-				/* -g <group>:<path> */
-				if (group_needed == GR_GROUP) {
-					usage(1, argv[0]);
-					result = -1;
-					goto err;
-				}
-				group_needed = GR_LIST;
-				ret = parse_cgroup_spec(cgroup_list, optarg,
-					capacity);
-				if (ret) {
-					fprintf(stderr, "%s: cgroup controller/"
-						"path parsing failed (%s)\n",
-						argv[0], argv[optind]);
-					ret = -1;
-					goto err;
-				}
-			}
-			break;
-		case 'a':
-			if (group_needed == GR_LIST) {
-				usage(1, argv[0]);
-				result = -1;
-				goto err;
-			}
-			group_needed = GR_GROUP;
-			/* go through cgroups for all possible controllers */
-			mode |=  MODE_SHOW_ALL_CONTROLLERS;
-			break;
-		default:
-			usage(1, argv[0]);
-			result = -1;
-			goto err;
-		}
-	}
-
-	if (((group_needed == GR_LIST) && (argv[optind])) ||
-	    ((group_needed != GR_LIST) && (!argv[optind]))) {
-		/* mixed -g <controllers>:<path> and <path> or path not set */
-		usage(1, argv[0]);
-		result = -1;
-		goto err;
-	}
-
-	/* Initialize libcgroup. */
 	ret = cgroup_init();
 	if (ret) {
 		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
 			argv[0], cgroup_strerror(ret));
-		result = ret;
 		goto err;
 	}
 
-	if ((mode & MODE_SHOW_ALL_CONTROLLERS) ||
-		((controllers[0] == NULL) && (names[0] == NULL)
-		&& (cgroup_list[0] == NULL))) {
-		/* show info about all controllers */
-		ret = cgroup_get_controller_begin(&handle, &controller);
-		/* go through list of controllers, add them to the list */
-		while (ret == 0) {
-			add_record_to_buffer(controllers, controller.name,
-				capacity);
-			ret = cgroup_get_controller_next(&handle, &controller);
-		}
-		cgroup_get_controller_end(&handle);
-	}
+	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode);
+	if (ret)
+		goto err;
 
-	/* Parse control groups set by -g<c>:<p> pairs */
-	for (i = 0; i < capacity; i++) {
-		if (!cgroup_list[i])
-			break;
-		ret |= display_values(cgroup_list[i]->controllers, capacity,
-			cgroup_list[i]->path, names, mode, argv[0]);
-	}
+	ret = get_values(cg_list, cg_list_len);
+	if (ret)
+		goto err;
 
-	/* Parse control groups and print them .*/
-	for (i = optind; i < argc; i++) {
-		ret |= display_values(controllers, capacity,
-			argv[i], names, mode, argv[0]);
-	}
+	print_cgroups(cg_list, cg_list_len, mode);
 
 err:
-	for (i = 0; i < capacity; i++) {
-		if (cgroup_list[i])
-			cgroup_free_group_spec(cgroup_list[i]);
-		if (controllers[i])
-			free(controllers[i]);
-		if (names[i])
-			free(names[i]);
-	}
+	for (i = 0; i < cg_list_len; i++)
+		cgroup_free(&(cg_list[i]));
 
-err_free:
-	free(cgroup_list);
-	free(controllers);
-	free(names);
-
-	return result;
+	return ret;
 }
