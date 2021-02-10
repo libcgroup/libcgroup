@@ -134,4 +134,5 @@ CGROUP_0.43 {
 	cgroup_build_tasks_procs_path;
 	cg_build_path_locked;
 	cgroup_fill_cgc;
+	cgroup_test_subsys_mounted;
 } CGROUP_0.42;

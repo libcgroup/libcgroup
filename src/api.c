@@ -384,7 +384,7 @@ static char *cgroup_basename(const char *path)
 	return base;
 }
 
-static int cgroup_test_subsys_mounted(const char *name)
+int cgroup_test_subsys_mounted(const char *name)
 {
 	int i;
 

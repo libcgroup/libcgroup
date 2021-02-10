@@ -351,6 +351,14 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 		    struct cgroup_controller *cgc, int cg_index);
 
 /**
+ * Given a controller name, test if it's mounted
+ *
+ * @param ctrl_name Controller name
+ * @return 1 if mounted, 0 if not mounted
+ */
+int cgroup_test_subsys_mounted(const char *ctrl_name);
+
+/**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
  * remaining static in a normal libcgroup library build.
