@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Advanced cgget functionality test - get a multiline value via the '-r' flag
+# Advanced cgget functionality test - exercise the '-a' flag
 #
 # Copyright (c) 2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
@@ -26,11 +26,9 @@ import ftests
 import os
 import sys
 
-CONTROLLER='memory'
-CGNAME="015cgget"
-
-SETTING='memory.stat'
-VALUE='512'
+CONTROLLER1='memory'
+CONTROLLER2='cpuset'
+CGNAME="014cgget"
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -39,18 +37,17 @@ def prereqs(config):
     return result, cause
 
 def setup(config):
-    Cgroup.create(config, CONTROLLER, CGNAME)
+    Cgroup.create(config, CONTROLLER1, CGNAME)
+    Cgroup.create(config, CONTROLLER2, CGNAME)
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    out = Cgroup.get(config, controller=None, cgname=CGNAME,
-                     setting=SETTING, print_headers=True,
-                     values_only=False)
+    out = Cgroup.get(config, cgname=CGNAME, all_controllers=True)
 
     # arbitrary check to ensure we read several lines
-    if len(out.splitlines()) < 10:
+    if len(out.splitlines()) < 20:
         result = consts.TEST_FAILED
         cause = "Expected multiple lines, but only received {}".format(
                 len(out.splitlines()))
@@ -58,15 +55,22 @@ def test(config):
 
     # arbitrary check for a setting that's in both cgroup v1 and cgroup v2
     # memory.stat
-    if not "\tunevictable" in out:
+    if not "\tpgmajfault" in out:
         result = consts.TEST_FAILED
         cause = "Unexpected output\n{}".format(out)
+        return result, cause
+
+    # make sure that a cpuset value was in the output:
+    if not "cpuset.cpus" in out:
+        result = consts.TEST_FAILED
+        cause = "Failed to find cpuset settings in output\n{}".format(out)
         return result, cause
 
     return result, cause
 
 def teardown(config):
-    Cgroup.delete(config, CONTROLLER, CGNAME)
+    Cgroup.delete(config, CONTROLLER1, CGNAME)
+    Cgroup.delete(config, CONTROLLER2, CGNAME)
 
 def main(config):
     [result, cause] = prereqs(config)
