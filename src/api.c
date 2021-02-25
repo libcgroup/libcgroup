@@ -1913,13 +1913,7 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 		free(path);
 		path = NULL;
 
-		/* don't consider error in files directly written by
-		 * the user as fatal */
-		if (ret && !controller->values[j]->dirty) {
-			ret = 0;
-			continue;
-		}
-		if (ret)
+		if (error)
 			goto err;
 
 		controller->values[j]->dirty = false;
