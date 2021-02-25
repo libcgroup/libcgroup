@@ -95,6 +95,7 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 	char tmp_path[FILENAME_MAX], buf[4092];
 	struct cgroup_controller ctrlr = {0};
 	int ret, i;
+	char *val;
 	FILE *f;
 
 	ret = snprintf(ctrlr.name, FILENAME_MAX - 1, "cpu");
@@ -108,7 +109,10 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 		strncpy(ctrlr.values[i]->name, NAMES[i], FILENAME_MAX);
 		strncpy(ctrlr.values[i]->value, VALUES[i],
 			CG_CONTROL_VALUE_MAX);
-		ctrlr.values[i]->dirty = false;
+		if (i == 0)
+			ctrlr.values[i]->dirty = true;
+		else
+			ctrlr.values[i]->dirty = false;
 		ctrlr.index++;
 	}
 
@@ -124,8 +128,9 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 		f = fopen(tmp_path, "r");
 		ASSERT_NE(f, nullptr);
 
-		while (fgets(buf, sizeof(buf), f))
-			ASSERT_STREQ(buf, VALUES[i]);
+		val = fgets(buf, sizeof(buf), f);
+		ASSERT_NE(val, nullptr);
+		ASSERT_STREQ(buf, VALUES[i]);
 		fclose(f);
 	}
 }
