@@ -41,8 +41,8 @@ class Run(object):
         out, err = subproc.communicate()
         ret = subproc.returncode
 
-        out = out.strip()
-        err = err.strip()
+        out = out.strip().decode('ascii')
+        err = err.strip().decode('ascii')
 
         if shell_bool:
             Log.log_debug(
@@ -53,7 +53,7 @@ class Run(object):
                 "run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}\n\tstderr = {}".format(
                 ' '.join(command), ret, out, err))
 
-        if ret != 0:
+        if ret != 0 or len(err) > 0:
             raise RunError("Command '{}' failed".format(''.join(command)),
                            command, ret, out, err)
 

@@ -24,7 +24,7 @@ from controller import Controller
 from enum import Enum
 import multiprocessing as mp
 import os
-from run import Run
+from run import Run, RunError
 import time
 import utils
 
@@ -167,25 +167,29 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    # valid cpuset commands:
-    #     Read one setting:
-    #         cgget -r cpuset.cpus tomcpuset
-    #     Read two settings:
-    #         cgget -r cpuset.cpus -r cpuset.cpu_exclusive tomcpuset
-    #     Read one setting from two cgroups:
-    #         cgget -r cpuset.cpu_exclusive tomcgroup1 tomcgroup2
-    #     Read two settings from two cgroups:
-    #         cgget -r cpuset.cpu_exclusive -r cpuset.cpu_exclusive tomcgroup1 tomcgroup2
-    #
-    #     Read all of the settings in a cgroup
-    #         cgget -g cpuset tomcpuset
-    #     Read all of the settings in multiple controllers
-    #         cgget -g cpuset -g cpu -g memory tomcgroup
-    #     Read all of the settings from a cgroup at a specific path
-    #         cgget -g memory:tomcgroup/tomcgroup
     def get(config, controller=None, cgname=None, setting=None,
             print_headers=True, values_only=False,
-            all_controllers=False):
+            all_controllers=False, cghelp=False):
+        """cgget equivalent method
+
+        Returns:
+        str: The stdout result of cgget
+
+        The following variants of cgget() are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgget -r cpuset.cpus mycg                                001
+        cgget -r cpuset.cpus -r cpuset.mems mycg                 008
+        cgget -g cpu mycg                                        009
+        cgget -g cpu:mycg                                        010
+        cgget -r cpuset.cpus mycg1 mycg2                         011
+        cgget -r cpuset.cpus -r cpuset.mems mycg1 mycg2          012
+        cgget -g cpu -g freezer mycg                             013
+        cgget -a mycg                                            014
+        cgget -r memory.stat mycg (multiline value read)         015
+        various invalid flag combinations                        016
+        """
         cmd = list()
         cmd.append(Cgroup.build_cmd_path('cgget'))
 
@@ -233,10 +237,19 @@ class Cgroup(object):
                 for cg in cgname:
                     cmd.append(cg)
 
+        if cghelp:
+            cmd.append('-h')
+
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd).decode('ascii')
+            try:
+                ret = Run.run(cmd)
+            except RunError as re:
+                if "profiling" in re.stderr:
+                    ret = re.stdout
+                else:
+                    raise re
 
         return ret
 
@@ -365,14 +378,23 @@ class Cgroup(object):
 
         # ensure the deny list file exists
         if config.args.container:
-            config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+            try:
+                config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+            except RunError as re:
+                if re.ret == 0 and "unable to resolve host" in re.stderr:
+                    pass
         else:
             Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
 
-        if config.args.container:
-            res = config.container.run(cmd)
-        else:
-            res = Run.run(cmd).decode('ascii')
+        try:
+            if config.args.container:
+                res = config.container.run(cmd)
+            else:
+                res = Run.run(cmd)
+        except RunError as re:
+            if re.ret == 0 and \
+               "neither blacklisted nor whitelisted" in re.stderr:
+                res = re.stdout
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)

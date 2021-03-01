@@ -71,7 +71,7 @@ class Process(object):
         if config.args.container:
             pid = config.container.run(cmd, shell_bool=True)
         else:
-            pid = Run.run(cmd, shell_bool=True).decode('ascii')
+            pid = Run.run(cmd, shell_bool=True)
 
             for _pid in pid.splitlines():
                 self.children_pids.append(_pid)
@@ -117,7 +117,7 @@ class Process(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd).decode('ascii')
+            ret = Run.run(cmd)
 
         for line in ret.splitlines():
             # cgroup v1 appears in /proc/{pid}/cgroup like the following:
@@ -157,7 +157,7 @@ class Process(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd).decode('ascii')
+            ret = Run.run(cmd)
 
         for line in ret.splitlines():
             # cgroup v2 appears in /proc/{pid}/cgroup like the following:
