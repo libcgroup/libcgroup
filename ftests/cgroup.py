@@ -1,7 +1,7 @@
 #
 # Cgroup class for the libcgroup functional tests
 #
-# Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2019-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -79,21 +79,21 @@ class Cgroup(object):
         return True
 
     @staticmethod
-    def build_cmd_path(in_container, cmd):
-        if in_container:
-            return os.path.join(consts.LIBCG_MOUNT_POINT,
-                                'src/tools/{}'.format(cmd))
-        else:
-            return cmd
+    def build_cmd_path(cmd):
+        return os.path.join(consts.LIBCG_MOUNT_POINT,
+                            'src/tools/{}'.format(cmd))
 
     # TODO - add support for all of the cgcreate options
     @staticmethod
-    def create(config, controller_list, cgname, in_container=True):
+    def create(config, controller_list, cgname):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgcreate'))
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgcreate'))
 
         controllers_and_path = '{}:{}'.format(
             ','.join(controller_list), cgname)
@@ -101,18 +101,21 @@ class Cgroup(object):
         cmd.append('-g')
         cmd.append(controllers_and_path)
 
-        if in_container:
+        if config.args.container:
             config.container.run(cmd)
         else:
             Run.run(cmd)
 
     @staticmethod
-    def delete(config, controller_list, cgname, in_container=True, recursive=False):
+    def delete(config, controller_list, cgname, recursive=False):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgdelete'))
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgdelete'))
 
         if recursive:
             cmd.append('-r')
@@ -123,15 +126,18 @@ class Cgroup(object):
         cmd.append('-g')
         cmd.append(controllers_and_path)
 
-        if in_container:
+        if config.args.container:
             config.container.run(cmd)
         else:
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname, setting, value, in_container=True):
+    def set(config, cgname, setting, value):
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgset'))
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgset'))
 
         if isinstance(setting, str) and isinstance(value, str):
             cmd.append('-r')
@@ -146,7 +152,7 @@ class Cgroup(object):
 
         cmd.append(cgname)
 
-        if in_container:
+        if config.args.container:
             config.container.run(cmd)
         else:
             Run.run(cmd)
@@ -169,10 +175,10 @@ class Cgroup(object):
     #     Read all of the settings from a cgroup at a specific path
     #         cgget -g memory:tomcgroup/tomcgroup
     def get(config, controller=None, cgname=None, setting=None,
-            in_container=True, print_headers=True, values_only=False,
+            print_headers=True, values_only=False,
             all_controllers=False):
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgget'))
+        cmd.append(Cgroup.build_cmd_path('cgget'))
 
         if not print_headers:
             cmd.append('-n')
@@ -218,18 +224,21 @@ class Cgroup(object):
                 for cg in cgname:
                     cmd.append(cg)
 
-        if in_container:
+        if config.args.container:
             ret = config.container.run(cmd)
         else:
-            ret = Run.run(cmd)
+            ret = Run.run(cmd).decode('ascii')
 
         return ret
 
     @staticmethod
     def classify(config, controller, cgname, pid_list, sticky=False,
-                 cancel_sticky=False, in_container=True):
+                 cancel_sticky=False):
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgclassify'))
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgclassify'))
         cmd.append('-g')
         cmd.append('{}:{}'.format(controller, cgname))
 
@@ -241,7 +250,7 @@ class Cgroup(object):
             for pid in pid_list:
                 cmd.append(pid)
 
-        if in_container:
+        if config.args.container:
             config.container.run(cmd)
         else:
             Run.run(cmd)
@@ -256,6 +265,9 @@ class Cgroup(object):
             GROUP = 1
             CONTROLLER = 2
             SETTING = 3
+            PERM = 4
+            ADMIN = 5
+            TASK = 6
 
         mode = parsemode.UNKNOWN
 
@@ -278,7 +290,9 @@ class Cgroup(object):
                     mode = parsemode.GROUP
 
             elif mode == parsemode.GROUP:
-                if line.endswith("{"):
+                if line.startswith("perm {"):
+                    mode = parsemode.PERM
+                elif line.endswith("{"):
                     ctrl_name = line.split()[0]
                     cg.controllers[ctrl_name] = Controller(ctrl_name)
 
@@ -318,25 +332,38 @@ class Cgroup(object):
                 else:
                     value += "{}\n".format(line)
 
+            elif mode == parsemode.PERM:
+                if line.startswith("admin {"):
+                    mode = parsemode.ADMIN
+                elif line.startswith("task {"):
+                    mode = parsemode.TASK
+                elif line.endswith("}"):
+                    mode = parsemode.GROUP
+
+            elif mode == parsemode.ADMIN or mode == parsemode.TASK:
+                # todo - handle these modes
+                if line.endswith("}"):
+                    mode = parsemode.PERM
+
         return cgdict
 
     @staticmethod
-    def snapshot(config, controller=None, in_container=True):
+    def snapshot(config, controller=None):
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path(in_container, 'cgsnapshot'))
+        cmd.append(Cgroup.build_cmd_path('cgsnapshot'))
         if controller is not None:
             cmd.append(controller)
 
-        if in_container:
-            # if we're running in a container, it's unlikely that libcgroup
-            # was installed and thus /etc/cgsnapshot_blacklist.conf likely
-            # doesn't exist.  Let's make it
+        # ensure the deny list file exists
+        if config.args.container:
             config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+        else:
+            Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
 
-        if in_container:
+        if config.args.container:
             res = config.container.run(cmd)
         else:
-            res = Run.run(cmd)
+            res = Run.run(cmd).decode('ascii')
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
