@@ -1,7 +1,7 @@
 #
 # Constants for the libcgroup functional tests
 #
-# Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2019-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -43,3 +43,5 @@ TESTS_RUN_ALL_SUITES = "allsuites"
 TEST_PASSED = "passed"
 TEST_FAILED = "failed"
 TEST_SKIPPED = "skipped"
+
+CGRULES_FILE = "/etc/cgrules.conf"

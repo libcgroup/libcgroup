@@ -22,8 +22,10 @@
 import consts
 from controller import Controller
 from enum import Enum
+import multiprocessing as mp
 import os
 from run import Run
+import time
 import utils
 
 class CgroupVersion(Enum):
@@ -59,6 +61,8 @@ class Cgroup(object):
         # struct cgroup_controller *controller[CG_CONTROLLER_MAX];
         self.controllers = dict()
 
+        self.children = list()
+
     def __str__(self):
         out_str = "Cgroup {}\n".format(self.name)
         for ctrl_key in self.controllers:
@@ -82,6 +86,11 @@ class Cgroup(object):
     def build_cmd_path(cmd):
         return os.path.join(consts.LIBCG_MOUNT_POINT,
                             'src/tools/{}'.format(cmd))
+
+    @staticmethod
+    def build_daemon_path(cmd):
+        return os.path.join(consts.LIBCG_MOUNT_POINT,
+                            'src/daemon/{}'.format(cmd))
 
     # TODO - add support for all of the cgcreate options
     @staticmethod
@@ -367,3 +376,96 @@ class Cgroup(object):
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
+
+    @staticmethod
+    def set_cgrules_conf(config, line, append=True):
+        cmd = list()
+
+        cmd.append('sudo')
+        cmd.append('su')
+        cmd.append('-c')
+
+        if append:
+            redirect_str = '>>'
+        else:
+            redirect_str = '>'
+
+        subcmd = '"echo {} {} {}"'.format(line, redirect_str,
+                                          consts.CGRULES_FILE)
+        cmd.append(subcmd)
+
+        if config.args.container:
+            config.container.run(cmd, shell_bool=True)
+        else:
+            Run.run(cmd, shell_bool=True)
+
+    @staticmethod
+    def init_cgrules(config):
+        cmd = list()
+
+        cmd.append('sudo')
+        cmd.append('mkdir')
+        cmd.append('/etc/cgconfig.d')
+
+        try:
+            if config.args.container:
+                config.container.run(cmd, shell_bool=True)
+            else:
+                Run.run(cmd, shell_bool=True)
+        except:
+            # todo - check the errno to ensure the directory exists rather
+            # than receiving a different error
+            pass
+
+        cmd2 = list()
+
+        cmd2.append('sudo')
+        cmd2.append('touch')
+        cmd2.append('/etc/cgconfig.conf')
+
+        if config.args.container:
+            config.container.run(cmd2, shell_bool=True)
+        else:
+            Run.run(cmd2, shell_bool=True)
+
+    # note that this runs cgrulesengd in this process and does not fork
+    # the daemon
+    @staticmethod
+    def __run_cgrules(config):
+        cmd = list()
+
+        cmd.append('sudo')
+        cmd.append(Cgroup.build_daemon_path('cgrulesengd'))
+        cmd.append('-d')
+        cmd.append('-n')
+
+        if config.args.container:
+            raise ValueError("Running cgrules within a container is not supported")
+        else:
+            Run.run(cmd, shell_bool=True)
+
+    def start_cgrules(self, config):
+        Cgroup.init_cgrules(config)
+
+        p = mp.Process(target=Cgroup.__run_cgrules,
+                       args=(config, ))
+        p.start()
+        time.sleep(2)
+
+        self.children.append(p)
+
+    def join_children(self, config):
+        # todo - make this smarter.  this is ugly, but it works for now
+        cmd = ['sudo', 'killall', 'cgrulesengd']
+        try:
+            if config.args.container:
+                config.container.run(cmd, shell_bool=True)
+            else:
+                Run.run(cmd, shell_bool=True)
+        except:
+            # ignore any errors during the kill command.  this is belt
+            # and suspenders code
+            pass
+
+        for child in self.children:
+            child.join(1)
