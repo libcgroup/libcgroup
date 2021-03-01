@@ -384,7 +384,7 @@ static char *cgroup_basename(const char *path)
 	return base;
 }
 
-static int cgroup_test_subsys_mounted(const char *name)
+int cgroup_test_subsys_mounted(const char *name)
 {
 	int i;
 
@@ -1460,8 +1460,8 @@ static char *cg_concat_path(const char *pref, const char *suf, char *path)
 
 /* Call with cg_mount_table_lock taken */
 /* path value have to have size at least FILENAME_MAX */
-static char *cg_build_path_locked(const char *name, char *path,
-						const char *type)
+char *cg_build_path_locked(const char *name, char *path,
+			   const char *type)
 {
 	int i;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
@@ -2180,9 +2180,35 @@ static int cgroup_copy_controller_values(struct cgroup_controller *dst,
 		dst_val = dst->values[i];
 		strncpy(dst_val->value, src_val->value, CG_CONTROL_VALUE_MAX);
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+
+		if (src_val->multiline_value) {
+			dst_val->multiline_value =
+				strdup(src_val->multiline_value);
+			if (!dst_val->multiline_value) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				goto err;
+			}
+		} else {
+			dst_val->multiline_value = NULL;
+		}
+
 		dst_val->dirty = src_val->dirty;
 	}
+
+	return ret;
+
 err:
+	dst->index = 0;
+	for (i = 0; i < src->index; i++) {
+		if (dst->values[i]) {
+			if (dst->values[i]->multiline_value)
+				free(dst->values[i]->multiline_value);
+
+			free(dst->values[i]);
+		}
+	}
+
 	return ret;
 }
 
@@ -2965,8 +2991,8 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup,
 /*
  * Call this function with required locks taken.
  */
-static int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
-			struct cgroup_controller *cgc, int cg_index)
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
+		    struct cgroup_controller *cgc, int cg_index)
 {
 	char *ctrl_name = NULL;
 	char *ctrl_file = NULL;

@@ -19,6 +19,7 @@
 __BEGIN_DECLS
 
 #include "config.h"
+#include <dirent.h>
 #include <fts.h>
 #include <libcgroup.h>
 #include <limits.h>
@@ -85,6 +86,9 @@ __BEGIN_DECLS
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_CONTROL_VALUE_MAX];
+
+	/* cgget uses this field for values that span multiple lines */
+	char *multiline_value;
 	bool dirty;
 };
 
@@ -320,6 +324,42 @@ int cgroup_get_controller_version(const char * const controller,
 int cgroup_build_tasks_procs_path(char * const path,
 				  size_t path_sz, const char * const cg_name,
 				  const char * const ctrl_name);
+
+/**
+ * Build the full path to the controller/setting
+ *
+ * @param setting Cgroup virtual filename/setting (optional)
+ * @param path Output variable to contain the concatenated path
+ * @param controller Cgroup controller name
+ *
+ * @return If successful, a valid pointer to the concatenated path
+ *
+ * @note The cg_mount_table_lock must be held prior to calling this function
+ */
+char *cg_build_path_locked(const char *setting, char *path,
+			   const char *controller);
+
+/**
+ * Given a cgroup controller and a setting within it, populate the setting's
+ * value
+ *
+ * @param ctrl_dir dirent representation of the setting, e.g. memory.stat
+ * @param cgroup current cgroup
+ * @param cgc current cgroup controller
+ * @param cg_index Index into the cg_mount_table of the cgroup
+ *
+ * @note The cg_mount_table_lock must be held prior to calling this function
+ */
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
+		    struct cgroup_controller *cgc, int cg_index);
+
+/**
+ * Given a controller name, test if it's mounted
+ *
+ * @param ctrl_name Controller name
+ * @return 1 if mounted, 0 if not mounted
+ */
+int cgroup_test_subsys_mounted(const char *ctrl_name);
 
 /**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST

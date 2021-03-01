@@ -150,8 +150,12 @@ void cgroup_free_controllers(struct cgroup *cgroup)
 		return;
 
 	for (i = 0; i < cgroup->index; i++) {
-		for (j = 0; j < cgroup->controller[i]->index; j++)
+		for (j = 0; j < cgroup->controller[i]->index; j++) {
+			if (cgroup->controller[i]->values[j]->multiline_value)
+				free(cgroup->controller[i]->values[j]->multiline_value);
+
 			free(cgroup->controller[i]->values[j]);
+		}
 		cgroup->controller[i]->index = 0;
 		free(cgroup->controller[i]);
 	}
@@ -195,18 +199,22 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 	if (!cntl_value)
 		return ECGCONTROLLERCREATEFAILED;
 
-	if (strlen(value) >= sizeof(cntl_value->value)) {
-		fprintf(stderr, "value exceeds the maximum of %d characters\n",
-			sizeof(cntl_value->value) - 1);
-		free(cntl_value);
-		return ECGCONFIGPARSEFAIL;
-	}
-
 	strncpy(cntl_value->name, name, sizeof(cntl_value->name));
 	cntl_value->name[sizeof(cntl_value->name)-1] = '\0';
-	strncpy(cntl_value->value, value, sizeof(cntl_value->value));
-	cntl_value->value[sizeof(cntl_value->value)-1] = '\0';
-	cntl_value->dirty = true;
+
+	if (value) {
+		if (strlen(value) >= sizeof(cntl_value->value)) {
+			fprintf(stderr, "value exceeds the maximum of %d characters\n",
+				sizeof(cntl_value->value) - 1);
+			free(cntl_value);
+			return ECGCONFIGPARSEFAIL;
+		}
+
+		strncpy(cntl_value->value, value, sizeof(cntl_value->value));
+		cntl_value->value[sizeof(cntl_value->value)-1] = '\0';
+		cntl_value->dirty = true;
+	}
+
 	controller->values[controller->index] = cntl_value;
 	controller->index++;
 
