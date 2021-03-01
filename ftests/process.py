@@ -20,6 +20,7 @@
 #
 
 from cgroup import Cgroup
+from cgroup import CgroupVersion
 import multiprocessing as mp
 from run import Run
 from run import RunError
@@ -105,3 +106,81 @@ class Process(object):
                 # ignore any errors during the kill command.  this is belt
                 # and suspenders code
                 pass
+
+    @staticmethod
+    def __get_cgroup_v1(config, pid, controller):
+        cmd = list()
+
+        cmd.append('cat')
+        cmd.append('/proc/{}/cgroup'.format(pid))
+
+        if config.args.container:
+            ret = config.container.run(cmd)
+        else:
+            ret = Run.run(cmd).decode('ascii')
+
+        for line in ret.splitlines():
+            # cgroup v1 appears in /proc/{pid}/cgroup like the following:
+            # $ cat /proc/1/cgroup
+            # 12:memory:/
+            # 11:hugetlb:/
+            # 10:perf_event:/
+            # 9:rdma:/
+            # 8:devices:/
+            # 7:cpuset:/
+            # 6:blkio:/
+            # 5:cpu,cpuacct:/
+            # 4:pids:/
+            # 3:freezer:/
+            # 2:net_cls,net_prio:/
+            # 1:name=systemd:/init.scope
+            # 0::/init.scope
+            proc_controllers = line.split(':')[1]
+            if proc_controllers.find(',') >= 0:
+                for proc_controller in proc_controllers.split(','):
+                    if controller == proc_controller:
+                        return line.split(':')[2]
+            else:
+                if controller == proc_controllers:
+                    return line.split(':')[2]
+
+        raise ValueError("Could not get cgroup for pid {} and controller {}".
+                         format(pid, controller))
+
+    @staticmethod
+    def __get_cgroup_v2(config, pid, controller):
+        cmd = list()
+
+        cmd.append('cat')
+        cmd.append('/proc/{}/cgroup'.format(pid))
+
+        if config.args.container:
+            ret = config.container.run(cmd)
+        else:
+            ret = Run.run(cmd).decode('ascii')
+
+        for line in ret.splitlines():
+            # cgroup v2 appears in /proc/{pid}/cgroup like the following:
+            # $ cat /proc/1/cgroup
+            # 0::/init.scope
+            if line.find('::') < 0:
+                # we have identified this controller is cgroup v2,
+                # ignore any cgroup v1 controllers
+                continue
+
+            return line.split(':')[2]
+
+        raise ValueError("Could not get cgroup for pid {} and controller {}".
+                         format(pid, controller))
+
+    # given a PID and a cgroup controller, what cgroup is this PID a member of
+    @staticmethod
+    def get_cgroup(config, pid, controller):
+        version = CgroupVersion.get_version(controller)
+
+        if version == CgroupVersion.CGROUP_V1:
+            return Process.__get_cgroup_v1(config, pid, controller)
+        elif version == CgroupVersion.CGROUP_V2:
+            return Process.__get_cgroup_v2(config, pid, controller)
+
+        raise ValueError("get_cgroup() shouldn't reach this point")
