@@ -81,7 +81,7 @@ class Process(object):
                 pid = pid.splitlines()[1]
 
         if pid == "" or int(pid) <= 0:
-            raise ValueException('Failed to get the pid of the child process: {}'.format(pid))
+            raise ValueError('Failed to get the pid of the child process: {}'.format(pid))
 
         self.children.append(p)
         return pid

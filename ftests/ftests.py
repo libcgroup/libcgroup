@@ -234,7 +234,7 @@ def run_tests(config):
                         elif ret == consts.TEST_SKIPPED:
                             skipped_tests.append([filename, run_time, failure_cause])
                         else:
-                            raise ValueException('Unexpected ret: {}'.format(ret))
+                            raise ValueError('Unexpected ret: {}'.format(ret))
 
     passed_cnt = len(passed_tests)
     failed_cnt = len(failed_tests)

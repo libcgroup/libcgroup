@@ -51,7 +51,7 @@ class CgroupVersion(Enum):
                             if ctrl == controller:
                                 return CgroupVersion.CGROUP_V2
 
-        return CgroupVersion.CGROUP_UNK
+        raise IndexError("Unknown version for controller {}".format(controller))
 
 class Cgroup(object):
     # This class is analogous to libcgroup's struct cgroup
