@@ -1,7 +1,7 @@
 #
 # Continuous Integration Workflow for libcgroup
 #
-# Copyright (c) 2020 Oracle and/or its affiliates.
+# Copyright (c) 2020-2021 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -67,7 +67,9 @@ jobs:
       run: make check
     - name: Display test logs
       if: ${{ always() }}
-      run: cat tests/ftests/ftests.sh.log
+      run: |
+        cat tests/ftests/ftests.sh.log
+        cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
@@ -110,7 +112,9 @@ jobs:
       run: make check
     - name: Display test logs
       if: ${{ always() }}
-      run: cat tests/ftests/ftests.sh.log
+      run: |
+        cat tests/ftests/ftests.sh.log
+        cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
