@@ -491,3 +491,49 @@ class Cgroup(object):
 
         for child in self.children:
             child.join(1)
+
+    @staticmethod
+    def configparser(config, load_file=None, load_dir=None, dflt_usr=None,
+                     dflt_grp=None, dperm=None, fperm=None, cghelp=False,
+                     tperm=None, tasks_usr=None, tasks_grp=None):
+        cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgconfigparser'))
+
+        if load_file is not None:
+            cmd.append('-l')
+            cmd.append(load_file)
+
+        if load_dir is not None:
+            cmd.append('-L')
+            cmd.append(load_dir)
+
+        if dflt_usr is not None and dflt_grp is not None:
+            cmd.append('-a')
+            cmd.append('{}:{}'.format(dflt_usr, dflt_grp))
+
+        if dperm is not None:
+            cmd.append('-d')
+            cmd.append(dperm)
+
+        if fperm is not None:
+            cmd.append('-f')
+            cmd.append(fperm)
+
+        if cghelp:
+            cmd.append('-h')
+
+        if tperm is not None:
+            cmd.append('-s')
+            cmd.append(tperm)
+
+        if tasks_usr is not None and tasks_grp is not None:
+            cmd.append('-t')
+            cmd.append('{}:{}'.format(tasks_usr, tasks_grp))
+
+        if config.args.container:
+            return config.container.run(cmd)
+        else:
+            return Run.run(cmd)
