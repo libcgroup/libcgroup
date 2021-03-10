@@ -496,6 +496,22 @@ class Cgroup(object):
     def configparser(config, load_file=None, load_dir=None, dflt_usr=None,
                      dflt_grp=None, dperm=None, fperm=None, cghelp=False,
                      tperm=None, tasks_usr=None, tasks_grp=None):
+        """cgconfigparser equivalent method
+
+        Returns:
+        str: The stdout result of cgconfigparser
+
+        The following variants of cgconfigparser are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgconfigparser -l conf_file                              017
+        cgconfigparser -L conf_dir                               018
+        cgconfigparser -l conf_file -a usr:grp -d mode -f mode   019
+        cgconfigparser -l conf_file -s mode -t usr:grp           020
+        cgconfigparser -h                                        021
+        cgconfigparser -l improper_conf_file                     021
+        """
         cmd = list()
 
         if not config.args.container:
