@@ -143,6 +143,21 @@ class Cgroup(object):
     @staticmethod
     def set(config, cgname=None, setting=None, value=None, copy_from=None,
             cghelp=False):
+        """cgset equivalent method
+
+        The following variants of cgset are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgset -r setting=value cgname                        various
+        cgset -r setting1=val1 -r setting2=val2
+              -r setting3=val2 cgname                            022
+        cgset --copy_from foo bar                                023
+        cgset --copy_from foo bar1 bar2                          024
+        cgset -r setting=value foo bar                           025
+        cgset -r setting1=value1 setting2=value2 foo bar         026
+        various invalid flag combinations                        027
+        """
         cmd = list()
 
         if not config.args.container:
