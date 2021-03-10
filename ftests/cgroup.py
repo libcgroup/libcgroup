@@ -141,7 +141,8 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname=None, setting=None, value=None, copy_from=None):
+    def set(config, cgname=None, setting=None, value=None, copy_from=None,
+            cghelp=False):
         cmd = list()
 
         if not config.args.container:
@@ -175,10 +176,13 @@ class Cgroup(object):
                 for cg in cgname:
                     cmd.append(cg)
 
+        if cghelp:
+            cmd.append('-h')
+
         if config.args.container:
-            config.container.run(cmd)
+            return config.container.run(cmd)
         else:
-            Run.run(cmd)
+            return Run.run(cmd)
 
     @staticmethod
     def get(config, controller=None, cgname=None, setting=None,
