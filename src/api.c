@@ -1892,7 +1892,8 @@ static int cg_set_control_value(char *path, const char *val)
  * @param controller The controller whose values are being updated
  */
 STATIC int cgroup_set_values_recursive(const char * const base,
-	const struct cgroup_controller * const controller)
+	const struct cgroup_controller * const controller,
+	bool ignore_non_dirty_failures)
 {
 	char *path = NULL;
 	int error = 0, ret, j;
@@ -1912,6 +1913,15 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 
 		free(path);
 		path = NULL;
+
+		if (error && ignore_non_dirty_failures &&
+		    !controller->values[j]->dirty) {
+			/* We failed to set this value, but it wasn't
+			 * marked as dirty, so ignore the failure.
+			 */
+			error = 0;
+			continue;
+		}
 
 		if (error)
 			goto err;
@@ -2142,7 +2152,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 			continue;
 
 		error = cgroup_set_values_recursive(base,
-				cgroup->controller[i]);
+				cgroup->controller[i], true);
 		if (error)
 			goto err;
 	}
@@ -2393,7 +2403,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			goto err;
 
 		error = cgroup_set_values_recursive(base,
-				cgroup->controller[k]);
+				cgroup->controller[k], false);
 		if (error)
 			goto err;
 
