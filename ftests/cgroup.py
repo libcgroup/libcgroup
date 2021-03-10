@@ -141,7 +141,7 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname, setting=None, value=None, copy_from=None):
+    def set(config, cgname=None, setting=None, value=None, copy_from=None):
         cmd = list()
 
         if not config.args.container:
@@ -167,7 +167,13 @@ class Cgroup(object):
             cmd.append('--copy-from')
             cmd.append(copy_from)
 
-        cmd.append(cgname)
+        if cgname is not None:
+            if isinstance(cgname, str):
+                # use the string as is
+                cmd.append(cgname)
+            elif isinstance(cgname, list):
+                for cg in cgname:
+                    cmd.append(cg)
 
         if config.args.container:
             config.container.run(cmd)
