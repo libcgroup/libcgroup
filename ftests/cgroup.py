@@ -537,3 +537,45 @@ class Cgroup(object):
             return config.container.run(cmd)
         else:
             return Run.run(cmd)
+
+    @staticmethod
+    def __get_controller_mount_point_v1(ctrl_name):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup':
+                    for option in line.split()[3].split(','):
+                        if option == ctrl_name:
+                            return line.split()[1]
+
+        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+
+    @staticmethod
+    def __get_controller_mount_point_v2(ctrl_name):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup2':
+                    ctrl_file = os.path.join(line.split()[1],
+                                             'cgroup.controllers')
+
+                    with open(ctrl_file, 'r') as ctrlf:
+                        controllers = ctrlf.readline()
+                        for controller in controllers.split():
+                            if controller == ctrl_name:
+                                return mnt_path
+
+        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+
+    @staticmethod
+    def get_controller_mount_point(ctrl_name):
+        vers = CgroupVersion.get_version(ctrl_name)
+
+        if vers == CgroupVersion.CGROUP_V1:
+            return Cgroup.__get_controller_mount_point_v1(ctrl_name)
+        elif vers == CgroupVersion.CGROUP_V2:
+            return Cgroup.__get_controller_mount_point_v2(ctrl_name)
+        else:
+            raise ValueError("Unsupported cgroup version")
