@@ -141,23 +141,31 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname, setting, value):
+    def set(config, cgname, setting=None, value=None, copy_from=None):
         cmd = list()
 
         if not config.args.container:
             cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgset'))
 
-        if isinstance(setting, str) and isinstance(value, str):
-            cmd.append('-r')
-            cmd.append('{}={}'.format(setting, value))
-        elif isinstance(setting, list) and isinstance(value, list):
-            if len(setting) != len(value):
-                raise ValueError('Settings list length must equal values list length')
-
-            for idx, stg in enumerate(setting):
+        if setting is not None or value is not None:
+            if isinstance(setting, str) and isinstance(value, str):
                 cmd.append('-r')
-                cmd.append('{}={}'.format(stg, value[idx]))
+                cmd.append('{}={}'.format(setting, value))
+            elif isinstance(setting, list) and isinstance(value, list):
+                if len(setting) != len(value):
+                    raise ValueError('Settings list length must equal values list length')
+
+                for idx, stg in enumerate(setting):
+                    cmd.append('-r')
+                    cmd.append('{}={}'.format(stg, value[idx]))
+            else:
+                raise ValueError('Invalid inputs to cgget:\nsetting: {}\n' \
+                                 'value{}'.format(setting, value))
+
+        if copy_from is not None:
+            cmd.append('--copy-from')
+            cmd.append(copy_from)
 
         cmd.append(cgname)
 
