@@ -491,3 +491,107 @@ class Cgroup(object):
 
         for child in self.children:
             child.join(1)
+
+    @staticmethod
+    def configparser(config, load_file=None, load_dir=None, dflt_usr=None,
+                     dflt_grp=None, dperm=None, fperm=None, cghelp=False,
+                     tperm=None, tasks_usr=None, tasks_grp=None):
+        """cgconfigparser equivalent method
+
+        Returns:
+        str: The stdout result of cgconfigparser
+
+        The following variants of cgconfigparser are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgconfigparser -l conf_file                              017
+        cgconfigparser -L conf_dir                               018
+        cgconfigparser -l conf_file -a usr:grp -d mode -f mode   019
+        cgconfigparser -l conf_file -s mode -t usr:grp           020
+        cgconfigparser -h                                        021
+        cgconfigparser -l improper_conf_file                     021
+        """
+        cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgconfigparser'))
+
+        if load_file is not None:
+            cmd.append('-l')
+            cmd.append(load_file)
+
+        if load_dir is not None:
+            cmd.append('-L')
+            cmd.append(load_dir)
+
+        if dflt_usr is not None and dflt_grp is not None:
+            cmd.append('-a')
+            cmd.append('{}:{}'.format(dflt_usr, dflt_grp))
+
+        if dperm is not None:
+            cmd.append('-d')
+            cmd.append(dperm)
+
+        if fperm is not None:
+            cmd.append('-f')
+            cmd.append(fperm)
+
+        if cghelp:
+            cmd.append('-h')
+
+        if tperm is not None:
+            cmd.append('-s')
+            cmd.append(tperm)
+
+        if tasks_usr is not None and tasks_grp is not None:
+            cmd.append('-t')
+            cmd.append('{}:{}'.format(tasks_usr, tasks_grp))
+
+        if config.args.container:
+            return config.container.run(cmd)
+        else:
+            return Run.run(cmd)
+
+    @staticmethod
+    def __get_controller_mount_point_v1(ctrl_name):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup':
+                    for option in line.split()[3].split(','):
+                        if option == ctrl_name:
+                            return line.split()[1]
+
+        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+
+    @staticmethod
+    def __get_controller_mount_point_v2(ctrl_name):
+        with open('/proc/mounts', 'r') as mntf:
+            for line in mntf.readlines():
+                mnt_path = line.split()[1]
+
+                if line.split()[0] == 'cgroup2':
+                    ctrl_file = os.path.join(line.split()[1],
+                                             'cgroup.controllers')
+
+                    with open(ctrl_file, 'r') as ctrlf:
+                        controllers = ctrlf.readline()
+                        for controller in controllers.split():
+                            if controller == ctrl_name:
+                                return mnt_path
+
+        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+
+    @staticmethod
+    def get_controller_mount_point(ctrl_name):
+        vers = CgroupVersion.get_version(ctrl_name)
+
+        if vers == CgroupVersion.CGROUP_V1:
+            return Cgroup.__get_controller_mount_point_v1(ctrl_name)
+        elif vers == CgroupVersion.CGROUP_V2:
+            return Cgroup.__get_controller_mount_point_v2(ctrl_name)
+        else:
+            raise ValueError("Unsupported cgroup version")
