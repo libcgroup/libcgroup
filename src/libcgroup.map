@@ -137,4 +137,5 @@ CGROUP_0.43 {
 	cgroup_test_subsys_mounted;
 	cg_mount_table;
 	cg_mount_table_lock;
+	cgroup_get_controller_version;
 } CGROUP_0.42;

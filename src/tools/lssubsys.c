@@ -95,6 +95,7 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 	int first = 1;
 	cont_name_t cont_names;
 	cont_name_t cont_name;
+	enum cg_version_t version;
 
 	/*
 	 * Initialize libcgroup and intentionally ignore its result,
@@ -110,8 +111,14 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 	}
 
 	while (ret != ECGEOF) {
-		/* controller is in the hierrachy */
-		if (info.hierarchy != hierarchy)
+		ret = cgroup_get_controller_version(info.name, &version);
+		if (ret)
+			goto end;
+
+		/* v1 controllers should be in the hierachy.  v2 controllers
+		 * will have a hierarchy value of zero
+		 */
+		if (version == CGROUP_V1 && info.hierarchy != hierarchy)
 			goto next;
 
 		if (first) {
@@ -162,7 +169,7 @@ static int cgroup_list_all_controllers(const char *tname,
 	ret = cgroup_get_all_controller_begin(&handle, &info);
 	while (ret == 0) {
 		if (info.hierarchy == 0) {
-			/* the controller is not attached to any hierrachy */
+			/* the controller is not attached to any hierachy */
 			if (flags & FL_ALL)
 				/* display only if -a flag is set */
 				printf("%s\n", info.name);
