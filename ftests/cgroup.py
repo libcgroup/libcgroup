@@ -655,3 +655,38 @@ class Cgroup(object):
             return config.container.run(cmd)
         else:
             return Run.run(cmd)
+
+    @staticmethod
+    def lssubsys(config, ls_all=False, cghelp=False, hierarchies=False,
+                 mount_points=False, all_mount_points=False):
+        cmd = list()
+
+        cmd.append(Cgroup.build_cmd_path('lssubsys'))
+
+        if ls_all:
+            cmd.append('-a')
+
+        if cghelp:
+            cmd.append('-h')
+
+        if hierarchies:
+            cmd.append('-i')
+
+        if mount_points:
+            cmd.append('-m')
+
+        if all_mount_points:
+            cmd.append('-M')
+
+        if config.args.container:
+            ret = config.container.run(cmd)
+        else:
+            try:
+                ret = Run.run(cmd)
+            except RunError as re:
+                if "profiling" in re.stderr:
+                    ret = re.stdout
+                else:
+                    raise re
+
+        return ret
