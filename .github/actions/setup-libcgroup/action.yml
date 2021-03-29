@@ -28,7 +28,7 @@ runs:
     shell: bash
   - run: ./bootstrap.sh
     shell: bash
-  - run: CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage
+  - run: CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd"
     shell: bash
   - run: make
     shell: bash
