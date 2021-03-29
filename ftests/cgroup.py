@@ -141,30 +141,63 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname, setting, value):
+    def set(config, cgname=None, setting=None, value=None, copy_from=None,
+            cghelp=False):
+        """cgset equivalent method
+
+        The following variants of cgset are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgset -r setting=value cgname                        various
+        cgset -r setting1=val1 -r setting2=val2
+              -r setting3=val2 cgname                            022
+        cgset --copy_from foo bar                                023
+        cgset --copy_from foo bar1 bar2                          024
+        cgset -r setting=value foo bar                           025
+        cgset -r setting1=value1 setting2=value2 foo bar         026
+        various invalid flag combinations                        027
+        """
         cmd = list()
 
         if not config.args.container:
             cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgset'))
 
-        if isinstance(setting, str) and isinstance(value, str):
-            cmd.append('-r')
-            cmd.append('{}={}'.format(setting, value))
-        elif isinstance(setting, list) and isinstance(value, list):
-            if len(setting) != len(value):
-                raise ValueError('Settings list length must equal values list length')
-
-            for idx, stg in enumerate(setting):
+        if setting is not None or value is not None:
+            if isinstance(setting, str) and isinstance(value, str):
                 cmd.append('-r')
-                cmd.append('{}={}'.format(stg, value[idx]))
+                cmd.append('{}={}'.format(setting, value))
+            elif isinstance(setting, list) and isinstance(value, list):
+                if len(setting) != len(value):
+                    raise ValueError('Settings list length must equal values list length')
 
-        cmd.append(cgname)
+                for idx, stg in enumerate(setting):
+                    cmd.append('-r')
+                    cmd.append('{}={}'.format(stg, value[idx]))
+            else:
+                raise ValueError('Invalid inputs to cgget:\nsetting: {}\n' \
+                                 'value{}'.format(setting, value))
+
+        if copy_from is not None:
+            cmd.append('--copy-from')
+            cmd.append(copy_from)
+
+        if cgname is not None:
+            if isinstance(cgname, str):
+                # use the string as is
+                cmd.append(cgname)
+            elif isinstance(cgname, list):
+                for cg in cgname:
+                    cmd.append(cg)
+
+        if cghelp:
+            cmd.append('-h')
 
         if config.args.container:
-            config.container.run(cmd)
+            return config.container.run(cmd)
         else:
-            Run.run(cmd)
+            return Run.run(cmd)
 
     @staticmethod
     def get(config, controller=None, cgname=None, setting=None,

@@ -116,7 +116,7 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 		ctrlr.index++;
 	}
 
-	ret = cgroup_set_values_recursive(PARENT_DIR, &ctrlr);
+	ret = cgroup_set_values_recursive(PARENT_DIR, &ctrlr, true);
 	ASSERT_EQ(ret, 0);
 
 	for (i = 0; i < NAMES_CNT; i++) {
