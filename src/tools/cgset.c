@@ -73,12 +73,57 @@ static void usage(int status, const char *program_name)
 		"parameters will be copied\n");
 }
 
+static int parse_r_flag(const char * const program_name,
+			const char * const name_value_str,
+			struct control_value * const name_value)
+{
+	int ret = 0;
+	char *copy, *buf;
+
+	copy = strdup(name_value_str);
+	if (copy == NULL) {
+		fprintf(stderr, "%s: not enough memory\n", program_name);
+		ret = -1;
+		goto err;
+	}
+
+	/* parse optarg value */
+	buf = strtok(copy, "=");
+	if (buf == NULL) {
+		fprintf(stderr, "%s: "
+			"wrong parameter of option -r: %s\n",
+			program_name, optarg);
+		ret = -1;
+		goto err;
+	}
+
+	strncpy(name_value->name, buf, FILENAME_MAX);
+	name_value->name[FILENAME_MAX-1] = '\0';
+
+	buf = strtok(NULL, "=");
+	if (buf == NULL) {
+		fprintf(stderr, "%s: "
+			"wrong parameter of option -r: %s\n",
+			program_name, optarg);
+		ret = -1;
+		goto err;
+	}
+
+	strncpy(name_value->value, buf, CG_CONTROL_VALUE_MAX);
+	name_value->value[CG_CONTROL_VALUE_MAX-1] = '\0';
+
+err:
+	if (copy)
+		free(copy);
+
+	return ret;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret = 0;
 	int c;
 
-	char *buf;
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
 	int nv_max = 0;
@@ -128,31 +173,10 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			/* parse optarg value */
-			/* there is necessary to input the tuple n=v */
-			buf = strtok(optarg, "=");
-			if (buf == NULL) {
-				fprintf(stderr, "%s: "
-					"wrong parameter of option -r: %s\n",
-					argv[0], optarg);
-				ret = -1;
+			ret = parse_r_flag(argv[0], optarg,
+					   &name_value[nv_number]);
+			if (ret)
 				goto err;
-			}
-
-			strncpy(name_value[nv_number].name, buf, FILENAME_MAX);
-			name_value[nv_number].name[FILENAME_MAX-1] = '\0';
-
-			buf = strtok(NULL, "=");
-			if (buf == NULL) {
-				fprintf(stderr, "%s: "
-					"wrong parameter of option -r: %s\n",
-					argv[0], optarg);
-				ret = -1;
-				goto err;
-			}
-
-			strncpy(name_value[nv_number].value, buf, CG_CONTROL_VALUE_MAX);
-			name_value[nv_number].value[CG_CONTROL_VALUE_MAX-1] = '\0';
 
 			nv_number++;
 			break;
