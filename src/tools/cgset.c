@@ -100,8 +100,13 @@ static int parse_r_flag(const char * const program_name,
 	strncpy(name_value->name, buf, FILENAME_MAX);
 	name_value->name[FILENAME_MAX-1] = '\0';
 
-	buf = strtok(NULL, "=");
-	if (buf == NULL) {
+	buf = strchr(name_value_str, '=');
+	/* we don't need to check the return value of strchr because we
+	 * know there's already an '=' character in the string.
+	 */
+	buf++;
+
+	if (strlen(buf) == 0) {
 		fprintf(stderr, "%s: "
 			"wrong parameter of option -r: %s\n",
 			program_name, optarg);
