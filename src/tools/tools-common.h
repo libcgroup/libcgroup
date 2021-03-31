@@ -129,6 +129,11 @@ int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
  * remaining static in a normal libcgroup build.
  */
 #ifdef UNIT_TEST
+
+int parse_r_flag(const char * const program_name,
+		 const char * const name_value_str,
+		 struct control_value * const name_value);
+
 #endif /* UNIT_TEST */
 
 __END_DECLS

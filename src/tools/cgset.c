@@ -73,7 +73,7 @@ static void usage(int status, const char *program_name)
 		"parameters will be copied\n");
 }
 
-static int parse_r_flag(const char * const program_name,
+STATIC int parse_r_flag(const char * const program_name,
 			const char * const name_value_str,
 			struct control_value * const name_value)
 {
