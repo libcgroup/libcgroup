@@ -21,13 +21,15 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_srcdir)/src \
+	      -I$(top_srcdir)/src/tools \
 	      -I$(top_builddir)/googletest/googletest/include \
 	      -I$(top_builddir)/googletest/googletest \
 	      -std=c++11 \
 	      -Wno-write-strings \
 	      -DSTATIC= \
 	      -DUNIT_TEST
-LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la
+LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la \
+	$(top_builddir)/src/tools/.libs/libcgset.la
 
 EXTRA_DIST = $(top_srcdir)/googletest/googletest/libgtest.so \
 	     $(top_srcdir)/googletest/googletest/libgtest_main.so \
@@ -52,6 +54,7 @@ gtest_SOURCES = gtest.cpp \
 		012-cgroup_create_cgroup.cpp \
 		013-cgroup_build_tasks_procs_path.cpp \
 		014-cgroupv2_get_subtree_control.cpp \
-		015-cgroupv2_controller_enabled.cpp
+		015-cgroupv2_controller_enabled.cpp \
+		016-cgset_parse_r_flag.cpp
 gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
 		-rpath $(abs_top_builddir)/googletest/googletest
