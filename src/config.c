@@ -1331,6 +1331,7 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 	struct cgroup_controller *cgc = NULL;
 	char path[FILENAME_MAX];
 	void *handle;
+	enum cg_version_t version;
 
 	cgroup = cgroup_new_cgroup(".");
 	if (cgroup == NULL)
@@ -1344,6 +1345,14 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 
 	ret = cgroup_delete_cgroup_ext(cgroup, CGFLAG_DELETE_RECURSIVE);
 	if (ret != 0)
+		goto out_error;
+
+	ret = cgroup_get_controller_version(mount_info->name, &version);
+	if (ret != 0)
+		goto out_error;
+
+	if (version == CGROUP_V2)
+		/* do not unmount the controller */
 		goto out_error;
 
 	/* unmount everything */

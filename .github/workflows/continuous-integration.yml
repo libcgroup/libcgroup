@@ -64,7 +64,11 @@ jobs:
     - name: Initialize the directory
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
-      run: make check
+      run: |
+        make check
+        pushd tests/ftests
+        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
+        popd
     - name: Display test logs
       if: ${{ always() }}
       run: |
@@ -109,7 +113,11 @@ jobs:
     - name: Initialize the directory
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
-      run: make check
+      run: |
+        make check
+        pushd tests/ftests
+        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
+        popd
     - name: Display test logs
       if: ${{ always() }}
       run: |

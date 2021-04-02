@@ -27,6 +27,7 @@ test -d m4 || mkdir m4
 autoreconf -fi
 rm -fr autom4te.cache
 
-CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var
+CFLAGS="$CFLAGS -g -O0" ./configure --sysconfdir=/etc --localstatedir=/var \
+	--enable-opaque-hierarchy="name=systemd"
 
 make clean
