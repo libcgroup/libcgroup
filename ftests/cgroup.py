@@ -628,3 +628,30 @@ class Cgroup(object):
             return Cgroup.__get_controller_mount_point_v2(ctrl_name)
         else:
             raise ValueError("Unsupported cgroup version")
+
+    @staticmethod
+    def clear(config, empty=False, cghelp=False, load_file=None, load_dir=None):
+        cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgclear'))
+
+        if empty:
+            cmd.append('-e')
+
+        if cghelp:
+            cmd.append('-h')
+
+        if load_file is not None:
+            cmd.append('-l')
+            cmd.append(load_file)
+
+        if load_dir is not None:
+            cmd.append('-L')
+            cmd.append(load_dir)
+
+        if config.args.container:
+            return config.container.run(cmd)
+        else:
+            return Run.run(cmd)

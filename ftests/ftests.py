@@ -65,6 +65,9 @@ def parse_args():
     parser.add_argument('-N', '--num',
                         help='Test number to run.  If unspecified, all tests are run',
                         required=False, default=consts.TESTS_RUN_ALL, type=int)
+    parser.add_argument('-S', '--skip',
+                        help='Test number to skip.  If unspecified, all tests are run',
+                        required=False, default=consts.TESTS_RUN_ALL, type=int)
     parser.add_argument('-s', '--suite',
                         help='Test suite to run, e.g. cpuset', required=False,
                         default=consts.TESTS_RUN_ALL_SUITES, type=str)
@@ -207,6 +210,10 @@ def run_tests(config):
                config.args.suite == filesuite:
                 if config.args.num == consts.TESTS_RUN_ALL or \
                    config.args.num == filenum_int:
+
+                    if config.args.skip == filenum_int:
+                        continue
+
                     test = __import__(os.path.splitext(filename)[0])
 
                     failure_cause = None
