@@ -18,6 +18,7 @@
 
 #define __TOOLS_COMMON
 
+__BEGIN_DECLS
 #include "config.h"
 #include <libcgroup.h>
 #include "../libcgroup-internal.h"
@@ -121,5 +122,20 @@ int parse_mode(char *string, mode_t *pmode, const char *program_name);
  */
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
 		const char *program_name);
+
+/**
+ * Functions that are defined as STATIC can be placed within the UNIT_TEST
+ * ifdef.  This will allow them to be included in the unit tests while
+ * remaining static in a normal libcgroup build.
+ */
+#ifdef UNIT_TEST
+
+int parse_r_flag(const char * const program_name,
+		 const char * const name_value_str,
+		 struct control_value * const name_value);
+
+#endif /* UNIT_TEST */
+
+__END_DECLS
 
 #endif /* TOOLS_COMMON */
