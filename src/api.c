@@ -1463,18 +1463,27 @@ static char *cg_concat_path(const char *pref, const char *suf, char *path)
 char *cg_build_path_locked(const char *name, char *path,
 			   const char *type)
 {
-	int i;
+	int i, ret;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
 		if (strcmp(cg_mount_table[i].name, type) == 0) {
 			if (cg_namespace_table[i]) {
-				snprintf(path, FILENAME_MAX, "%s/%s/",
+				ret = snprintf(path, FILENAME_MAX, "%s/%s/",
 						cg_mount_table[i].mount.path,
 						cg_namespace_table[i]);
 				path[FILENAME_MAX-1] = '\0';
+				if (ret >= FILENAME_MAX)
+					cgroup_dbg("Warning: filename too long:"
+						"%s/%s/",
+						cg_mount_table[i].mount.path,
+						cg_namespace_table[i]);
 			} else {
-				snprintf(path, FILENAME_MAX, "%s/",
+				ret = snprintf(path, FILENAME_MAX, "%s/",
 						cg_mount_table[i].mount.path);
 				path[FILENAME_MAX-1] = '\0';
+				if (ret >= FILENAME_MAX)
+					cgroup_dbg("Warning: filename too long:"
+						"%s/",
+						cg_mount_table[i].mount.path);
 			}
 
 			if (name) {
