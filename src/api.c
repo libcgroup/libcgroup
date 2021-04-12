@@ -2885,7 +2885,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			/* tasks need to be moved, pre-open target tasks file */
 			ret = cgroup_build_tasks_procs_path(parent_path,
 					sizeof(parent_path), parent_name,
-					cgroup->controller[i]);
+					cgroup->controller[i]->name);
 			if (ret != 0) {
 				if (first_error == 0)
 					first_error = ECGFAIL;
