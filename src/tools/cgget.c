@@ -336,9 +336,25 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	}
 
 	while (argv[optind] != NULL) {
-		cg = (*cg_list)[(*cg_list_len) - 1];
+		if ((*cg_list_len) > 0)
+			cg = (*cg_list)[(*cg_list_len) - 1];
+		else
+			cg = NULL;
 
-		if (strlen(cg->name) == 0) {
+		if ((*cg_list_len) == 0) {
+			/* The user didn't provide a '-r' or '-g' flag.
+			 * The parse_a_flag() function can be reused here
+			 * because we both have the same use case - gather
+			 * all the data about this particular cgroup.
+			 */
+			ret = parse_a_flag(cg_list, cg_list_len);
+			if (ret)
+				goto out;
+
+			strncpy((*cg_list)[(*cg_list_len) - 1]->name,
+				argv[optind],
+				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
+		} else if (cg != NULL && strlen(cg->name) == 0) {
 			/* this cgroup was created based upon control/value
 			 * pairs or with a -g <controller> option.  we'll
 			 * populate it with the parameter provided by the
