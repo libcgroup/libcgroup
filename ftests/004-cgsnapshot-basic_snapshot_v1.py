@@ -24,6 +24,7 @@ from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
 import os
+from run import Run
 import sys
 
 CONTROLLER='memory'
@@ -48,10 +49,15 @@ CGSNAPSHOT = """group 004cgsnapshot {
                             memory.kmem.limit_in_bytes="9223372036854771712";
                             memory.use_hierarchy="1";
                             memory.kmem.tcp.limit_in_bytes="9223372036854771712";
-                            memory.memsw.failcnt="0";
+"""
+
+CGSNAPSHOT_SWAP = """                            memory.memsw.failcnt="0";
                             memory.memsw.limit_in_bytes="9223372036854771712";
                             memory.memsw.max_usage_in_bytes="0";
                     }
+            }"""
+
+CGSNAPSHOT_NOSWAP = """                    }
             }"""
 
 def prereqs(config):
@@ -77,7 +83,16 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    expected = Cgroup.snapshot_to_dict(CGSNAPSHOT)
+    try:
+        # check if the memsw.failcnt file exists.  if so, add it to the
+        # expected snapshot
+        Cgroup.get(config, setting="memory.memsw.failcnt", cgname=CGNAME)
+        expected_str = CGSNAPSHOT + CGSNAPSHOT_SWAP
+    except:
+        # memsw files don't exist.  exclude them from the snapshot
+        expected_str = CGSNAPSHOT + CGSNAPSHOT_NOSWAP
+
+    expected = Cgroup.snapshot_to_dict(expected_str)
     actual = Cgroup.snapshot(config, controller=CONTROLLER)
 
     if expected[CGNAME] != actual[CGNAME]:
