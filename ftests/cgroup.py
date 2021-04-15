@@ -750,3 +750,36 @@ class Cgroup(object):
                             mount_list.append(mount_copy)
 
         return mount_list
+
+    @staticmethod
+    def lscgroup(config, cghelp=False, controller=None, path=None):
+        cmd = list()
+
+        cmd.append(Cgroup.build_cmd_path('lscgroup'))
+
+        if cghelp:
+            cmd.append('-h')
+
+        if controller is not None and path is not None:
+            if isinstance(controller, list):
+                for idx, ctrl in enumerate(controller):
+                    cmd.append('-g')
+                    cmd.append('{}:{}'.format(ctrl, path[idx]))
+            elif isinstance(controller, str):
+                cmd.append('-g')
+                cmd.append('{}:{}'.format(controller, path))
+            else:
+                raise ValueError('Unsupported controller value')
+
+        if config.args.container:
+            ret = config.container.run(cmd)
+        else:
+            try:
+                ret = Run.run(cmd)
+            except RunError as re:
+                if "profiling" in re.stderr:
+                    ret = re.stdout
+                else:
+                    raise re
+
+        return ret
