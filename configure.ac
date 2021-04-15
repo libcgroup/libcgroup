@@ -221,4 +221,3 @@ AC_CONFIG_FILES([Makefile
 AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
-

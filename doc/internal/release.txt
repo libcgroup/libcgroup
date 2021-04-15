@@ -4,10 +4,10 @@ Please follow the following steps (TODO: Automate these steps)
 1. Check, that every new or changed feature since last release is reflected in
    README and/or man pages.
 2. Bump soname of libcgroup shared objects if needed - LIBRARY_VERSION_MAJOR,
-   _MINOR and _RELEASE in configure.in.
+   _MINOR and _RELEASE in configure.ac.
 3. Prepare release candidate (X.YY-rcZ - X.YY = version, Z - prerelease
 umber):
-	a. Update AC_INIT(X.YY.rcZ) in configure.in.
+	a. Update AC_INIT(X.YY.rcZ) in configure.ac.
 	b. Run 'autoreconf -i' to generate the configure file again, with the
 	   new release number.
 	c. Run './configure' to generate Makefile and dist/libcgroup.spec with

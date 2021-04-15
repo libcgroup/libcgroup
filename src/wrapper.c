@@ -204,7 +204,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
 
 	if (value) {
 		if (strlen(value) >= sizeof(cntl_value->value)) {
-			fprintf(stderr, "value exceeds the maximum of %d characters\n",
+			fprintf(stderr, "value exceeds the maximum of %ld characters\n",
 				sizeof(cntl_value->value) - 1);
 			free(cntl_value);
 			return ECGCONFIGPARSEFAIL;

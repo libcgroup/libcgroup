@@ -1,4 +1,4 @@
-1.  Update version in configure.in
+1.  Update version in configure.ac
     a.  AC_INIT([libcgroup],[0.XX])
     b.  Add an .rcY to the end, e.g. 0.XX.rcY
 2.  Build
