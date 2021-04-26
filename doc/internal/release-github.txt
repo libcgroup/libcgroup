@@ -3,7 +3,7 @@
     b.  Add an .rcY to the end, e.g. 0.XX.rcY
 2.  Build
     a.  Run ./bootstrap.sh
-    b.  Run ./configure
+    b.  Run ./configure --enable-opaque-hierarchy="name=systemd"
     c.  Run make check
     d.  Run make dist
 3.  Tag the Release
@@ -11,9 +11,16 @@
 4.  Push to github
     a.  git push origin v0.XX.rcY
     b.  Generate a checksum for the *.tar.gz and *.tar.bz2 and ...
-        sha256sum <tarball> > libseccomp-X.Y.Z.tar.gz.SHA256SUM
-    c.  Upload the zips and checksums to the github release
-    d.  Email libcg-devel about the new release w/ the changelog
+        sha256sum <tarball> > libcgroup-X.Y.Z.tar.gz.SHA256SUM
+    c.  Sign the tar files
+        gpg --armor --detach-sign libcgroup-X.Y.Z.tar.gz
+        gpg --armor --detach-sign libcgroup-X.Y.Z.tar.bz2
+    d.  Sign the SHA256 files
+        gpg --clearsign libcgroup-X.Y.Z.tar.gz.SHA256SUM
+        gpg --clearsign libcgroup-X.Y.Z.tar.bz2.SHA256SUM
+    e.  Upload the zips, checksums, and signing files to the github
+        release
+    f.  Email libcg-devel about the new release w/ the changelog
         git shortlog v0.XX.rc(Y-1)..v0.XX.rcY
 5.  Verify continuous integration passes
     a.  Verify TravisCI, code coverage, etc. all pass
