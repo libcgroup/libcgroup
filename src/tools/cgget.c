@@ -582,6 +582,7 @@ static int fill_empty_controller(struct cgroup * const cg,
 
 	path_len = strlen(path);
 	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
+	path[sizeof(path) - 1] = '\0';
 
 	if (access(path, F_OK))
 		goto out;
