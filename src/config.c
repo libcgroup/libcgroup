@@ -1840,6 +1840,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				/* variables substituted in template */
 				strncpy(buffer, t_cgroup->name,
 					FILENAME_MAX-1);
+				buffer[sizeof(buffer) - 1] = '\0';
 				strncpy(t_cgroup->name, cgroup->name,
 					FILENAME_MAX-1);
 
