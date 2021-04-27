@@ -813,6 +813,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		}
 		strncpy(newrule->destination, destination,
 			sizeof(newrule->destination) - 1);
+		newrule->destination[sizeof(newrule->destination) - 1] = '\0';
 
 		if (has_options) {
 			ret = cgroup_parse_rules_options(options, newrule);
