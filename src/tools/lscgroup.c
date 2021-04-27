@@ -97,6 +97,7 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 		return ret;
 
 	strncpy(cgroup_dir_path, info.full_path, FILENAME_MAX);
+	cgroup_dir_path[sizeof(cgroup_dir_path) - 1] = '\0';
 	/* remove problematic  '/' characters from cgroup directory path*/
 	trim_filepath(cgroup_dir_path);
 
