@@ -129,6 +129,7 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 
 			memset(cont_names, 0, FILENAME_MAX);
 			strncpy(cont_names, info.name, FILENAME_MAX-1);
+			cont_names[sizeof(cont_names) - 1] = '\0';
 			first = 0;
 		} else {
 			/* the next controller in the hierarchy */
