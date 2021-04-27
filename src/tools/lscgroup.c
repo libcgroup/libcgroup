@@ -148,6 +148,7 @@ static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 				FILENAME_MAX-strlen(all_conts)-1);
 			strncat(all_conts, controller.name,
 				FILENAME_MAX-strlen(all_conts)-1);
+			all_conts[sizeof(all_conts) - 1] = '\0';
 		} else {
 			/* we got new mount point, print it if needed */
 			if (output) {
