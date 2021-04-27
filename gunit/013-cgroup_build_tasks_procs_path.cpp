@@ -49,7 +49,7 @@ class BuildTasksProcPathTest : public ::testing::Test {
 		char NAMESPACE1[] = "ns1";
 		char NAMESPACE4[] = "ns4";
 		const int ENTRY_CNT = 6;
-		int i;
+		int i, ret;
 
 		memset(&cg_mount_table, 0, sizeof(cg_mount_table));
 		memset(cg_namespace_table, 0,
@@ -61,8 +61,10 @@ class BuildTasksProcPathTest : public ::testing::Test {
 				 "controller%d", i);
 			cg_mount_table[i].index = i;
 
-			snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
+			ret = snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
 				 "/sys/fs/cgroup/%s", cg_mount_table[i].name);
+			ASSERT_LT(ret, sizeof(cg_mount_table[i].mount.path));
+
 			cg_mount_table[i].mount.next = NULL;
 
 			if (i == 0)
