@@ -1843,6 +1843,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				buffer[sizeof(buffer) - 1] = '\0';
 				strncpy(t_cgroup->name, cgroup->name,
 					FILENAME_MAX-1);
+				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 
 				ret = cgroup_create_cgroup(t_cgroup, flags);
 
