@@ -132,6 +132,7 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 			/* the next controller in the hierarchy */
 			strncat(cont_names, ",", FILENAME_MAX-1);
 			strncat(cont_names, info.name, FILENAME_MAX-1);
+			cont_names[sizeof(cont_names) - 1] = '\0';
 		}
 next:
 		ret = cgroup_get_all_controller_next(&handle, &info);
