@@ -674,6 +674,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		len_username = min(len_username, sizeof(user) - 1);
 		memset(user, '\0', sizeof(user));
 		strncpy(user, key, len_username);
+		user[sizeof(user) - 1] = '\0';
 
 		/*
 		 * Next, check the user/group.  If it's a % sign, then we
