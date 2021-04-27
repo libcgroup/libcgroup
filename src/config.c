@@ -1849,6 +1849,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 
 				strncpy(t_cgroup->name, buffer,
 					FILENAME_MAX-1);
+				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 				if (ret) {
 					cgroup_dbg("creating group %s, error %d\n",
 					cgroup->name, ret);
