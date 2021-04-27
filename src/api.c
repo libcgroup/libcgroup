@@ -3151,6 +3151,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 
 		path_len = strlen(path);
 		strncat(path, cgroup->name, FILENAME_MAX - path_len - 1);
+		path[sizeof(path) - 1] = '\0';
 
 		if (access(path, F_OK))
 			continue;
