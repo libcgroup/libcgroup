@@ -796,6 +796,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		len_username = min(len_username,
 					sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
+		newrule->username[sizeof(newrule->username) - 1] = '\0';
+
 		if (len_procname) {
 			newrule->procname = strdup(procname);
 			if (!newrule->procname) {
