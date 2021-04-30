@@ -1840,13 +1840,16 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				/* variables substituted in template */
 				strncpy(buffer, t_cgroup->name,
 					FILENAME_MAX-1);
+				buffer[sizeof(buffer) - 1] = '\0';
 				strncpy(t_cgroup->name, cgroup->name,
 					FILENAME_MAX-1);
+				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 
 				ret = cgroup_create_cgroup(t_cgroup, flags);
 
 				strncpy(t_cgroup->name, buffer,
 					FILENAME_MAX-1);
+				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 				if (ret) {
 					cgroup_dbg("creating group %s, error %d\n",
 					cgroup->name, ret);

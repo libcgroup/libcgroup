@@ -674,6 +674,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		len_username = min(len_username, sizeof(user) - 1);
 		memset(user, '\0', sizeof(user));
 		strncpy(user, key, len_username);
+		user[sizeof(user) - 1] = '\0';
 
 		/*
 		 * Next, check the user/group.  If it's a % sign, then we
@@ -795,6 +796,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		len_username = min(len_username,
 					sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
+		newrule->username[sizeof(newrule->username) - 1] = '\0';
+
 		if (len_procname) {
 			newrule->procname = strdup(procname);
 			if (!newrule->procname) {
@@ -810,6 +813,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		}
 		strncpy(newrule->destination, destination,
 			sizeof(newrule->destination) - 1);
+		newrule->destination[sizeof(newrule->destination) - 1] = '\0';
 
 		if (has_options) {
 			ret = cgroup_parse_rules_options(options, newrule);
@@ -3147,6 +3151,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 
 		path_len = strlen(path);
 		strncat(path, cgroup->name, FILENAME_MAX - path_len - 1);
+		path[sizeof(path) - 1] = '\0';
 
 		if (access(path, F_OK))
 			continue;

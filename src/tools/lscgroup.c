@@ -97,10 +97,12 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 		return ret;
 
 	strncpy(cgroup_dir_path, info.full_path, FILENAME_MAX);
+	cgroup_dir_path[sizeof(cgroup_dir_path) - 1] = '\0';
 	/* remove problematic  '/' characters from cgroup directory path*/
 	trim_filepath(cgroup_dir_path);
 
 	strncpy(input_dir_path, input_path, FILENAME_MAX);
+	input_dir_path[sizeof(input_dir_path) - 1] = '\0';
 
 	/* remove problematic  '/' characters from input directory path*/
 	trim_filepath(input_dir_path);
@@ -146,6 +148,7 @@ static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 				FILENAME_MAX-strlen(all_conts)-1);
 			strncat(all_conts, controller.name,
 				FILENAME_MAX-strlen(all_conts)-1);
+			all_conts[sizeof(all_conts) - 1] = '\0';
 		} else {
 			/* we got new mount point, print it if needed */
 			if (output) {
