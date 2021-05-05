@@ -66,8 +66,9 @@ def parse_args():
                         help='Test number to run.  If unspecified, all tests are run',
                         required=False, default=consts.TESTS_RUN_ALL, type=int)
     parser.add_argument('-S', '--skip',
-                        help='Test number to skip.  If unspecified, all tests are run',
-                        required=False, default=consts.TESTS_RUN_ALL, type=int)
+                        help='Test number(s) to skip.  If unspecified, all tests are run.'
+                        'To skip multiple tests, separate them via a \',\', e.g. \'5,7,12\'',
+                        required=False, default='', type=str)
     parser.add_argument('-s', '--suite',
                         help='Test suite to run, e.g. cpuset', required=False,
                         default=consts.TESTS_RUN_ALL_SUITES, type=str)
@@ -88,6 +89,15 @@ def parse_args():
                         default=True, required=False, action="store_false")
 
     config = Config(parser.parse_args())
+
+    if config.args.skip is None or config.args.skip == '':
+        pass
+    elif config.args.skip.find(',') < 0:
+        config.skip_list.append(int(config.args.skip))
+    else:
+        # multiple tests are being skipped
+        for test_num in config.args.skip.split(','):
+            config.skip_list.append(int(test_num))
 
     if config.args.loglevel:
         log.log_level = config.args.loglevel
@@ -211,7 +221,7 @@ def run_tests(config):
                 if config.args.num == consts.TESTS_RUN_ALL or \
                    config.args.num == filenum_int:
 
-                    if config.args.skip == filenum_int:
+                    if filenum_int in config.skip_list:
                         continue
 
                     test = __import__(os.path.splitext(filename)[0])
