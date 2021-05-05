@@ -28,6 +28,7 @@ import utils
 class Config(object):
     def __init__(self, args, container=None):
         self.args = args
+        self.skip_list = []
 
         if self.args.container:
             if container:
