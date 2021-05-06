@@ -1,6 +1,6 @@
 @CODE_COVERAGE_RULES@
 
-CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
 LDADD = $(top_builddir)/src/libcgroup.la -lpthread
 
 if WITH_TOOLS
