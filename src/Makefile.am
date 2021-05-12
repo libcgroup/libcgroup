@@ -13,7 +13,7 @@ AM_YFLAGS = -d
 
 CLEANFILES = lex.c parse.c parse.h
 
-INCLUDES = -I$(top_srcdir)/include
+CPPFLAGS = -I$(top_srcdir)/include
 lib_LTLIBRARIES = libcgroup.la libcgroupfortesting.la
 libcgroup_la_SOURCES = parse.h parse.y lex.l api.c config.c libcgroup-internal.h libcgroup.map wrapper.c log.c
 libcgroup_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)

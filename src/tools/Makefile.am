@@ -1,6 +1,6 @@
 @CODE_COVERAGE_RULES@
 
-INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/include
+CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
 LDADD = $(top_builddir)/src/libcgroup.la -lpthread
 
 if WITH_TOOLS
