@@ -1,5 +1,5 @@
 SUBDIRS = .
-CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include
 
 lib_LTLIBRARIES = _libcgroup.la
 _libcgroup_la_SOURCES = libcgroup.c
