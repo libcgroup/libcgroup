@@ -783,3 +783,34 @@ class Cgroup(object):
                     raise re
 
         return ret
+
+    # exec is a keyword in python, so let's name this function cgexec
+    @staticmethod
+    def cgexec(config, controller, cgname, cmdline, sticky=False,
+               cghelp=False):
+        """cgexec equivalent method
+        """
+        cmd = list()
+
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgexec'))
+        cmd.append('-g')
+        cmd.append('{}:{}'.format(controller, cgname))
+
+        if sticky:
+            cmd.append('--sticky')
+
+        if isinstance(cmdline, str):
+            cmd.append(cmdline)
+        elif isinstance(cmdline, list):
+            for entry in cmdline:
+                cmd.append(entry)
+
+        if cghelp:
+            cmd.append('-h')
+
+        if config.args.container:
+            return config.container.run(cmd, shell_bool=True)
+        else:
+            return Run.run(cmd, shell_bool=True)
