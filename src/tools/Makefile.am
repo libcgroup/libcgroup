@@ -8,7 +8,7 @@ if WITH_TOOLS
 bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgget cgdelete lssubsys\
 		lscgroup cgsnapshot
 
-sbin_PROGRAMS = cgconfigparser cgclear
+sbin_PROGRAMS = cgconfigparser
 
 lib_LTLIBRARIES = libcgset.la
 
@@ -39,10 +39,6 @@ cgget_CFLAGS = $(CODE_COVERAGE_CFLAGS)
 cgconfigparser_SOURCES = cgconfig.c tools-common.c tools-common.h
 cgconfigparser_LIBS = $(CODE_COVERAGE_LIBS)
 cgconfigparser_CFLAGS = $(CODE_COVERAGE_CFLAGS)
-
-cgclear_SOURCES = cgclear.c tools-common.c tools-common.h
-cgclear_LIBS = $(CODE_COVERAGE_LIBS)
-cgclear_CFLAGS = $(CODE_COVERAGE_CFLAGS)
 
 cgdelete_SOURCES = cgdelete.c tools-common.c tools-common.h
 cgdelete_LIBS = $(CODE_COVERAGE_LIBS)

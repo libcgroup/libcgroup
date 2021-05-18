@@ -30,7 +30,7 @@ to do so:
 
 Consequently, the 'name=systemd' hierarchy will not be visible to libcgroup and
 all of its tools. For example, the lscgroup command will not list systemd
-cgroups and the cgclear command will not remove them.
+cgroups.
 
 Start-up and services
 ====================

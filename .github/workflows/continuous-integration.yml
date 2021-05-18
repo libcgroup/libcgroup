@@ -67,7 +67,6 @@ jobs:
       run: |
         make check
         pushd tests/ftests
-        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         popd
     - name: Display test logs
       if: ${{ always() }}
@@ -116,7 +115,6 @@ jobs:
       run: |
         make check
         pushd tests/ftests
-        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         popd
     - name: Display test logs
       if: ${{ always() }}
