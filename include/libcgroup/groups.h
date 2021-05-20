@@ -11,7 +11,9 @@
 #include <stdbool.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Flags for cgroup_delete_cgroup_ext().
@@ -587,6 +589,8 @@ char *cgroup_get_cgroup_name(struct cgroup *cgroup);
  */
 
 
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_GROUPS_H */
