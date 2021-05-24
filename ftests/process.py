@@ -52,22 +52,21 @@ class Process(object):
             # catch and suppress it
             pass
 
-    def create_process(self, config):
-        # To allow for multiple processes to be created, each new process
-        # sleeps for a different amount of time.  This lets us uniquely find
-        # each process later in this function
-        sleep_time = len(self.children) + 1
+    @staticmethod
+    def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1):
+        cmd = ['/usr/bin/perl', '-e', '\'while(1){{sleep({})}};\''.format(sleep_time)]
 
-        p = mp.Process(target=Process.__infinite_loop,
-                       args=(config, sleep_time, ))
-        p.start()
+        try:
+            Cgroup.cgexec(config, controller, cgname, cmd)
+        except RunError as re:
+            # When this process is killed, it will throw a run error.
+            # Ignore it.
+            pass
 
-        # wait for the process to start.  If we don't wait, then the getpid
-        # logic below may not find the process
-        time.sleep(2)
-
+    def __save_child_pid(self, config, sleep_time):
         # get the PID of the newly spawned infinite loop
         cmd = 'ps x | grep perl | grep "sleep({})" | awk \'{{print $1}}\''.format(sleep_time)
+
         if config.args.container:
             pid = config.container.run(cmd, shell_bool=True)
         else:
@@ -83,13 +82,46 @@ class Process(object):
         if pid == "" or int(pid) <= 0:
             raise ValueError('Failed to get the pid of the child process: {}'.format(pid))
 
+        return pid
+
+    def create_process(self, config):
+        # To allow for multiple processes to be created, each new process
+        # sleeps for a different amount of time.  This lets us uniquely find
+        # each process later in this function
+        sleep_time = len(self.children) + 1
+
+        p = mp.Process(target=Process.__infinite_loop,
+                       args=(config, sleep_time, ))
+        p.start()
+
+        # wait for the process to start.  If we don't wait, then the getpid
+        # logic below may not find the process
+        time.sleep(2)
+
+        pid = self.__save_child_pid(config, sleep_time)
         self.children.append(p)
+
         return pid
 
     # Create a simple process in the requested cgroup
-    def create_process_in_cgroup(self, config, controller, cgname):
-        child_pid = self.create_process(config)
-        Cgroup.classify(config, controller, cgname, child_pid)
+    def create_process_in_cgroup(self, config, controller, cgname,
+                                 cgclassify=True):
+        if cgclassify:
+            child_pid = self.create_process(config)
+            Cgroup.classify(config, controller, cgname, child_pid)
+        else:
+            # use cgexec
+
+            # To allow for multiple processes to be created, each new process
+            # sleeps for a different amount of time.  This lets us uniquely find
+            # each process later in this function
+            sleep_time = len(self.children) + 1
+
+            p = mp.Process(target=Process.__cgexec_infinite_loop,
+                           args=(config, controller, cgname, sleep_time, ))
+            p.start()
+
+            self.children.append(p)
 
     # The caller will block until all children are stopped.
     def join_children(self, config):
