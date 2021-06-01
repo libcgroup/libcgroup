@@ -29,10 +29,12 @@ import sys
 CONTROLLER = 'memory'
 CGNAME = '008cgget'
 
-SETTING1 = 'memory.limit_in_bytes'
+SETTING1_V1 = 'memory.limit_in_bytes'
+SETTING1_V2 = 'memory.max'
 VALUE1 = '1048576'
 
-SETTING2='memory.soft_limit_in_bytes'
+SETTING2_V1 = 'memory.soft_limit_in_bytes'
+SETTING2_V2 = 'memory.high'
 VALUE2 = '1024000'
 
 def prereqs(config):
@@ -43,32 +45,45 @@ def prereqs(config):
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
-    Cgroup.set(config, CGNAME, SETTING1, VALUE1)
-    Cgroup.set(config, CGNAME, SETTING2, VALUE2)
+
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        Cgroup.set(config, CGNAME, SETTING1_V1, VALUE1)
+        Cgroup.set(config, CGNAME, SETTING2_V1, VALUE2)
+    elif version == CgroupVersion.CGROUP_V2:
+        Cgroup.set(config, CGNAME, SETTING1_V2, VALUE1)
+        Cgroup.set(config, CGNAME, SETTING2_V2, VALUE2)
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    out = Cgroup.get(config, controller=None, cgname=CGNAME,
-                     setting=[SETTING1, SETTING2])
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        settings=[SETTING1_V1, SETTING2_V1]
+    elif version == CgroupVersion.CGROUP_V2:
+        settings=[SETTING1_V2, SETTING2_V2]
+
+    out = Cgroup.get(config, controller=None, cgname=CGNAME, setting=settings)
 
     if out.splitlines()[0] != "{}:".format(CGNAME):
         result = consts.TEST_FAILED
         cause = "cgget expected the cgroup name {} in the first line.\n" \
                 "Instead it received {}".format(CGNAME, out.splitlines()[0])
 
-    if out.splitlines()[1] != "{}: {}".format(SETTING1, VALUE1):
+    if out.splitlines()[1] != "{}: {}".format(settings[0], VALUE1):
         result = consts.TEST_FAILED
         cause = "cgget expected the following:\n\t" \
                 "{}: {}\nbut received:\n\t{}".format(
-                SETTING1, VALUE1, out.splitlines()[1])
+                settings[0], VALUE1, out.splitlines()[1])
 
-    if out.splitlines()[2] != "{}: {}".format(SETTING2, VALUE2):
+    if out.splitlines()[2] != "{}: {}".format(settings[1], VALUE2):
         result = consts.TEST_FAILED
         cause = "cgget expected the following:\n\t" \
                 "{}: {}\nbut received:\n\t{}".format(
-                SETTING2, VALUE2, out.splitlines()[2])
+                settings[1], VALUE2, out.splitlines()[2])
 
     return result, cause
 
