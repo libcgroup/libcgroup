@@ -113,7 +113,6 @@ fi
 /bin/lssubsys
 /sbin/cgconfigparser
 /sbin/cgrulesengd
-/sbin/cgclear
 /bin/cgsnapshot
 %attr(0644, root, root) %{_mandir}/man1/*
 %attr(0644, root, root) %{_mandir}/man5/*

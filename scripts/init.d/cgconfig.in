@@ -132,7 +132,6 @@ start() {
 
 stop() {
     echo -n "Stopping cgconfig service: "
-    cgclear
     rm -f "$lockfile"
     log_success_msg
     return 0
