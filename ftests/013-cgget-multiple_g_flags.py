@@ -24,22 +24,41 @@ from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
 import os
+from run import RunError
 import sys
 
-CONTROLLER1 = 'freezer'
+CONTROLLER1 = 'pids'
 CONTROLLER2 = 'cpu'
 CGNAME = '013cgget'
 
-EXPECTED_OUT = '''013cgget:
-freezer.self_freezing: 0
-freezer.parent_freezing: 0
-freezer.state: THAWED
+EXPECTED_OUT_V1 = '''013cgget:
+pids.current: 0
+pids.events: max 0
+pids.max: max
 cpu.cfs_period_us: 100000
 cpu.stat: nr_periods 0
         nr_throttled 0
         throttled_time 0
 cpu.shares: 1024
 cpu.cfs_quota_us: -1
+cpu.uclamp.min: 0.00
+cpu.uclamp.max: max
+'''
+
+EXPECTED_OUT_V2 = '''013cgget:
+pids.current: 0
+pids.events: max 0
+pids.max: max
+cpu.weight: 100
+cpu.stat: usage_usec 0
+        user_usec 0
+        system_usec 0
+        nr_periods 0
+        nr_throttled 0
+        throttled_usec 0
+cpu.weight.nice: 0
+cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+cpu.max: max 100000
 cpu.uclamp.min: 0.00
 cpu.uclamp.max: max
 '''
@@ -61,18 +80,42 @@ def test(config):
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
 
+    version = CgroupVersion.get_version(CONTROLLER1)
+
+    if version == CgroupVersion.CGROUP_V1:
+        expected_out = EXPECTED_OUT_V1
+    elif version == CgroupVersion.CGROUP_V2:
+        expected_out = EXPECTED_OUT_V2
+
+    if len(out.splitlines()) != len(expected_out.splitlines()):
+        result = consts.TEST_FAILED
+        cause = "Expected {} lines but received {} lines".format(
+                len(expected_out.splitlines()), len(out.splitlines()))
+        return result, cause
+
     for line_num, line in enumerate(out.splitlines()):
-        if line.strip() != EXPECTED_OUT.splitlines()[line_num].strip():
+        if line.strip() != expected_out.splitlines()[line_num].strip():
             result = consts.TEST_FAILED
             cause = "Expected line:\n\t{}\nbut received line:\n\t{}".format(
-                    EXPECTED_OUT.splitlines()[line_num].strip(), line.strip())
+                    expected_out.splitlines()[line_num].strip(), line.strip())
             return result, cause
 
+    print(result)
+    print(cause)
     return result, cause
 
 def teardown(config):
-    Cgroup.delete(config, CONTROLLER1, CGNAME)
-    Cgroup.delete(config, CONTROLLER2, CGNAME)
+    ver1 = CgroupVersion.get_version(CONTROLLER1)
+    ver2 = CgroupVersion.get_version(CONTROLLER2)
+
+    if ver1 == CgroupVersion.CGROUP_V2 and \
+       ver2 == CgroupVersion.CGROUP_V2:
+        # If both controllers are cgroup v2, then we only need to delete
+        # one cgroup.  The path will be the same for both
+        Cgroup.delete(config, [CONTROLLER1, CONTROLLER2], CGNAME)
+    else:
+        Cgroup.delete(config, CONTROLLER1, CGNAME)
+        Cgroup.delete(config, CONTROLLER2, CGNAME)
 
 def main(config):
     [result, cause] = prereqs(config)
