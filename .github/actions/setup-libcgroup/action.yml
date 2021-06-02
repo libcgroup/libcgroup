@@ -24,7 +24,7 @@ description: "Install dependencies, git clone, bootstrap, configure, and make li
 runs:
   using: "composite"
   steps:
-  - run: sudo apt update
+  - run: sudo apt-get update
     shell: bash
   - run: sudo apt-get install libpam-dev lcov
     shell: bash
