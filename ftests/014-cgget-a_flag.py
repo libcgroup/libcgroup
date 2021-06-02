@@ -37,8 +37,17 @@ def prereqs(config):
     return result, cause
 
 def setup(config):
-    Cgroup.create(config, CONTROLLER1, CGNAME)
-    Cgroup.create(config, CONTROLLER2, CGNAME)
+    ver1 = CgroupVersion.get_version(CONTROLLER1)
+    ver2 = CgroupVersion.get_version(CONTROLLER2)
+
+    if ver1 == CgroupVersion.CGROUP_V2 and \
+       ver2 == CgroupVersion.CGROUP_V2:
+        # If both controllers are cgroup v2, then we only need to make
+        # one cgroup.  The path will be the same for both
+        Cgroup.create(config, [CONTROLLER1, CONTROLLER2], CGNAME)
+    else:
+        Cgroup.create(config, CONTROLLER1, CGNAME)
+        Cgroup.create(config, CONTROLLER2, CGNAME)
 
 def test(config):
     result = consts.TEST_PASSED
@@ -69,8 +78,17 @@ def test(config):
     return result, cause
 
 def teardown(config):
-    Cgroup.delete(config, CONTROLLER1, CGNAME)
-    Cgroup.delete(config, CONTROLLER2, CGNAME)
+    ver1 = CgroupVersion.get_version(CONTROLLER1)
+    ver2 = CgroupVersion.get_version(CONTROLLER2)
+
+    if ver1 == CgroupVersion.CGROUP_V2 and \
+       ver2 == CgroupVersion.CGROUP_V2:
+        # If both controllers are cgroup v2, then we only need to make
+        # one cgroup.  The path will be the same for both
+        Cgroup.delete(config, [CONTROLLER1, CONTROLLER2], CGNAME)
+    else:
+        Cgroup.delete(config, CONTROLLER1, CGNAME)
+        Cgroup.delete(config, CONTROLLER2, CGNAME)
 
 def main(config):
     [result, cause] = prereqs(config)
