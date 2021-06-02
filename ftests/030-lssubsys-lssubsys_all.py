@@ -61,6 +61,10 @@ def test(config):
                 found = True
                 break
 
+            if lsmount == "blkio" and mount.controller == "io":
+                found = True
+                break
+
         if not found:
             result = consts.TEST_FAILED
             cause = "Failed to find {} in lssubsys list".format(
