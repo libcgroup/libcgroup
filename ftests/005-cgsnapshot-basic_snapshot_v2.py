@@ -56,7 +56,8 @@ def test(config):
     expected = Cgroup.snapshot_to_dict(CGSNAPSHOT)
     actual = Cgroup.snapshot(config, controller=CONTROLLER)
 
-    if expected[CGNAME] != actual[CGNAME]:
+    if expected[CGNAME].controllers[CONTROLLER] != \
+       actual[CGNAME].controllers[CONTROLLER]:
         result = consts.TEST_FAILED
         cause = "Expected cgsnapshot result did not equal actual cgsnapshot"
 
