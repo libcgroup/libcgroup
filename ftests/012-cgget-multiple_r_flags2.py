@@ -30,10 +30,12 @@ CONTROLLER = 'memory'
 CGNAME1 = '012cgget1'
 CGNAME2 = '012cgget2'
 
-SETTING1 = 'memory.limit_in_bytes'
+SETTING1_V1 = 'memory.limit_in_bytes'
+SETTING1_V2 = 'memory.max'
 VALUE1 = '4194304'
 
-SETTING2 = 'memory.soft_limit_in_bytes'
+SETTING2_V1 = 'memory.soft_limit_in_bytes'
+SETTING2_V2 = 'memory.high'
 VALUE2 = '4096000'
 
 EXPECTED_OUT = '''{}:
@@ -54,17 +56,33 @@ def prereqs(config):
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME1)
     Cgroup.create(config, CONTROLLER, CGNAME2)
-    Cgroup.set(config, CGNAME1, SETTING1, VALUE1)
-    Cgroup.set(config, CGNAME1, SETTING2, VALUE2)
-    Cgroup.set(config, CGNAME2, SETTING1, VALUE1)
-    Cgroup.set(config, CGNAME2, SETTING2, VALUE2)
+
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        Cgroup.set(config, CGNAME1, SETTING1_V1, VALUE1)
+        Cgroup.set(config, CGNAME1, SETTING2_V1, VALUE2)
+        Cgroup.set(config, CGNAME2, SETTING1_V1, VALUE1)
+        Cgroup.set(config, CGNAME2, SETTING2_V1, VALUE2)
+    elif version == CgroupVersion.CGROUP_V2:
+        Cgroup.set(config, CGNAME1, SETTING1_V2, VALUE1)
+        Cgroup.set(config, CGNAME1, SETTING2_V2, VALUE2)
+        Cgroup.set(config, CGNAME2, SETTING1_V2, VALUE1)
+        Cgroup.set(config, CGNAME2, SETTING2_V2, VALUE2)
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        settings = [SETTING1_V1, SETTING2_V1]
+    elif version == CgroupVersion.CGROUP_V2:
+        settings = [SETTING1_V2, SETTING2_V2]
+
     out = Cgroup.get(config, controller=None, cgname=[CGNAME1, CGNAME2],
-                     setting=[SETTING1, SETTING2], values_only=True)
+                     setting=settings, values_only=True)
 
     for line_num, line in enumerate(out.splitlines()):
         if line.strip() != EXPECTED_OUT.splitlines()[line_num].strip():

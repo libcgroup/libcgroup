@@ -30,14 +30,22 @@ CONTROLLER = 'memory'
 CGNAME1 = '011cgget1'
 CGNAME2 = '011cgget2'
 
-SETTING = 'memory.limit_in_bytes'
+SETTING_V1 = 'memory.limit_in_bytes'
+SETTING_V2 = 'memory.max'
 VALUE = '2048000'
 
-EXPECTED_OUT = '''011cgget1:
+EXPECTED_OUT_V1 = '''011cgget1:
 memory.limit_in_bytes: 2048000
 
 011cgget2:
 memory.limit_in_bytes: 2048000
+'''
+
+EXPECTED_OUT_V2 = '''011cgget1:
+memory.max: 2048000
+
+011cgget2:
+memory.max: 2048000
 '''
 
 def prereqs(config):
@@ -49,21 +57,37 @@ def prereqs(config):
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME1)
     Cgroup.create(config, CONTROLLER, CGNAME2)
-    Cgroup.set(config, CGNAME1, SETTING, VALUE)
-    Cgroup.set(config, CGNAME2, SETTING, VALUE)
+
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        Cgroup.set(config, CGNAME1, SETTING_V1, VALUE)
+        Cgroup.set(config, CGNAME2, SETTING_V1, VALUE)
+    elif version == CgroupVersion.CGROUP_V2:
+        Cgroup.set(config, CGNAME1, SETTING_V2, VALUE)
+        Cgroup.set(config, CGNAME2, SETTING_V2, VALUE)
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
+    version = CgroupVersion.get_version(CONTROLLER)
+
+    if version == CgroupVersion.CGROUP_V1:
+        setting = SETTING_V1
+        expected_out = EXPECTED_OUT_V1
+    elif version == CgroupVersion.CGROUP_V2:
+        setting = SETTING_V2
+        expected_out = EXPECTED_OUT_V2
+
     out = Cgroup.get(config, controller=None, cgname=[CGNAME1, CGNAME2],
-                     setting=SETTING)
+                     setting=setting)
 
     for line_num, line in enumerate(out.splitlines()):
-        if line.strip() != EXPECTED_OUT.splitlines()[line_num].strip():
+        if line.strip() != expected_out.splitlines()[line_num].strip():
             result = consts.TEST_FAILED
             cause = "Expected line:\n\t{}\nbut received line:\n\t{}".format(
-                    EXPECTED_OUT.splitlines()[line_num].strip(), line.strip())
+                    expected_out.splitlines()[line_num].strip(), line.strip())
             return result, cause
 
     return result, cause

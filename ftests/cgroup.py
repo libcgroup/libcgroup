@@ -162,7 +162,7 @@ class Cgroup(object):
             cmd.append('-r')
 
         controllers_and_path = '{}:{}'.format(
-            ''.join(controller_list), cgname)
+            ','.join(controller_list), cgname)
 
         cmd.append('-g')
         cmd.append(controllers_and_path)

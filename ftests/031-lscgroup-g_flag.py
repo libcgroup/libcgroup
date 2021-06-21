@@ -50,6 +50,21 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
+    v2_cnt = 0
+    mount_list = Cgroup.get_cgroup_mounts(config)
+
+    for mount in mount_list:
+        if mount.version == CgroupVersion.CGROUP_V2:
+            v2_cnt += 1
+
+    if v2_cnt > 1:
+        # There is a bug in lscgroup - see issue #50 - where it doesn't
+        # properly list the enabled controllers for a cgroup v2 cgroup.
+        # Skip this test because of this
+        result = consts.TEST_SKIPPED
+        cause = "See Github Issue #50 - lscgroup lists controllers..."
+        return result, cause
+
     return result, cause
 
 def setup(config):
