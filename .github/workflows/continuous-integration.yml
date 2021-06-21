@@ -89,8 +89,8 @@ jobs:
         flag-name: "Cgroup v1 Functional Tests"
         parallel: True
 
-  functionaltestsv2:
-    name: Cgroup v2 Functional Tests
+  functionaltestsv1v2:
+    name: Cgroup v1/v2 Functional Tests
     runs-on: ubuntu-20.04
 
     steps:
@@ -125,6 +125,42 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
+        name: Cgroup v1v2 test logs
+        path: tests/ftests/*.log
+    - name: Collate code coverage results
+      run: lcov -d . -c > lcov.info
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
+        flag-name: "Cgroup v1/v2 Functional Tests"
+        parallel: True
+
+  functionaltestsv2:
+    name: Cgroup v2 Functional Tests
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run functional tests
+      run: |
+        make check
+        pushd tests/ftests
+        popd
+    - name: Display test logs
+      if: ${{ always() }}
+      run: |
+        cat tests/ftests/ftests.sh.log
+        cat tests/ftests/ftests-nocontainer.sh.log
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
         name: Cgroup v2 test logs
         path: tests/ftests/*.log
     - name: Collate code coverage results
@@ -139,7 +175,7 @@ jobs:
 
   finalize:
     name: Finalize the test run
-    needs: [unittests, functionaltestsv1, functionaltestsv2]
+    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results
