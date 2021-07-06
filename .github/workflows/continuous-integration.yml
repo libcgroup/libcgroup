@@ -144,19 +144,21 @@ jobs:
         name: Cgroup v1v2 test logs
         path: tests/ftests/*.log
     - name: Collate code coverage results
-      run: lcov -d . -c > lcov.info
+      run: |
+        lcov -d . -c -o lcov.tests
+        lcov -a lcov.base -a lcov.tests -o lcov.total
     - name: Upload code coverage results
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.info
+        path-to-lcov: ./lcov.total
         flag-name: "Cgroup v1/v2 Functional Tests"
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: Cgroup v1 Code Coverage
+        name: Cgroup v1v2 Code Coverage
         path: lcov.*
 
   functionaltestsv2:
