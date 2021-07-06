@@ -28,6 +28,8 @@ runs:
     shell: bash
   - run: sudo apt-get install libpam-dev lcov
     shell: bash
+  - run: rm -fr tests/
+    shell: bash
   - run: ./bootstrap.sh
     shell: bash
   - run: CFLAGS="$CFLAGS -g -O0 -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd"
