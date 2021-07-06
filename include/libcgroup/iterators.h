@@ -11,7 +11,9 @@
 #include <features.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup group_iterators 3. Iterators
@@ -423,6 +425,8 @@ int cgroup_get_subsys_mount_point_end(void **handle);
  * @}
  */
 
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_ITERATORS_H */

@@ -9,7 +9,9 @@
 #include <features.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup group_init 1. Initialization
@@ -58,6 +60,8 @@ int cgroup_get_subsys_mount_point(const char *controller, char **mount_point);
  * @}
  * @}
  */
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_INIT_H */

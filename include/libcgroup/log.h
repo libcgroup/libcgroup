@@ -11,7 +11,9 @@
 
 #include <stdarg.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup group_log 7. Logging
@@ -142,6 +144,8 @@ extern int cgroup_parse_log_level_str(const char *levelstr);
  * @}
  * @}
  */
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_LOG_H */
