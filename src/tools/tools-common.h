@@ -18,7 +18,9 @@
 
 #define __TOOLS_COMMON
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "config.h"
 #include <libcgroup.h>
 #include "../libcgroup-internal.h"
@@ -136,6 +138,8 @@ int parse_r_flag(const char * const program_name,
 
 #endif /* UNIT_TEST */
 
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* TOOLS_COMMON */

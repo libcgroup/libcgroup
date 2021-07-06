@@ -3,14 +3,6 @@
 #include "libcgroup.h"
 %}
 
-#ifdef  __cplusplus
-#define __BEGIN_DECLS   extern "C" {
-#define __END_DECLS     }
-#else
-#define __BEGIN_DECLS
-#define __END_DECLS
-#endif
-
 %include typemaps.i
 %include cpointer.i
 %pointer_functions(int, intp);

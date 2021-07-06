@@ -9,7 +9,9 @@
 #include <features.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup group_errors 6. Error handling
@@ -99,6 +101,8 @@ int cgroup_get_last_errno(void);
  * @}
  * @}
  */
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_INIT_H */

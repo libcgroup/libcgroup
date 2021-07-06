@@ -9,7 +9,9 @@
 #include <features.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @defgroup group_config 5. Configuration
@@ -128,6 +130,8 @@ int cgroup_config_create_template_group(
  * @}
  * @}
  */
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /*_LIBCGROUP_CONFIG_H*/

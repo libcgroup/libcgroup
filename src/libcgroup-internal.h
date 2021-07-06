@@ -16,7 +16,9 @@
 
 #define __LIBCG_INTERNAL
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "config.h"
 #include <dirent.h>
@@ -407,6 +409,8 @@ int cgroupv2_controller_enabled(const char * const cg_name,
 
 #endif /* UNIT_TEST */
 
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
