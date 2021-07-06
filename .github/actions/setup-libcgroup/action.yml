@@ -36,3 +36,5 @@ runs:
     shell: bash
   - run: make
     shell: bash
+  - run: lcov -i -d . -c -o lcov.base
+    shell: bash
