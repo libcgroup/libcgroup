@@ -17,7 +17,9 @@
 
 #include <features.h>
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "config.h"
 #include "libcgroup.h"
@@ -119,7 +121,9 @@ void cgre_flash_templates(int signum);
  */
 void cgre_catch_term(int signum);
 
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _CGRULESENGD_H */
 
