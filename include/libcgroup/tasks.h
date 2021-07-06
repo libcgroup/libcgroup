@@ -12,7 +12,9 @@
 #include <stdbool.h>
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /** Flags for cgroup_change_cgroup_uid_gid(). */
 enum cgflags {
@@ -204,6 +206,8 @@ int cgroup_register_unchanged_process(pid_t pid, int flags);
  * @}
  * @}
  */
-__END_DECLS
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBCGROUP_TASKS_H */
