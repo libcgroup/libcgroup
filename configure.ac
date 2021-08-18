@@ -174,6 +174,10 @@ AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
 
+AC_SEARCH_LIBS([fts_open], [fts], [], [
+  AC_MSG_ERROR([unable to find the fts_open() function])
+])
+
 if test x$with_pam = xtrue; then
 	AC_CHECK_LIB(
 		[pam],
