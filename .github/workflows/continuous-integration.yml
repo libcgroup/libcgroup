@@ -73,8 +73,8 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: |
-        make check
         pushd tests/ftests
+        make check
         popd
     - name: Display test logs
       if: ${{ always() }}
@@ -129,8 +129,8 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: |
-        make check
         pushd tests/ftests
+        make check
         popd
     - name: Display test logs
       if: ${{ always() }}
@@ -173,8 +173,8 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: |
-        make check
         pushd tests/ftests
+        make check
         popd
     - name: Display test logs
       if: ${{ always() }}
