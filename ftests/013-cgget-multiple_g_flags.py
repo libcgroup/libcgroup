@@ -100,8 +100,6 @@ def test(config):
                     expected_out.splitlines()[line_num].strip(), line.strip())
             return result, cause
 
-    print(result)
-    print(cause)
     return result, cause
 
 def teardown(config):
