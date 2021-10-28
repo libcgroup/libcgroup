@@ -191,6 +191,7 @@ def run_tests(config):
     passed_tests = []
     failed_tests = []
     skipped_tests = []
+    filename_max = 0
 
     for root, dirs, filenames in os.walk(config.ftest_dir):
         for filename in filenames:
@@ -223,6 +224,9 @@ def run_tests(config):
 
                     if filenum_int in config.skip_list:
                         continue
+
+                    if len(filename) > filename_max:
+                        filename_max = len(filename)
 
                     test = __import__(os.path.splitext(filename)[0])
 
@@ -279,18 +283,18 @@ def run_tests(config):
     global teardown_time
     if config.args.verbose:
         print("Timing Results:")
-        print('\t{}{}'.format('{0: <35}'.format("Test"), '{0: >15}'.format("Time (sec)")))
-        print("\t---------------------------------------------------------")
+        print('\t{}{}'.format('{0: <{1}}'.format("Test", filename_max), '{0: >15}'.format("Time (sec)")))
+        print('\t{}'.format('-' * (filename_max + 15))) # 15 is padding space of "Time (sec)"
         time_str = "{0: 2.2f}".format(setup_time)
-        print('\t{}{}'.format('{0: <35}'.format('setup'), '{0: >15}'.format(time_str)))
+        print('\t{}{}'.format('{0: <{1}}'.format('setup', filename_max), '{0: >15}'.format(time_str)))
 
         all_tests = passed_tests + skipped_tests + failed_tests
         all_tests.sort()
         for test in all_tests:
             time_str = "{0: 2.2f}".format(test[1])
-            print('\t{}{}'.format('{0: <35}'.format(test[0]), '{0: >15}'.format(time_str)))
+            print('\t{}{}'.format('{0: <{1}}'.format(test[0], filename_max), '{0: >15}'.format(time_str)))
         time_str = "{0: 2.2f}".format(teardown_time)
-        print('\t{}{}'.format('{0: <35}'.format('teardown'), '{0: >15}'.format(time_str)))
+        print('\t{}{}'.format('{0: <{1}}'.format('teardown', filename_max), '{0: >15}'.format(time_str)))
 
         total_run_time = setup_time + teardown_time
         for test in passed_tests:
@@ -298,8 +302,8 @@ def run_tests(config):
         for test in failed_tests:
             total_run_time += test[1]
         total_str = "{0: 5.2f}".format(total_run_time)
-        print("\t---------------------------------------------------------")
-        print('\t{}{}'.format('{0: <35}'.format("Total Run Time"), '{0: >15}'.format(total_str)))
+        print('\t{}'.format('-' * (filename_max + 15)))
+        print('\t{}{}'.format('{0: <{1}}'.format("Total Run Time", filename_max), '{0: >15}'.format(total_str)))
 
     return [passed_cnt, failed_cnt, skipped_cnt]
 
