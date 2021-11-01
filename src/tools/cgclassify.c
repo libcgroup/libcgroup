@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg,
 					CG_HIER_MAX);
 			if (ret) {
-				fprintf(stderr, "cgroup controller and path"
+				fprintf(stderr, "cgroup controller and path "
 						"parsing failed\n");
 				return -1;
 			}
