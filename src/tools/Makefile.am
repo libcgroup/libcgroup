@@ -58,5 +58,8 @@ cgsnapshot_CFLAGS = $(CODE_COVERAGE_CFLAGS)
 
 install-exec-hook:
 	chmod u+s $(DESTDIR)$(bindir)/cgexec
+	find $(DESTDIR)$(libdir) -type f -name libcgset.\* -delete
+	unlink $(DESTDIR)$(libdir)/libcgset.so
+	unlink $(DESTDIR)$(libdir)/libcgset.so.0
 
 endif
