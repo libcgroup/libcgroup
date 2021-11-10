@@ -27,6 +27,7 @@ cgcreate_CFLAGS = $(CODE_COVERAGE_CFLAGS)
 libcgset_la_SOURCES = cgset.c tools-common.c tools-common.h
 libcgset_la_LIBADD = $(CODE_COVERAGE_LIBS)
 libcgset_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -DSTATIC= -DUNIT_TEST
+libcgset_la_LDFLAGS = -Wl,--no-undefined $(LDADD)
 
 cgset_SOURCES = cgset.c tools-common.c tools-common.h
 cgset_LIBS = $(CODE_COVERAGE_LIBS)
