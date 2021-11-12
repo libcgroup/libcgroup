@@ -66,8 +66,8 @@ jobs:
     - name: Run functional tests
       run: |
         pushd tests/ftests
-        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         make check
+        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         popd
     - name: Display test logs
       if: ${{ always() }}
@@ -115,8 +115,8 @@ jobs:
     - name: Run functional tests
       run: |
         pushd tests/ftests
-        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         make check
+        ./028-cgclear-basic_cgclear.py --no-container -l 10 -L ftests-28.log
         popd
     - name: Display test logs
       if: ${{ always() }}
