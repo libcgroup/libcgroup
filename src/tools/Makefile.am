@@ -10,7 +10,7 @@ bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgget cgdelete lssubsys\
 
 sbin_PROGRAMS = cgconfigparser
 
-lib_LTLIBRARIES = libcgset.la
+noinst_LTLIBRARIES = libcgset.la
 
 cgexec_SOURCES = cgexec.c tools-common.c tools-common.h
 cgexec_LIBS = $(CODE_COVERAGE_LIBS)
@@ -59,8 +59,5 @@ cgsnapshot_CFLAGS = $(CODE_COVERAGE_CFLAGS)
 
 install-exec-hook:
 	chmod u+s $(DESTDIR)$(bindir)/cgexec
-	find $(DESTDIR)$(libdir) -type f -name libcgset.\* -delete
-	unlink $(DESTDIR)$(libdir)/libcgset.so
-	unlink $(DESTDIR)$(libdir)/libcgset.so.0
 
 endif
