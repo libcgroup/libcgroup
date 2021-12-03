@@ -16,6 +16,7 @@ enum {
 	COPY_FROM_OPTION = CHAR_MAX + 1
 };
 
+#ifndef UNIT_TEST
 static struct option const long_options[] =
 {
 	{"rule", required_argument, NULL, 'r'},
@@ -72,6 +73,7 @@ static void usage(int status, const char *program_name)
 	printf("  --copy-from <source_cgroup_path>	Control group whose "\
 		"parameters will be copied\n");
 }
+#endif /* !UNIT_TEST */
 
 STATIC int parse_r_flag(const char * const program_name,
 			const char * const name_value_str,
@@ -124,6 +126,7 @@ err:
 	return ret;
 }
 
+#ifndef UNIT_TEST
 int main(int argc, char *argv[])
 {
 	int ret = 0;
@@ -278,3 +281,4 @@ err:
 	free(name_value);
 	return ret;
 }
+#endif /* !UNIT_TEST */
