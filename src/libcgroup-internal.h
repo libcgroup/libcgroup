@@ -75,6 +75,8 @@ extern "C" {
 #define CGROUP_RULE_MAXLINE	(FILENAME_MAX + CGROUP_RULE_MAXKEY + \
 	CG_CONTROLLER_MAX + 3)
 
+#define CGROUP_FILE_PREFIX	"cgroup"
+
 #define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
 #define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)
 #define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)
