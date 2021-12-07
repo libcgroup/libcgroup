@@ -23,6 +23,17 @@ name: Continuous Integration
 on: ["push", "pull_request"]
 
 jobs:
+  # Thanks to github user @martyrs
+  # https://github.community/t/how-to-properly-clean-up-self-hosted-runners/128909/3
+  cleaner:
+    name: Delete Self-Hosted Runner Workspaces
+    runs-on: self-hosted
+    steps:
+      - name: Delete workspace path
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+
   unittests:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -163,6 +174,7 @@ jobs:
 
   functionaltestsv2:
     name: Cgroup v2 Functional Tests
+    needs: [cleaner]
     runs-on: self-hosted
 
     steps:
