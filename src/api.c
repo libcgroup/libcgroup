@@ -396,6 +396,17 @@ int cgroup_test_subsys_mounted(const char *name)
 			pthread_rwlock_unlock(&cg_mount_table_lock);
 			return 1;
 		}
+
+		/* The user has likely requested a file like cgroup.type or
+		 * cgroup.procs.  Allow this request as long as there's a
+		 * cgroup v2 controller mounted.
+		 */
+		if (strncmp(name, CGROUP_FILE_PREFIX,
+			    strlen(CGROUP_FILE_PREFIX)) == 0 &&
+		    cg_mount_table[i].version == CGROUP_V2) {
+			pthread_rwlock_unlock(&cg_mount_table_lock);
+			return 1;
+		}
 	}
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return 0;
@@ -1469,7 +1480,15 @@ char *cg_build_path_locked(const char *name, char *path,
 {
 	int i, ret;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
-		if (strcmp(cg_mount_table[i].name, type) == 0) {
+		/* Two ways to successfully move forward here:
+		 * 1. The "type" controller matches the name of a mounted
+		 *    controller
+		 * 2. The "type" controller requested is "cgroup" and there's
+		 *    a "real" controller mounted as cgroup v2
+		 */
+		if ((strcmp(cg_mount_table[i].name, type) == 0) ||
+		    (strcmp(type, CGROUP_FILE_PREFIX) == 0 &&
+		     cg_mount_table[i].version == CGROUP_V2)) {
 			if (cg_namespace_table[i]) {
 				ret = snprintf(path, FILENAME_MAX, "%s/%s/",
 						cg_mount_table[i].mount.path,
