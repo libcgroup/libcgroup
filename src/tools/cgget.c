@@ -113,7 +113,9 @@ static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
 		if (!cgc) {
 			cgc = cgroup_add_controller(cg, controller.name);
 			if (!cgc) {
-				ret = ECGCONTROLLERCREATEFAILED;
+				fprintf(stderr, "cgget: cannot find controller '%s'\n",
+					controller.name);
+				ret = ECGOTHER;
 				goto out;
 			}
 		}
@@ -163,7 +165,9 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, cntl_value_controller);
 		if (!cgc) {
-			ret = ECGCONTROLLERCREATEFAILED;
+			fprintf(stderr, "cgget: cannot find controller '%s'\n",
+				cntl_value_controller);
+			ret = ECGOTHER;
 			goto out;
 		}
 	}
@@ -204,7 +208,9 @@ static int parse_g_flag_no_colon(struct cgroup **cg_list[],
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, ctrl_str);
 		if (!cgc) {
-			ret = ECGCONTROLLERCREATEFAILED;
+			fprintf(stderr, "cgget: cannot find controller '%s'\n",
+				ctrl_str);
+			ret = ECGOTHER;
 			goto out;
 		}
 	}
@@ -296,7 +302,9 @@ static int parse_g_flag_with_colon(struct cgroup **cg_list[],
 		if (!cgc) {
 			cgc = cgroup_add_controller(cg, controllers[i]);
 			if (!cgc) {
-				ret = ECGCONTROLLERCREATEFAILED;
+				fprintf(stderr, "cgget: cannot find controller '%s'\n",
+					controllers[i]);
+				ret = ECGOTHER;
 				goto out;
 			}
 		}

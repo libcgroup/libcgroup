@@ -101,6 +101,7 @@ struct cgroup_controller {
 	struct control_value *values[CG_NV_MAX];
 	struct cgroup *cgroup;
 	int index;
+	enum cg_version_t version;
 };
 
 struct cgroup {
