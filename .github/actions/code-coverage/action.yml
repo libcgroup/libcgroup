@@ -1,0 +1,46 @@
+#
+# Action to collate the libcgroup code coverage data
+#
+# Copyright (c) 2021-2022 Oracle and/or its affiliates.
+# Author: Tom Hromatka <tom.hromatka@oracle.com>
+#
+
+#
+# This library is free software; you can redistribute it and/or modify it
+# under the terms of version 2.1 of the GNU Lesser General Public License as
+# published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this library; if not, see <http://www.gnu.org/licenses>.
+#
+
+name: Collate code coverage results
+description: "Collate code coverage results"
+runs:
+  using: "composite"
+  steps:
+  - run: lcov -d . -c -o lcov.tests
+    shell: bash
+  - run: |
+      lcov -r lcov.tests "/usr/include/python3.8/objimpl.h" \
+                         "/usr/include/python3.8/object.h" \
+                         "$(pwd)/src/python/libcgroup.c" \
+                         "$(pwd)/src/parse.c" \
+                         "$(pwd)/src/lex.c" \
+                         -o lcov.tests
+    shell: bash
+  - run: |
+      lcov -r lcov.base "/usr/include/python3.8/objimpl.h" \
+                        "/usr/include/python3.8/object.h" \
+                        "$(pwd)/src/python/libcgroup.c" \
+                         "$(pwd)/src/parse.c" \
+                         "$(pwd)/src/lex.c" \
+                        -o lcov.base
+    shell: bash
+  - run: lcov -a lcov.base -a lcov.tests -o lcov.total
+    shell: bash
