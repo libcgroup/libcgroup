@@ -2,11 +2,7 @@
 
 BUILT_SOURCES = parse.c parse.h
 
-if WITH_BINDINGS
-BINDINGS_SUBDIR = bindings
-endif
-
-SUBDIRS = . daemon pam tools $(BINDINGS_SUBDIR)
+SUBDIRS = . daemon pam tools
 
 # generate parse.h  from parse.y
 AM_YFLAGS = -d
