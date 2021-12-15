@@ -144,4 +144,5 @@ CGROUP_3.0 {
 	cgroup_convert_cgroup;
 	cgroup_cgxget;
 	cgroup_cgxset;
+	cgroup_version;
 } CGROUP_2.0;
