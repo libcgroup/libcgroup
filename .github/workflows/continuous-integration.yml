@@ -123,14 +123,12 @@ jobs:
       uses: ./.github/actions/setup-libcgroup
     - name: Run functional tests
       run: |
+        # The cgroup v1 runner hosted by Github Actions doesn't allow
+        # for exclusive cpusets.  Thus, skip the cpuset automated test
         pushd tests/ftests
-        make check
+        ./ftests.py -l 10 -L ftests.log
+        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38 --no-container
         popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: |
-        cat tests/ftests/ftests.sh.log
-        cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
