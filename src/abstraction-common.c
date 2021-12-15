@@ -155,7 +155,19 @@ static int convert_setting(struct cgroup_controller * const out_cgc,
 	}
 
 	for (i = 0; i < tbl_sz; i++) {
-		if (strcmp(convert_tbl[i].in_setting, in_ctrl_val->name) == 0) {
+		/*
+		 * For a few settings, e.g. cpu.max <-> cpu.cfs_quota_us/
+		 * cpu.cfs_period_us, the conversion from the N->1 field
+		 * (cpu.max) back to one of the other settings cannot be done
+		 * without prior knowledge of our desired setting (quota or
+		 * period in this example).  If prev_name is set, it can guide
+		 * us back to the correct mapping.
+		 */
+		if (strcmp(convert_tbl[i].in_setting, in_ctrl_val->name) == 0 &&
+		    (in_ctrl_val->prev_name == NULL ||
+		     strcmp(in_ctrl_val->prev_name,
+			    convert_tbl[i].out_setting) == 0)) {
+
 			ret = convert_tbl[i].cgroup_convert(out_cgc,
 					in_ctrl_val->value,
 					convert_tbl[i].out_setting,

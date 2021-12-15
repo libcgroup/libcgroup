@@ -170,6 +170,8 @@ void cgroup_free_controllers(struct cgroup *cgroup)
 		for (j = 0; j < cgroup->controller[i]->index; j++) {
 			if (cgroup->controller[i]->values[j]->multiline_value)
 				free(cgroup->controller[i]->values[j]->multiline_value);
+			if (cgroup->controller[i]->values[j]->prev_name)
+				free(cgroup->controller[i]->values[j]->prev_name);
 
 			free(cgroup->controller[i]->values[j]);
 		}
