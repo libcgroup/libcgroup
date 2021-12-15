@@ -4,7 +4,9 @@ cgcreate
 cgdelete
 cgexec
 cgget
+cgxget
 cgset
+cgxset
 cgsnapshot
 lscgroup
 lssubsys
