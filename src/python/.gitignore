@@ -1,0 +1,6 @@
+build/
+Makefile
+Makefile.in
+__init__.py
+*.c
+*.swp

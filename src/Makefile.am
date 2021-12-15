@@ -3,6 +3,9 @@
 BUILT_SOURCES = parse.c parse.h
 
 SUBDIRS = . daemon pam tools
+if ENABLE_PYTHON
+SUBDIRS += python
+endif
 
 # generate parse.h  from parse.y
 AM_YFLAGS = -d

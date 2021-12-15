@@ -75,6 +75,21 @@ AC_ARG_ENABLE([daemon],
 	[with_daemon=true])
 AM_CONDITIONAL([WITH_DAEMON], [test x$with_daemon = xtrue])
 
+AC_ARG_ENABLE([python],
+	[AS_HELP_STRING([--enable-python],
+	[build the python bindings, requires cython])])
+AS_IF([test "$enable_python" = yes], [
+	# cython version check
+	AS_IF([test "$CYTHON_VER_MAJ" -eq 0 -a "$CYTHON_VER_MIN" -lt 29], [
+		AC_MSG_ERROR([python bindings require cython 0.29 or higher])
+	])
+	AM_PATH_PYTHON([3])
+])
+AM_CONDITIONAL([ENABLE_PYTHON], [test "$enable_python" = yes])
+AC_DEFINE_UNQUOTED([ENABLE_PYTHON],
+	[$(test "$enable_python" = yes && echo 1 || echo 0)],
+	[Python bindings build flag.])
+
 AC_ARG_ENABLE([initscript-install],
 	[AS_HELP_STRING([--enable-initscript-install],[install init scripts [default=no]])],
 	[
@@ -202,6 +217,7 @@ AC_CONFIG_FILES([Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
 	src/pam/Makefile
+	src/python/Makefile
 	scripts/Makefile
 	scripts/init.d/cgconfig
 	scripts/init.d/cgred
