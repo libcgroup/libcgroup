@@ -92,9 +92,7 @@ jobs:
       if: ${{ always() }}
       run: cat tests/gunit/test-suite.log
     - name: Collate code coverage results
-      run: |
-        lcov -d . -c -o lcov.tests
-        lcov -a lcov.base -a lcov.tests -o lcov.total
+      uses: ./.github/actions/code-coverage
     - name: Upload code coverage results
       uses: coverallsapp/github-action@master
       with:
@@ -137,11 +135,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Cgroup v1 test logs
-        path: tests/ftests/*.log
+        path: ./*.log
     - name: Collate code coverage results
-      run: |
-        lcov -d . -c -o lcov.tests
-        lcov -a lcov.base -a lcov.tests -o lcov.total
+      uses: ./.github/actions/code-coverage
     - name: Upload code coverage results
       uses: coverallsapp/github-action@master
       with:
@@ -198,9 +194,7 @@ jobs:
         name: Cgroup v1v2 test logs
         path: tests/ftests/*.log
     - name: Collate code coverage results
-      run: |
-        lcov -d . -c -o lcov.tests
-        lcov -a lcov.base -a lcov.tests -o lcov.total
+      uses: ./.github/actions/code-coverage
     - name: Upload code coverage results
       uses: coverallsapp/github-action@master
       with:
@@ -246,9 +240,7 @@ jobs:
         name: Cgroup v2 test logs
         path: tests/ftests/*.log
     - name: Collate code coverage results
-      run: |
-        lcov -d . -c -o lcov.tests
-        lcov -a lcov.base -a lcov.tests -o lcov.total
+      uses: ./.github/actions/code-coverage
     - name: Upload code coverage results
       uses: coverallsapp/github-action@master
       with:
