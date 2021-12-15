@@ -86,6 +86,21 @@ int cgroup_convert_passthrough(struct cgroup_controller * const dst_cgc,
 			       const char * const out_setting,
 			       void *in_dflt, void *out_dflt);
 
+/**
+ * Convert from an unmapple setting
+ *
+ * @param dst_cgc Destination cgroup controller (unused)
+ * @param in_value Contents of the input setting (unsed)
+ * @param out_setting Destination cgroup setting (unused)
+ * @param in_dflt Default value of the input setting (unused)
+ * @param out_dflt Default value of the output setting (unused)
+ * @return Always returns ECGNOVERSIONCONVERT
+ */
+int cgroup_convert_unmappable(struct cgroup_controller * const dst_cgc,
+			      const char * const in_value,
+			      const char * const out_setting,
+			      void *in_dflt, void *out_dflt);
+
 /* cpu */
 int cgroup_convert_cpu_nto1(struct cgroup_controller * const out_cgc,
 			    struct cgroup_controller * const in_cgc);
