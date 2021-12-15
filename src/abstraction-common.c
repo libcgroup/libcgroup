@@ -65,3 +65,52 @@ int cgroup_strtol(const char * const in_str, int base,
 out:
 	return ret;
 }
+
+int cgroup_convert_int(struct cgroup_controller * const dst_cgc,
+		       const char * const in_value,
+		       const char * const out_setting,
+		       void *in_dflt, void *out_dflt)
+{
+#define OUT_VALUE_STR_LEN 20
+
+	long int in_dflt_int = (long int)in_dflt;
+	long int out_dflt_int = (long int)out_dflt;
+	char *out_value_str = NULL;
+	long int out_value;
+	int ret;
+
+	if (!in_value)
+		return ECGINVAL;
+
+	if (strlen(in_value) > 0) {
+		ret = cgroup_strtol(in_value, 10, &out_value);
+		if (ret)
+			goto out;
+
+		/* now scale from the input range to the output range */
+		out_value = out_value * out_dflt_int / in_dflt_int;
+
+		out_value_str = calloc(sizeof(char), OUT_VALUE_STR_LEN);
+		if (!out_value_str) {
+			ret = ECGOTHER;
+			goto out;
+		}
+
+		ret = snprintf(out_value_str, OUT_VALUE_STR_LEN, "%ld", out_value);
+		if (ret == OUT_VALUE_STR_LEN) {
+			/* we ran out of room in the string. throw an error */
+			cgroup_err("Error: output value too large for string: %d\n",
+				   out_value);
+			ret = ECGFAIL;
+			goto out;
+		}
+	}
+
+	ret = cgroup_add_value_string(dst_cgc, out_setting, out_value_str);
+
+out:
+	if (out_value_str)
+		free(out_value_str);
+
+	return ret;
+}
