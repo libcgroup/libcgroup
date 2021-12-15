@@ -192,8 +192,8 @@ int cgroup_walk_tree_set_flags(void **handle, int flags);
  * @return #ECGEOF when the stats file is empty.
  */
 
-int cgroup_read_value_begin(const char *controller, const char *path,
-	char *name, void **handle, char *buffer, int max);
+int cgroup_read_value_begin(const char * const controller, const char *path,
+	const char * const name, void **handle, char *buffer, int max);
 
 /**
   * Read the next string from the given variable handle

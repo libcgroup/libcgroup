@@ -4734,8 +4734,8 @@ int cgroup_read_value_next(void **handle, char *buffer, int max)
 	return ret;
 }
 
-int cgroup_read_value_begin(const char *controller, const char *path,
-	char *name, void **handle, char *buffer, int max)
+int cgroup_read_value_begin(const char * const controller, const char *path,
+	const char * const name, void **handle, char *buffer, int max)
 {
 	int ret = 0;
 	char *ret_c = NULL;
