@@ -38,18 +38,6 @@ LT_INIT
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_HEADER([config.h])
 
-AC_ARG_ENABLE([bindings],
-	[AS_HELP_STRING([--enable-bindings],[enable python bindings [default=no]])],
-	[
-		if test "x$enableval" = xno; then
-			with_bindings=false
-		else
-			with_bindings=true
-		fi
-	],
-	[with_bindings = false])
-AM_CONDITIONAL([WITH_BINDINGS], [test x$with_bindings = xtrue])
-
 # Process command line options
 AC_ARG_ENABLE([tools],
 	[AS_HELP_STRING([--enable-tools],[compile libcgroup tools [default=yes]])],
@@ -214,7 +202,6 @@ AC_CONFIG_FILES([Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
 	src/pam/Makefile
-	src/bindings/Makefile
 	scripts/Makefile
 	scripts/init.d/cgconfig
 	scripts/init.d/cgred
