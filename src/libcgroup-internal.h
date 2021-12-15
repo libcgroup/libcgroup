@@ -361,6 +361,17 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 int cgroup_test_subsys_mounted(const char *ctrl_name);
 
 /**
+ * Create a duplicate copy of values under the specified controller
+ *
+ * @dst: Destination controller
+ * @src: Source controller from which values will be copied to dst
+ *
+ * @return 0 on a successful copy, ECGOTHER if the copy failed
+ */
+int cgroup_copy_controller_values(struct cgroup_controller * const dst,
+				  const struct cgroup_controller * const src);
+
+/**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
  * remaining static in a normal libcgroup library build.
