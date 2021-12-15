@@ -56,7 +56,7 @@ struct cgroup *cgroup_new_cgroup(const char *name)
 struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 							const char *name)
 {
-	int i;
+	int i, ret;
 	struct cgroup_controller *controller;
 
 	if (!cgroup)
@@ -85,6 +85,23 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 	strncpy(controller->name, name, sizeof(controller->name) - 1);
 	controller->cgroup = cgroup;
 	controller->index = 0;
+
+	if (strcmp(controller->name, CGROUP_FILE_PREFIX) == 0) {
+		/*
+		 * Operating on the "cgroup" controller is only allowed on
+		 * cgroup v2 systems
+		 */
+		controller->version = CGROUP_V2;
+	} else {
+		ret = cgroup_get_controller_version(controller->name,
+						    &controller->version);
+		if (ret) {
+			cgroup_dbg("failed to get cgroup version for controller %s\n",
+				   controller->name);
+			free(controller);
+			return NULL;
+		}
+	}
 
 	cgroup->controller[cgroup->index] = controller;
 	cgroup->index++;

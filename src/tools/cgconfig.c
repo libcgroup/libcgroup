@@ -94,6 +94,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	ret = cgroup_init();
+	if (ret) {
+		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
+			argv[0], cgroup_strerror(ret));
+		goto err;
+	}
+
 	error = cgroup_string_list_init(&cfg_files, argc/2);
 	if (error)
 		goto err;
