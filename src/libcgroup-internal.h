@@ -379,6 +379,16 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
 				  const struct cgroup_controller * const src);
 
 /**
+ * Remove a name/value pair from a controller.
+ *
+ * @param controller
+ * @param name Name of the name/value pair to be removed
+ * @return 0 on success.  ECGROUPNOTEXIST if name does not exist.
+ */
+int cgroup_remove_value(struct cgroup_controller * const controller,
+			const char * const name);
+
+/**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
  * ifdef.  This will allow them to be included in the unit tests while
  * remaining static in a normal libcgroup library build.
