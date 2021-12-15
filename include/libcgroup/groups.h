@@ -15,6 +15,13 @@
 extern "C" {
 #endif
 
+enum cg_version_t {
+	CGROUP_UNK = 0,
+	CGROUP_V1,
+	CGROUP_V2,
+	CGROUP_DISK = 0xFF,
+};
+
 /**
  * Flags for cgroup_delete_cgroup_ext().
  */
