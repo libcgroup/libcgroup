@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "abstraction-common.h"
+#include "abstraction-map.h"
 
 int cgroup_strtol(const char * const in_str, int base,
 		  long int * const out_value)
@@ -112,5 +113,107 @@ out:
 	if (out_value_str)
 		free(out_value_str);
 
+	return ret;
+}
+
+static int convert_setting(struct cgroup_controller * const out_cgc,
+			   const struct control_value * const in_ctrl_val)
+{
+	const struct cgroup_abstraction_map *convert_tbl;
+	int tbl_sz = 0;
+	int ret = ECGINVAL;
+	int i;
+
+	switch (out_cgc->version) {
+	case CGROUP_V1:
+		convert_tbl = cgroup_v2_to_v1_map;
+		tbl_sz = cgroup_v2_to_v1_map_sz;
+		break;
+	case CGROUP_V2:
+		convert_tbl = cgroup_v1_to_v2_map;
+		tbl_sz = cgroup_v1_to_v2_map_sz;
+		break;
+	default:
+		ret = ECGFAIL;
+		goto out;
+	}
+
+	for (i = 0; i < tbl_sz; i++) {
+		if (strcmp(convert_tbl[i].in_setting, in_ctrl_val->name) == 0) {
+			ret = convert_tbl[i].cgroup_convert(out_cgc,
+					in_ctrl_val->value,
+					convert_tbl[i].out_setting,
+					convert_tbl[i].in_dflt,
+					convert_tbl[i].out_dflt);
+			if (ret)
+				goto out;
+		}
+	}
+
+out:
+	return ret;
+}
+
+static int convert_controller(struct cgroup_controller * const out_cgc,
+			      const struct cgroup_controller * const in_cgc)
+{
+	int ret;
+	int i;
+
+
+	if (in_cgc->version == out_cgc->version) {
+		ret = cgroup_copy_controller_values(out_cgc, in_cgc);
+		/* regardless of success/failure, there's nothing more to do */
+		goto out;
+	}
+
+	for (i = 0; i < in_cgc->index; i++) {
+		ret = convert_setting(out_cgc, in_cgc->values[i]);
+		if (ret)
+			goto out;
+	}
+
+out:
+	return ret;
+}
+
+int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
+			  enum cg_version_t out_version,
+			  const struct cgroup * const in_cgroup,
+			  enum cg_version_t in_version)
+{
+	struct cgroup_controller *cgc;
+	int ret = 0;
+	int i;
+
+	for (i = 0; i < in_cgroup->index; i++) {
+		cgc = cgroup_add_controller(out_cgroup,
+					    in_cgroup->controller[i]->name);
+		if (cgc == NULL) {
+			ret = ECGFAIL;
+			goto out;
+		}
+
+		/* the user has overridden the version */
+		if (in_version == CGROUP_V1 || in_version == CGROUP_V2) {
+			in_cgroup->controller[i]->version = in_version;
+		}
+
+		cgc->version = out_version;
+
+		if (cgc->version == CGROUP_UNK ||
+		    cgc->version == CGROUP_DISK) {
+			ret = cgroup_get_controller_version(cgc->name,
+				&cgc->version);
+			if (ret)
+				goto out;
+		}
+
+		ret = convert_controller(cgc, in_cgroup->controller[i]);
+		if (ret)
+			goto out;
+	}
+
+out:
 	return ret;
 }
