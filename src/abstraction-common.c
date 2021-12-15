@@ -124,6 +124,14 @@ int cgroup_convert_name_only(struct cgroup_controller * const dst_cgc,
 	return cgroup_add_value_string(dst_cgc, out_setting, in_value);
 }
 
+int cgroup_convert_passthrough(struct cgroup_controller * const dst_cgc,
+			       const char * const in_value,
+			       const char * const out_setting,
+			       void *in_dflt, void *out_dflt)
+{
+	return cgroup_add_value_string(dst_cgc, out_setting, in_value);
+}
+
 static int convert_setting(struct cgroup_controller * const out_cgc,
 			   const struct control_value * const in_ctrl_val)
 {
