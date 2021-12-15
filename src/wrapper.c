@@ -159,24 +159,36 @@ end:
 	return ret;
 }
 
+static void cgroup_free_value(struct control_value *value)
+{
+	if (value->multiline_value)
+		free(value->multiline_value);
+	if (value->prev_name)
+		free(value->prev_name);
+
+	free(value);
+}
+
+static void cgroup_free_controller(struct cgroup_controller *ctrl)
+{
+	int i;
+
+	for (i = 0; i < ctrl->index; i++)
+		cgroup_free_value(ctrl->values[i]);
+	ctrl->index = 0;
+
+	free(ctrl);
+}
+
 void cgroup_free_controllers(struct cgroup *cgroup)
 {
-	int i, j;
+	int i;
 
 	if (!cgroup)
 		return;
 
 	for (i = 0; i < cgroup->index; i++) {
-		for (j = 0; j < cgroup->controller[i]->index; j++) {
-			if (cgroup->controller[i]->values[j]->multiline_value)
-				free(cgroup->controller[i]->values[j]->multiline_value);
-			if (cgroup->controller[i]->values[j]->prev_name)
-				free(cgroup->controller[i]->values[j]->prev_name);
-
-			free(cgroup->controller[i]->values[j]);
-		}
-		cgroup->controller[i]->index = 0;
-		free(cgroup->controller[i]);
+		cgroup_free_controller(cgroup->controller[i]);
 	}
 	cgroup->index = 0;
 }
@@ -295,6 +307,35 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
 	free(val);
 
 	return ret;
+}
+
+int cgroup_remove_value(struct cgroup_controller * const controller,
+			const char * const name)
+{
+	int i;
+
+	for (i = 0; i < controller->index; i++) {
+		if (strcmp(controller->values[i]->name, name) == 0) {
+			cgroup_free_value(controller->values[i]);
+
+			if (i == (controller->index - 1)) {
+				/* This is the last entry in the table.
+				 * There's nothing to move
+				 */
+				controller->index--;
+			} else {
+				memmove(&controller->values[i],
+					&controller->values[i + 1],
+					sizeof(struct control_value *) *
+						(controller->index - i - 1));
+				controller->index--;
+			}
+
+			return 0;
+		}
+	}
+
+	return ECGROUPNOTEXIST;
 }
 
 int cgroup_compare_controllers(struct cgroup_controller *cgca,
