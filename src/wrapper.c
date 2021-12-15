@@ -169,7 +169,7 @@ static void cgroup_free_value(struct control_value *value)
 	free(value);
 }
 
-static void cgroup_free_controller(struct cgroup_controller *ctrl)
+void cgroup_free_controller(struct cgroup_controller *ctrl)
 {
 	int i;
 

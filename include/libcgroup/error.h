@@ -74,6 +74,8 @@ enum {
 	ECGCANTSETVALUE,
 	/** Removing of a group failed because it was not empty. */
 	ECGNONEMPTY,
+	/** Failed to convert from cgroup v1 to/from cgroup v2 */
+	ECGNOVERSIONCONVERT,
 };
 
 /**

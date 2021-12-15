@@ -132,6 +132,14 @@ int cgroup_convert_passthrough(struct cgroup_controller * const dst_cgc,
 	return cgroup_add_value_string(dst_cgc, out_setting, in_value);
 }
 
+int cgroup_convert_unmappable(struct cgroup_controller * const dst_cgc,
+			      const char * const in_value,
+			      const char * const out_setting,
+			      void *in_dflt, void *out_dflt)
+{
+	return ECGNOVERSIONCONVERT;
+}
+
 static int convert_setting(struct cgroup_controller * const out_cgc,
 			   const struct control_value * const in_ctrl_val)
 {
@@ -182,32 +190,60 @@ out:
 	return ret;
 }
 
-static int convert_controller(struct cgroup_controller * const out_cgc,
+static int convert_controller(struct cgroup_controller ** const out_cgc,
 			      struct cgroup_controller * const in_cgc)
 {
+	bool unmappable = false;
 	int ret;
 	int i;
 
 
-	if (in_cgc->version == out_cgc->version) {
-		ret = cgroup_copy_controller_values(out_cgc, in_cgc);
+	if (in_cgc->version == (*out_cgc)->version) {
+		ret = cgroup_copy_controller_values(*out_cgc, in_cgc);
 		/* regardless of success/failure, there's nothing more to do */
 		goto out;
 	}
 
 	if (strcmp(in_cgc->name, "cpu") == 0) {
-		ret = cgroup_convert_cpu_nto1(out_cgc, in_cgc);
+		ret = cgroup_convert_cpu_nto1(*out_cgc, in_cgc);
 		if (ret)
 			goto out;
 	}
 
 	for (i = 0; i < in_cgc->index; i++) {
-		ret = convert_setting(out_cgc, in_cgc->values[i]);
-		if (ret)
+		ret = convert_setting(*out_cgc, in_cgc->values[i]);
+		if (ret == ECGNOVERSIONCONVERT) {
+			/*
+			 * Ignore unmappable errors while they happen, as
+			 * there may be mappable settings after that
+			 */
+			unmappable = true;
+			ret = 0;
+		} else if (ret) {
+			/* immediately fail on all other errors */
 			goto out;
+		}
 	}
 
 out:
+	if (ret == 0 && unmappable) {
+		/*
+		 * The only error received was an unmappable error.
+		 * Return it.
+		 */
+		ret = ECGNOVERSIONCONVERT;
+
+		if ((*out_cgc)->index == 0) {
+			/*
+			 * No settings were successfully converted.  Remove
+			 * this controller so that tools like cgxget aren't
+			 * confused
+			 */
+			cgroup_free_controller(*out_cgc);
+			*out_cgc = NULL;
+		}
+	}
+
 	return ret;
 }
 
@@ -217,6 +253,7 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 			  enum cg_version_t in_version)
 {
 	struct cgroup_controller *cgc;
+	bool unmappable = false;
 	int ret = 0;
 	int i;
 
@@ -243,11 +280,34 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 				goto out;
 		}
 
-		ret = convert_controller(cgc, in_cgroup->controller[i]);
-		if (ret)
+		ret = convert_controller(&cgc, in_cgroup->controller[i]);
+		if (ret == ECGNOVERSIONCONVERT) {
+			/*
+			 * Ignore unmappable errors while they happen, as
+			 * there may be mappable settings after that
+			 */
+			unmappable = true;
+
+			if (!cgc)
+				/*
+				 * The converted controller had no settings
+				 * and was removed.  It's up to us to manage
+				 * the controller count
+				 */
+				out_cgroup->index--;
+		} else if (ret) {
+			/* immediately fail on all other errors */
 			goto out;
+		}
 	}
 
 out:
+	if (ret == 0 && unmappable)
+		/*
+		 * The only error received was an unmappable error.
+		 * Return it.
+		 */
+		ret = ECGNOVERSIONCONVERT;
+
 	return ret;
 }
