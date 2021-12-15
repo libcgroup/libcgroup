@@ -57,6 +57,21 @@ int cgroup_convert_int(struct cgroup_controller * const dst_cgc,
 		       const char * const out_setting,
 		       void *in_dflt, void *out_dflt);
 
+/**
+ * Convert only the name from one setting to another.  The contents remain
+ * the same
+ *
+ * @param dst_cgc Destination cgroup controller
+ * @param in_value Contents of the input setting
+ * @param out_setting Destination cgroup setting
+ * @param in_dflt Default value of the input setting (unused)
+ * @param out_dflt Default value of the output setting (unused)
+ */
+int cgroup_convert_name_only(struct cgroup_controller * const dst_cgc,
+			     const char * const in_value,
+			     const char * const out_setting,
+			     void *in_dflt, void *out_dflt);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
