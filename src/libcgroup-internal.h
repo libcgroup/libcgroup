@@ -93,6 +93,13 @@ struct control_value {
 
 	/* cgget uses this field for values that span multiple lines */
 	char *multiline_value;
+
+	/*
+	 * The abstraction layer uses prev_name when there's an N->1 or
+	 * 1->N relationship between cgroup v1 and v2 settings.
+	 */
+	char *prev_name;
+
 	bool dirty;
 };
 
