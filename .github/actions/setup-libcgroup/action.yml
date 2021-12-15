@@ -26,13 +26,15 @@ runs:
   steps:
   - run: sudo apt-get update
     shell: bash
-  - run: sudo apt-get install libpam-dev lcov
+  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev
+    shell: bash
+  - run: sudo pip install cython
     shell: bash
   - run: rm -fr tests/
     shell: bash
   - run: ./bootstrap.sh
     shell: bash
-  - run: CFLAGS="$CFLAGS -g -O0 -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd"
+  - run: CFLAGS="$CFLAGS -g -O0 -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python
     shell: bash
   - run: make
     shell: bash
