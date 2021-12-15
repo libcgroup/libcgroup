@@ -50,6 +50,12 @@
 #include <linux/un.h>
 #include <grp.h>
 
+const struct cgroup_library_version library_version = {
+	.major = CGROUP_VER_MAJOR,
+	.minor = CGROUP_VER_MINOR,
+	.release = CGROUP_VER_RELEASE,
+};
+
 /*
  * The errno which happend the last time (have to be thread specific)
  */
@@ -5776,4 +5782,9 @@ int cgroup_get_controller_version(const char * const controller,
 	}
 
 	return ECGROUPNOTEXIST;
+}
+
+const struct cgroup_library_version *cgroup_version(void)
+{
+	return &library_version;
 }

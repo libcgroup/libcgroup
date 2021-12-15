@@ -608,6 +608,16 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 			  enum cg_version_t in_version);
 
 /**
+ * Get the cgroup version of a controller.  Version is set to CGROUP_UNK
+ * if the version cannot be determined.
+ *
+ * @param controller The controller of interest
+ * @param version The version of the controller
+ */
+int cgroup_get_controller_version(const char * const controller,
+		enum cg_version_t * const version);
+
+/**
  * @}
  * @}
  */

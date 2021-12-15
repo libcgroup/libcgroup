@@ -207,6 +207,7 @@ AC_CONFIG_FILES([Makefile
 	scripts/init.d/cgred
 	samples/Makefile
 	include/Makefile
+	include/libcgroup/init.h
 	doc/Makefile
 	doc/man/Makefile
 	dist/Makefile

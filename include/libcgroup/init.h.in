@@ -13,6 +13,25 @@
 extern "C" {
 #endif
 
+#define CGROUP_VER_MAJOR	@LIBRARY_VERSION_MAJOR@
+#define CGROUP_VER_MINOR	@LIBRARY_VERSION_MINOR@
+#define CGROUP_VER_RELEASE	@LIBRARY_VERSION_RELEASE@
+
+struct cgroup_library_version {
+	unsigned int major;
+	unsigned int minor;
+	unsigned int release;
+};
+
+/**
+ * Query the library version information
+ *
+ * This function returns a pointer to a populated cgroup_library_version
+ * struct.  The caller does not need to free the structure when finished.
+ *
+ */
+const struct cgroup_library_version *cgroup_version(void);
+
 /**
  * @defgroup group_init 1. Initialization
  * @{
