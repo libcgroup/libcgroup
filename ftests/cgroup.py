@@ -124,9 +124,10 @@ class Cgroup(object):
         return os.path.join(consts.LIBCG_MOUNT_POINT,
                             'src/daemon/{}'.format(cmd))
 
-    # TODO - add support for all of the cgcreate options
     @staticmethod
-    def create(config, controller_list, cgname):
+    def create(config, controller_list, cgname, user_name=None,
+               group_name=None, dperm=None, fperm=None, tperm=None,
+               tasks_user_name=None, tasks_group_name=None, cghelp=False):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
@@ -135,6 +136,29 @@ class Cgroup(object):
         if not config.args.container:
             cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgcreate'))
+
+        if user_name is not None and group_name is not None:
+            cmd.append('-a')
+            cmd.append('{}:{}'.format(user_name, group_name))
+
+        if dperm is not None:
+            cmd.append('-d')
+            cmd.append(dperm)
+
+        if fperm is not None:
+            cmd.append('-f')
+            cmd.append(fperm)
+
+        if tperm is not None:
+            cmd.append('-s')
+            cmd.append(tperm)
+
+        if tasks_user_name is not None and tasks_group_name is not None:
+            cmd.append('-t')
+            cmd.append('{}:{}'.format(tasks_user_name, tasks_group_name))
+
+        if cghelp:
+            cmd.append('-h')
 
         controllers_and_path = '{}:{}'.format(
             ','.join(controller_list), cgname)
