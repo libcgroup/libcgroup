@@ -33,8 +33,23 @@ TABLE = [
     # writesetting, writeval, writever, readsetting, readval, readver
     ['cpu.shares', '512', CgroupVersion.CGROUP_V1, 'cpu.shares', '512', CgroupVersion.CGROUP_V1],
     ['cpu.shares', '512', CgroupVersion.CGROUP_V1, 'cpu.weight', '50', CgroupVersion.CGROUP_V2],
+
     ['cpu.weight', '200', CgroupVersion.CGROUP_V2, 'cpu.shares', '2048', CgroupVersion.CGROUP_V1],
     ['cpu.weight', '200', CgroupVersion.CGROUP_V2, 'cpu.weight', '200', CgroupVersion.CGROUP_V2],
+
+    ['cpu.cfs_quota_us', '10000', CgroupVersion.CGROUP_V1, 'cpu.cfs_quota_us', '10000', CgroupVersion.CGROUP_V1],
+    ['cpu.cfs_period_us', '100000', CgroupVersion.CGROUP_V1, 'cpu.cfs_period_us', '100000', CgroupVersion.CGROUP_V1],
+    ['cpu.cfs_period_us', '50000', CgroupVersion.CGROUP_V1, 'cpu.max', '10000 50000', CgroupVersion.CGROUP_V2],
+
+    ['cpu.cfs_quota_us', '-1', CgroupVersion.CGROUP_V1, 'cpu.cfs_quota_us', '-1', CgroupVersion.CGROUP_V1],
+    ['cpu.cfs_period_us', '100000', CgroupVersion.CGROUP_V1, 'cpu.max', 'max 100000', CgroupVersion.CGROUP_V2],
+
+    ['cpu.max', '5000 25000', CgroupVersion.CGROUP_V2, 'cpu.max', '5000 25000', CgroupVersion.CGROUP_V2],
+    ['cpu.max', '6000 26000', CgroupVersion.CGROUP_V2, 'cpu.cfs_quota_us', '6000', CgroupVersion.CGROUP_V1],
+    ['cpu.max', '7000 27000', CgroupVersion.CGROUP_V2, 'cpu.cfs_period_us', '27000', CgroupVersion.CGROUP_V1],
+
+    ['cpu.max', 'max 40000', CgroupVersion.CGROUP_V2, 'cpu.max', 'max 40000', CgroupVersion.CGROUP_V2],
+    ['cpu.max', 'max 41000', CgroupVersion.CGROUP_V2, 'cpu.cfs_quota_us', '-1', CgroupVersion.CGROUP_V1],
 ]
 
 def prereqs(config):
