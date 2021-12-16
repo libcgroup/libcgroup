@@ -173,29 +173,8 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname=None, setting=None, value=None, copy_from=None,
-            cghelp=False):
-        """cgset equivalent method
-
-        The following variants of cgset are being tested by the
-        automated functional tests:
-
-        Command                                          Test Number
-        cgset -r setting=value cgname                        various
-        cgset -r setting1=val1 -r setting2=val2
-              -r setting3=val2 cgname                            022
-        cgset --copy_from foo bar                                023
-        cgset --copy_from foo bar1 bar2                          024
-        cgset -r setting=value foo bar                           025
-        cgset -r setting1=value1 setting2=value2 foo bar         026
-        various invalid flag combinations                        027
-        """
-        cmd = list()
-
-        if not config.args.container:
-            cmd.append('sudo')
-        cmd.append(Cgroup.build_cmd_path('cgset'))
-
+    def __set(config, cmd, cgname=None, setting=None, value=None,
+              copy_from=None, cghelp=False):
         if setting is not None or value is not None:
             if isinstance(setting, str) and isinstance(value, str):
                 cmd.append('-r')
@@ -230,6 +209,54 @@ class Cgroup(object):
             return config.container.run(cmd)
         else:
             return Run.run(cmd)
+
+    @staticmethod
+    def set(config, cgname=None, setting=None, value=None, copy_from=None,
+            cghelp=False):
+        """cgset equivalent method
+
+        The following variants of cgset are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgset -r setting=value cgname                        various
+        cgset -r setting1=val1 -r setting2=val2
+              -r setting3=val2 cgname                            022
+        cgset --copy_from foo bar                                023
+        cgset --copy_from foo bar1 bar2                          024
+        cgset -r setting=value foo bar                           025
+        cgset -r setting1=value1 setting2=value2 foo bar         026
+        various invalid flag combinations                        027
+        """
+        cmd = list()
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgset'))
+
+        return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
+                            cghelp)
+
+    @staticmethod
+    def xset(config, cgname=None, setting=None, value=None, copy_from=None,
+             version=CgroupVersion.CGROUP_UNK, cghelp=False,
+             ignore_unmappable=False):
+        """cgxset equivalent method
+        """
+        cmd = list()
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgxset'))
+
+        if version == CgroupVersion.CGROUP_V1:
+            cmd.append('-1')
+        elif version == CgroupVersion.CGROUP_V2:
+            cmd.append('-2')
+
+        if ignore_unmappable:
+            cmd.append('-i')
+
+        return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
+                            cghelp)
 
     @staticmethod
     def __get(config, cmd, controller=None, cgname=None, setting=None,
