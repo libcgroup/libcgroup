@@ -232,32 +232,9 @@ class Cgroup(object):
             return Run.run(cmd)
 
     @staticmethod
-    def get(config, controller=None, cgname=None, setting=None,
-            print_headers=True, values_only=False,
-            all_controllers=False, cghelp=False):
-        """cgget equivalent method
-
-        Returns:
-        str: The stdout result of cgget
-
-        The following variants of cgget() are being tested by the
-        automated functional tests:
-
-        Command                                          Test Number
-        cgget -r cpuset.cpus mycg                                001
-        cgget -r cpuset.cpus -r cpuset.mems mycg                 008
-        cgget -g cpu mycg                                        009
-        cgget -g cpu:mycg                                        010
-        cgget -r cpuset.cpus mycg1 mycg2                         011
-        cgget -r cpuset.cpus -r cpuset.mems mycg1 mycg2          012
-        cgget -g cpu -g freezer mycg                             013
-        cgget -a mycg                                            014
-        cgget -r memory.stat mycg (multiline value read)         015
-        various invalid flag combinations                        016
-        """
-        cmd = list()
-        cmd.append(Cgroup.build_cmd_path('cgget'))
-
+    def __get(config, cmd, controller=None, cgname=None, setting=None,
+              print_headers=True, values_only=False,
+              all_controllers=False, cghelp=False):
         if not print_headers:
             cmd.append('-n')
         if values_only:
@@ -317,6 +294,62 @@ class Cgroup(object):
                     raise re
 
         return ret
+
+    @staticmethod
+    def get(config, controller=None, cgname=None, setting=None,
+            print_headers=True, values_only=False,
+            all_controllers=False, cghelp=False):
+        """cgget equivalent method
+
+        Returns:
+        str: The stdout result of cgget
+
+        The following variants of cgget() are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgget -r cpuset.cpus mycg                                001
+        cgget -r cpuset.cpus -r cpuset.mems mycg                 008
+        cgget -g cpu mycg                                        009
+        cgget -g cpu:mycg                                        010
+        cgget -r cpuset.cpus mycg1 mycg2                         011
+        cgget -r cpuset.cpus -r cpuset.mems mycg1 mycg2          012
+        cgget -g cpu -g freezer mycg                             013
+        cgget -a mycg                                            014
+        cgget -r memory.stat mycg (multiline value read)         015
+        various invalid flag combinations                        016
+        """
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path('cgget'))
+
+        return Cgroup.__get(config, cmd, controller, cgname, setting,
+                            print_headers, values_only, all_controllers,
+                            cghelp)
+
+    @staticmethod
+    def xget(config, controller=None, cgname=None, setting=None,
+             print_headers=True, values_only=False,
+             all_controllers=False, version=CgroupVersion.CGROUP_UNK,
+             cghelp=False, ignore_unmappable=False):
+        """cgxget equivalent method
+
+        Returns:
+        str: The stdout result of cgxget
+        """
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path('cgxget'))
+
+        if version == CgroupVersion.CGROUP_V1:
+            cmd.append('-1')
+        elif version == CgroupVersion.CGROUP_V2:
+            cmd.append('-2')
+
+        if ignore_unmappable:
+            cmd.append('-i')
+
+        return Cgroup.__get(config, cmd, controller, cgname, setting,
+                            print_headers, values_only, all_controllers,
+                            cghelp)
 
     @staticmethod
     def classify(config, controller, cgname, pid_list, sticky=False,
