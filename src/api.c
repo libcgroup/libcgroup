@@ -1164,6 +1164,7 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 			ent->mnt_dir, FILENAME_MAX);
 		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
 			'\0';
+		cg_mount_table[*mnt_tbl_idx].version = CGROUP_V1;
 		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
 		cgroup_dbg("Found cgroup option %s, count %d\n",
 			ent->mnt_opts, *mnt_tbl_idx);
