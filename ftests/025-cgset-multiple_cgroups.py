@@ -59,7 +59,7 @@ def test(config):
     if value != VALUE:
             result = consts.TEST_FAILED
             cause = "Expected {} to be set to {} in {}, but received {}".format(
-                    setting, VALUES[i], CGNAME1, value)
+                    SETTING, VALUE, CGNAME1, value)
             return result, cause
 
     value = Cgroup.get(config, cgname=CGNAME2, setting=SETTING,
@@ -67,7 +67,7 @@ def test(config):
     if value != VALUE:
             result = consts.TEST_FAILED
             cause = "Expected {} to be set to {} in {}, but received {}".format(
-                    setting, VALUES[i], CGNAME2, value)
+                    SETTING, VALUE, CGNAME2, value)
             return result, cause
 
     return result, cause

@@ -23,7 +23,7 @@ import consts
 import getpass
 from log import Log
 import os
-from run import Run
+from run import Run, RunError
 
 class Container(object):
     def __init__(self, name, stop_timeout=None, arch=None, cfg_path=None,
