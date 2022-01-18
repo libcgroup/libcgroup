@@ -3877,6 +3877,20 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 	}
 
 	/*
+	 * User had asked to find the matching rule (if one exist) in the
+	 * cached rules  but the list might be empty due to the inactive
+	 * cgrulesengd. Lets emulate its behaviour of caching the rules
+	 * by reloading the rules from the configuration file.
+	 */
+	if ((flags & CGFLAG_USECACHE) && (rl.head == NULL)) {
+		cgroup_warn("Warning: no cached rules found, trying to reload "
+			    " from %s.\n", CGRULES_CONF_FILE);
+		ret = cgroup_reload_cached_rules();
+		if (ret != 0)
+			goto finished;
+	}
+
+	/*
 	 * If the user did not ask for cached rules, we must parse the
 	 * configuration to find a matching rule (if one exists).  Else, we'll
 	 * find the first match in the cached list (rl).
