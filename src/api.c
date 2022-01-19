@@ -5431,11 +5431,16 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 	cg_build_path(name, cgroup_path, controller);
 	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX-strlen(cgroup_path));
 
-	/*
-	 * This kernel does have support for cgroup.procs
-	 */
-	if (access(cgroup_path, F_OK))
-		return ECGROUPUNSUPP;
+	procs = fopen(cgroup_path, "r");
+	if (!procs) {
+		last_errno = errno;
+		*pids = NULL;
+		*size = 0;
+		if (errno == ENOENT)
+			return ECGROUPUNSUPP;
+		else
+			return ECGOTHER;
+	}
 
 	/*
 	 * Keep doubling the memory allocated if needed
@@ -5443,15 +5448,7 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 	tmp_list= malloc(sizeof(pid_t) * tot_procs);
 	if (!tmp_list) {
 		last_errno = errno;
-		return ECGOTHER;
-	}
-
-	procs = fopen(cgroup_path, "r");
-	if (!procs) {
-		last_errno = errno;
-		free(tmp_list);
-		*pids = NULL;
-		*size = 0;
+		fclose(procs);
 		return ECGOTHER;
 	}
 
