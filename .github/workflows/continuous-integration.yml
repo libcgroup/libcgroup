@@ -23,6 +23,22 @@ name: Continuous Integration
 on: ["push", "pull_request"]
 
 jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: github/codeql-action/init@v1
+      with:
+        languages: cpp, python
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
+
   unittests:
     name: Unit Tests
     runs-on: ubuntu-latest
