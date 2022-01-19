@@ -34,6 +34,22 @@ jobs:
           echo "Cleaning up previous run"
           rm -rf "${{ github.workspace }}"
 
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - uses: github/codeql-action/init@v1
+      with:
+        languages: cpp, python
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
+
   doxygen:
     name: Doxygen
     # Only run Doxygen against the main branch
