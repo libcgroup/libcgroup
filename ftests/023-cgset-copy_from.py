@@ -52,22 +52,12 @@ def setup(config):
     Cgroup.set(config, cgname=SRC_CGNAME, setting=SETTINGS, value=VALUES)
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
-
     Cgroup.set(config, cgname=DST_CGNAME, copy_from=SRC_CGNAME)
 
     for i, setting in enumerate(SETTINGS):
-        value = Cgroup.get(config, cgname=DST_CGNAME, setting=setting,
-                           print_headers=False, values_only=True)
+        Cgroup.get_and_validate(config, DST_CGNAME, setting, VALUES[i])
 
-        if value != VALUES[i]:
-            result = consts.TEST_FAILED
-            cause = "Expected {} to be set to {}, but received {}".format(
-                    setting, VALUES[i], value)
-            return result, cause
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, SRC_CGNAME)

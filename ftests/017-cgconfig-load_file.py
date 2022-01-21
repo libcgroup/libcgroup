@@ -60,36 +60,13 @@ def setup(config):
     f.close()
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
-
     Cgroup.configparser(config, load_file=CONFIG_FILE_NAME)
 
-    period = Cgroup.get(config, cgname=CGNAME, setting='cpu.cfs_period_us',
-                        print_headers=False, values_only=True)
-    if period != CFS_PERIOD:
-            result = consts.TEST_FAILED
-            cause = "cfs_period_us failed.  Expected {}, Received {}".format(
-                    CFS_PERIOD, period)
-            return result, cause
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_period_us', CFS_PERIOD)
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_quota_us', CFS_QUOTA)
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.shares', SHARES)
 
-    quota = Cgroup.get(config, cgname=CGNAME, setting='cpu.cfs_quota_us',
-                       print_headers=False, values_only=True)
-    if quota != CFS_QUOTA:
-            result = consts.TEST_FAILED
-            cause = "cfs_quota_us failed.  Expected {}, Received {}".format(
-                    CFS_QUOTA, quota)
-            return result, cause
-
-    shares = Cgroup.get(config, cgname=CGNAME, setting='cpu.shares',
-                        print_headers=False, values_only=True)
-    if shares != SHARES:
-            result = consts.TEST_FAILED
-            cause = "shares failed.  Expected {}, Received {}".format(
-                    SHARES, shares)
-            return result, cause
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)

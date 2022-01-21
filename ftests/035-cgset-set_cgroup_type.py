@@ -51,37 +51,15 @@ def prereqs(config):
     return result, cause
 
 def setup(config):
-    result = consts.TEST_PASSED
-    cause = None
-
     Cgroup.create(config, CONTROLLER, CGNAME)
+    Cgroup.get_and_validate(config, CGNAME, SETTING, BEFORE)
 
-
-    before = Cgroup.get(config, controller=None, cgname=CGNAME,
-                        setting=SETTING, print_headers=False,
-                        values_only=True)
-    if before != BEFORE:
-        result = consts.TEST_SKIPPED
-        cause = "Skipping test.  Unexpected value in {}: {}".format(SETTING,
-                    before)
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
+    Cgroup.set_and_validate(config, CGNAME, SETTING, AFTER)
 
-    Cgroup.set(config, CGNAME, SETTING, AFTER)
-
-    after = Cgroup.get(config, controller=None, cgname=CGNAME,
-                       setting=SETTING, print_headers=False,
-                       values_only=True)
-
-    if after != AFTER:
-        result = consts.TEST_FAILED
-        cause = "cgget expected {} but received {}".format(AFTER, after)
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)

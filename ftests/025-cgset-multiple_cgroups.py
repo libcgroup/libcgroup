@@ -49,28 +49,12 @@ def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME2)
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
-
     Cgroup.set(config, cgname=[CGNAME1, CGNAME2], setting=SETTING, value=VALUE)
 
-    value = Cgroup.get(config, cgname=CGNAME1, setting=SETTING,
-                       print_headers=False, values_only=True)
-    if value != VALUE:
-            result = consts.TEST_FAILED
-            cause = "Expected {} to be set to {} in {}, but received {}".format(
-                    SETTING, VALUE, CGNAME1, value)
-            return result, cause
+    Cgroup.get_and_validate(config, CGNAME1, SETTING, VALUE)
+    Cgroup.get_and_validate(config, CGNAME2, SETTING, VALUE)
 
-    value = Cgroup.get(config, cgname=CGNAME2, setting=SETTING,
-                       print_headers=False, values_only=True)
-    if value != VALUE:
-            result = consts.TEST_FAILED
-            cause = "Expected {} to be set to {} in {}, but received {}".format(
-                    SETTING, VALUE, CGNAME2, value)
-            return result, cause
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME1)

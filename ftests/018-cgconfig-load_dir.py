@@ -77,53 +77,16 @@ def setup(config):
     f.close()
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
-
     Cgroup.configparser(config, load_dir=CONFIG_FILE_DIR)
 
-    period = Cgroup.get(config, cgname=CGNAME, setting='cpu.cfs_period_us',
-                        print_headers=False, values_only=True)
-    if period != CFS_PERIOD:
-            result = consts.TEST_FAILED
-            cause = "cfs_period_us failed.  Expected {}, Received {}".format(
-                    CFS_PERIOD, period)
-            return result, cause
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_period_us', CFS_PERIOD)
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_quota_us', CFS_QUOTA)
+    Cgroup.get_and_validate(config, CGNAME, 'cpu.shares', SHARES)
+    Cgroup.get_and_validate(config, CGNAME, 'memory.limit_in_bytes', LIMIT_IN_BYTES)
+    Cgroup.get_and_validate(config, CGNAME, 'memory.soft_limit_in_bytes',
+                            SOFT_LIMIT_IN_BYTES)
 
-    quota = Cgroup.get(config, cgname=CGNAME, setting='cpu.cfs_quota_us',
-                       print_headers=False, values_only=True)
-    if quota != CFS_QUOTA:
-            result = consts.TEST_FAILED
-            cause = "cfs_quota_us failed.  Expected {}, Received {}".format(
-                    CFS_QUOTA, quota)
-            return result, cause
-
-    shares = Cgroup.get(config, cgname=CGNAME, setting='cpu.shares',
-                        print_headers=False, values_only=True)
-    if shares != SHARES:
-            result = consts.TEST_FAILED
-            cause = "shares failed.  Expected {}, Received {}".format(
-                    SHARES, shares)
-            return result, cause
-
-    limit = Cgroup.get(config, cgname=CGNAME, setting='memory.limit_in_bytes',
-                       print_headers=False, values_only=True)
-    if limit != LIMIT_IN_BYTES:
-            result = consts.TEST_FAILED
-            cause = "limit_in_bytes failed.  Expected {}, Received {}".format(
-                    LIMIT_IN_BYTES, limit)
-            return result, cause
-
-    soft_limit = Cgroup.get(config, cgname=CGNAME,
-                            setting='memory.soft_limit_in_bytes',
-                            print_headers=False, values_only=True)
-    if soft_limit != SOFT_LIMIT_IN_BYTES:
-            result = consts.TEST_FAILED
-            cause = "soft_limit_in_bytes failed.  Expected {}, Received {}".format(
-                    SOFT_LIMIT_IN_BYTES, soft_limit)
-            return result, cause
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CPU_CTRL, CGNAME)
