@@ -47,18 +47,9 @@ def setup(config):
     Cgroup.set(config, CGNAME, SETTING, VALUE)
 
 def test(config):
-    result = consts.TEST_PASSED
-    cause = None
+    Cgroup.get_and_validate(config, CGNAME, SETTING, VALUE)
 
-    value = Cgroup.get(config, controller=None, cgname=CGNAME,
-                       setting=SETTING, print_headers=False,
-                       values_only=True)
-
-    if value != VALUE:
-        result = consts.TEST_FAILED
-        cause = "cgget expected {} but received {}".format(VALUE, value)
-
-    return result, cause
+    return consts.TEST_PASSED, None
 
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)

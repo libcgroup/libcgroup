@@ -830,3 +830,34 @@ class Cgroup(object):
                     return Run.run(cmd, shell_bool=True)
 
         return None
+
+    @staticmethod
+    def get_and_validate(config, cgname, setting, expected_value):
+        """get the requested setting and validate the value received
+
+        This is a helper method for the functional tests and there is no
+        equivalent libcgroup command line interface.  This method will
+        raise a CgroupError if the comparison fails
+        """
+        value = Cgroup.get(config, controller=None, cgname=cgname,
+                           setting=setting, print_headers=False,
+                           values_only=True)
+
+        if value != expected_value:
+            raise CgroupError("cgget expected {} but received {}".format(
+                              expected_value, value))
+
+    @staticmethod
+    def set_and_validate(config, cgname, setting, value):
+        """set the requested setting and validate the write
+
+        This is a helper method for the functional tests and there is no
+        equivalent libcgroup command line interface.  This method will
+        raise a CgroupError if the comparison fails
+        """
+        Cgroup.set(config, cgname, setting, value)
+        Cgroup.get_and_validate(config, cgname, setting, value)
+
+class CgroupError(Exception):
+    def __init__(self, message):
+        super(CgroupError, self).__init__(message)
