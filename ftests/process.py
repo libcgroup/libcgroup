@@ -22,6 +22,7 @@
 from cgroup import Cgroup
 from cgroup import CgroupVersion
 import multiprocessing as mp
+import threading as tp
 from run import Run
 from run import RunError
 import time
@@ -37,6 +38,11 @@ class Process(object):
         out_str += "\tchildren_pids = {}\n".format(self.children_pids)
 
         return out_str
+
+    @staticmethod
+    def __thread_infinite_loop(config, sleep_time=1):
+        while 1:
+            time.sleep(sleep_time)
 
     @staticmethod
     def __infinite_loop(config, sleep_time=1):
@@ -122,6 +128,33 @@ class Process(object):
             p.start()
 
             self.children.append(p)
+
+    def create_threaded_process(self, config, threads_cnt):
+        threads = list()
+
+        for n in range(threads_cnt):
+            sleep_time = n + 1
+            thread = tp.Thread(target=Process.__thread_infinite_loop,
+                               args=(config, sleep_time, ))
+            threads.append(thread)
+
+        for thread in threads:
+            thread.start()
+
+    def create_threaded_process_in_cgroup(self, config, controller, cgname,
+                                          threads=2, cgclassify=True):
+
+        p = mp.Process(target=self.create_threaded_process,
+                       args=(config, threads, ))
+        p.start()
+
+        if cgclassify:
+            Cgroup.classify(config, controller, cgname, p.pid)
+
+        self.children.append(p)
+        self.children_pids.append(p.pid)
+
+        return p.pid
 
     # The caller will block until all children are stopped.
     def join_children(self, config):
