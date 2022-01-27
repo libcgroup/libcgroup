@@ -1534,11 +1534,72 @@ char *cg_build_path(const char *name, char *path, const char *type)
 	return path;
 }
 
+static int cgroup_get_cg_type(const char * const path, char * const type,
+			      size_t type_sz)
+{
+	char cg_type_path[FILENAME_MAX];
+	char cg_type[LL_MAX];
+	int len, err = 0;
+	FILE *fp = NULL;
+	struct stat st;
+	int stat_ret;
+
+	snprintf(cg_type_path, FILENAME_MAX, "%scgroup.type", path);
+	/* file cgroup.type, doesn't exist for root cgroup. */
+	stat_ret = stat(cg_type_path, &st);
+	if (stat_ret != 0) {
+		snprintf(type, type_sz, "cgroup.procs");
+		goto out;
+	}
+
+	fp = fopen(cg_type_path, "re");
+	if (!fp) {
+		cgroup_warn("Warning: failed to open file %s: %s\n",
+				cg_type_path, strerror(errno));
+		err = ECGOTHER;
+		goto out;
+	}
+
+	if (fgets(cg_type, LL_MAX, fp) == NULL) {
+		cgroup_warn("Warning: failed to read file %s: %s\n",
+				cg_type_path, strerror(errno));
+		err = ECGOTHER;
+		goto out;
+	}
+
+	len = strlen(cg_type) - 1;
+	/*
+	 * Append cgroup.threads to the path, if the cgroup.type is
+	 * threaded and cgroup.procs for type domain, domain threaded.
+	 * domain type is used for regular cgroup and domain threaded
+	 * for root of threaded cgroup v2 subtree.  Another possible
+	 * type is domain invalid, it's an invalid state, under the
+	 * threaded subtree.
+	 */
+	if (strncmp(cg_type, "domain", len) == 0 ||
+	    strncmp(cg_type, "domain threaded", len) == 0) {
+		snprintf(type, type_sz, "cgroup.procs");
+	} else if (strncmp(cg_type, "threaded", len) == 0) {
+		snprintf(type, type_sz, "cgroup.threads");
+	} else {
+		cgroup_warn("Warning: invalid %scgroup.type: %s\n",
+				path, cg_type);
+		err = ECGOTHER;
+	}
+
+out:
+	if (fp)
+		fclose(fp);
+
+	return err;
+}
+
 int cgroup_build_tasks_procs_path(char * const path,
 				  size_t path_sz, const char * const cg_name,
 				  const char * const ctrl_name)
 {
 	enum cg_version_t version;
+	char cg_type[LL_MAX];
 	int err = ECGOTHER;
 
 	if (!cg_build_path(cg_name, path, ctrl_name))
@@ -1554,8 +1615,11 @@ int cgroup_build_tasks_procs_path(char * const path,
 		err = 0;
 		break;
 	case CGROUP_V2:
-		strncat(path, "cgroup.procs", path_sz - strlen(path));
-		err = 0;
+		err = cgroup_get_cg_type(path, cg_type, sizeof(cg_type));
+		if (err)
+			goto error;
+
+		strncat(path, cg_type , path_sz - strlen(path));
 		break;
 	default:
 		err = ECGOTHER;
@@ -1565,6 +1629,8 @@ int cgroup_build_tasks_procs_path(char * const path,
 error:
 	if (err)
 		path[0] = '\0';
+
+	cgroup_dbg("cgroup build procs path: %s\n", path);
 
 	return err;
 }
