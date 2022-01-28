@@ -25,6 +25,7 @@
 #include <libcgroup/tasks.h>
 #include <libcgroup/config.h>
 #include <libcgroup/log.h>
+#include <libcgroup/tools.h>
 
 #undef _LIBCGROUP_H_INSIDE
 

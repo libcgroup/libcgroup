@@ -37,6 +37,7 @@
 
 #define LL_MAX				100
 
+#ifndef LIBCG_LIB
 static struct option const long_options[] =
 {
 	{"v1", no_argument, NULL, '1'},
@@ -497,6 +498,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 err:
 	return ret;
 }
+#endif /* !LIBCG_LIB */
 
 static int get_cv_value(struct control_value * const cv,
 			const char * const cg_name,
@@ -711,6 +713,7 @@ static int get_cgroup_values(struct cgroup * const cg)
 	return ret;
 }
 
+#ifndef LIBCG_LIB
 static int get_values(struct cgroup *cg_list[], int cg_list_len)
 {
 	int ret = 0;
@@ -725,7 +728,8 @@ static int get_values(struct cgroup *cg_list[], int cg_list_len)
 	return ret;
 }
 
-void print_control_values(const struct control_value * const cv, int mode)
+static void print_control_values(const struct control_value * const cv,
+				 int mode)
 {
 	if (mode & MODE_SHOW_NAMES)
 		printf("%s: ", cv->name);
@@ -736,7 +740,8 @@ void print_control_values(const struct control_value * const cv, int mode)
 		printf("%s\n", cv->value);
 }
 
-void print_controller(const struct cgroup_controller * const cgc, int mode)
+static void print_controller(const struct cgroup_controller * const cgc,
+			     int mode)
 {
 	int i;
 
@@ -768,9 +773,9 @@ static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
 	}
 }
 
-int convert_cgroups(struct cgroup **cg_list[], int cg_list_len,
-		    enum cg_version_t in_version,
-		    enum cg_version_t out_version)
+static int convert_cgroups(struct cgroup **cg_list[], int cg_list_len,
+			   enum cg_version_t in_version,
+			   enum cg_version_t out_version)
 {
 	struct cgroup **cg_converted_list;
 	int i = 0, j, ret = 0;
@@ -863,3 +868,54 @@ err:
 
 	return ret;
 }
+#endif /* !LIBCG_LIB */
+
+#ifdef LIBCG_LIB
+int cgroup_cgxget(struct cgroup **cg,
+		  enum cg_version_t version, bool ignore_unmappable)
+{
+	struct cgroup *disk_cg, *out_cg;
+	int ret;
+
+	if (!cg || !(*cg)) {
+		ret = ECGINVAL;
+		goto out;
+	}
+
+	disk_cg = cgroup_new_cgroup((*cg)->name);
+	if (!disk_cg) {
+		ret = ECGCONTROLLERCREATEFAILED;
+		goto out;
+	}
+
+	ret = cgroup_convert_cgroup(disk_cg, CGROUP_DISK, *cg, version);
+	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
+		ret = 0;
+	else if (ret)
+		goto out;
+
+	ret = get_cgroup_values(disk_cg);
+	if (ret)
+		goto out;
+
+	out_cg = cgroup_new_cgroup((*cg)->name);
+	if (!out_cg) {
+		ret = ECGCONTROLLERCREATEFAILED;
+		goto out;
+	}
+
+	ret = cgroup_convert_cgroup(out_cg, version, disk_cg, CGROUP_DISK);
+	if (ret) {
+		cgroup_free(&out_cg);
+		goto out;
+	}
+
+	cgroup_free(cg);
+	*cg = out_cg;
+
+out:
+	if (disk_cg)
+		cgroup_free(&disk_cg);
+	return ret;
+}
+#endif /* LIBCG_LIB */
