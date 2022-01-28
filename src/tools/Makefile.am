@@ -5,8 +5,8 @@ LDADD = $(top_builddir)/src/libcgroup.la -lpthread
 
 if WITH_TOOLS
 
-bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgget cgdelete lssubsys\
-		lscgroup cgsnapshot
+bin_PROGRAMS = cgexec cgclassify cgcreate cgset cgget cgdelete lssubsys \
+	       lscgroup cgsnapshot
 
 sbin_PROGRAMS = cgconfigparser
 
