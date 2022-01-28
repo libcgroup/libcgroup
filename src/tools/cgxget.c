@@ -41,6 +41,7 @@ static struct option const long_options[] =
 {
 	{"v1", no_argument, NULL, '1'},
 	{"v2", no_argument, NULL, '2'},
+	{"ignore-unmappable", no_argument, NULL, 'i'},
 	{"variable", required_argument, NULL, 'r'},
 	{"help", no_argument, NULL, 'h'},
 	{"all",  no_argument, NULL, 'a'},
@@ -65,6 +66,8 @@ static void usage(int status, const char *program_name)
 	       "v1 format\n");
 	printf("  -2, --v2			Provided parameters are in "
 	       "v2 format\n");
+	printf("  -i, --ignore-unmappable       Do not return an error for settings "
+	       "that cannot be converted\n");
 	printf("  -a, --all			Print info about all relevant "
 	       "controllers\n");
 	printf("  -g <controllers>		Controller which info should "
@@ -413,7 +416,8 @@ out:
 }
 static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 		      int * const cg_list_len, int * const mode,
-		      enum cg_version_t * const version)
+		      enum cg_version_t * const version,
+		      bool * const ignore_unmappable)
 {
 	bool do_not_fill_controller = false;
 	bool fill_controller = false;
@@ -422,7 +426,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 	int c;
 
 	/* Parse arguments. */
-	while ((c = getopt_long(argc, argv, "r:hnvg:a12", long_options, NULL))
+	while ((c = getopt_long(argc, argv, "r:hnvg:a12i", long_options, NULL))
 		> 0) {
 		switch (c) {
 		case 'h':
@@ -469,6 +473,9 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 			break;
 		case '2':
 			*version = CGROUP_V2;
+			break;
+		case 'i':
+			*ignore_unmappable = true;
 			break;
 		default:
 			usage(1, argv[0]);
@@ -786,12 +793,15 @@ int convert_cgroups(struct cgroup **cg_list[], int cg_list_len,
 	}
 
 out:
-	if (ret) {
-		/* the conversion failed */
+	if (ret != 0 && ret != ECGNOVERSIONCONVERT) {
+		/* The conversion failed */
 		for (j = 0; j < i; j++)
 			cgroup_free(&(cg_converted_list[i]));
 	} else {
-		/* the conversion succeeded.  free the old list */
+		/*
+		 * The conversion succeeded or was unmappable.  Free the old
+		 * list.
+		 */
 		for (i = 0; i < cg_list_len; i++)
 			cgroup_free(cg_list[i]);
 
@@ -808,6 +818,7 @@ int main(int argc, char *argv[])
 	int ret = 0, i;
 	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
 	enum cg_version_t version = CGROUP_UNK;
+	bool ignore_unmappable = false;
 
 	/* No parameter on input? */
 	if (argc < 2) {
@@ -822,12 +833,18 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version);
+	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version,
+			 &ignore_unmappable);
 	if (ret)
 		goto err;
 
 	ret = convert_cgroups(&cg_list, cg_list_len, version, CGROUP_DISK);
-	if (ret)
+	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
+		/* The user has specified that we should ignore any errors
+		 * due to being unable to map from v1 to v2 or vice versa
+		*/
+		ret = 0;
+	else if (ret)
 		goto err;
 
 	ret = get_values(cg_list, cg_list_len);
