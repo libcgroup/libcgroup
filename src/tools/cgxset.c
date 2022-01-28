@@ -345,3 +345,41 @@ err:
 	return ret;
 }
 #endif /* !UNIT_TEST */
+
+#ifdef LIBCG_LIB
+int cgroup_cgxset(const struct cgroup * const cgroup,
+		  enum cg_version_t version, bool ignore_unmappable)
+{
+	struct cgroup *converted_cgroup;
+	int ret;
+
+	converted_cgroup = cgroup_new_cgroup(cgroup->name);
+	if (converted_cgroup == NULL) {
+		ret = ECGCONTROLLERCREATEFAILED;
+		goto err;
+	}
+
+	ret = cgroup_convert_cgroup(converted_cgroup, CGROUP_DISK,
+				    cgroup, version);
+	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
+		/* The user has specified that we should ignore
+		 * any errors due to being unable to map from v1 to
+		 * v2 or vice versa
+		 */
+		ret = 0;
+	else if (ret)
+		goto err;
+
+	/* modify cgroup based on values of the new one */
+	ret = cgroup_modify_cgroup(converted_cgroup);
+	if (ret) {
+		goto err;
+	}
+
+err:
+	if (converted_cgroup)
+		cgroup_free(&converted_cgroup);
+
+	return ret;
+}
+#endif /* LIBCG_LIB */

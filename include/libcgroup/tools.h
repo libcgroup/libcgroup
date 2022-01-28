@@ -53,6 +53,19 @@ extern "C" {
 int cgroup_cgxget(struct cgroup ** cg,
 		  enum cg_version_t version, bool ignore_unmappable);
 
+/**
+ * Write the setting-value pairs in *cg to the cgroup sysfs.
+ * cgroup_cgxset() will perform the necessary conversions to match the
+ * "on-disk" format prior to writing to the cgroup sysfs.
+ *
+ * @param cg cgroup instance that will be written to the cgroup sysfs
+ * @param version Cgroup version of *cg
+ * @param ignore_unmappable Ignore failures due to settings that cannot be
+ *                          converted from one cgroup version to another
+ */
+int cgroup_cgxset(const struct cgroup * const cg,
+		  enum cg_version_t version, bool ignore_unmappable);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
