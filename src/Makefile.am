@@ -22,7 +22,8 @@ lib_LTLIBRARIES = libcgroup.la
 libcgroup_la_SOURCES = parse.h parse.y lex.l api.c config.c \
 		       libcgroup-internal.h libcgroup.map wrapper.c log.c \
 		       abstraction-common.c abstraction-common.h \
-		       abstraction-map.c abstraction-map.h
+		       abstraction-map.c abstraction-map.h \
+		       abstraction-cpu.c
 libcgroup_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)
 libcgroup_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -DSTATIC=static
 libcgroup_la_LDFLAGS = -Wl,--version-script,$(srcdir)/libcgroup.map \
