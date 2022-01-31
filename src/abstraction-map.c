@@ -32,9 +32,11 @@
 #include "abstraction-map.h"
 
 const struct cgroup_abstraction_map cgroup_v1_to_v2_map[] = {
+	/* cpu controller */
 	{cgroup_convert_int, "cpu.shares", (void *)1024, "cpu.weight", (void *)100},
 	{cgroup_convert_cpu_quota_to_max, "cpu.cfs_quota_us", NULL, "cpu.max", NULL},
 	{cgroup_convert_cpu_period_to_max, "cpu.cfs_period_us", NULL, "cpu.max", NULL},
+	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
 	{cgroup_convert_name_only, "cpuset.effective_cpus", NULL,
@@ -50,9 +52,11 @@ const int cgroup_v1_to_v2_map_sz = sizeof(cgroup_v1_to_v2_map) /
 				   sizeof(cgroup_v1_to_v2_map[0]);
 
 const struct cgroup_abstraction_map cgroup_v2_to_v1_map[] = {
+	/* cpu controller */
 	{cgroup_convert_int, "cpu.weight", (void *)100, "cpu.shares", (void *)1024},
 	{cgroup_convert_cpu_max_to_quota, "cpu.max", NULL, "cpu.cfs_quota_us", NULL},
 	{cgroup_convert_cpu_max_to_period, "cpu.max", NULL, "cpu.cfs_period_us", NULL},
+	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
 	{cgroup_convert_name_only, "cpuset.cpus.effective", NULL,
