@@ -1312,16 +1312,14 @@ int cgroup_init(void)
 	/*
 	 * The first line of the file has stuff we are not interested in.
 	 * So just read it and discard the information.
-	 *
-	 * XX: fix the size for fgets
 	 */
-	buf = malloc(FILENAME_MAX);
+	buf = malloc(LL_MAX);
 	if (!buf) {
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
 	}
-	if (!fgets(buf, FILENAME_MAX, proc_cgroup)) {
+	if (!fgets(buf, LL_MAX, proc_cgroup)) {
 		free(buf);
 		cgroup_err("Error: cannot read /proc/cgroups: %s\n",
 				strerror(errno));
