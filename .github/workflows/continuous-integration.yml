@@ -258,6 +258,7 @@ jobs:
 
   finalize:
     name: Finalize the test run
+    if: ${{ always() }}
     needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2]
     runs-on: ubuntu-latest
     steps:
