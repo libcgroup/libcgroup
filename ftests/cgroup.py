@@ -124,9 +124,10 @@ class Cgroup(object):
         return os.path.join(consts.LIBCG_MOUNT_POINT,
                             'src/daemon/{}'.format(cmd))
 
-    # TODO - add support for all of the cgcreate options
     @staticmethod
-    def create(config, controller_list, cgname):
+    def create(config, controller_list, cgname, user_name=None,
+               group_name=None, dperm=None, fperm=None, tperm=None,
+               tasks_user_name=None, tasks_group_name=None, cghelp=False):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
@@ -135,6 +136,29 @@ class Cgroup(object):
         if not config.args.container:
             cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgcreate'))
+
+        if user_name is not None and group_name is not None:
+            cmd.append('-a')
+            cmd.append('{}:{}'.format(user_name, group_name))
+
+        if dperm is not None:
+            cmd.append('-d')
+            cmd.append(dperm)
+
+        if fperm is not None:
+            cmd.append('-f')
+            cmd.append(fperm)
+
+        if tperm is not None:
+            cmd.append('-s')
+            cmd.append(tperm)
+
+        if tasks_user_name is not None and tasks_group_name is not None:
+            cmd.append('-t')
+            cmd.append('{}:{}'.format(tasks_user_name, tasks_group_name))
+
+        if cghelp:
+            cmd.append('-h')
 
         controllers_and_path = '{}:{}'.format(
             ','.join(controller_list), cgname)
@@ -173,29 +197,8 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    def set(config, cgname=None, setting=None, value=None, copy_from=None,
-            cghelp=False):
-        """cgset equivalent method
-
-        The following variants of cgset are being tested by the
-        automated functional tests:
-
-        Command                                          Test Number
-        cgset -r setting=value cgname                        various
-        cgset -r setting1=val1 -r setting2=val2
-              -r setting3=val2 cgname                            022
-        cgset --copy_from foo bar                                023
-        cgset --copy_from foo bar1 bar2                          024
-        cgset -r setting=value foo bar                           025
-        cgset -r setting1=value1 setting2=value2 foo bar         026
-        various invalid flag combinations                        027
-        """
-        cmd = list()
-
-        if not config.args.container:
-            cmd.append('sudo')
-        cmd.append(Cgroup.build_cmd_path('cgset'))
-
+    def __set(config, cmd, cgname=None, setting=None, value=None,
+              copy_from=None, cghelp=False):
         if setting is not None or value is not None:
             if isinstance(setting, str) and isinstance(value, str):
                 cmd.append('-r')
@@ -232,32 +235,57 @@ class Cgroup(object):
             return Run.run(cmd)
 
     @staticmethod
-    def get(config, controller=None, cgname=None, setting=None,
-            print_headers=True, values_only=False,
-            all_controllers=False, cghelp=False):
-        """cgget equivalent method
+    def set(config, cgname=None, setting=None, value=None, copy_from=None,
+            cghelp=False):
+        """cgset equivalent method
 
-        Returns:
-        str: The stdout result of cgget
-
-        The following variants of cgget() are being tested by the
+        The following variants of cgset are being tested by the
         automated functional tests:
 
         Command                                          Test Number
-        cgget -r cpuset.cpus mycg                                001
-        cgget -r cpuset.cpus -r cpuset.mems mycg                 008
-        cgget -g cpu mycg                                        009
-        cgget -g cpu:mycg                                        010
-        cgget -r cpuset.cpus mycg1 mycg2                         011
-        cgget -r cpuset.cpus -r cpuset.mems mycg1 mycg2          012
-        cgget -g cpu -g freezer mycg                             013
-        cgget -a mycg                                            014
-        cgget -r memory.stat mycg (multiline value read)         015
-        various invalid flag combinations                        016
+        cgset -r setting=value cgname                        various
+        cgset -r setting1=val1 -r setting2=val2
+              -r setting3=val2 cgname                            022
+        cgset --copy_from foo bar                                023
+        cgset --copy_from foo bar1 bar2                          024
+        cgset -r setting=value foo bar                           025
+        cgset -r setting1=value1 setting2=value2 foo bar         026
+        various invalid flag combinations                        027
         """
         cmd = list()
-        cmd.append(Cgroup.build_cmd_path('cgget'))
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgset'))
 
+        return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
+                            cghelp)
+
+    @staticmethod
+    def xset(config, cgname=None, setting=None, value=None, copy_from=None,
+             version=CgroupVersion.CGROUP_UNK, cghelp=False,
+             ignore_unmappable=False):
+        """cgxset equivalent method
+        """
+        cmd = list()
+        if not config.args.container:
+            cmd.append('sudo')
+        cmd.append(Cgroup.build_cmd_path('cgxset'))
+
+        if version == CgroupVersion.CGROUP_V1:
+            cmd.append('-1')
+        elif version == CgroupVersion.CGROUP_V2:
+            cmd.append('-2')
+
+        if ignore_unmappable:
+            cmd.append('-i')
+
+        return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
+                            cghelp)
+
+    @staticmethod
+    def __get(config, cmd, controller=None, cgname=None, setting=None,
+              print_headers=True, values_only=False,
+              all_controllers=False, cghelp=False):
         if not print_headers:
             cmd.append('-n')
         if values_only:
@@ -317,6 +345,62 @@ class Cgroup(object):
                     raise re
 
         return ret
+
+    @staticmethod
+    def get(config, controller=None, cgname=None, setting=None,
+            print_headers=True, values_only=False,
+            all_controllers=False, cghelp=False):
+        """cgget equivalent method
+
+        Returns:
+        str: The stdout result of cgget
+
+        The following variants of cgget() are being tested by the
+        automated functional tests:
+
+        Command                                          Test Number
+        cgget -r cpuset.cpus mycg                                001
+        cgget -r cpuset.cpus -r cpuset.mems mycg                 008
+        cgget -g cpu mycg                                        009
+        cgget -g cpu:mycg                                        010
+        cgget -r cpuset.cpus mycg1 mycg2                         011
+        cgget -r cpuset.cpus -r cpuset.mems mycg1 mycg2          012
+        cgget -g cpu -g freezer mycg                             013
+        cgget -a mycg                                            014
+        cgget -r memory.stat mycg (multiline value read)         015
+        various invalid flag combinations                        016
+        """
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path('cgget'))
+
+        return Cgroup.__get(config, cmd, controller, cgname, setting,
+                            print_headers, values_only, all_controllers,
+                            cghelp)
+
+    @staticmethod
+    def xget(config, controller=None, cgname=None, setting=None,
+             print_headers=True, values_only=False,
+             all_controllers=False, version=CgroupVersion.CGROUP_UNK,
+             cghelp=False, ignore_unmappable=False):
+        """cgxget equivalent method
+
+        Returns:
+        str: The stdout result of cgxget
+        """
+        cmd = list()
+        cmd.append(Cgroup.build_cmd_path('cgxget'))
+
+        if version == CgroupVersion.CGROUP_V1:
+            cmd.append('-1')
+        elif version == CgroupVersion.CGROUP_V2:
+            cmd.append('-2')
+
+        if ignore_unmappable:
+            cmd.append('-i')
+
+        return Cgroup.__get(config, cmd, controller, cgname, setting,
+                            print_headers, values_only, all_controllers,
+                            cghelp)
 
     @staticmethod
     def classify(config, controller, cgname, pid_list, sticky=False,
