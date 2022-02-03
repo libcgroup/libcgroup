@@ -69,11 +69,11 @@ $(function() {
 <dt>Module <a class="el" href="group__group__groups.html#amgrp8b151c1f58f3f15039d7fd770cc3dab8">Basic infrastructure</a>  </dt>
 <dd><a class="anchor" id="_todo000002"></a>add some propaganda what's so great on this approach... I personally think it is broken and confusing (see TODOs below). </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a>  (uid_t uid, gid_t gid, const char *procname, pid_t pid, int flags)</dt>
-<dd><a class="anchor" id="_todo000017"></a>Determine thread-safeness and fix of not safe.  </dd>
+<dd><a class="anchor" id="_todo000016"></a>Determine thread-safeness and fix of not safe.  </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a>  (const char *path, pid_t pid, const char *const controllers[])</dt>
-<dd><a class="anchor" id="_todo000015"></a>should this function be really public?  </dd>
+<dd><a class="anchor" id="_todo000014"></a>should this function be really public?  </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a>  (uid_t uid, gid_t gid, pid_t pid, int flags)</dt>
-<dd><a class="anchor" id="_todo000018"></a>Determine thread-safeness and fix if not safe.  </dd>
+<dd><a class="anchor" id="_todo000017"></a>Determine thread-safeness and fix if not safe.  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
 <dd><a class="anchor" id="_todo000005"></a>what is ignore_ownership good for?  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
@@ -83,7 +83,7 @@ $(function() {
 <dt>Global <a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup</a>  (struct cgroup *cgroup, int ignore_migration)</dt>
 <dd><a class="anchor" id="_todo000008"></a>what is ignore_migration good for? rmdir() will fail if tasks were not moved.  </dd>
 <dt>Global <a class="el" href="group__group__iterators.html#gga608b4aa32e2db58fed34771a6a272444a24e202c59f318e63ad8cafcc1b4b102b">CGROUP_FILE_TYPE_OTHER</a>  </dt>
-<dd><a class="anchor" id="_todo000014"></a>really?  </dd>
+<dd><a class="anchor" id="_todo000013"></a>really?  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#ga92d27c9ff0d655838642a7aa68497596">cgroup_free_controllers</a>  (struct cgroup *cgroup)</dt>
 <dd><a class="anchor" id="_todo000004"></a>should this function be public???  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a>  (struct cgroup *cgroup)</dt>
@@ -91,17 +91,15 @@ $(function() {
 <dt>Global <a class="el" href="group__group__groups.html#gafaa51e5ffe09f8ad05585a1d3b6f7fa9">cgroup_get_value_string</a>  (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller, const char *name, char **value)</dt>
 <dd><a class="anchor" id="_todo000010"></a>rephrase, it's too vague... How big is the buffer actually? </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a>  (void)</dt>
-<dd><a class="anchor" id="_todo000016"></a>add parameter with the filename?  </dd>
+<dd><a class="anchor" id="_todo000015"></a>add parameter with the filename?  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#ga6cd4733e5982ac2c92ee3cb3dbd10a31">cgroup_new_cgroup</a>  (const char *name)</dt>
 <dd><a class="anchor" id="_todo000003"></a>suggest one preferred way, either "/foo" or "foo".  </dd>
 <dt>Global <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin</a>  (const char *controller, const char *base_path, int depth, void **handle, struct <a class="el" href="structcgroup__file__info.html">cgroup_file_info</a> *info, int *base_level)</dt>
-<dd><a class="anchor" id="_todo000013"></a>why base_level is not hidden in **handle?  </dd>
+<dd><a class="anchor" id="_todo000012"></a>why base_level is not hidden in **handle?  </dd>
 <dt>Module <a class="el" href="group__group__config.html#amgrp0e02ce690a683c3ba45b7ef59ad72acd">Configuration file</a>  </dt>
 <dd><a class="anchor" id="_todo000001"></a>add this description?: These functions are mostly intended to be used by internal <code>libcgroup</code> tools, however they are fully supported and applications can benefit from them.  </dd>
 <dt>Module <a class="el" href="group__group__iterators.html">group_iterators</a>  </dt>
-<dd><a class="anchor" id="_todo000012"></a>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed!  </dd>
-<dt>Module <a class="el" href="group__group__init.html#amgrp61bcd96a2c1f8026527cbf2019d6e9a4">Initialization</a>  </dt>
-<dd><a class="anchor" id="_todo000011"></a>this is very bad... There should be at least way how to refresh the cache and/or an option to refresh it automatically (does kernel provide any indication, when a filesystem is mounted/unmounted?). Dtto the cleanup on exit. </dd>
+<dd><a class="anchor" id="_todo000011"></a>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

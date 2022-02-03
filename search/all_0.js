@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['1_2e_20initialization_0',['1. Initialization',['../group__group__init.html',1,'']]]
+  ['2_2e_20group_20manipulation_20api_0',['2. Group manipulation API',['../group__group__groups.html',1,'']]]
 ];

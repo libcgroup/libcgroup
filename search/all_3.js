@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['4_2e_20manipulation_20with_20tasks_3',['4. Manipulation with tasks',['../group__group__tasks.html',1,'']]]
+  ['5_2e_20configuration_3',['5. Configuration',['../group__group__config.html',1,'']]]
 ];

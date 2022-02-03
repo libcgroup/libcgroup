@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>libcgroup: cgroup_controller Struct Reference</title>
+<title>libcgroup: cgroup_abstraction_map Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -64,34 +64,35 @@ $(function() {
   <div class="summary">
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<div class="title">cgroup_controller Struct Reference<div class="ingroups"><a class="el" href="group__group__groups.html">2. Group manipulation API</a></div></div>  </div>
+<div class="title">cgroup_abstraction_map Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;<a class="el" href="groups_8h_source.html">groups.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="abstraction-map_8h_source.html">abstraction-map.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr class="memitem:a192c36bfd8191056c32cef5d9682a98a"><td class="memItemLeft" align="right" valign="top"><a id="a192c36bfd8191056c32cef5d9682a98a"></a>
-char&#160;</td><td class="memItemRight" valign="bottom"><b>name</b> [FILENAME_MAX]</td></tr>
-<tr class="separator:a192c36bfd8191056c32cef5d9682a98a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a391b7f18461dc17d1aadb57bbf3d2bda"><td class="memItemLeft" align="right" valign="top"><a id="a391b7f18461dc17d1aadb57bbf3d2bda"></a>
-struct <a class="el" href="structcontrol__value.html">control_value</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>values</b> [CG_NV_MAX]</td></tr>
-<tr class="separator:a391b7f18461dc17d1aadb57bbf3d2bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7c36bfafcff06ebde1cf8318fc1a1ec"><td class="memItemLeft" align="right" valign="top"><a id="af7c36bfafcff06ebde1cf8318fc1a1ec"></a>
-struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup</b></td></tr>
-<tr class="separator:af7c36bfafcff06ebde1cf8318fc1a1ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2b6bd9e6cd54849e0ca3a0625555c77"><td class="memItemLeft" align="right" valign="top"><a id="ae2b6bd9e6cd54849e0ca3a0625555c77"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>index</b></td></tr>
-<tr class="separator:ae2b6bd9e6cd54849e0ca3a0625555c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9b3473e3b4ebd3ef661618ec46af5e5"><td class="memItemLeft" align="right" valign="top"><a id="ab9b3473e3b4ebd3ef661618ec46af5e5"></a>
-enum cg_version_t&#160;</td><td class="memItemRight" valign="bottom"><b>version</b></td></tr>
-<tr class="separator:ab9b3473e3b4ebd3ef661618ec46af5e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf64a953a7757184b31b5a07721e17ce"><td class="memItemLeft" align="right" valign="top"><a id="abf64a953a7757184b31b5a07721e17ce"></a>
+int(*&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert</b> )(struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *const dst_cgc, const char *const in_value, const char *const out_setting, void *in_dflt, void *out_dflt)</td></tr>
+<tr class="separator:abf64a953a7757184b31b5a07721e17ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa49f028e9d9e8a58ad9a93100673f4e7"><td class="memItemLeft" align="right" valign="top"><a id="aa49f028e9d9e8a58ad9a93100673f4e7"></a>
+char *&#160;</td><td class="memItemRight" valign="bottom"><b>in_setting</b></td></tr>
+<tr class="separator:aa49f028e9d9e8a58ad9a93100673f4e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c7b3743d1b62a29705e40e5578c68ee"><td class="memItemLeft" align="right" valign="top"><a id="a9c7b3743d1b62a29705e40e5578c68ee"></a>
+void *&#160;</td><td class="memItemRight" valign="bottom"><b>in_dflt</b></td></tr>
+<tr class="separator:a9c7b3743d1b62a29705e40e5578c68ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ce580f7efca804ce5a0fdae70fb2cf4"><td class="memItemLeft" align="right" valign="top"><a id="a5ce580f7efca804ce5a0fdae70fb2cf4"></a>
+char *&#160;</td><td class="memItemRight" valign="bottom"><b>out_setting</b></td></tr>
+<tr class="separator:a5ce580f7efca804ce5a0fdae70fb2cf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58e0e6db190e3cceed5ffc6e02a4cfdd"><td class="memItemLeft" align="right" valign="top"><a id="a58e0e6db190e3cceed5ffc6e02a4cfdd"></a>
+void *&#160;</td><td class="memItemRight" valign="bottom"><b>out_dflt</b></td></tr>
+<tr class="separator:a58e0e6db190e3cceed5ffc6e02a4cfdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Structure describing a controller attached to one struct <code>cgroup</code>, including parameters of the group and their values. The structure is opaque to applications. </p><dl class="section see"><dt>See also</dt><dd>groups </dd></dl>
+<div class="textblock"><p>Libcgroup abstraction layer mappings</p>
+<p>Copyright (c) 2021-2022 Oracle and/or its affiliates. Author: Tom Hromatka <a href="#" onclick="location.href='mai'+'lto:'+'tom'+'.h'+'rom'+'at'+'ka@'+'or'+'acl'+'e.'+'com'; return false;">tom.h<span style="display: none;">.nosp@m.</span>roma<span style="display: none;">.nosp@m.</span>tka@o<span style="display: none;">.nosp@m.</span>racl<span style="display: none;">.nosp@m.</span>e.com</a> </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>src/<a class="el" href="libcgroup-internal_8h_source.html">libcgroup-internal.h</a></li>
+<li>src/<a class="el" href="abstraction-map_8h_source.html">abstraction-map.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

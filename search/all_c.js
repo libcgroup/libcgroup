@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['full_5fpath_139',['full_path',['../structcgroup__file__info.html#a4c61dc7f726ba0784ff8c71473dbc6e6',1,'cgroup_file_info']]]
+  ['hierarchy_140',['hierarchy',['../structcontroller__data.html#a25e316f55473ca2b333b0d7e0ca644b4',1,'controller_data']]],
+  ['how_20to_20contribute_20to_20the_20libcgroup_20project_141',['How to Contribute to the libcgroup Project',['../md_CONTRIBUTING.html',1,'']]]
 ];

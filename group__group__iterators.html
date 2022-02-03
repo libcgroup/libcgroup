@@ -99,8 +99,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:ga09a70990837a58e506a264f8c50d4cde"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga645ec7a6206dffb32667e7a0e148edc8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#ga645ec7a6206dffb32667e7a0e148edc8">cgroup_walk_tree_set_flags</a> (void **handle, int flags)</td></tr>
 <tr class="separator:ga645ec7a6206dffb32667e7a0e148edc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga73edb115af6779644d3371b12cf09140"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#ga73edb115af6779644d3371b12cf09140">cgroup_read_value_begin</a> (const char *controller, const char *path, char *name, void **handle, char *buffer, int max)</td></tr>
-<tr class="separator:ga73edb115af6779644d3371b12cf09140"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9378ee0f1f6e65900df8e25b3d7ce236"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#ga9378ee0f1f6e65900df8e25b3d7ce236">cgroup_read_value_begin</a> (const char *const controller, const char *path, const char *const name, void **handle, char *buffer, int max)</td></tr>
+<tr class="separator:ga9378ee0f1f6e65900df8e25b3d7ce236"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaced2fe331f19d599a3270db2440847cc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gaced2fe331f19d599a3270db2440847cc">cgroup_read_value_next</a> (void **handle, char *buffer, int max)</td></tr>
 <tr class="separator:gaced2fe331f19d599a3270db2440847cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad348f041e283860cbf6bcea567e23a21"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gad348f041e283860cbf6bcea567e23a21">cgroup_read_value_end</a> (void **handle)</td></tr>
@@ -178,7 +178,7 @@ Data Structures</h2></td></tr>
 <li><p class="startli"><code>void <em>iterator_name</em>_end(void **handle)</code></p><ul>
 <li>Free any data associated with the iterator. This function must be called even when <code><em>iterator_name</em>_begin()</code> fails.</li>
 </ul>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd></dl>
 <dl class="section user"><dt>Example of iterator usage:</dt><dd><div class="fragment"><div class="line"><span class="keywordtype">void</span> *handle; <span class="comment">// our iterator handle</span></div>
 <div class="line">my_type item; <span class="comment">// the data returned by the iterator</span></div>
 <div class="line"><span class="keywordtype">int</span> ret;</div>
@@ -229,7 +229,7 @@ Data Structures</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="gga608b4aa32e2db58fed34771a6a272444a5418798fc4bf9634429c6af167a0e7c3"></a>CGROUP_FILE_TYPE_DIR&#160;</td><td class="fielddoc"><p>Directory. </p>
 </td></tr>
-<tr><td class="fieldname"><a id="gga608b4aa32e2db58fed34771a6a272444a24e202c59f318e63ad8cafcc1b4b102b"></a>CGROUP_FILE_TYPE_OTHER&#160;</td><td class="fielddoc"><p>Directory. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000014">Todo:</a></b></dt><dd>really? </dd></dl>
+<tr><td class="fieldname"><a id="gga608b4aa32e2db58fed34771a6a272444a24e202c59f318e63ad8cafcc1b4b102b"></a>CGROUP_FILE_TYPE_OTHER&#160;</td><td class="fielddoc"><p>Directory. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>really? </dd></dl>
 </td></tr>
 </table>
 
@@ -476,7 +476,7 @@ Data Structures</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read the first mount point of the hierarchy with given controller. The first is the same as the mount point returned by <a class="el" href="group__group__init.html#ga4f061b353321b81869057970d96f09f7">cgroup_get_subsys_mount_point()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Read the first mount point of the hierarchy with given controller. The first is the same as the mount point returned by cgroup_get_subsys_mount_point(). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
     <tr><td class="paramname">controller</td><td>Controller name. </td></tr>
@@ -751,8 +751,8 @@ Data Structures</h2></td></tr>
 
 </div>
 </div>
-<a id="ga73edb115af6779644d3371b12cf09140"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga73edb115af6779644d3371b12cf09140">&#9670;&nbsp;</a></span>cgroup_read_value_begin()</h2>
+<a id="ga9378ee0f1f6e65900df8e25b3d7ce236"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga9378ee0f1f6e65900df8e25b3d7ce236">&#9670;&nbsp;</a></span>cgroup_read_value_begin()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -760,7 +760,7 @@ Data Structures</h2></td></tr>
         <tr>
           <td class="memname">int cgroup_read_value_begin </td>
           <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
+          <td class="paramtype">const char *const&#160;</td>
           <td class="paramname"><em>controller</em>, </td>
         </tr>
         <tr>
@@ -772,7 +772,7 @@ Data Structures</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">char *&#160;</td>
+          <td class="paramtype">const char *const&#160;</td>
           <td class="paramname"><em>name</em>, </td>
         </tr>
         <tr>
@@ -938,7 +938,7 @@ Data Structures</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>why base_level is not hidden in **handle? </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>why base_level is not hidden in **handle? </dd></dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__group__errors.html#gga06fc87d81c62e9abb8790b6e5713c55ba2724c2f0af0d3e3cea66027f6bf2e436">ECGEOF</a> when there is no node. </dd></dl>
 
 </div>

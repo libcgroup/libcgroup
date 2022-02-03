@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['2_2e_20group_20manipulation_20api_297',['2. Group manipulation API',['../group__group__groups.html',1,'']]]
+  ['3_2e_20iterators_298',['3. Iterators',['../group__group__iterators.html',1,'']]]
 ];

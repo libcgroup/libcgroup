@@ -68,7 +68,7 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Logging</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p><a class="anchor" id="amgrp8db7df66ab1d7ab5f1dc947acdb5fae4"></a>Libcgroup allows applications to register a callback function which libcgroup will call when it wants to log something. Each log message has associated a log level. As described in previous chapter, most libcgroup functions return an error code, which described root cause of the failure and log messages might provide further details about these failures and other notable events.</p>
-<dl class="section user"><dt></dt><dd>The logging callback can be set at any time, but setting the callback before any other libcgroup function (including <a class="el" href="group__group__init.html#ga37740e2f5f298edf13e18fcd7632b75a">cgroup_init()</a>) is highly recommended. If no logger is set before <a class="el" href="group__group__init.html#ga37740e2f5f298edf13e18fcd7632b75a">cgroup_init()</a> is called, default logger is automatically set, logging CGROUP_LOG_ERROR messages to stdout.</dd></dl>
+<dl class="section user"><dt></dt><dd>The logging callback can be set at any time, but setting the callback before any other libcgroup function (including cgroup_init()) is highly recommended. If no logger is set before cgroup_init() is called, default logger is automatically set, logging CGROUP_LOG_ERROR messages to stdout.</dd></dl>
 <dl class="section user"><dt>Setting log level</dt><dd>Some of the functions below set the log level as integer. Application can set directly a value of enum <a class="el" href="group__group__log.html#ga98b7aea5d23411e70c7e3da54d90233a">cgroup_log_level</a> or use value <code>-1</code> to set the log level automatically. In this case, libcgroup inspects environment variable <code>CGROUP_LOGLEVEL</code> if it is set and contains any of these values: <code>ERROR</code>, <code>WARNING</code>, <code>INFO</code>, <code>DEBUG</code> or integer number representing value from enum <a class="el" href="group__group__log.html#ga98b7aea5d23411e70c7e3da54d90233a">cgroup_log_level</a>. If <code>CGROUP_LOGLEVEL</code> is not set or its value is not valid, <code>CGROUP_LOG_ERROR</code> is set as default log level.</dd></dl>
 <dl class="section user"><dt>Example:</dt><dd>Following short example shows custom libcgroup logger sending all log messages to <code>stderr</code>: <div class="fragment"><div class="line"><span class="keyword">static</span> <span class="keywordtype">void</span> my_logger(<span class="keywordtype">void</span> *userdata, <span class="keywordtype">int</span> level, <span class="keyword">const</span> <span class="keywordtype">char</span> *fmt, va_list ap)</div>
 <div class="line">{</div>
@@ -80,12 +80,11 @@ $(function() {
 <div class="line"> <span class="keywordtype">int</span> ret;</div>
 <div class="line"> </div>
 <div class="line"> <a class="code" href="group__group__log.html#ga76d7032206f9b9d1c0be1a71a68c43d0">cgroup_set_logger</a>(my_logger, -1, NULL);</div>
-<div class="line"> ret = <a class="code" href="group__group__init.html#ga37740e2f5f298edf13e18fcd7632b75a">cgroup_init</a>();</div>
+<div class="line"> ret = cgroup_init();</div>
 <div class="line"> <span class="keywordflow">if</span> (ret) {</div>
 <div class="line">    ...</div>
 <div class="line"> }</div>
 <div class="line"> ...</div>
-<div class="ttc" id="agroup__group__init_html_ga37740e2f5f298edf13e18fcd7632b75a"><div class="ttname"><a href="group__group__init.html#ga37740e2f5f298edf13e18fcd7632b75a">cgroup_init</a></div><div class="ttdeci">int cgroup_init(void)</div><div class="ttdef"><b>Definition:</b> api.c:1271</div></div>
 <div class="ttc" id="agroup__group__log_html_ga76d7032206f9b9d1c0be1a71a68c43d0"><div class="ttname"><a href="group__group__log.html#ga76d7032206f9b9d1c0be1a71a68c43d0">cgroup_set_logger</a></div><div class="ttdeci">void cgroup_set_logger(cgroup_logger_callback logger, int loglevel, void *userdata)</div><div class="ttdef"><b>Definition:</b> log.c:48</div></div>
 </div><!-- fragment --> </dd></dl>
 </td></tr>

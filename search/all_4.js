@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['5_2e_20configuration_4',['5. Configuration',['../group__group__config.html',1,'']]]
+  ['6_2e_20error_20handling_4',['6. Error handling',['../group__group__errors.html',1,'']]]
 ];
