@@ -160,8 +160,11 @@ class Cgroup(object):
         if cghelp:
             cmd.append('-h')
 
-        controllers_and_path = '{}:{}'.format(
-            ','.join(controller_list), cgname)
+        if controller_list:
+            controllers_and_path = '{}:{}'.format(
+                ','.join(controller_list), cgname)
+        else:
+            controllers_and_path = ':{}'.format(cgname)
 
         cmd.append('-g')
         cmd.append(controllers_and_path)
@@ -185,8 +188,11 @@ class Cgroup(object):
         if recursive:
             cmd.append('-r')
 
-        controllers_and_path = '{}:{}'.format(
-            ','.join(controller_list), cgname)
+        if controller_list:
+            controllers_and_path = '{}:{}'.format(
+                ','.join(controller_list), cgname)
+        else:
+            controllers_and_path = ':{}'.format(cgname)
 
         cmd.append('-g')
         cmd.append(controllers_and_path)
