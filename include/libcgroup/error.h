@@ -30,52 +30,52 @@ extern "C" {
 
 enum {
 	ECGROUPNOTCOMPILED = 50000,
-	ECGROUPNOTMOUNTED,
-	ECGROUPNOTEXIST,
-	ECGROUPNOTCREATED,
-	ECGROUPSUBSYSNOTMOUNTED,
-	ECGROUPNOTOWNER,
+	ECGROUPNOTMOUNTED,		/* 50001 */
+	ECGROUPNOTEXIST,		/* 50002 */
+	ECGROUPNOTCREATED,		/* 50003 */
+	ECGROUPSUBSYSNOTMOUNTED,	/* 50004 */
+	ECGROUPNOTOWNER,		/* 50005 */
 	/** Controllers bound to different mount points */
-	ECGROUPMULTIMOUNTED,
+	ECGROUPMULTIMOUNTED,		/* 50006 */
 	/* This is the stock error. Default error. @todo really? */
-	ECGROUPNOTALLOWED,
-	ECGMAXVALUESEXCEEDED,
-	ECGCONTROLLEREXISTS,
-	ECGVALUEEXISTS,
-	ECGINVAL,
-	ECGCONTROLLERCREATEFAILED,
-	ECGFAIL,
-	ECGROUPNOTINITIALIZED,
-	ECGROUPVALUENOTEXIST,
+	ECGROUPNOTALLOWED,		/* 50007 */
+	ECGMAXVALUESEXCEEDED,		/* 50008 */
+	ECGCONTROLLEREXISTS,		/* 50009 */
+	ECGVALUEEXISTS,			/* 50010 */
+	ECGINVAL,			/* 50011 */
+	ECGCONTROLLERCREATEFAILED,	/* 50012 */
+	ECGFAIL,			/* 50013 */
+	ECGROUPNOTINITIALIZED,		/* 50014 */
+	ECGROUPVALUENOTEXIST,		/* 50015 */
 	/**
 	 * Represents error coming from other libraries like glibc. @c libcgroup
 	 * users need to check cgroup_get_last_errno() upon encountering this
 	 * error.
 	 */
-	ECGOTHER,
-	ECGROUPNOTEQUAL,
-	ECGCONTROLLERNOTEQUAL,
+	ECGOTHER,			/* 50016 */
+	ECGROUPNOTEQUAL,		/* 50017 */
+	ECGCONTROLLERNOTEQUAL,		/* 50018 */
 	/** Failed to parse rules configuration file. */
-	ECGROUPPARSEFAIL,
+	ECGROUPPARSEFAIL,		/* 50019 */
 	/** Rules list does not exist. */
-	ECGROUPNORULES,
-	ECGMOUNTFAIL,
+	ECGROUPNORULES,			/* 50020 */
+	ECGMOUNTFAIL,			/* 50021 */
 	/**
 	 * Not an real error, it just indicates that iterator has come to end
 	 * of sequence and no more items are left.
 	 */
 	ECGEOF = 50023,
 	/** Failed to parse config file (cgconfig.conf). */
-	ECGCONFIGPARSEFAIL,
-	ECGNAMESPACEPATHS,
-	ECGNAMESPACECONTROLLER,
-	ECGMOUNTNAMESPACE,
-	ECGROUPUNSUPP,
-	ECGCANTSETVALUE,
+	ECGCONFIGPARSEFAIL,		/* 50024 */
+	ECGNAMESPACEPATHS,		/* 50025 */
+	ECGNAMESPACECONTROLLER,		/* 50026 */
+	ECGMOUNTNAMESPACE,		/* 50027 */
+	ECGROUPUNSUPP,			/* 50028 */
+	ECGCANTSETVALUE,		/* 50029 */
 	/** Removing of a group failed because it was not empty. */
-	ECGNONEMPTY,
+	ECGNONEMPTY,			/* 50030 */
 	/** Failed to convert from cgroup v1 to/from cgroup v2 */
-	ECGNOVERSIONCONVERT,
+	ECGNOVERSIONCONVERT,		/* 50031 */
 };
 
 /**
