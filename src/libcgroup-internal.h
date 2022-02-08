@@ -48,7 +48,6 @@ extern "C" {
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
 /* Definitions for the uid and gid members of a cgroup_rules */
-/* FIXME: These really should not be negative values */
 #define CGRULE_INVALID ((uid_t) -1)
 #define CGRULE_WILD ((uid_t) -2)
 
