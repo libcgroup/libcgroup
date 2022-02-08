@@ -1518,9 +1518,10 @@ char *cg_build_path_locked(const char *name, char *path,
 
 			if (name) {
 				char *tmp;
-				tmp = strdup(path);
 
-				/* FIXME: missing OOM check here! */
+				tmp = strdup(path);
+				if (tmp == NULL)
+					break;
 
 				cg_concat_path(tmp, name, path);
 				free(tmp);
