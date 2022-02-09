@@ -270,7 +270,14 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 			in_cgroup->controller[i]->version = in_version;
 		}
 
-		cgc->version = out_version;
+		if (strcmp(CGROUP_FILE_PREFIX, cgc->name) == 0)
+			/*
+			 * libcgroup only supports accessing cgroup.* files on
+			 * cgroup v2 filesystems.
+			 */
+			cgc->version = CGROUP_V2;
+		else
+			cgc->version = out_version;
 
 		if (cgc->version == CGROUP_UNK ||
 		    cgc->version == CGROUP_DISK) {

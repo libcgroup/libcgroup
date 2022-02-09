@@ -1485,15 +1485,19 @@ char *cg_build_path_locked(const char *name, char *path,
 {
 	int i, ret;
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
-		/* Two ways to successfully move forward here:
+		/* Three ways to successfully move forward here:
 		 * 1. The "type" controller matches the name of a mounted
 		 *    controller
 		 * 2. The "type" controller requested is "cgroup" and there's
 		 *    a "real" controller mounted as cgroup v2
+		 * 3. The "type" controller is NULL and there's a "real"
+		 *    controller mounted as cgroup v2.  This allows a user
+		 *    to create a v2 cgroup with no controllers enabled
 		 */
-		if ((strcmp(cg_mount_table[i].name, type) == 0) ||
-		    (strcmp(type, CGROUP_FILE_PREFIX) == 0 &&
-		     cg_mount_table[i].version == CGROUP_V2)) {
+		if ((type && strcmp(cg_mount_table[i].name, type) == 0) ||
+		    (type && strcmp(type, CGROUP_FILE_PREFIX) == 0 &&
+		     cg_mount_table[i].version == CGROUP_V2) ||
+		    (type == NULL && cg_mount_table[i].version == CGROUP_V2)) {
 			if (cg_namespace_table[i]) {
 				ret = snprintf(path, FILENAME_MAX, "%s/%s/",
 						cg_mount_table[i].mount.path,
@@ -2435,29 +2439,39 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	fts_path[1] = NULL;
 	path = fts_path[0];
 
-	if (!cg_build_path(cgroup->name, path, controller->name))
-		goto err;
-
-	error = cgroup_get_controller_version(controller->name, &version);
-	if (error)
-		goto err;
-
-	if (version == CGROUP_V2) {
-		char *parent, *dname;
-
-		parent = strdup(path);
-		if (!parent) {
+	if (controller) {
+		if (!cg_build_path(cgroup->name, path, controller->name)) {
 			error = ECGOTHER;
 			goto err;
 		}
 
-		dname = dirname(parent);
-
-		error = cgroupv2_subtree_control_recursive(dname,
-				controller->name, true);
-		free(parent);
+		error = cgroup_get_controller_version(controller->name,
+						      &version);
 		if (error)
 			goto err;
+
+		if (version == CGROUP_V2) {
+			char *parent, *dname;
+
+			parent = strdup(path);
+			if (!parent) {
+				error = ECGOTHER;
+				goto err;
+			}
+
+			dname = dirname(parent);
+
+			error = cgroupv2_subtree_control_recursive(dname,
+					controller->name, true);
+			free(parent);
+			if (error)
+				goto err;
+		}
+	} else {
+		if (!cg_build_path(cgroup->name, path, NULL)) {
+			error = ECGOTHER;
+			goto err;
+		}
 	}
 
 	error = cg_create_control_group(path);
@@ -2488,9 +2502,11 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	if (error)
 		goto err;
 
-	error = cgroup_set_values_recursive(base, controller, false);
-	if (error)
-		goto err;
+	if (controller) {
+		error = cgroup_set_values_recursive(base, controller, false);
+		if (error)
+			goto err;
+	}
 
 	if (!ignore_ownership && version == CGROUP_V1) {
 		error = cgroup_chown_chmod_tasks(base,
@@ -2530,6 +2546,14 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	for (i = 0; i < cgroup->index;	i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
+	}
+
+
+	if (cgroup->index == 0) {
+		/* create an empty cgroup v2 cgroup */
+		error = _cgroup_create_cgroup(cgroup, NULL, ignore_ownership);
+		if (error)
+			return error;
 	}
 
 	/*
