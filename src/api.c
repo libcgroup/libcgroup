@@ -2417,6 +2417,97 @@ err:
 	return error;
 }
 
+static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
+				 const struct cgroup_controller * const controller,
+				 int ignore_ownership)
+{
+	enum cg_version_t version;
+	char *fts_path[2];
+	char *base = NULL;
+	char *path = NULL;
+	int error;
+
+	fts_path[0] = (char *)malloc(FILENAME_MAX);
+	if (!fts_path[0]) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+	fts_path[1] = NULL;
+	path = fts_path[0];
+
+	if (!cg_build_path(cgroup->name, path, controller->name))
+		goto err;
+
+	error = cgroup_get_controller_version(controller->name, &version);
+	if (error)
+		goto err;
+
+	if (version == CGROUP_V2) {
+		char *parent, *dname;
+
+		parent = strdup(path);
+		if (!parent) {
+			error = ECGOTHER;
+			goto err;
+		}
+
+		dname = dirname(parent);
+
+		error = cgroupv2_subtree_control_recursive(dname,
+				controller->name, true);
+		free(parent);
+		if (error)
+			goto err;
+	}
+
+	error = cg_create_control_group(path);
+	if (error)
+		goto err;
+
+	base = strdup(path);
+
+	if (!base) {
+		last_errno = errno;
+		error = ECGOTHER;
+		goto err;
+	}
+
+	if (!ignore_ownership) {
+		cgroup_dbg("Changing ownership of %s\n", fts_path[0]);
+		error = cg_chown_recursive(fts_path,
+			cgroup->control_uid, cgroup->control_gid);
+		if (!error)
+			error = cg_chmod_recursive_controller(fts_path[0],
+					cgroup->control_dperm,
+					cgroup->control_dperm != NO_PERMS,
+					cgroup->control_fperm,
+					cgroup->control_fperm != NO_PERMS,
+					1, cgroup_ignored_tasks_files);
+	}
+
+	if (error)
+		goto err;
+
+	error = cgroup_set_values_recursive(base, controller, false);
+	if (error)
+		goto err;
+
+	if (!ignore_ownership && version == CGROUP_V1) {
+		error = cgroup_chown_chmod_tasks(base,
+				cgroup->tasks_uid, cgroup->tasks_gid,
+				cgroup->task_fperm);
+		if (error)
+			goto err;
+	}
+
+err:
+	if (path)
+		free(path);
+	if (base)
+		free(base);
+	return error;
+}
+
 /** cgroup_create_cgroup creates a new control group.
  * struct cgroup *cgroup: The control group to be created
  *
@@ -2427,13 +2518,8 @@ err:
  */
 int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 {
-	enum cg_version_t version;
-	char *fts_path[2];
-	char *base = NULL;
-	char *path = NULL;
-	int i, k;
 	int error = 0;
-	int retval = 0;
+	int i;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
@@ -2446,99 +2532,19 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	fts_path[0] = (char *)malloc(FILENAME_MAX);
-	if (!fts_path[0]) {
-		last_errno = errno;
-		return ECGOTHER;
-	}
-	fts_path[1] = NULL;
-	path = fts_path[0];
-
 	/*
 	 * XX: One important test to be done is to check, if you have multiple
 	 * subsystems mounted at one point, all of them *have* be on the cgroup
 	 * data structure. If not, we fail.
 	 */
-	for (k = 0; k < cgroup->index; k++) {
-		if (!cg_build_path(cgroup->name, path,
-				cgroup->controller[k]->name))
-			continue;
-
-		error = cgroup_get_controller_version(
-			cgroup->controller[k]->name, &version);
+	for (i = 0; i < cgroup->index; i++) {
+		error = _cgroup_create_cgroup(cgroup, cgroup->controller[i],
+					      ignore_ownership);
 		if (error)
-			goto err;
-
-		if (version == CGROUP_V2) {
-			char *parent, *dname;
-
-			parent = strdup(path);
-			if (!parent) {
-				error = ECGOTHER;
-				goto err;
-			}
-
-			dname = dirname(parent);
-
-			error = cgroupv2_subtree_control_recursive(dname,
-					cgroup->controller[k]->name, true);
-			free(parent);
-			if (error)
-				goto err;
-		}
-
-		error = cg_create_control_group(path);
-		if (error)
-			goto err;
-
-		base = strdup(path);
-
-		if (!base) {
-			last_errno = errno;
-			error = ECGOTHER;
-			goto err;
-		}
-
-		if (!ignore_ownership) {
-			cgroup_dbg("Changing ownership of %s\n", fts_path[0]);
-			error = cg_chown_recursive(fts_path,
-				cgroup->control_uid, cgroup->control_gid);
-			if (!error)
-				error = cg_chmod_recursive_controller(fts_path[0],
-						cgroup->control_dperm,
-						cgroup->control_dperm != NO_PERMS,
-						cgroup->control_fperm,
-						cgroup->control_fperm != NO_PERMS,
-						1, cgroup_ignored_tasks_files);
-		}
-
-		if (error)
-			goto err;
-
-		error = cgroup_set_values_recursive(base,
-				cgroup->controller[k], false);
-		if (error)
-			goto err;
-
-		if (!ignore_ownership && version == CGROUP_V1) {
-			error = cgroup_chown_chmod_tasks(base,
-					cgroup->tasks_uid, cgroup->tasks_gid,
-					cgroup->task_fperm);
-			if (error)
-				goto err;
-		}
-		free(base);
-		base = NULL;
+			return error;
 	}
 
-err:
-	if (path)
-		free(path);
-	if (base)
-		free(base);
-	if (retval && !error)
-		error = retval;
-	return error;
+	return 0;
 }
 
 /**
