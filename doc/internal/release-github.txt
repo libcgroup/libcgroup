@@ -1,6 +1,9 @@
 1.  Update version in configure.ac
     a.  AC_INIT([libcgroup],[0.XX])
     b.  Add an .rcY to the end, e.g. 0.XX.rcY
+    c.  AC_SUBST(LIBRARY_VERSION_MAJOR, 0)
+        AC_SUBST(LIBRARY_VERSION_MINOR, XX)
+        AC_SUBST(LIBRARY_VERSION_RELEASE, rcY)
 2.  Build
     a.  Run ./bootstrap.sh
     b.  Run ./configure --enable-opaque-hierarchy="name=systemd"
