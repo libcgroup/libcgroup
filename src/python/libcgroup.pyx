@@ -147,6 +147,12 @@ cdef class Cgroup:
         if cgcp == NULL:
             self.add_controller(ctrl_name)
 
+            cgcp = cgroup.cgroup_get_controller(self._cgp,
+                                                c_str(ctrl_name))
+            if cgcp == NULL:
+                raise RuntimeError("Failed to get controller {}".format(
+                                   ctrl_name))
+
         if setting_value == None:
             ret = cgroup.cgroup_add_value_string(cgcp,
                       c_str(setting_name), NULL)
@@ -269,6 +275,20 @@ cdef class Cgroup:
         ret = cgroup.cgroup_cgxset(self._cgp, self.version, ignore)
         if ret != 0:
             raise RuntimeError("cgxset failed: {}".format(ret))
+
+    def create(self, ignore_ownership=True):
+        """Write this cgroup to the cgroup sysfs
+
+        Arguments:
+        ignore_ownership - if true, all errors are ignored when setting ownership
+                           of the group and its tasks file
+
+        Return:
+        None
+        """
+        ret = cgroup.cgroup_create_cgroup(self._cgp, ignore_ownership)
+        if ret != 0:
+            raise RuntimeError("Failed to create cgroup: {}".format(ret))
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);

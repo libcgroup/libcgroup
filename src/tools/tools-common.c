@@ -34,7 +34,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 {
 	struct cgroup_group_spec *ptr;
 	int i, j;
-	char *cptr, *pathptr, *temp;
+	char *cptr = NULL, *pathptr = NULL, *temp;
 
 	ptr = *cdptr;
 
@@ -52,13 +52,20 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 	}
 
 	/* Extract list of controllers */
-	cptr = strtok(optarg, ":");
-	cgroup_dbg("list of controllers is %s\n", cptr);
-	if (!cptr)
-		return -1;
+	if (optarg[0] == ':') {
+		/* No controller was passed in */
+		cptr = NULL;
+		pathptr = strtok(optarg, ":");
+	} else {
+		/* Extract the list of controllers from the user */
+		cptr = strtok(optarg, ":");
+		cgroup_dbg("list of controllers is %s\n", cptr);
+		if (!cptr)
+			return -1;
 
-	/* Extract cgroup path */
-	pathptr = strtok(NULL, ":");
+		pathptr = strtok(NULL, ":");
+	}
+
 	cgroup_dbg("cgroup path is %s\n", pathptr);
 	if (!pathptr)
 		return -1;
@@ -69,24 +76,27 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 		fprintf(stderr, "%s\n", strerror(errno));
 		return -1;
 	}
-	/* Convert list of controllers into an array of strings. */
-	j = 0;
-	do {
-		if (j == 0)
-			temp = strtok(cptr, ",");
-		else
-			temp = strtok(NULL, ",");
 
-		if (temp) {
-			cdptr[i]->controllers[j] = strdup(temp);
-			if (!cdptr[i]->controllers[j]) {
-				free(cdptr[i]);
-				fprintf(stderr, "%s\n", strerror(errno));
-				return -1;
+	if (cptr != NULL) {
+		/* Convert list of controllers into an array of strings. */
+		j = 0;
+		do {
+			if (j == 0)
+				temp = strtok(cptr, ",");
+			else
+				temp = strtok(NULL, ",");
+
+			if (temp) {
+				cdptr[i]->controllers[j] = strdup(temp);
+				if (!cdptr[i]->controllers[j]) {
+					free(cdptr[i]);
+					fprintf(stderr, "%s\n", strerror(errno));
+					return -1;
+				}
 			}
-		}
-		j++;
-	} while (temp && j<CG_CONTROLLER_MAX-1);
+			j++;
+		} while (temp && j<CG_CONTROLLER_MAX-1);
+	}
 
 	/* Store path to the cgroup */
 	strncpy(cdptr[i]->path, pathptr, FILENAME_MAX - 1);

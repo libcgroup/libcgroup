@@ -43,6 +43,7 @@ cdef extern from "libcgroup.h":
     const cgroup_library_version * cgroup_version()
 
     cgroup *cgroup_new_cgroup(const char *name)
+    int cgroup_create_cgroup(cgroup *cg, int ignore_ownership)
     int cgroup_convert_cgroup(cgroup *out_cg, cg_version_t out_version,
                               cgroup  *in_cg, cg_version_t in_version)
     void cgroup_free(cgroup **cg)
