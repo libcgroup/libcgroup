@@ -45,3 +45,5 @@ TEST_FAILED = "failed"
 TEST_SKIPPED = "skipped"
 
 CGRULES_FILE = "/etc/cgrules.conf"
+
+# vim: set et ts=4 sw=4:

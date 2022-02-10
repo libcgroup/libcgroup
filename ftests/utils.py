@@ -88,3 +88,5 @@ def get_file_permissions(config, filename):
         return config.container.run(cmd, shell_bool=True)
     else:
         return Run.run(cmd, shell_bool=True)
+
+# vim: set et ts=4 sw=4:

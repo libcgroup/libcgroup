@@ -67,3 +67,5 @@ class Controller(object):
             return False
 
         return True
+
+# vim: set et ts=4 sw=4:

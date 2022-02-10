@@ -63,3 +63,5 @@ class ConfigError(Exception):
     def __str__(self):
         out_str = "ConfigError:\n\tmessage = {}".format(self.message)
         return out_str
+
+# vim: set et ts=4 sw=4:

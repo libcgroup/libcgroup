@@ -249,3 +249,5 @@ class Process(object):
             return Process.__get_cgroup_v2(config, pid, controller)
 
         raise ValueError("get_cgroup() shouldn't reach this point")
+
+# vim: set et ts=4 sw=4:

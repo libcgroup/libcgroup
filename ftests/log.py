@@ -54,3 +54,5 @@ class Log(object):
     @staticmethod
     def log_debug(msg):
         Log.log("DEBUG: {}".format(msg), consts.LOG_DEBUG)
+
+# vim: set et ts=4 sw=4:

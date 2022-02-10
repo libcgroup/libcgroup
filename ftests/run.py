@@ -80,3 +80,5 @@ class RunError(Exception):
                   self.command, self.ret)
         out_str += "\n\tstdout = {}\n\tstderr = {}".format(self.stdout, self.stderr)
         return out_str
+
+# vim: set et ts=4 sw=4:

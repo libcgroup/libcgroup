@@ -351,3 +351,5 @@ def main(config):
 if __name__ == '__main__':
     config = parse_args()
     sys.exit(main(config))
+
+# vim: set et ts=4 sw=4:

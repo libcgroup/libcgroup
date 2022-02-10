@@ -165,3 +165,5 @@ if __name__ == '__main__':
     # this test was invoked directly.  run only it
     config.args.num = int(os.path.basename(__file__).split('-')[0])
     sys.exit(ftests.main(config))
+
+# vim: set et ts=4 sw=4:
