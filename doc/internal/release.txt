@@ -8,23 +8,26 @@ Please follow the following steps (TODO: Automate these steps)
 3. Prepare release candidate (X.YY-rcZ - X.YY = version, Z - prerelease
 umber):
 	a. Update AC_INIT(X.YY.rcZ) in configure.ac.
-	b. Run 'autoreconf -i' to generate the configure file again, with the
+	b. Update AC_SUBST(LIBRARY_VERSION_MAJOR, X),
+	   AC_SUBST(LIBRARY_VERSION_MINOR, YY),
+	   AC_SUBST(LIBRARY_VERSION_RELEASE, rcZ) in configure.ac.
+	c. Run 'autoreconf -i' to generate the configure file again, with the
 	   new release number.
-	c. Run './configure' to generate Makefile and dist/libcgroup.spec with
+	d. Run './configure' to generate Makefile and dist/libcgroup.spec with
 	   correct version numbers.
-	d. Run 'make dist' to create tarball. Fix Makefile.am files if
+	e. Run 'make dist' to create tarball. Fix Makefile.am files if
 	   something goes wrong.
 	   The tarball should contain everything needed for compilation with
 	   simple sh, make and (optionally) rpmbuild, among others:
 	   	libcgroup-X.YY.rcZ/configure
 		libcgroup-X.YY.rcZ/dist/libcgroup.spec
-	e. Try to build rpms ('rpmbuild -ta libcgroup-X.YY.rcZ.tar.gz'), fix
+	f. Try to build rpms ('rpmbuild -ta libcgroup-X.YY.rcZ.tar.gz'), fix
 	   errors in dist/libcgroup.spec.in file if something goes wrong.
-	f. Tag the pre-release in git.
-	g. Publish the pre-release libcgroup-X.YY.rcZ.tar.gz and announce it on
+	g. Tag the pre-release in git.
+	h. Publish the pre-release libcgroup-X.YY.rcZ.tar.gz and announce it on
 	   the libgroup-devel list with a changelog (git shortlog A..B is your
            friend).
-	h. Test the pre-release and go to a) if new one is needed.
+	i. Test the pre-release and go to a) if new one is needed.
 	During this period, ABI of newly introduced shared symbols is *not*
 	stable and may change, if there is very good reason to break it.
 
