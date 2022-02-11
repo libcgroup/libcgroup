@@ -1550,23 +1550,20 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 	char cg_type[LL_MAX];
 	int len, err = 0;
 	FILE *fp = NULL;
-	struct stat st;
-	int stat_ret;
 
 	snprintf(cg_type_path, FILENAME_MAX, "%scgroup.type", path);
-	/* file cgroup.type, doesn't exist for root cgroup. */
-	stat_ret = stat(cg_type_path, &st);
-	if (stat_ret != 0) {
-		snprintf(type, type_sz, "cgroup.procs");
-		goto out;
-	}
-
 	fp = fopen(cg_type_path, "re");
 	if (!fp) {
-		cgroup_warn("Warning: failed to open file %s: %s\n",
-				cg_type_path, strerror(errno));
-		err = ECGOTHER;
-		goto out;
+		if (errno == ENOENT) {
+			/* file cgroup.type, doesn't exist for root cgroup. */
+			snprintf(type, type_sz, "cgroup.procs");
+			goto out;
+		} else {
+			cgroup_warn("Warning: failed to open file %s: %s\n",
+					cg_type_path, strerror(errno));
+			err = ECGOTHER;
+			goto out;
+		}
 	}
 
 	if (fgets(cg_type, LL_MAX, fp) == NULL) {
