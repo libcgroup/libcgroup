@@ -292,3 +292,5 @@ cdef class Cgroup:
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
+
+# vim: set et ts=4 sw=4:

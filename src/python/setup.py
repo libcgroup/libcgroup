@@ -43,3 +43,5 @@ setup(
             extra_objects=["../.libs/libcgroup.a"]),
     ])
 )
+
+# vim: set et ts=4 sw=4:
