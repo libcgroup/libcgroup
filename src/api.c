@@ -5789,6 +5789,12 @@ int cgroup_get_subsys_mount_point_next(void **handle,
 
 int cgroup_get_subsys_mount_point_end(void **handle)
 {
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+	if (!handle)
+		return ECGINVAL;
+
+	*handle = NULL;
 	return 0;
 }
 
