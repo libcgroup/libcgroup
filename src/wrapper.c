@@ -532,7 +532,7 @@ int cgroup_set_value_int64(struct cgroup_controller *controller,
 			ret = snprintf(val->value,
 				sizeof(val->value), "%" PRId64, value);
 
-			if (ret >= sizeof(val->value) || ret < 0)
+			if (ret >= sizeof(val->value))
 				return ECGINVAL;
 
 			val->dirty = true;
@@ -581,7 +581,7 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller,
 			ret = snprintf(val->value,
 				sizeof(val->value), "%" PRIu64, value);
 
-			if (ret >= sizeof(val->value) || ret < 0)
+			if (ret >= sizeof(val->value))
 				return ECGINVAL;
 
 			val->dirty = true;
@@ -641,7 +641,7 @@ int cgroup_set_value_bool(struct cgroup_controller *controller,
 						sizeof(val->value), "0");
 			}
 
-			if (ret >= sizeof(val->value) || ret < 0)
+			if (ret >= sizeof(val->value))
 				return ECGINVAL;
 
 			val->dirty = true;
