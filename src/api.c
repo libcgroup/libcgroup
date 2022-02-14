@@ -3072,13 +3072,14 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 		 * error code, but continue with next controller and try remove
 		 * the group from all of them.
 		 */
-		if (ret != 0 && first_error == 0) {
+		if (ret) {
 			/*
 			 * ECGNONEMPTY is more or less not an error, but an
 			 * indication that something was not removed.
 			 * Therefore it should be replaced by any other error.
 			 */
-			if (ret != ECGNONEMPTY || first_error == ECGNONEMPTY) {
+			if (ret != ECGNONEMPTY &&
+			    (first_error == 0 || first_errno == ECGNONEMPTY)) {
 				first_errno = last_errno;
 				first_error = ret;
 			}
