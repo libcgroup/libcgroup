@@ -20,29 +20,30 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup
+from run import Run
 import consts
 import ftests
-import os
-from process import Process
-from run import Run
 import sys
+import os
 
-import time
 
 CONTROLLER = 'cpuset'
 CGNAME = '034cgexec'
 
+
 def prereqs(config):
     if not config.args.container:
         result = consts.TEST_SKIPPED
-        cause = "This test must be run within a container"
+        cause = 'This test must be run within a container'
         return result, cause
 
     return consts.TEST_PASSED, None
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     config.process.create_process_in_cgroup(config, CONTROLLER, CGNAME,
@@ -51,18 +52,19 @@ def test(config):
     pids = Cgroup.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
     if pids is None:
         result = consts.TEST_FAILED
-        cause = "No processes were found in cgroup {}".format(CGNAME)
+        cause = 'No processes were found in cgroup {}'.format(CGNAME)
         return result, cause
 
     # run cgexec -h
     ret = Cgroup.cgexec(config, controller=CONTROLLER, cgname=CGNAME,
                         cmdline=None, cghelp=True)
-    if not "Run the task in given control group(s)" in ret:
+    if 'Run the task in given control group(s)' not in ret:
         result = consts.TEST_FAILED
-        cause = "Failed to print cgexec help text: {}".format(ret)
+        cause = 'Failed to print cgexec help text: {}'.format(ret)
         return result, cause
 
     return consts.TEST_PASSED, None
+
 
 def teardown(config):
     pids = Cgroup.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
@@ -75,6 +77,7 @@ def teardown(config):
 
     Cgroup.delete(config, CONTROLLER, CGNAME)
 
+
 def main(config):
     [result, cause] = prereqs(config)
     if result != consts.TEST_PASSED:
@@ -85,6 +88,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
