@@ -20,12 +20,12 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup
 import consts
 import ftests
-import os
 import sys
-import utils
+import os
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -33,8 +33,10 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     pass
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -46,7 +48,7 @@ def test(config):
     lssubsys_list = Cgroup.lssubsys(config, ls_all=True)
 
     for mount in mount_list:
-        if mount.controller == "name=systemd" or mount.controller == "systemd":
+        if mount.controller == 'name=systemd' or mount.controller == 'systemd':
             continue
 
         found = False
@@ -61,26 +63,30 @@ def test(config):
                 found = True
                 break
 
-            if lsmount == "blkio" and mount.controller == "io":
+            if lsmount == 'blkio' and mount.controller == 'io':
                 found = True
                 break
 
         if not found:
             result = consts.TEST_FAILED
-            cause = "Failed to find {} in lssubsys list".format(
-                      mount.controller)
+            cause = (
+                        'Failed to find {} in lssubsys list'
+                        ''.format(mount.controller)
+                    )
             return result, cause
 
     ret = Cgroup.lssubsys(config, cghelp=True)
-    if not "Usage:" in ret:
+    if 'Usage:' not in ret:
         result = consts.TEST_FAILED
-        cause = "Failed to print help text"
+        cause = 'Failed to print help text'
         return result, cause
 
     return result, cause
 
+
 def teardown(config):
     pass
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -94,6 +100,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
