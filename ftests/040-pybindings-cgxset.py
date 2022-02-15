@@ -20,17 +20,17 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup as CgroupCli
 from cgroup import CgroupVersion as CgroupCliVersion
+from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
+from run import Run
 import consts
 import ftests
-import os
-from run import Run
 import sys
+import os
 
 CONTROLLER = 'cpu'
-CGNAME = "040bindings"
+CGNAME = '040bindings'
 
 SETTING1 = 'cpu.shares'
 VALUE1 = '512'
@@ -38,10 +38,11 @@ VALUE1 = '512'
 SETTING2 = 'cpu.weight'
 VALUE2 = '50'
 
+
 def prereqs(config):
     if config.args.container:
         result = consts.TEST_SKIPPED
-        cause = "This test cannot be run within a container"
+        cause = 'This test cannot be run within a container'
         return result, cause
 
     result = consts.TEST_PASSED
@@ -49,12 +50,14 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     user_name = Run.run('whoami', shell_bool=True)
     group_name = Run.run('groups', shell_bool=True).split(' ')[0]
 
     CgroupCli.create(config, controller_list=CONTROLLER, cgname=CGNAME,
                      user_name=user_name, group_name=group_name)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -66,18 +69,21 @@ def test(config):
 
     cg1.cgxset()
 
-    value_v1 = CgroupCli.xget(config, setting=SETTING1, print_headers=False,
-                   values_only=True, version=CgroupCliVersion.CGROUP_V1,
-                   cgname=CGNAME)
+    value_v1 = CgroupCli.xget(
+                                config, setting=SETTING1, print_headers=False,
+                                values_only=True,
+                                version=CgroupCliVersion.CGROUP_V1,
+                                cgname=CGNAME
+                             )
 
     if value_v1 != VALUE1:
         result = consts.TEST_FAILED
-        cause = "Expected {}, but received {}".format(VALUE1, value_v1)
+        cause = 'Expected {}, but received {}'.format(VALUE1, value_v1)
         return result, cause
 
     # Set the cpu.shares/cpu.weight to an arbitrary value to ensure
     # the following v2 cgxset works properly
-    CgroupCli.xset(config, cgname=CGNAME, setting=SETTING1, value="1234",
+    CgroupCli.xset(config, cgname=CGNAME, setting=SETTING1, value='1234',
                    version=CgroupCliVersion.CGROUP_V1)
 
     cg2 = Cgroup(CGNAME, Version.CGROUP_V2)
@@ -86,19 +92,24 @@ def test(config):
 
     cg2.cgxset()
 
-    value_v2 = CgroupCli.xget(config, setting=SETTING2, print_headers=False,
-                   values_only=True, version=CgroupCliVersion.CGROUP_V2,
-                   cgname=CGNAME)
+    value_v2 = CgroupCli.xget(
+                                config, setting=SETTING2, print_headers=False,
+                                values_only=True,
+                                version=CgroupCliVersion.CGROUP_V2,
+                                cgname=CGNAME
+                             )
 
     if value_v2 != VALUE2:
         result = consts.TEST_FAILED
-        cause = "Expected {}, but received {}".format(VALUE2, value_v2)
+        cause = 'Expected {}, but received {}'.format(VALUE2, value_v2)
         return result, cause
 
     return result, cause
 
+
 def teardown(config):
     CgroupCli.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -110,6 +121,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
