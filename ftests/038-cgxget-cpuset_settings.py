@@ -21,41 +21,65 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
+from run import Run
 import consts
 import ftests
-import os
-from run import Run
 import sys
+import os
 
 CONTROLLER = 'cpuset'
 CGNAME = '038cgxget'
 
+CGRP_VER_V1 = CgroupVersion.CGROUP_V1
+CGRP_VER_V2 = CgroupVersion.CGROUP_V2
+
 TABLE = [
     # writesetting, writeval, writever, readsetting, readval, readver
-    ['cpuset.cpus', '0-1', CgroupVersion.CGROUP_V1, 'cpuset.cpus', '0-1', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpus', '0-1', CgroupVersion.CGROUP_V1, 'cpuset.cpus', '0-1', CgroupVersion.CGROUP_V2],
-    ['cpuset.cpus', '0-1', CgroupVersion.CGROUP_V1, 'cpuset.effective_cpus', '0-1', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpus', '0-1', CgroupVersion.CGROUP_V1, 'cpuset.cpus.effective', '0-1', CgroupVersion.CGROUP_V2],
-    ['cpuset.cpus', '1', CgroupVersion.CGROUP_V2, 'cpuset.cpus', '1', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpus', '1', CgroupVersion.CGROUP_V2, 'cpuset.cpus', '1', CgroupVersion.CGROUP_V2],
+    ['cpuset.cpus',           '0-1', CGRP_VER_V1,
+     'cpuset.cpus',           '0-1', CGRP_VER_V1],
+    ['cpuset.cpus',           '0-1', CGRP_VER_V1,
+     'cpuset.cpus',           '0-1', CGRP_VER_V2],
+    ['cpuset.cpus',           '0-1', CGRP_VER_V1,
+     'cpuset.effective_cpus', '0-1', CGRP_VER_V1],
+    ['cpuset.cpus',           '0-1', CGRP_VER_V1,
+     'cpuset.cpus.effective', '0-1', CGRP_VER_V2],
+    ['cpuset.cpus',           '1',   CGRP_VER_V2,
+     'cpuset.cpus',           '1',   CGRP_VER_V1],
+    ['cpuset.cpus',           '1',   CGRP_VER_V2,
+     'cpuset.cpus',           '1',   CGRP_VER_V2],
 
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V1, 'cpuset.mems', '0', CgroupVersion.CGROUP_V1],
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V1, 'cpuset.mems', '0', CgroupVersion.CGROUP_V2],
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V2, 'cpuset.mems', '0', CgroupVersion.CGROUP_V1],
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V2, 'cpuset.mems', '0', CgroupVersion.CGROUP_V2],
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V1, 'cpuset.effective_mems', '0', CgroupVersion.CGROUP_V1],
-    ['cpuset.mems', '0', CgroupVersion.CGROUP_V1, 'cpuset.mems.effective', '0', CgroupVersion.CGROUP_V2],
+    ['cpuset.mems',           '0', CGRP_VER_V1,
+     'cpuset.mems',           '0', CGRP_VER_V1],
+    ['cpuset.mems',           '0', CGRP_VER_V1,
+     'cpuset.mems',           '0', CGRP_VER_V2],
+    ['cpuset.mems',           '0', CGRP_VER_V2,
+     'cpuset.mems',           '0', CGRP_VER_V1],
+    ['cpuset.mems',           '0', CGRP_VER_V2,
+     'cpuset.mems',           '0', CGRP_VER_V2],
+    ['cpuset.mems',           '0', CGRP_VER_V1,
+     'cpuset.effective_mems', '0', CGRP_VER_V1],
+    ['cpuset.mems',           '0', CGRP_VER_V1,
+     'cpuset.mems.effective', '0', CGRP_VER_V2],
 
-    ['cpuset.cpu_exclusive', '1', CgroupVersion.CGROUP_V1, 'cpuset.cpu_exclusive', '1', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpu_exclusive', '1', CgroupVersion.CGROUP_V1, 'cpuset.cpus.partition', 'root', CgroupVersion.CGROUP_V2],
-    ['cpuset.cpu_exclusive', '0', CgroupVersion.CGROUP_V1, 'cpuset.cpu_exclusive', '0', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpu_exclusive', '0', CgroupVersion.CGROUP_V1, 'cpuset.cpus.partition', 'member', CgroupVersion.CGROUP_V2],
+    ['cpuset.cpu_exclusive',  '1',      CGRP_VER_V1,
+     'cpuset.cpu_exclusive',  '1',      CGRP_VER_V1],
+    ['cpuset.cpu_exclusive',  '1',      CGRP_VER_V1,
+     'cpuset.cpus.partition', 'root',   CGRP_VER_V2],
+    ['cpuset.cpu_exclusive',  '0',      CGRP_VER_V1,
+     'cpuset.cpu_exclusive',  '0',      CGRP_VER_V1],
+    ['cpuset.cpu_exclusive',  '0',      CGRP_VER_V1,
+     'cpuset.cpus.partition', 'member', CGRP_VER_V2],
 
-    ['cpuset.cpus.partition', 'root', CgroupVersion.CGROUP_V2, 'cpuset.cpu_exclusive', '1', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpus.partition', 'root', CgroupVersion.CGROUP_V2, 'cpuset.cpus.partition', 'root', CgroupVersion.CGROUP_V2],
-    ['cpuset.cpus.partition', 'member', CgroupVersion.CGROUP_V2, 'cpuset.cpu_exclusive', '0', CgroupVersion.CGROUP_V1],
-    ['cpuset.cpus.partition', 'member', CgroupVersion.CGROUP_V2, 'cpuset.cpus.partition', 'member', CgroupVersion.CGROUP_V2],
+    ['cpuset.cpus.partition', 'root',   CGRP_VER_V2,
+     'cpuset.cpu_exclusive',  '1',      CGRP_VER_V1],
+    ['cpuset.cpus.partition', 'root',   CGRP_VER_V2,
+     'cpuset.cpus.partition', 'root',   CGRP_VER_V2],
+    ['cpuset.cpus.partition', 'member', CGRP_VER_V2,
+     'cpuset.cpu_exclusive', '0',       CGRP_VER_V1],
+    ['cpuset.cpus.partition', 'member', CGRP_VER_V2,
+     'cpuset.cpus.partition', 'member', CGRP_VER_V2],
 ]
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -64,17 +88,19 @@ def prereqs(config):
     nproc = Run.run('nproc')
     if int(nproc) < 2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires 2 or more processors"
+        cause = 'This test requires 2 or more processors'
 
     if config.args.container:
         result = consts.TEST_SKIPPED
-        cause = "This test cannot be run within a container"
+        cause = 'This test cannot be run within a container'
         return result, cause
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -89,14 +115,20 @@ def test(config):
                           print_headers=False)
         if out != entry[4]:
             result = consts.TEST_FAILED
-            cause = "After setting {}={}, expected {}={}, but received {}={}".format(
-                    entry[0], entry[1], entry[3], entry[4], entry[3], out)
+            cause = (
+                        'After setting {}={}, expected {}={}, but received '
+                        '{}={}'
+                        ''.format(entry[0], entry[1], entry[3], entry[4],
+                                  entry[3], out)
+                    )
             return result, cause
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -108,6 +140,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
