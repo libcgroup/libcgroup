@@ -23,13 +23,14 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 # Which controller isn't all that important, but it is important that we
 # have a cgroup v2 controller
 CONTROLLER = 'cpu'
-CGNAME = "043cgcreate"
+CGNAME = '043cgcreate'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -37,12 +38,14 @@ def prereqs(config):
 
     if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires cgroup v2"
+        cause = 'This test requires cgroup v2'
 
     return result, cause
 
+
 def setup(config):
     return consts.TEST_PASSED, None
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -51,14 +54,18 @@ def test(config):
     Cgroup.create(config, None, CGNAME)
 
     # verify the cgroup exists by reading cgroup.procs
-    Cgroup.get(config, controller=None, cgname=CGNAME,
-               setting="cgroup.procs", print_headers=True,
-               values_only=False)
+    Cgroup.get(
+                config, controller=None, cgname=CGNAME,
+                setting='cgroup.procs', print_headers=True,
+                values_only=False
+              )
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, None, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -73,6 +80,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
