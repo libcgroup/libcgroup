@@ -20,14 +20,15 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup
 import consts
 import ftests
-import os
 import sys
+import os
 
 CONTROLLER = 'cpuset'
 CGNAME = '033cgget'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -35,8 +36,10 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -44,20 +47,27 @@ def test(config):
 
     out = Cgroup.get(config, controller=None, cgname=CGNAME)
 
-    if out.splitlines()[0] != "{}:".format(CGNAME):
+    if out.splitlines()[0] != '{}:'.format(CGNAME):
         result = consts.TEST_FAILED
-        cause = "cgget expected the cgroup name {} in the first line.\n" \
-                "Instead it received {}".format(CGNAME, out.splitlines()[0])
+        cause = (
+                    'cgget expected the cgroup name {} in the first line.\n'
+                    'Instead it received {}'
+                    ''.format(CGNAME, out.splitlines()[0])
+                )
 
     if len(out.splitlines()) < 5:
         result = consts.TEST_FAILED
-        cause = "Too few lines output by cgget.  Received {} lines".format(
-                len(out.splitlines()))
+        cause = (
+                    'Too few lines output by cgget.  Received {} lines'
+                    ''.format(len(out.splitlines()))
+                )
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -69,6 +79,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
