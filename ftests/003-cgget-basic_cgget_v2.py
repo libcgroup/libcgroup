@@ -23,14 +23,15 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
-CONTROLLER='cpuset'
-CGNAME="003cgget"
+CONTROLLER = 'cpuset'
+CGNAME = '003cgget'
 
-SETTING='cpuset.mems'
-VALUE='0'
+SETTING = 'cpuset.mems'
+VALUE = '0'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -38,21 +39,25 @@ def prereqs(config):
 
     if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v2 cpuset controller"
+        cause = 'This test requires the cgroup v2 cpuset controller'
 
     return result, cause
+
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
     Cgroup.set(config, CGNAME, SETTING, VALUE)
+
 
 def test(config):
     Cgroup.get_and_validate(config, CGNAME, SETTING, VALUE)
 
     return consts.TEST_PASSED, None
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -64,6 +69,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
