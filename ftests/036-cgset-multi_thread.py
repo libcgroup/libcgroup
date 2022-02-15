@@ -35,21 +35,23 @@ SETTING = 'cgroup.type'
 AFTER = 'threaded'
 THREADS = 3
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if config.args.container:
         result = consts.TEST_SKIPPED
-        cause = "This test cannot be run within a container"
+        cause = 'This test cannot be run within a container'
         return result, cause
 
     if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v2"
+        cause = 'This test requires the cgroup v2'
         return result, cause
 
     return result, cause
+
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, PARENT_CGNAME)
@@ -59,21 +61,23 @@ def setup(config):
 
     return consts.TEST_PASSED, None
 
+
 def test(config):
     config.process.create_threaded_process_in_cgroup(
                                 config, CONTROLLER, PARENT_CGNAME, THREADS)
 
     threads = Cgroup.get(config, controller=None, cgname=PARENT_CGNAME,
-                         setting="cgroup.threads", print_headers=False,
+                         setting='cgroup.threads', print_headers=False,
                          values_only=True)
     threads = threads.replace('\n', '').split('\t')
 
-    #pick the first thread
+#   #pick the first thread
     thread_tid = threads[1]
 
-    Cgroup.set_and_validate(config, CHILD_CGPATH, "cgroup.threads", thread_tid)
+    Cgroup.set_and_validate(config, CHILD_CGPATH, 'cgroup.threads', thread_tid)
 
     return consts.TEST_PASSED, None
+
 
 def teardown(config):
     # destroy the child processes
@@ -83,6 +87,7 @@ def teardown(config):
             Run.run(['sudo', 'kill', '-9', p])
 
     Cgroup.delete(config, CONTROLLER, PARENT_CGNAME, recursive=True)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -96,6 +101,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
