@@ -23,9 +23,8 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
-from run import RunError
 import sys
+import os
 
 CONTROLLER1 = 'pids'
 CONTROLLER2 = 'cpu'
@@ -63,15 +62,18 @@ cpu.uclamp.min: 0.00
 cpu.uclamp.max: max
 '''
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER1, CGNAME)
     Cgroup.create(config, CONTROLLER2, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -89,18 +91,25 @@ def test(config):
 
     if len(out.splitlines()) != len(expected_out.splitlines()):
         result = consts.TEST_FAILED
-        cause = "Expected {} lines but received {} lines".format(
-                len(expected_out.splitlines()), len(out.splitlines()))
+        cause = (
+                    'Expected {} lines but received {} lines'
+                    ''.format(len(expected_out.splitlines()),
+                              len(out.splitlines()))
+                )
         return result, cause
 
     for line_num, line in enumerate(out.splitlines()):
         if line.strip() != expected_out.splitlines()[line_num].strip():
             result = consts.TEST_FAILED
-            cause = "Expected line:\n\t{}\nbut received line:\n\t{}".format(
-                    expected_out.splitlines()[line_num].strip(), line.strip())
+            cause = (
+                        'Expected line:\n\t{}\nbut received line:\n\t{}'
+                        ''.format(expected_out.splitlines()[line_num].strip(),
+                                  line.strip())
+                    )
             return result, cause
 
     return result, cause
+
 
 def teardown(config):
     ver1 = CgroupVersion.get_version(CONTROLLER1)
@@ -115,6 +124,7 @@ def teardown(config):
         Cgroup.delete(config, CONTROLLER1, CGNAME)
         Cgroup.delete(config, CONTROLLER2, CGNAME)
 
+
 def main(config):
     [result, cause] = prereqs(config)
     if result != consts.TEST_PASSED:
@@ -125,6 +135,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
