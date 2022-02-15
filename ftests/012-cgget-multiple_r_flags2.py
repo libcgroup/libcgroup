@@ -23,8 +23,8 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 CONTROLLER = 'memory'
 CGNAME1 = '012cgget1'
@@ -47,11 +47,13 @@ EXPECTED_OUT = '''{}:
 {}
 '''.format(CGNAME1, VALUE1, VALUE2, CGNAME2, VALUE1, VALUE2)
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     return result, cause
+
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME1)
@@ -70,6 +72,7 @@ def setup(config):
         Cgroup.set(config, CGNAME2, SETTING1_V2, VALUE1)
         Cgroup.set(config, CGNAME2, SETTING2_V2, VALUE2)
 
+
 def test(config):
     result = consts.TEST_PASSED
     cause = None
@@ -87,15 +90,20 @@ def test(config):
     for line_num, line in enumerate(out.splitlines()):
         if line.strip() != EXPECTED_OUT.splitlines()[line_num].strip():
             result = consts.TEST_FAILED
-            cause = "Expected line:\n\t{}\nbut received line:\n\t{}".format(
-                    EXPECTED_OUT.splitlines()[line_num].strip(), line.strip())
+            cause = (
+                        'Expected line:\n\t{}\nbut received line:\n\t{}'
+                        ''.format(EXPECTED_OUT.splitlines()[line_num].strip(),
+                                  line.strip())
+                    )
             return result, cause
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME1)
     Cgroup.delete(config, CONTROLLER, CGNAME2)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -107,6 +115,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
