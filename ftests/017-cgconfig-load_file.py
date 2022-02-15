@@ -23,8 +23,8 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 CONTROLLER = 'cpu'
 CGNAME = '017cgconfig'
@@ -43,21 +43,24 @@ CONFIG_FILE = '''group
 
 CONFIG_FILE_NAME = os.path.join(os.getcwd(), '017cgconfig.conf')
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 cpu controller"
+        cause = 'This test requires the cgroup v1 cpu controller'
         return result, cause
 
     return result, cause
+
 
 def setup(config):
     f = open(CONFIG_FILE_NAME, 'w')
     f.write(CONFIG_FILE)
     f.close()
+
 
 def test(config):
     Cgroup.configparser(config, load_file=CONFIG_FILE_NAME)
@@ -68,9 +71,11 @@ def test(config):
 
     return consts.TEST_PASSED, None
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
     os.remove(CONFIG_FILE_NAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -84,6 +89,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
