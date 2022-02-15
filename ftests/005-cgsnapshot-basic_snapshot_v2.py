@@ -23,11 +23,11 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
-CONTROLLER='cpuset'
-CGNAME="005cgsnapshot"
+CONTROLLER = 'cpuset'
+CGNAME = '005cgsnapshot'
 CGSNAPSHOT = """group 005cgsnapshot {
                     cpuset {
                             cpuset.cpus.partition="member";
@@ -36,18 +36,21 @@ CGSNAPSHOT = """group 005cgsnapshot {
                     }
             }"""
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v2 cpuset controller"
+        cause = 'This test requires the cgroup v2 cpuset controller'
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -59,12 +62,14 @@ def test(config):
     if expected[CGNAME].controllers[CONTROLLER] != \
        actual[CGNAME].controllers[CONTROLLER]:
         result = consts.TEST_FAILED
-        cause = "Expected cgsnapshot result did not equal actual cgsnapshot"
+        cause = 'Expected cgsnapshot result did not equal actual cgsnapshot'
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -76,6 +81,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
