@@ -20,17 +20,18 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup
 import consts
 import ftests
-import os
 import sys
+import os
 
-CONTROLLER='memory'
-CGNAME="015cgget"
+CONTROLLER = 'memory'
+CGNAME = '015cgget'
 
-SETTING='memory.stat'
-VALUE='512'
+SETTING = 'memory.stat'
+VALUE = '512'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -38,8 +39,10 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -52,21 +55,25 @@ def test(config):
     # arbitrary check to ensure we read several lines
     if len(out.splitlines()) < 10:
         result = consts.TEST_FAILED
-        cause = "Expected multiple lines, but only received {}".format(
-                len(out.splitlines()))
+        cause = (
+                    'Expected multiple lines, but only received {}'
+                    ''.format(len(out.splitlines()))
+                )
         return result, cause
 
     # arbitrary check for a setting that's in both cgroup v1 and cgroup v2
     # memory.stat
-    if not "\tunevictable" in out:
+    if '\tunevictable' not in out:
         result = consts.TEST_FAILED
-        cause = "Unexpected output\n{}".format(out)
+        cause = 'Unexpected output\n{}'.format(out)
         return result, cause
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -78,6 +85,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
