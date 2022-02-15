@@ -23,9 +23,9 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
-import sys
 import utils
+import sys
+import os
 
 CONTROLLER = 'cpuset'
 PARENT_CGNAME = '032lscgroup'
@@ -52,6 +52,7 @@ EXPECTED_OUT1 = '''{}:/{}/
                     CONTROLLER, SIBLING_CGNAME,
                     CONTROLLER, SIBLING_CGNAME, SIBLING_CHILD_CGNAME)
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
@@ -68,20 +69,23 @@ def prereqs(config):
         # properly list the enabled controllers for a cgroup v2 cgroup.
         # Skip this test because of this
         result = consts.TEST_SKIPPED
-        cause = "See Github Issue #50 - lscgroup lists controllers..."
+        cause = 'See Github Issue #50 - lscgroup lists controllers...'
         return result, cause
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, PARENT_CGNAME)
-    Cgroup.create(config, CONTROLLER, os.path.join(PARENT_CGNAME, CHILD_CGNAME))
+    Cgroup.create(config, CONTROLLER,
+                  os.path.join(PARENT_CGNAME, CHILD_CGNAME))
     Cgroup.create(config, CONTROLLER,
                   os.path.join(PARENT_CGNAME, CHILD_CGNAME, GRANDCHILD_CGNAME))
 
     Cgroup.create(config, CONTROLLER, SIBLING_CGNAME)
     Cgroup.create(config, CONTROLLER,
                   os.path.join(SIBLING_CGNAME, SIBLING_CHILD_CGNAME))
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -91,23 +95,28 @@ def test(config):
                           path=[PARENT_CGNAME, SIBLING_CGNAME])
     if out != EXPECTED_OUT1:
         result = consts.TEST_FAILED
-        cause = "Expected lscgroup output doesn't match received output\n" \
-                "Expected:\n{}\n" \
-                "Received:\n{}\n".format(utils.indent(EXPECTED_OUT1, 4),
-                                         utils.indent(out, 4))
+        cause = (
+                    "Expected lscgroup output doesn't match received output\n"
+                    "Expected:\n{}\n"
+                    "Received:\n{}\n"
+                    "".format(utils.indent(EXPECTED_OUT1, 4),
+                              utils.indent(out, 4))
+                )
         return result, cause
 
     ret = Cgroup.lscgroup(config, cghelp=True)
-    if not "Usage:" in ret:
+    if 'Usage:' not in ret:
         result = consts.TEST_FAILED
-        cause = "Failed to print help text"
+        cause = 'Failed to print help text'
         return result, cause
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, PARENT_CGNAME, recursive=True)
     Cgroup.delete(config, CONTROLLER, SIBLING_CGNAME, recursive=True)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -119,6 +128,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
