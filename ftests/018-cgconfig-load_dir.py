@@ -23,8 +23,8 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 CPU_CTRL = 'cpu'
 MEMORY_CTRL = 'memory'
@@ -53,21 +53,23 @@ CONFIG_FILE = '''group
 CONFIG_FILE_DIR = os.path.join(os.getcwd(), '018cgconfig')
 CONFIG_FILE_NAME = os.path.join(CONFIG_FILE_DIR, 'cgconfig.conf')
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 cpu controller"
+        cause = 'This test requires the cgroup v1 cpu controller'
         return result, cause
 
     if CgroupVersion.get_version('memory') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 memory controller"
+        cause = 'This test requires the cgroup v1 memory controller'
         return result, cause
 
     return result, cause
+
 
 def setup(config):
     os.mkdir(CONFIG_FILE_DIR)
@@ -76,23 +78,27 @@ def setup(config):
     f.write(CONFIG_FILE)
     f.close()
 
+
 def test(config):
     Cgroup.configparser(config, load_dir=CONFIG_FILE_DIR)
 
     Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_period_us', CFS_PERIOD)
     Cgroup.get_and_validate(config, CGNAME, 'cpu.cfs_quota_us', CFS_QUOTA)
     Cgroup.get_and_validate(config, CGNAME, 'cpu.shares', SHARES)
-    Cgroup.get_and_validate(config, CGNAME, 'memory.limit_in_bytes', LIMIT_IN_BYTES)
+    Cgroup.get_and_validate(config, CGNAME, 'memory.limit_in_bytes',
+                            LIMIT_IN_BYTES)
     Cgroup.get_and_validate(config, CGNAME, 'memory.soft_limit_in_bytes',
                             SOFT_LIMIT_IN_BYTES)
 
     return consts.TEST_PASSED, None
+
 
 def teardown(config):
     Cgroup.delete(config, CPU_CTRL, CGNAME)
     Cgroup.delete(config, MEMORY_CTRL, CGNAME)
     os.remove(CONFIG_FILE_NAME)
     os.rmdir(CONFIG_FILE_DIR)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -106,6 +112,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
