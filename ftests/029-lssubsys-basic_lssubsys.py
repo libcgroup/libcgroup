@@ -23,9 +23,9 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
-import utils
+import os
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -33,8 +33,10 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     pass
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -49,7 +51,7 @@ def test(config):
         if mount.version == CgroupVersion.CGROUP_V2:
             continue
 
-        if mount.controller == "name=systemd" or mount.controller == "systemd":
+        if mount.controller == 'name=systemd' or mount.controller == 'systemd':
             continue
 
         found = False
@@ -66,14 +68,18 @@ def test(config):
 
         if not found:
             result = consts.TEST_FAILED
-            cause = "Failed to find {} in lssubsys list".format(
-                      mount.controller)
+            cause = (
+                        'Failed to find {} in lssubsys list'
+                        ''.format(mount.controller)
+                    )
             return result, cause
 
     return result, cause
 
+
 def teardown(config):
     pass
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -87,6 +93,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
