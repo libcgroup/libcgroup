@@ -23,18 +23,20 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
-CONTROLLER1='memory'
-CONTROLLER2='cpuset'
-CGNAME="014cgget"
+CONTROLLER1 = 'memory'
+CONTROLLER2 = 'cpuset'
+CGNAME = '014cgget'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     return result, cause
+
 
 def setup(config):
     ver1 = CgroupVersion.get_version(CONTROLLER1)
@@ -49,6 +51,7 @@ def setup(config):
         Cgroup.create(config, CONTROLLER1, CGNAME)
         Cgroup.create(config, CONTROLLER2, CGNAME)
 
+
 def test(config):
     result = consts.TEST_PASSED
     cause = None
@@ -58,24 +61,27 @@ def test(config):
     # arbitrary check to ensure we read several lines
     if len(out.splitlines()) < 20:
         result = consts.TEST_FAILED
-        cause = "Expected multiple lines, but only received {}".format(
-                len(out.splitlines()))
+        cause = (
+                    'Expected multiple lines, but only received {}'
+                    ''.format(len(out.splitlines()))
+                )
         return result, cause
 
     # arbitrary check for a setting that's in both cgroup v1 and cgroup v2
     # memory.stat
-    if not "\tpgmajfault" in out:
+    if '\tpgmajfault' not in out:
         result = consts.TEST_FAILED
-        cause = "Unexpected output\n{}".format(out)
+        cause = 'Unexpected output\n{}'.format(out)
         return result, cause
 
     # make sure that a cpuset value was in the output:
-    if not "cpuset.cpus" in out:
+    if 'cpuset.cpus' not in out:
         result = consts.TEST_FAILED
-        cause = "Failed to find cpuset settings in output\n{}".format(out)
+        cause = 'Failed to find cpuset settings in output\n{}'.format(out)
         return result, cause
 
     return result, cause
+
 
 def teardown(config):
     ver1 = CgroupVersion.get_version(CONTROLLER1)
@@ -90,6 +96,7 @@ def teardown(config):
         Cgroup.delete(config, CONTROLLER1, CGNAME)
         Cgroup.delete(config, CONTROLLER2, CGNAME)
 
+
 def main(config):
     [result, cause] = prereqs(config)
     if result != consts.TEST_PASSED:
@@ -100,6 +107,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
