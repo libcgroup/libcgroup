@@ -24,8 +24,8 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 CONTROLLER = 'memory'
 CGNAMES = ['026cgset1', '026cgset2']
@@ -35,20 +35,23 @@ SETTINGS = ['memory.limit_in_bytes',
             'memory.swappiness']
 VALUES = ['2048000', '1024000', '89']
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if CgroupVersion.get_version('memory') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 memory controller"
+        cause = 'This test requires the cgroup v1 memory controller'
         return result, cause
 
     return result, cause
 
+
 def setup(config):
     for cg in CGNAMES:
         Cgroup.create(config, CONTROLLER, cg)
+
 
 def test(config):
     Cgroup.set(config, cgname=CGNAMES, setting=SETTINGS, value=VALUES)
@@ -59,9 +62,11 @@ def test(config):
 
     return consts.TEST_PASSED, None
 
+
 def teardown(config):
     for cg in CGNAMES:
         Cgroup.delete(config, CONTROLLER, cg)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -73,6 +78,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
