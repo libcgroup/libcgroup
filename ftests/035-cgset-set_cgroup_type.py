@@ -23,17 +23,18 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 # Which controller isn't all that important, but it is important that we
 # have a cgroup v2 controller
 CONTROLLER = 'cpu'
-CGNAME = "035cgset"
+CGNAME = '035cgset'
 
 SETTING = 'cgroup.type'
 BEFORE = 'domain'
 AFTER = 'threaded'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -41,14 +42,15 @@ def prereqs(config):
 
     if config.args.container:
         result = consts.TEST_SKIPPED
-        cause = "This test cannot be run within a container"
+        cause = 'This test cannot be run within a container'
         return result, cause
 
     if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
-        cause = "This test requires cgroup v2"
+        cause = 'This test requires cgroup v2'
 
     return result, cause
+
 
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
@@ -56,13 +58,16 @@ def setup(config):
 
     return consts.TEST_PASSED, None
 
+
 def test(config):
     Cgroup.set_and_validate(config, CGNAME, SETTING, AFTER)
 
     return consts.TEST_PASSED, None
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -77,6 +82,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
