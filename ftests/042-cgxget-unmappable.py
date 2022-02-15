@@ -23,12 +23,13 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
 import sys
+import os
 
 CONTROLLER = 'cpu'
 CGNAME = '042cgxget'
 SETTING = 'cpu.stat'
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -36,8 +37,10 @@ def prereqs(config):
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -49,17 +52,21 @@ def test(config):
     else:
         requested_ver = CgroupVersion.CGROUP_V1
 
-    out = Cgroup.xget(config, cgname=CGNAME, setting=SETTING,
-                      version=requested_ver, print_headers=False,
-                      ignore_unmappable=True)
+    out = Cgroup.xget(
+                        config, cgname=CGNAME, setting=SETTING,
+                        version=requested_ver, print_headers=False,
+                        ignore_unmappable=True
+                      )
     if len(out):
         result = consts.TEST_FAILED
-        cause = "Expected cgxget to return nothing.  Received {}".format(out)
+        cause = 'Expected cgxget to return nothing.  Received {}'.format(out)
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -71,6 +78,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
