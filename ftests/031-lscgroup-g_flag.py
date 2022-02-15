@@ -23,9 +23,9 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
-import os
-import sys
 import utils
+import sys
+import os
 
 CONTROLLER = 'cpuset'
 PARENT_CGNAME = '031lscgroup'
@@ -44,7 +44,9 @@ EXPECTED_OUT1 = '''{}:/{}/
 {}:/{}/{}
 {}:/{}/{}/{}'''.format(CONTROLLER, PARENT_CGNAME,
                        CONTROLLER, PARENT_CGNAME, CHILD_CGNAME,
-                       CONTROLLER, PARENT_CGNAME, CHILD_CGNAME, GRANDCHILD_CGNAME)
+                       CONTROLLER, PARENT_CGNAME, CHILD_CGNAME,
+                       GRANDCHILD_CGNAME)
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -62,16 +64,21 @@ def prereqs(config):
         # properly list the enabled controllers for a cgroup v2 cgroup.
         # Skip this test because of this
         result = consts.TEST_SKIPPED
-        cause = "See Github Issue #50 - lscgroup lists controllers..."
+        cause = 'See Github Issue #50 - lscgroup lists controllers...'
         return result, cause
 
     return result, cause
 
+
 def setup(config):
     Cgroup.create(config, CONTROLLER, PARENT_CGNAME)
-    Cgroup.create(config, CONTROLLER, os.path.join(PARENT_CGNAME, CHILD_CGNAME))
+    Cgroup.create(
+                    config, CONTROLLER, os.path.join(
+                        PARENT_CGNAME, CHILD_CGNAME)
+                 )
     Cgroup.create(config, CONTROLLER,
                   os.path.join(PARENT_CGNAME, CHILD_CGNAME, GRANDCHILD_CGNAME))
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -80,16 +87,21 @@ def test(config):
     out = Cgroup.lscgroup(config, controller=CONTROLLER, path=PARENT_CGNAME)
     if out != EXPECTED_OUT1:
         result = consts.TEST_FAILED
-        cause = "Expected lscgroup output doesn't match received output\n" \
-                "Expected:\n{}\n" \
-                "Received:\n{}\n".format(utils.indent(EXPECTED_OUT1, 4),
-                                         utils.indent(out, 4))
+        cause = (
+                    "Expected lscgroup output doesn't match received output\n'"
+                    "Expected:\n{}\n"
+                    "Received:\n{}\n"
+                    "".format(utils.indent(EXPECTED_OUT1, 4),
+                              utils.indent(out, 4))
+                )
         return result, cause
 
     return result, cause
 
+
 def teardown(config):
     Cgroup.delete(config, CONTROLLER, PARENT_CGNAME, recursive=True)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -101,6 +113,7 @@ def main(config):
     teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
