@@ -207,12 +207,6 @@ AC_CONFIG_FILES([Makefile
 	tests/Makefile
 	tests/ftests/Makefile
 	tests/gunit/Makefile
-	tests/tools/testenv.sh
-	tests/tools/Makefile
-	tests/tools/cgconfigparser/Makefile
-	tests/tools/cgclassify/Makefile
-	tests/tools/multimount/Makefile
-	tests/runlibcgrouptest.sh
 	src/Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
