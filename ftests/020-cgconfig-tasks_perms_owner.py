@@ -21,12 +21,13 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
+from container import ContainerError
+from run import Run, RunError
 import consts
 import ftests
-import os
-from run import Run
-import sys
 import utils
+import sys
+import os
 
 CONTROLLER = 'cpuset'
 CGNAME = '020cgconfig'
@@ -43,16 +44,18 @@ TPERM = '642'
 
 CONFIG_FILE_NAME = os.path.join(os.getcwd(), '020cgconfig.conf')
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
-        cause = "This test requires the cgroup v1 cpuset controller"
+        cause = 'This test requires the cgroup v1 cpuset controller'
         return result, cause
 
     return result, cause
+
 
 def setup(config):
     f = open(CONFIG_FILE_NAME, 'w')
@@ -65,6 +68,7 @@ def setup(config):
     else:
         Run.run(['sudo', 'useradd', '-p', 'Test020#1', USER])
         Run.run(['sudo', 'groupadd', GROUP])
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -81,24 +85,31 @@ def test(config):
 
     if user != USER:
         result = consts.TEST_FAILED
-        cause = "Owner name failed.  Expected {}, received {}\n".format(
-                USER, user)
+        cause = (
+                    'Owner name failed.  Expected {}, received {}\n'
+                    ''.format(USER, user)
+                )
         return result, cause
 
     if group != GROUP:
         result = consts.TEST_FAILED
-        cause = "Owner group failed.  Expected {}, received {}\n".format(
-                GROUP, group)
+        cause = (
+                    'Owner group failed.  Expected {}, received {}\n'
+                    ''.format(GROUP, group)
+                )
         return result, cause
 
     tperm = utils.get_file_permissions(config, tasks_path)
     if tperm != TPERM:
         result = consts.TEST_FAILED
-        cause = "File permissions failed.  Expected {}, received {}\n".format(
-                TPERM, tperm)
+        cause = (
+                    'File permissions failed.  Expected {}, received {}\n'
+                    ''.format(TPERM, tperm)
+                )
         return result, cause
 
     return result, cause
+
 
 def teardown(config):
     os.remove(CONFIG_FILE_NAME)
@@ -110,10 +121,11 @@ def teardown(config):
         else:
             Run.run(['sudo', 'userdel', USER])
             Run.run(['sudo', 'groupdel', GROUP])
-    except:
+    except (ContainerError, RunError, ValueError):
         pass
 
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -127,6 +139,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
