@@ -20,13 +20,14 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup, CgroupVersion
+from container import ContainerError
+from run import Run, RunError
+from cgroup import Cgroup
 import consts
 import ftests
-import os
-from run import Run
-import sys
 import utils
+import sys
+import os
 
 CONTROLLER = 'cpuset'
 CGNAME = '019cgconfig'
@@ -44,11 +45,13 @@ FPERM = '246'
 
 CONFIG_FILE_NAME = os.path.join(os.getcwd(), '019cgconfig.conf')
 
+
 def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
     return result, cause
+
 
 def setup(config):
     f = open(CONFIG_FILE_NAME, 'w')
@@ -61,6 +64,7 @@ def setup(config):
     else:
         Run.run(['sudo', 'useradd', '-p', 'Test019#1', USER])
         Run.run(['sudo', 'groupadd', GROUP])
+
 
 def test(config):
     result = consts.TEST_PASSED
@@ -77,31 +81,40 @@ def test(config):
 
     if user != USER:
         result = consts.TEST_FAILED
-        cause = "Owner name failed.  Expected {}, received {}\n".format(
-                USER, user)
+        cause = (
+                    'Owner name failed.  Expected {}, received {}\n'
+                    ''.format(USER, user)
+                )
         return result, cause
 
     if group != GROUP:
         result = consts.TEST_FAILED
-        cause = "Owner group failed.  Expected {}, received {}\n".format(
-                GROUP, group)
+        cause = (
+                    'Owner group failed.  Expected {}, received {}\n'
+                    ''.format(GROUP, group)
+                )
         return result, cause
 
     fperm = utils.get_file_permissions(config, cpus_path)
     if fperm != FPERM:
         result = consts.TEST_FAILED
-        cause = "File permissions failed.  Expected {}, received {}\n".format(
-                FPERM, fperm)
+        cause = (
+                    'File permissions failed.  Expected {}, received {}\n'
+                    ''.format(FPERM, fperm)
+                )
         return result, cause
 
     dperm = utils.get_file_permissions(config, os.path.join(mnt_path, CGNAME))
     if dperm != DPERM:
         result = consts.TEST_FAILED
-        cause = "Directory permissions failed.  Expected {}, received {}\n".format(
-                DPERM, dperm)
+        cause = (
+                    'Directory permissions failed.  Expected {}, received {}\n'
+                    ''.format(DPERM, dperm)
+                )
         return result, cause
 
     return result, cause
+
 
 def teardown(config):
     os.remove(CONFIG_FILE_NAME)
@@ -113,10 +126,11 @@ def teardown(config):
         else:
             Run.run(['sudo', 'userdel', USER])
             Run.run(['sudo', 'groupdel', GROUP])
-    except:
+    except (ContainerError, RunError, ValueError):
         pass
 
     Cgroup.delete(config, CONTROLLER, CGNAME)
+
 
 def main(config):
     [result, cause] = prereqs(config)
@@ -130,6 +144,7 @@ def main(config):
         teardown(config)
 
     return [result, cause]
+
 
 if __name__ == '__main__':
     config = ftests.parse_args()
