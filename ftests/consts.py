@@ -39,11 +39,11 @@ DEFAULT_CONTAINER_ARCH = 'amd64'
 DEFAULT_CONTAINER_STOP_TIMEOUT = 5
 
 TESTS_RUN_ALL = -1
-TESTS_RUN_ALL_SUITES = "allsuites"
-TEST_PASSED = "passed"
-TEST_FAILED = "failed"
-TEST_SKIPPED = "skipped"
+TESTS_RUN_ALL_SUITES = 'allsuites'
+TEST_PASSED = 'passed'
+TEST_FAILED = 'failed'
+TEST_SKIPPED = 'skipped'
 
-CGRULES_FILE = "/etc/cgrules.conf"
+CGRULES_FILE = '/etc/cgrules.conf'
 
 # vim: set et ts=4 sw=4:
