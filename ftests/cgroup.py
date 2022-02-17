@@ -19,26 +19,28 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-import consts
-import copy
+from container import ContainerError
 from controller import Controller
-from enum import Enum
-import multiprocessing as mp
-import os
 from run import Run, RunError
-import time
+import multiprocessing as mp
+from enum import Enum
+import consts
 import utils
+import time
+import copy
+import os
+
 
 class CgroupMount(object):
     def __init__(self, mount_line):
         entries = mount_line.split()
 
-        if entries[2] == "cgroup":
+        if entries[2] == 'cgroup':
             self.version = CgroupVersion.CGROUP_V1
-        elif entries[2] == "cgroup2":
+        elif entries[2] == 'cgroup2':
             self.version = CgroupVersion.CGROUP_V2
         else:
-            raise ValueError("Unknown cgroup version")
+            raise ValueError('Unknown cgroup version')
 
         self.mount_point = entries[1]
 
@@ -46,19 +48,20 @@ class CgroupMount(object):
         if self.version == CgroupVersion.CGROUP_V1:
             self.controller = entries[3].split(',')[-1]
 
-            if self.controller == "clone_children":
+            if self.controller == 'clone_children':
                 # the cpuset controller may append this option to the end
                 # rather than the controller name like all other controllers
-                self.controller = "cpuset"
+                self.controller = 'cpuset'
 
     def __str__(self):
-        out_str = "CgroupMount"
-        out_str += "\n\tMount Point = {}".format(self.mount_point)
-        out_str += "\n\tCgroup Version = {}".format(self.version)
+        out_str = 'CgroupMount'
+        out_str += '\n\tMount Point = {}'.format(self.mount_point)
+        out_str += '\n\tCgroup Version = {}'.format(self.version)
         if self.controller is not None:
-            out_str += "\n\tController = {}".format(self.controller)
+            out_str += '\n\tController = {}'.format(self.controller)
 
         return out_str
+
 
 class CgroupVersion(Enum):
     CGROUP_UNK = 0
@@ -77,13 +80,18 @@ class CgroupVersion(Enum):
                         if option == controller:
                             return CgroupVersion.CGROUP_V1
                 elif line.split()[0] == 'cgroup2':
-                    with open(os.path.join(mnt_path, 'cgroup.controllers'), 'r') as ctrlf:
+                    ctrlf_path = os.path.join(mnt_path, 'cgroup.controllers')
+                    with open(ctrlf_path, 'r') as ctrlf:
                         controllers = ctrlf.readline()
                         for ctrl in controllers.split():
                             if ctrl == controller:
                                 return CgroupVersion.CGROUP_V2
 
-        raise IndexError("Unknown version for controller {}".format(controller))
+        raise IndexError(
+                            'Unknown version for controller {}'
+                            ''.format(controller)
+                        )
+
 
 class Cgroup(object):
     # This class is analogous to libcgroup's struct cgroup
@@ -96,7 +104,7 @@ class Cgroup(object):
         self.children = list()
 
     def __str__(self):
-        out_str = "Cgroup {}\n".format(self.name)
+        out_str = 'Cgroup {}\n'.format(self.name)
         for ctrl_key in self.controllers:
             out_str += utils.indent(str(self.controllers[ctrl_key]), 4)
 
@@ -211,14 +219,20 @@ class Cgroup(object):
                 cmd.append('{}={}'.format(setting, value))
             elif isinstance(setting, list) and isinstance(value, list):
                 if len(setting) != len(value):
-                    raise ValueError('Settings list length must equal values list length')
+                    raise ValueError(
+                                        'Settings list length must equal '
+                                        'values list length'
+                                    )
 
                 for idx, stg in enumerate(setting):
                     cmd.append('-r')
                     cmd.append('{}={}'.format(stg, value[idx]))
             else:
-                raise ValueError('Invalid inputs to cgget:\nsetting: {}\n' \
-                                 'value{}'.format(setting, value))
+                raise ValueError(
+                                    'Invalid inputs to cgget:\nsetting: {}\n'
+                                    'value{}'
+                                    ''.format(setting, value)
+                                )
 
         if copy_from is not None:
             cmd.append('--copy-from')
@@ -345,7 +359,7 @@ class Cgroup(object):
             try:
                 ret = Run.run(cmd)
             except RunError as re:
-                if "profiling" in re.stderr:
+                if 'profiling' in re.stderr:
                     ret = re.stdout
                 else:
                     raise re
@@ -433,7 +447,8 @@ class Cgroup(object):
             Run.run(cmd)
 
     @staticmethod
-    # given a stdout of cgsnapshot-like data, create a dictionary of cgroup objects
+    # given a stdout of cgsnapshot-like data, create a dictionary of cgroup
+    # objects
     def snapshot_to_dict(cgsnapshot_stdout):
         cgdict = dict()
 
@@ -452,10 +467,10 @@ class Cgroup(object):
             line = line.strip()
 
             if mode == parsemode.UNKNOWN:
-                if line.startswith("#"):
+                if line.startswith('#'):
                     continue
 
-                elif line.startswith("group") and line.endswith("{"):
+                elif line.startswith('group') and line.endswith('{'):
                     cg_name = line.split()[1]
                     if cg_name in cgdict:
                         # We already have a cgroup with this name.  This block
@@ -467,39 +482,39 @@ class Cgroup(object):
                     mode = parsemode.GROUP
 
             elif mode == parsemode.GROUP:
-                if line.startswith("perm {"):
+                if line.startswith('perm {'):
                     mode = parsemode.PERM
-                elif line.endswith("{"):
+                elif line.endswith('{'):
                     ctrl_name = line.split()[0]
                     cg.controllers[ctrl_name] = Controller(ctrl_name)
 
                     mode = parsemode.CONTROLLER
-                elif line.endswith("}"):
+                elif line.endswith('}'):
                     # we've found the end of this group
                     cgdict[cg_name] = cg
 
                     mode = parsemode.UNKNOWN
 
             elif mode == parsemode.CONTROLLER:
-                if line.endswith("\";"):
+                if line.endswith('";'):
                     # this is a setting on a single line
-                    setting = line.split("=")[0]
-                    value = line.split("=")[1]
+                    setting = line.split('=')[0]
+                    value = line.split('=')[1]
 
                     cg.controllers[ctrl_name].settings[setting] = value
 
-                elif line.endswith("}"):
+                elif line.endswith('}'):
                     # we've found the end of this controller
                     mode = parsemode.GROUP
 
                 else:
                     # this is a multi-line setting
-                    setting = line.split("=")[0]
-                    value = "{}\n".format(line.split("=")[1])
+                    setting = line.split('=')[0]
+                    value = '{}\n'.format(line.split('=')[1])
                     mode = parsemode.SETTING
 
             elif mode == parsemode.SETTING:
-                if line.endswith("\";"):
+                if line.endswith('";'):
                     # this is the last line of the multi-line setting
                     value += line
 
@@ -507,19 +522,19 @@ class Cgroup(object):
                     mode = parsemode.CONTROLLER
 
                 else:
-                    value += "{}\n".format(line)
+                    value += '{}\n'.format(line)
 
             elif mode == parsemode.PERM:
-                if line.startswith("admin {"):
+                if line.startswith('admin {'):
                     mode = parsemode.ADMIN
-                elif line.startswith("task {"):
+                elif line.startswith('task {'):
                     mode = parsemode.TASK
-                elif line.endswith("}"):
+                elif line.endswith('}'):
                     mode = parsemode.GROUP
 
             elif mode == parsemode.ADMIN or mode == parsemode.TASK:
                 # todo - handle these modes
-                if line.endswith("}"):
+                if line.endswith('}'):
                     mode = parsemode.PERM
 
         return cgdict
@@ -534,9 +549,13 @@ class Cgroup(object):
         # ensure the deny list file exists
         if config.args.container:
             try:
-                config.container.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+                config.container.run(
+                                        ['sudo',
+                                         'touch',
+                                         '/etc/cgsnapshot_blacklist.conf']
+                                    )
             except RunError as re:
-                if re.ret == 0 and "unable to resolve host" in re.stderr:
+                if re.ret == 0 and 'unable to resolve host' in re.stderr:
                     pass
         else:
             Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
@@ -548,7 +567,7 @@ class Cgroup(object):
                 res = Run.run(cmd)
         except RunError as re:
             if re.ret == 0 and \
-               "neither blacklisted nor whitelisted" in re.stderr:
+               'neither blacklisted nor whitelisted' in re.stderr:
                 res = re.stdout
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
@@ -589,10 +608,14 @@ class Cgroup(object):
                 config.container.run(cmd, shell_bool=True)
             else:
                 Run.run(cmd, shell_bool=True)
-        except:
-            # todo - check the errno to ensure the directory exists rather
+        except RunError as re:
+            # check the errno to ensure the directory exists rather
             # than receiving a different error
-            pass
+            if re.ret == 1 and \
+               'File exists' in re.stderr:
+                pass
+            else:
+                raise re
 
         cmd2 = list()
 
@@ -617,7 +640,10 @@ class Cgroup(object):
         cmd.append('-n')
 
         if config.args.container:
-            raise ValueError("Running cgrules within a container is not supported")
+            raise ValueError(
+                                'Running cgrules within a container is not '
+                                'supported'
+                            )
         else:
             Run.run(cmd, shell_bool=True)
 
@@ -639,7 +665,7 @@ class Cgroup(object):
                 config.container.run(cmd, shell_bool=True)
             else:
                 Run.run(cmd, shell_bool=True)
-        except:
+        except (RunError, ContainerError):
             # ignore any errors during the kill command.  this is belt
             # and suspenders code
             pass
@@ -718,9 +744,12 @@ class Cgroup(object):
                 if line.split()[0] == 'cgroup':
                     for option in line.split()[3].split(','):
                         if option == ctrl_name:
-                            return line.split()[1]
+                            return mnt_path
 
-        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+        raise IndexError(
+                            'Unknown mount point for controller {}'
+                            ''.format(ctrl_name)
+                        )
 
     @staticmethod
     def __get_controller_mount_point_v2(ctrl_name):
@@ -738,7 +767,10 @@ class Cgroup(object):
                             if controller == ctrl_name:
                                 return mnt_path
 
-        raise IndexError("Unknown mount point for controller {}".format(ctrl_name))
+        raise IndexError(
+                            'Unknown mount point for controller {}'
+                            ''.format(ctrl_name)
+                        )
 
     @staticmethod
     def get_controller_mount_point(ctrl_name):
@@ -749,10 +781,11 @@ class Cgroup(object):
         elif vers == CgroupVersion.CGROUP_V2:
             return Cgroup.__get_controller_mount_point_v2(ctrl_name)
         else:
-            raise ValueError("Unsupported cgroup version")
+            raise ValueError('Unsupported cgroup version')
 
     @staticmethod
-    def clear(config, empty=False, cghelp=False, load_file=None, load_dir=None):
+    def clear(config, empty=False, cghelp=False, load_file=None,
+              load_dir=None):
         cmd = list()
 
         if not config.args.container:
@@ -806,7 +839,7 @@ class Cgroup(object):
             try:
                 ret = Run.run(cmd)
             except RunError as re:
-                if "profiling" in re.stderr:
+                if 'profiling' in re.stderr:
                     ret = re.stdout
                 else:
                     raise re
@@ -821,18 +854,18 @@ class Cgroup(object):
             for line in mntf.readlines():
                 entry = line.split()
 
-                if entry[0] != "cgroup" and entry[0] != "cgroup2":
+                if entry[0] != 'cgroup' and entry[0] != 'cgroup2':
                     continue
 
                 mount = CgroupMount(line)
 
                 if mount.version == CgroupVersion.CGROUP_V1 or \
-                   expand_v2_mounts == False:
+                   expand_v2_mounts is False:
                     mount_list.append(mount)
                     continue
 
                 with open(os.path.join(mount.mount_point,
-                                       "cgroup.controllers")) as ctrlf:
+                                       'cgroup.controllers')) as ctrlf:
                     for line in ctrlf.readlines():
                         for ctrl in line.split():
                             mount_copy = copy.deepcopy(mount)
@@ -867,7 +900,7 @@ class Cgroup(object):
             try:
                 ret = Run.run(cmd)
             except RunError as re:
-                if "profiling" in re.stderr:
+                if 'profiling' in re.stderr:
                     ret = re.stdout
                 else:
                     raise re
@@ -911,7 +944,11 @@ class Cgroup(object):
 
         for mount in mounts:
             if mount.controller == controller:
-                proc_file = os.path.join(mount.mount_point, cgroup, "cgroup.procs")
+                proc_file = os.path.join(
+                                            mount.mount_point,
+                                            cgroup,
+                                            'cgroup.procs'
+                                        )
                 cmd = ['cat', proc_file]
 
                 if config.args.container:
@@ -934,7 +971,7 @@ class Cgroup(object):
                            values_only=True)
 
         if value != expected_value:
-            raise CgroupError("cgget expected {} but received {}".format(
+            raise CgroupError('cgget expected {} but received {}'.format(
                               expected_value, value))
 
     @staticmethod
@@ -947,6 +984,7 @@ class Cgroup(object):
         """
         Cgroup.set(config, cgname, setting, value)
         Cgroup.get_and_validate(config, cgname, setting, value)
+
 
 class CgroupError(Exception):
     def __init__(self, message):
