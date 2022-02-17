@@ -21,7 +21,7 @@
 
 from log import Log
 import subprocess
-import time
+
 
 class Run(object):
     @staticmethod
@@ -46,18 +46,22 @@ class Run(object):
 
         if shell_bool:
             Log.log_debug(
-                "run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}\n\tstderr = {}".format(
-                command, ret, out, err))
+                            'run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}'
+                            '\n\tstderr = {}'
+                            ''.format(command, ret, out, err)
+                         )
         else:
             Log.log_debug(
-                "run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}\n\tstderr = {}".format(
-                ' '.join(command), ret, out, err))
+                            'run:\n\tcommand = {}\n\tret = {}\n\tstdout = {}'
+                            '\n\tstderr = {}'
+                            ''.format(' '.join(command), ret, out, err)
+                         )
 
         if ret != 0:
             raise RunError("Command '{}' failed".format(''.join(command)),
                            command, ret, out, err)
         if ret != 0 or len(err) > 0:
-            if err.find("WARNING: cgroup v2 is not fully supported yet") == -1:
+            if err.find('WARNING: cgroup v2 is not fully supported yet') == -1:
                 # LXD throws the above warning on systems that are fully
                 # running cgroup v2.  Ignore this warning, but fail if any
                 # other warnings/errors are raised
@@ -65,6 +69,7 @@ class Run(object):
                                command, ret, out, err)
 
         return out
+
 
 class RunError(Exception):
     def __init__(self, message, command, ret, stdout, stderr):
@@ -76,9 +81,10 @@ class RunError(Exception):
         self.stderr = stderr
 
     def __str__(self):
-        out_str = "RunError:\n\tcommand = {}\n\tret = {}".format(
+        out_str = 'RunError:\n\tcommand = {}\n\tret = {}'.format(
                   self.command, self.ret)
-        out_str += "\n\tstdout = {}\n\tstderr = {}".format(self.stdout, self.stderr)
+        out_str += '\n\tstdout = {}\n\tstderr = {}'.format(self.stdout,
+                                                           self.stderr)
         return out_str
 
 # vim: set et ts=4 sw=4:
