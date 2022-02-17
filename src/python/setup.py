@@ -23,25 +23,26 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-import os
-
 from setuptools import Extension, setup
 from Cython.Build import cythonize
+import os
 
 setup(
-    name = "libcgroup",
-    version = os.environ["VERSION_RELEASE"],
-    description = "Python bindings for libcgroup",
-    url = "https://github.com/libcgroup/libcgroup",
-    maintainer = "Tom Hromatka",
-    maintainer_email = "tom.hromatka@oracle.com",
-    license = "LGPLv2.1",
-    platforms = "Linux",
-    ext_modules = cythonize([
-        Extension("libcgroup", ["libcgroup.pyx"],
-            # unable to handle libtool libraries directly
-            extra_objects=["../.libs/libcgroup.a"]),
-    ])
+    name='libcgroup',
+    version=os.environ['VERSION_RELEASE'],
+    description='Python bindings for libcgroup',
+    url='https://github.com/libcgroup/libcgroup',
+    maintainer='Tom Hromatka',
+    maintainer_email='tom.hromatka@oracle.com',
+    license='LGPLv2.1',
+    platforms='Linux',
+    ext_modules=cythonize([
+            Extension(
+                      'libcgroup', ['libcgroup.pyx'],
+                      # unable to handle libtool libraries directly
+                      extra_objects=['../.libs/libcgroup.a']
+                     ),
+             ])
 )
 
 # vim: set et ts=4 sw=4:
