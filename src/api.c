@@ -88,6 +88,9 @@ static struct cgroup_rule_list trl;
 /* Lock for the list of rules (rl) */
 static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
 
+/* Cgroup v2 mount path.  Null if v2 isn't mounted */
+static char cg_cgroup_v2_mount_path[FILENAME_MAX];
+
 /* Namespace */
 __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
@@ -1195,6 +1198,12 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	int ret = 0, i, duplicate;
 	FILE *fp = NULL;
 
+	/*
+	 * Save off this mount point.  This may be used later to build
+	 * the cg_path.
+	 */
+	strncpy(cg_cgroup_v2_mount_path, ent->mnt_dir, FILENAME_MAX);
+
 	/* determine what v2 controllers are available on this mount */
 	snprintf(cgroup_controllers_path, FILENAME_MAX, "%s/%s", ent->mnt_dir,
 		 CGV2_CONTROLLERS_FILE);
@@ -1304,6 +1313,8 @@ int cgroup_init(void)
 		}
 	}
 	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
+
+	memset(&cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
 
 	proc_cgroup = fopen("/proc/cgroups", "re");
 
@@ -1484,25 +1495,46 @@ char *cg_build_path_locked(const char *name, char *path,
 			   const char *type)
 {
 	int i, ret;
+
+	/*
+	 * If no type is specified, and there's a valid cgroup v2 mount,
+	 * then build up a path to this mount (and cgroup name if supplied).
+	 * This can be used to create a cgroup v2 cgroup that's not attached
+	 * to any controller.
+	 */
+	if (!type && strlen(cg_cgroup_v2_mount_path) > 0) {
+		ret = snprintf(path, FILENAME_MAX, "%s/",
+			       cg_cgroup_v2_mount_path);
+		if (ret >= FILENAME_MAX)
+			cgroup_dbg("Warning: filename too long: %s/",
+				   cg_cgroup_v2_mount_path);
+		if (name) {
+			char *tmp;
+
+			tmp = strdup(path);
+			if (tmp == NULL)
+				return NULL;
+
+			cg_concat_path(tmp, name, path);
+			free(tmp);
+		}
+		return path;
+	}
+
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
-		/* Three ways to successfully move forward here:
+		/* Two ways to successfully move forward here:
 		 * 1. The "type" controller matches the name of a mounted
 		 *    controller
 		 * 2. The "type" controller requested is "cgroup" and there's
 		 *    a "real" controller mounted as cgroup v2
-		 * 3. The "type" controller is NULL and there's a "real"
-		 *    controller mounted as cgroup v2.  This allows a user
-		 *    to create a v2 cgroup with no controllers enabled
 		 */
 		if ((type && strcmp(cg_mount_table[i].name, type) == 0) ||
 		    (type && strcmp(type, CGROUP_FILE_PREFIX) == 0 &&
-		     cg_mount_table[i].version == CGROUP_V2) ||
-		    (type == NULL && cg_mount_table[i].version == CGROUP_V2)) {
+		     cg_mount_table[i].version == CGROUP_V2)) {
 			if (cg_namespace_table[i]) {
 				ret = snprintf(path, FILENAME_MAX, "%s/%s/",
 						cg_mount_table[i].mount.path,
 						cg_namespace_table[i]);
-				path[FILENAME_MAX-1] = '\0';
 				if (ret >= FILENAME_MAX)
 					cgroup_dbg("Warning: filename too long:"
 						"%s/%s/",
@@ -1511,7 +1543,6 @@ char *cg_build_path_locked(const char *name, char *path,
 			} else {
 				ret = snprintf(path, FILENAME_MAX, "%s/",
 						cg_mount_table[i].mount.path);
-				path[FILENAME_MAX-1] = '\0';
 				if (ret >= FILENAME_MAX)
 					cgroup_dbg("Warning: filename too long:"
 						"%s/",
