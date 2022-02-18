@@ -20,73 +20,127 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-import argparse
-from cgroup import Cgroup
 from config import Config
-import consts
-import container
-import datetime
-import log
 from log import Log
-import os
-from process import Process
 from run import Run
-import sys
+import datetime
+import argparse
+import consts
 import time
+import log
+import sys
+import os
 
 setup_time = 0.0
 teardown_time = 0.0
 
+
 def parse_args():
     parser = argparse.ArgumentParser("Libcgroup Functional Tests")
-    parser.add_argument('-n', '--name',
-                        help='name of the container',
-                        required=False, type=str, default=None)
-    parser.add_argument('-d', '--distro',
-                        help='linux distribution to use as a template',
-                        required=False, type=str, default=None)
-    parser.add_argument('-r', '--release',
-                        help='distribution release, e.g.\'trusty\'',
-                        required=False, type=str, default=None)
-    parser.add_argument('-a', '--arch',
-                        help='processor architecture',
-                        required=False, type=str, default=None)
-    parser.add_argument('-t', '--timeout',
-                        help='wait timeout (sec) before stopping the container',
-                        required=False, type=int, default=None)
+    parser.add_argument(
+                            '-n', '--name',
+                            help='name of the container',
+                            required=False,
+                            type=str,
+                            default=None
+                        )
+    parser.add_argument(
+                            '-d', '--distro',
+                            help='linux distribution to use as a template',
+                            required=False,
+                            type=str,
+                            default=None
+                        )
+    parser.add_argument(
+                            '-r', '--release',
+                            help="distribution release, e.g.'trusty'",
+                            required=False,
+                            type=str,
+                            default=None
+                        )
+    parser.add_argument(
+                            '-a', '--arch',
+                            help='processor architecture',
+                            required=False,
+                            type=str,
+                            default=None
+                        )
+    parser.add_argument(
+                            '-t', '--timeout',
+                            help='wait timeout (sec) before stopping the '
+                                 'container',
+                            required=False,
+                            type=int,
+                            default=None
+                        )
 
-    parser.add_argument('-l', '--loglevel',
-                        help='log level',
-                        required=False, type=int, default=None)
-    parser.add_argument('-L', '--logfile',
-                        help='log file',
-                        required=False, type=str, default=None)
+    parser.add_argument(
+                            '-l', '--loglevel',
+                            help='log level',
+                            required=False,
+                            type=int,
+                            default=None
+                        )
+    parser.add_argument(
+                            '-L', '--logfile',
+                            help='log file',
+                            required=False,
+                            type=str,
+                            default=None
+                        )
 
-    parser.add_argument('-N', '--num',
-                        help='Test number to run.  If unspecified, all tests are run',
-                        required=False, default=consts.TESTS_RUN_ALL, type=int)
-    parser.add_argument('-S', '--skip',
-                        help='Test number(s) to skip.  If unspecified, all tests are run.'
-                        'To skip multiple tests, separate them via a \',\', e.g. \'5,7,12\'',
-                        required=False, default='', type=str)
-    parser.add_argument('-s', '--suite',
-                        help='Test suite to run, e.g. cpuset', required=False,
-                        default=consts.TESTS_RUN_ALL_SUITES, type=str)
+    parser.add_argument(
+                            '-N', '--num',
+                            help='Test number to run.  If unspecified, all '
+                                 'tests are run',
+                            required=False,
+                            default=consts.TESTS_RUN_ALL,
+                            type=int
+                        )
+    parser.add_argument(
+                            '-S', '--skip',
+                            help="Test number(s) to skip.  If unspecified, all"
+                                 " tests are run. To skip multiple tests, "
+                                 "separate them via a ',', e.g. '5,7,12'",
+                            required=False,
+                            default='',
+                            type=str
+                        )
+    parser.add_argument(
+                            '-s', '--suite',
+                            help='Test suite to run, e.g. cpuset',
+                            required=False,
+                            default=consts.TESTS_RUN_ALL_SUITES,
+                            type=str
+                        )
 
     container_parser = parser.add_mutually_exclusive_group(required=False)
-    container_parser.add_argument('--container', action='store_true',
-                        help='Run the tests in a container. '
-                        'Note that some tests cannot be run in a container.',
-                        dest='container')
-    container_parser.add_argument('--no-container', action='store_false',
-                        help='Do not run the tests in a container. '
-                        'Note that some tests are destructive and will modify your cgroup hierarchy.',
-                        dest='container')
+    container_parser.add_argument(
+                                    '--container',
+                                    action='store_true',
+                                    help='Run the tests in a container. Note '
+                                         'that some tests cannot be run in a '
+                                         'container.',
+                                    dest='container'
+                                 )
+    container_parser.add_argument(
+                                    '--no-container',
+                                    action='store_false',
+                                    help='Do not run the tests in a container.'
+                                         ' Note that some tests are '
+                                         'destructive and will modify your '
+                                         'cgroup hierarchy.',
+                                    dest='container'
+                                 )
     parser.set_defaults(container=True)
 
-    parser.add_argument('-v', '--verbose',
-                        help='Print all information about this test run',
-                        default=True, required=False, action="store_false")
+    parser.add_argument(
+                            '-v', '--verbose',
+                            help='Print all information about this test run',
+                            default=True,
+                            required=False,
+                            action="store_false"
+                        )
 
     config = Config(parser.parse_args())
 
@@ -105,6 +159,7 @@ def parse_args():
         log.log_file = config.args.logfile
 
     return config
+
 
 # this function maps the container UID to the host UID.  By doing
 # this, we can write to a bind-mounted device - and thus generate
@@ -129,6 +184,7 @@ def update_host_subuid():
         Run.run('sudo sh -c "echo {} >> /etc/subuid"'.format(
                 subuid_line2), shell_bool=True)
 
+
 # this function maps the container GID to the host GID.  By doing
 # this, we can write to a bind-mounted device - and thus generate
 # code coverage data in the LXD container
@@ -151,6 +207,7 @@ def update_host_subgid():
     if not found_line2:
         Run.run('sudo sh -c "echo {} >> /etc/subgid"'.format(
                 subgid_line2), shell_bool=True)
+
 
 def setup(config, do_teardown=True, record_time=False):
     global setup_time
@@ -179,13 +236,19 @@ def setup(config, do_teardown=True, record_time=False):
         config.container.run(['ln', '-s', '/bin/sed', '/usr/bin/sed'])
 
         # add the libcgroup library to the container's ld
-        echo_cmd = ['bash', '-c', 'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'.format(
-                   os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs'))]
+        libcgrp_lib_path = os.path.join(consts.LIBCG_MOUNT_POINT, 'src/.libs')
+        echo_cmd = ([
+                        'bash',
+                        '-c',
+                        'echo {} >> /etc/ld.so.conf.d/libcgroup.conf'
+                        ''.format(libcgrp_lib_path)
+                    ])
         config.container.run(echo_cmd)
         config.container.run('ldconfig')
 
     if record_time:
         setup_time = time.time() - start_time
+
 
 def run_tests(config):
     passed_tests = []
@@ -205,16 +268,20 @@ def run_tests(config):
                 filenum_int = int(filenum)
             except ValueError:
                 # D'oh.  This file must not be a test.  Skip it
-                Log.log_debug('Skipping {}.  It doesn\'t start with an int'.format(
-                              filename))
+                Log.log_debug(
+                                'Skipping {}.  It doesn\'t start with an int'
+                                ''.format(filename)
+                             )
                 continue
 
             try:
                 filesuite = filename.split('-')[1]
             except IndexError:
                 Log.log_error(
-                    'Skipping {}.  It doesn\'t conform to the filename format'.format(
-                    filename))
+                                'Skipping {}.  It doesn\'t conform to the '
+                                'filename format'
+                                ''.format(filename)
+                             )
                 continue
 
             if config.args.suite == consts.TESTS_RUN_ALL_SUITES or \
@@ -251,9 +318,17 @@ def run_tests(config):
                         if ret == consts.TEST_PASSED:
                             passed_tests.append([filename, run_time])
                         elif ret == consts.TEST_FAILED:
-                            failed_tests.append([filename, run_time, failure_cause])
+                            failed_tests.append([
+                                                 filename,
+                                                 run_time,
+                                                 failure_cause
+                                                 ])
                         elif ret == consts.TEST_SKIPPED:
-                            skipped_tests.append([filename, run_time, failure_cause])
+                            skipped_tests.append([
+                                                  filename,
+                                                  run_time,
+                                                  failure_cause
+                                                  ])
                         else:
                             raise ValueError('Unexpected ret: {}'.format(ret))
 
@@ -264,37 +339,85 @@ def run_tests(config):
     print("-----------------------------------------------------------------")
     print("Test Results:")
     date_str = datetime.datetime.now().strftime('%b %d %H:%M:%S')
-    print('\t{}{}'.format('{0: <35}'.format("Run Date:"), '{0: >15}'.format(date_str)))
+    print(
+            '\t{}{}'.format(
+                                '{0: <35}'.format("Run Date:"),
+                                '{0: >15}'.format(date_str)
+                            )
+         )
 
     test_str = "{} test(s)".format(passed_cnt)
-    print('\t{}{}'.format('{0: <35}'.format("Passed:"), '{0: >15}'.format(test_str)))
+    print(
+            '\t{}{}'.format(
+                                '{0: <35}'.format("Passed:"),
+                                '{0: >15}'.format(test_str)
+                            )
+         )
 
     test_str = "{} test(s)".format(skipped_cnt)
-    print('\t{}{}'.format('{0: <35}'.format("Skipped:"), '{0: >15}'.format(test_str)))
+    print(
+            '\t{}{}'.format(
+                                '{0: <35}'.format("Skipped:"),
+                                '{0: >15}'.format(test_str)
+                            )
+         )
 
     test_str = "{} test(s)".format(failed_cnt)
-    print('\t{}{}'.format('{0: <35}'.format("Failed:"), '{0: >15}'.format(test_str)))
+    print(
+            '\t{}{}'.format(
+                                '{0: <35}'.format("Failed:"),
+                                '{0: >15}'.format(test_str)
+                            )
+         )
 
     for test in failed_tests:
-        print("\t\tTest:\t\t\t\t{} - {}".format(test[0], str(test[2])))
+        print(
+                "\t\tTest:\t\t\t\t{} - {}"
+                ''.format(test[0], str(test[2]))
+             )
     print("-----------------------------------------------------------------")
 
     global setup_time
     global teardown_time
     if config.args.verbose:
         print("Timing Results:")
-        print('\t{}{}'.format('{0: <{1}}'.format("Test", filename_max), '{0: >15}'.format("Time (sec)")))
-        print('\t{}'.format('-' * (filename_max + 15))) # 15 is padding space of "Time (sec)"
+        print(
+                '\t{}{}'.format(
+                                    '{0: <{1}}'.format("Test", filename_max),
+                                    '{0: >15}'.format("Time (sec)")
+                                )
+             )
+        print(
+                # 15 is padding space of "Time (sec)"
+                '\t{}'.format('-' * (filename_max + 15))
+             )
         time_str = "{0: 2.2f}".format(setup_time)
-        print('\t{}{}'.format('{0: <{1}}'.format('setup', filename_max), '{0: >15}'.format(time_str)))
+        print(
+                '\t{}{}'.format(
+                                    '{0: <{1}}'.format('setup', filename_max),
+                                    '{0: >15}'.format(time_str)
+                                )
+             )
 
         all_tests = passed_tests + skipped_tests + failed_tests
         all_tests.sort()
         for test in all_tests:
             time_str = "{0: 2.2f}".format(test[1])
-            print('\t{}{}'.format('{0: <{1}}'.format(test[0], filename_max), '{0: >15}'.format(time_str)))
+            print(
+                    '\t{}{}'.format(
+                                        '{0: <{1}}'.format(test[0],
+                                                           filename_max),
+                                        '{0: >15}'.format(time_str)
+                                    )
+                  )
         time_str = "{0: 2.2f}".format(teardown_time)
-        print('\t{}{}'.format('{0: <{1}}'.format('teardown', filename_max), '{0: >15}'.format(time_str)))
+        print(
+                '\t{}{}'
+                ''.format(
+                            '{0: <{1}}'.format('teardown', filename_max),
+                            '{0: >15}'.format(time_str)
+                          )
+             )
 
         total_run_time = setup_time + teardown_time
         for test in passed_tests:
@@ -303,9 +426,17 @@ def run_tests(config):
             total_run_time += test[1]
         total_str = "{0: 5.2f}".format(total_run_time)
         print('\t{}'.format('-' * (filename_max + 15)))
-        print('\t{}{}'.format('{0: <{1}}'.format("Total Run Time", filename_max), '{0: >15}'.format(total_str)))
+        print(
+                '\t{}{}'
+                ''.format(
+                            '{0: <{1}}'
+                            ''.format("Total Run Time", filename_max),
+                            '{0: >15}'.format(total_str)
+                         )
+              )
 
     return [passed_cnt, failed_cnt, skipped_cnt]
+
 
 def teardown(config, record_time=False):
     global teardown_time
@@ -328,6 +459,7 @@ def teardown(config, record_time=False):
     if record_time:
         teardown_time = time.time() - start_time
 
+
 def main(config):
     AUTOMAKE_SKIPPED = 77
     AUTOMAKE_HARD_ERROR = 99
@@ -347,6 +479,7 @@ def main(config):
         return AUTOMAKE_SKIPPED
 
     return AUTOMAKE_HARD_ERROR
+
 
 if __name__ == '__main__':
     config = parse_args()
