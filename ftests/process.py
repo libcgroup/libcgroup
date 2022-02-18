@@ -19,13 +19,15 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from cgroup import Cgroup
+from container import ContainerError
 from cgroup import CgroupVersion
 import multiprocessing as mp
+from cgroup import Cgroup
+from run import RunError
 import threading as tp
 from run import Run
-from run import RunError
 import time
+
 
 class Process(object):
     def __init__(self):
@@ -33,9 +35,9 @@ class Process(object):
         self.children_pids = list()
 
     def __str__(self):
-        out_str = "Process Class\n"
-        out_str += "\tchildren = {}\n".format(self.children)
-        out_str += "\tchildren_pids = {}\n".format(self.children_pids)
+        out_str = 'Process Class\n'
+        out_str += '\tchildren = {}\n'.format(self.children)
+        out_str += '\tchildren_pids = {}\n'.format(self.children_pids)
 
         return out_str
 
@@ -46,32 +48,41 @@ class Process(object):
 
     @staticmethod
     def __infinite_loop(config, sleep_time=1):
-        cmd = ['/usr/bin/perl', '-e', '\'while(1){{sleep({})}};\''.format(sleep_time)]
+        cmd = ["/usr/bin/perl",
+               "-e",
+               "'while(1){{sleep({})}};'".format(sleep_time)
+               ]
 
         try:
             if config.args.container:
                 config.container.run(cmd, shell_bool=True)
             else:
                 Run.run(cmd, shell_bool=True)
-        except RunError as re:
+        except RunError:
             # when the process is killed, a RunError will be thrown.  let's
             # catch and suppress it
             pass
 
     @staticmethod
     def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1):
-        cmd = ['/usr/bin/perl', '-e', '\'while(1){{sleep({})}};\''.format(sleep_time)]
+        cmd = ["/usr/bin/perl",
+               "-e",
+               "'while(1){{sleep({})}};'".format(sleep_time)
+               ]
 
         try:
             Cgroup.cgexec(config, controller, cgname, cmd)
-        except RunError as re:
+        except RunError:
             # When this process is killed, it will throw a run error.
             # Ignore it.
             pass
 
     def __save_child_pid(self, config, sleep_time):
         # get the PID of the newly spawned infinite loop
-        cmd = 'ps x | grep perl | grep "sleep({})" | awk \'{{print $1}}\''.format(sleep_time)
+        cmd = (
+                "ps x | grep perl | grep 'sleep({})' | awk '{{print $1}}'"
+                "".format(sleep_time)
+              )
 
         if config.args.container:
             pid = config.container.run(cmd, shell_bool=True)
@@ -85,8 +96,12 @@ class Process(object):
                 # The second pid in the list contains the actual perl process
                 pid = pid.splitlines()[1]
 
-        if pid == "" or int(pid) <= 0:
-            raise ValueError('Failed to get the pid of the child process: {}'.format(pid))
+        if pid == '' or int(pid) <= 0:
+            raise ValueError(
+                                'Failed to get the pid of the child process:'
+                                '{}'
+                                ''.format(pid)
+                            )
 
         return pid
 
@@ -119,8 +134,8 @@ class Process(object):
             # use cgexec
 
             # To allow for multiple processes to be created, each new process
-            # sleeps for a different amount of time.  This lets us uniquely find
-            # each process later in this function
+            # sleeps for a different amount of time.  This lets us uniquely
+            # find each process later in this function
             sleep_time = len(self.children) + 1
 
             p = mp.Process(target=Process.__cgexec_infinite_loop,
@@ -159,7 +174,7 @@ class Process(object):
     # The caller will block until all children are stopped.
     def join_children(self, config):
         for child in self.children:
-             child.join(1)
+            child.join(1)
 
         for child in self.children_pids:
             try:
@@ -167,7 +182,7 @@ class Process(object):
                     config.container.run(['kill', child])
                 else:
                     Run.run(['kill', child])
-            except:
+            except (RunError, ContainerError):
                 # ignore any errors during the kill command.  this is belt
                 # and suspenders code
                 pass
@@ -209,7 +224,7 @@ class Process(object):
                 if controller == proc_controllers:
                     return line.split(':')[2]
 
-        raise ValueError("Could not get cgroup for pid {} and controller {}".
+        raise ValueError('Could not get cgroup for pid {} and controller {}'.
                          format(pid, controller))
 
     @staticmethod
@@ -235,8 +250,10 @@ class Process(object):
 
             return line.split(':')[2]
 
-        raise ValueError("Could not get cgroup for pid {} and controller {}".
-                         format(pid, controller))
+        raise ValueError(
+                            'Could not get cgroup for pid {} and controller {}'
+                            ''.format(pid, controller)
+                        )
 
     # given a PID and a cgroup controller, what cgroup is this PID a member of
     @staticmethod
