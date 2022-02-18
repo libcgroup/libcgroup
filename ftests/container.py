@@ -19,11 +19,10 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-import consts
-import getpass
-from log import Log
-import os
 from run import Run, RunError
+import consts
+import os
+
 
 class Container(object):
     def __init__(self, name, stop_timeout=None, arch=None, cfg_path=None,
@@ -56,25 +55,23 @@ class Container(object):
         # save off the path to the libcgroup source code
         self.libcg_dir = os.path.dirname(tests_dir)
 
-
     def __str__(self):
-        out_str = "Container {}".format(self.name)
-        out_str += "\n\tdistro = {}".format(self.distro)
-        out_str += "\n\trelease = {}".format(self.release)
-        out_str += "\n\tarch = {}".format(self.arch)
-        out_str += "\n\tstop_timeout = {}\n".format(self.stop_timeout)
+        out_str = 'Container {}'.format(self.name)
+        out_str += '\n\tdistro = {}'.format(self.distro)
+        out_str += '\n\trelease = {}'.format(self.release)
+        out_str += '\n\tarch = {}'.format(self.arch)
+        out_str += '\n\tstop_timeout = {}\n'.format(self.stop_timeout)
 
         return out_str
 
     # configure the container to meet our needs
     def config(self):
-        ftest_dir = os.path.dirname(os.path.abspath(__file__))
-        tests_dir = os.path.dirname(ftest_dir)
-        libcg_dir = os.path.dirname(tests_dir)
-
         # map our UID and GID to the same UID/GID in the container
-        cmd = 'printf "uid {} 1000\ngid {} 1000" | sudo lxc config set {} raw.idmap -'.format(
-              os.getuid(), os.getgid(), self.name)
+        cmd = (
+                    'printf "uid {} 1000\ngid {} 1000" | sudo lxc config set '
+                    '{} raw.idmap -'
+                    ''.format(os.getuid(), os.getgid(), self.name)
+              )
         Run.run(cmd, shell_bool=True)
 
         # add the libcgroup root directory (where we did the build) into
@@ -87,7 +84,7 @@ class Container(object):
         cmd2.append('device')
         cmd2.append('add')
         cmd2.append(self.name)
-        cmd2.append('libcgsrc') # arbitrary name of device
+        cmd2.append('libcgsrc')  # arbitrary name of device
         cmd2.append('disk')
         # to appease gcov, mount the libcgroup source at the same path as we
         # built it.  This can be worked around someday by using
@@ -182,12 +179,13 @@ class Container(object):
 
         return Run.run(cmd)
 
+
 class ContainerError(Exception):
     def __init__(self, message, ret):
         super(RunError, self).__init__(message)
 
     def __str__(self):
-        out_str = "ContainerError:\n\tmessage = {}".format(self.message)
+        out_str = 'ContainerError:\n\tmessage = {}'.format(self.message)
         return out_str
 
 # vim: set et ts=4 sw=4:
