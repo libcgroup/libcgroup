@@ -608,14 +608,9 @@ class Cgroup(object):
                 config.container.run(cmd, shell_bool=True)
             else:
                 Run.run(cmd, shell_bool=True)
-        except RunError as re:
-            # check the errno to ensure the directory exists rather
-            # than receiving a different error
-            if re.ret == 1 and \
-               'File exists' in re.stderr:
-                pass
-            else:
-                raise re
+        except UnicodeDecodeError as ude:
+            # A unicode error is thrown when the directory already exists
+            pass
 
         cmd2 = list()
 
