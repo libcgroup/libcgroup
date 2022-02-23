@@ -20,7 +20,6 @@
 #
 
 from run import Run
-import os
 
 
 # function to indent a block of text by cnt number of spaces
@@ -53,7 +52,6 @@ def get_file_owner_username(config, filename):
         return config.container.run(cmd, shell_bool=True)
     else:
         return Run.run(cmd, shell_bool=True)
-    return os.stat(filename).st_uid
 
 
 def get_file_owner_gid(config, filename):
