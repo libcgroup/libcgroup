@@ -181,7 +181,7 @@ class Container(object):
 
 
 class ContainerError(Exception):
-    def __init__(self, message, ret):
+    def __init__(self, message):
         super(ContainerError, self).__init__(message)
 
     def __str__(self):
