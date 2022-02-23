@@ -861,8 +861,8 @@ class Cgroup(object):
 
                 with open(os.path.join(mount.mount_point,
                                        'cgroup.controllers')) as ctrlf:
-                    for line in ctrlf.readlines():
-                        for ctrl in line.split():
+                    for ctrlf_line in ctrlf.readlines():
+                        for ctrl in ctrlf_line.split():
                             mount_copy = copy.deepcopy(mount)
                             mount_copy.controller = ctrl
                             mount_list.append(mount_copy)
