@@ -1,1 +1,1 @@
-SUBDIRS = config
+SUBDIRS = config c
