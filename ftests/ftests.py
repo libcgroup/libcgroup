@@ -21,7 +21,6 @@
 #
 
 from config import Config
-from log import Log
 from run import Run
 import datetime
 import argparse
@@ -33,6 +32,8 @@ import os
 
 setup_time = 0.0
 teardown_time = 0.0
+
+Log = log.Log
 
 
 def parse_args():
