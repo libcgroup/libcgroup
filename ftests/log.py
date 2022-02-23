@@ -21,7 +21,6 @@
 
 import datetime
 import consts
-import log
 
 log_level = consts.DEFAULT_LOG_LEVEL
 log_file = consts.DEFAULT_LOG_FILE
@@ -32,16 +31,20 @@ class Log(object):
 
     @staticmethod
     def log(msg, msg_level=consts.DEFAULT_LOG_LEVEL):
+        global log_level, log_file, log_fd
+
         if log_level >= msg_level:
-            if log.log_fd is None:
-                Log.open_logfd(log.log_file)
+            if log_fd is None:
+                Log.open_logfd(log_file)
 
             timestamp = datetime.datetime.now().strftime('%b %d %H:%M:%S')
             log_fd.write('{}: {}\n'.format(timestamp, msg))
 
     @staticmethod
     def open_logfd(log_file):
-        log.log_fd = open(log_file, 'a')
+        global log_fd
+
+        log_fd = open(log_file, 'a')
 
     @staticmethod
     def log_critical(msg):
