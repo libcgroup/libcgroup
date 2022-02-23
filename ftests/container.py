@@ -19,7 +19,7 @@
 # along with this library; if not, see <http://www.gnu.org/licenses>.
 #
 
-from run import Run, RunError
+from run import Run
 import consts
 import os
 
@@ -182,7 +182,7 @@ class Container(object):
 
 class ContainerError(Exception):
     def __init__(self, message, ret):
-        super(RunError, self).__init__(message)
+        super(ContainerError, self).__init__(message)
 
     def __str__(self):
         out_str = 'ContainerError:\n\tmessage = {}'.format(self.message)
