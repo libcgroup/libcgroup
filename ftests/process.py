@@ -179,9 +179,9 @@ class Process(object):
         for child in self.children_pids:
             try:
                 if config.args.container:
-                    config.container.run(['kill', child])
+                    config.container.run(['kill', str(child)])
                 else:
-                    Run.run(['kill', child])
+                    Run.run(['kill', str(child)])
             except (RunError, ContainerError):
                 # ignore any errors during the kill command.  this is belt
                 # and suspenders code
