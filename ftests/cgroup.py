@@ -601,6 +601,7 @@ class Cgroup(object):
 
         cmd.append('sudo')
         cmd.append('mkdir')
+        cmd.append('-p')
         cmd.append('/etc/cgconfig.d')
 
         try:
@@ -608,9 +609,8 @@ class Cgroup(object):
                 config.container.run(cmd, shell_bool=True)
             else:
                 Run.run(cmd, shell_bool=True)
-        except UnicodeDecodeError as ude:
-            # A unicode error is thrown when the directory already exists
-            pass
+        except RunError as re:
+            raise re
 
         cmd2 = list()
 
