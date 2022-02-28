@@ -1202,7 +1202,8 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	 * Save off this mount point.  This may be used later to build
 	 * the cg_path.
 	 */
-	strncpy(cg_cgroup_v2_mount_path, ent->mnt_dir, FILENAME_MAX);
+	strncpy(cg_cgroup_v2_mount_path, ent->mnt_dir, FILENAME_MAX-1);
+	cg_cgroup_v2_mount_path[FILENAME_MAX-1] = '\0';
 
 	/* determine what v2 controllers are available on this mount */
 	snprintf(cgroup_controllers_path, FILENAME_MAX, "%s/%s", ent->mnt_dir,
