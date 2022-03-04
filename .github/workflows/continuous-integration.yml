@@ -23,11 +23,20 @@ name: Continuous Integration
 on: ["push", "pull_request"]
 
 jobs:
-  lint:
+  flake8-lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: cclauss/Find-Python-syntax-errors-action@master
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: flake8 Lint
+        uses: reviewdog/action-flake8@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   # Thanks to github user @martyrs
   # https://github.community/t/how-to-properly-clean-up-self-hosted-runners/128909/3
