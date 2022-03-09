@@ -19,20 +19,21 @@
  * along with this library; if not, see <http://www.gnu.org/licenses>.
  */
 
-#include <libcgroup.h>
-#include <libcgroup-internal.h>
-
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #include "abstraction-common.h"
 #include "abstraction-map.h"
 
+#include <libcgroup.h>
+#include <libcgroup-internal.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+
+
 int cgroup_strtol(const char * const in_str, int base,
-		  long int * const out_value)
+		  long * const out_value)
 {
 	char *endptr = NULL;
 	int ret = 0;
@@ -74,10 +75,10 @@ int cgroup_convert_int(struct cgroup_controller * const dst_cgc,
 {
 #define OUT_VALUE_STR_LEN 20
 
-	long int in_dflt_int = (long int)in_dflt;
-	long int out_dflt_int = (long int)out_dflt;
+	long out_dflt_int = (long)out_dflt;
+	long in_dflt_int = (long)in_dflt;
 	char *out_value_str = NULL;
-	long int out_value;
+	long out_value;
 	int ret;
 
 	if (!in_value)
@@ -144,8 +145,8 @@ static int convert_setting(struct cgroup_controller * const out_cgc,
 			   const struct control_value * const in_ctrl_val)
 {
 	const struct cgroup_abstraction_map *convert_tbl;
-	int tbl_sz = 0;
 	int ret = ECGINVAL;
+	int tbl_sz = 0;
 	int i;
 
 	switch (out_cgc->version) {
@@ -266,9 +267,8 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 		}
 
 		/* the user has overridden the version */
-		if (in_version == CGROUP_V1 || in_version == CGROUP_V2) {
+		if (in_version == CGROUP_V1 || in_version == CGROUP_V2)
 			in_cgroup->controller[i]->version = in_version;
-		}
 
 		if (strcmp(CGROUP_FILE_PREFIX, cgc->name) == 0)
 			/*
