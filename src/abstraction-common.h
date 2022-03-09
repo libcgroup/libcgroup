@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 #include "config.h"
+
 #include <libcgroup.h>
 #include "libcgroup-internal.h"
 
@@ -37,11 +38,11 @@ extern "C" {
  * @param out_value Pointer to hold the output long value
  *
  * @return 0 on success,
- * 	   ECGFAIL if the conversion to long failed,
- * 	   ECGINVAL upon an invalid parameter
+ *	   ECGFAIL if the conversion to long failed,
+ *	   ECGINVAL upon an invalid parameter
  */
 int cgroup_strtol(const char * const in_str, int base,
-		  long int * const out_value);
+		  long * const out_value);
 
 /**
  * Convert an integer setting to another integer setting
