@@ -14,11 +14,12 @@
 
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
+
+#include <strings.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <strings.h>
+#include <stdio.h>
 
 static cgroup_logger_callback cgroup_logger;
 static void *cgroup_logger_userdata;
@@ -46,7 +47,7 @@ void cgroup_log(int level, const char *fmt, ...)
 }
 
 void cgroup_set_logger(cgroup_logger_callback logger, int loglevel,
-		void *userdata)
+		       void *userdata)
 {
 	cgroup_logger = logger;
 	cgroup_set_loglevel(loglevel);
@@ -63,6 +64,7 @@ int cgroup_parse_log_level_str(const char *levelstr)
 {
 	char *end;
 	long level;
+
 	errno = 0;
 
 	/* try to parse integer first */
@@ -88,6 +90,7 @@ void cgroup_set_loglevel(int loglevel)
 		cgroup_loglevel = loglevel;
 	else {
 		char *level_str = getenv("CGROUP_LOGLEVEL");
+
 		if (level_str != NULL)
 			cgroup_loglevel = cgroup_parse_log_level_str(level_str);
 		else
