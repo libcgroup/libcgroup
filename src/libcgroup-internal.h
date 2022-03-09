@@ -21,15 +21,18 @@ extern "C" {
 #endif
 
 #include "config.h"
-#include <dirent.h>
-#include <fts.h>
+
 #include <libcgroup.h>
+
+#include <pthread.h>
+#include <dirent.h>
 #include <limits.h>
 #include <mntent.h>
-#include <pthread.h>
+#include <setjmp.h>
+#include <fts.h>
+
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <setjmp.h>
 
 /* Maximum number of mount points/controllers */
 #define MAX_MNT_ELEMENTS	16
@@ -37,19 +40,19 @@ extern "C" {
 #define MAX_GROUP_ELEMENTS	128
 
 /* Maximum length of a value */
-#define CG_CONTROL_VALUE_MAX 4096
+#define CG_CONTROL_VALUE_MAX	4096
 
-#define CG_NV_MAX 100
-#define CG_CONTROLLER_MAX 100
-#define CG_OPTIONS_MAX 100
+#define CG_NV_MAX		100
+#define CG_CONTROLLER_MAX	100
+#define CG_OPTIONS_MAX		100
 /* Max number of mounted hierarchies. Event if one controller is mounted per
  * hier, it can not exceed CG_CONTROLLER_MAX
  */
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
 /* Definitions for the uid and gid members of a cgroup_rules */
-#define CGRULE_INVALID ((uid_t) -1)
-#define CGRULE_WILD ((uid_t) -2)
+#define CGRULE_INVALID	((uid_t) -1)
+#define CGRULE_WILD	((uid_t) -2)
 
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
 
@@ -76,15 +79,15 @@ extern "C" {
 
 #define CGROUP_FILE_PREFIX	"cgroup"
 
-#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
-#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)
-#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)
-#define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
+#define cgroup_err(x...)	cgroup_log(CGROUP_LOG_ERROR, x)
+#define cgroup_warn(x...)	cgroup_log(CGROUP_LOG_WARNING, x)
+#define cgroup_info(x...)	cgroup_log(CGROUP_LOG_INFO, x)
+#define cgroup_dbg(x...)	cgroup_log(CGROUP_LOG_DEBUG, x)
 
 #define CGROUP_DEFAULT_LOGLEVEL CGROUP_LOG_ERROR
 
-#define max(x,y) ((y)<(x)?(x):(y))
-#define min(x,y) ((y)>(x)?(x):(y))
+#define max(x, y) ((y) < (x)?(x):(y))
+#define min(x, y) ((y) > (x)?(x):(y))
 
 struct control_value {
 	char name[FILENAME_MAX];
@@ -311,7 +314,7 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask);
  * Build the path to the tasks or cgroup.procs file
  *
  * @param path Output variable that will contain the path.  Must be
-              of size FILENAME_MAX or larger
+ *	       of size FILENAME_MAX or larger
  * @param path_sz Size of the path string
  * @param cg_name Cgroup name
  * @param ctrl_name Controller name
@@ -371,7 +374,7 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
  * Remove a name/value pair from a controller.
  *
  * @param controller
- * @param name Name of the name/value pair to be removed
+ * @param name The name of the name/value pair to be removed
  * @return 0 on success.  ECGROUPNOTEXIST if name does not exist.
  */
 int cgroup_remove_value(struct cgroup_controller * const controller,
