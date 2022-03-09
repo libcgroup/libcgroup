@@ -22,26 +22,28 @@
  * by Dhaval Giani. All faults will still be Balbir's mistake :)
  */
 
-#include <assert.h>
-#include <dirent.h>
-#include <errno.h>
-#include <grp.h>
+#include "tools/tools-common.h"
+
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
-#include <limits.h>
-#include <pwd.h>
+
 #include <pthread.h>
+#include <assert.h>
+#include <dirent.h>
+#include <limits.h>
 #include <search.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "tools/tools-common.h"
 
 unsigned int MAX_CGROUPS = 64;	/* NOTE: This value changes dynamically */
 unsigned int MAX_TEMPLATES = 64;
@@ -56,7 +58,7 @@ extern FILE *yyin;
 extern int yyparse(void);
 
 static struct cgroup default_group;
-static int default_group_set = 0;
+static int default_group_set;
 
 /*
  * The basic global data structures.
@@ -152,7 +154,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 		}
 
 		memset(newblk + oldlen, 0, (*max - oldlen) *
-			sizeof(struct cgroup));
+		       sizeof(struct cgroup));
 		init_cgroup_table(newblk + oldlen, *max - oldlen);
 		config_table = newblk;
 		switch (flag) {
@@ -167,15 +169,13 @@ int config_insert_cgroup(char *cg_name, int flag)
 		}
 		cgroup_dbg("maximum %d\n", *max);
 		cgroup_dbg("reallocated config_table to %p\n",
-			config_table);
+			   config_table);
 	}
 
 	config_cgroup = &config_table[*table_index];
 	strncpy(config_cgroup->name, cg_name, FILENAME_MAX - 1);
 
-	/*
-	 * Since this will be the last part to be parsed.
-	 */
+	/* Since this will be the last part to be parsed. */
 	*table_index = *table_index + 1;
 	free(cg_name);
 	return 1;
@@ -219,12 +219,12 @@ int template_config_insert_cgroup(char *cg_name)
 int config_parse_controller_options(char *controller,
 	struct cgroup_dictionary *values, int flag)
 {
-	const char *name, *value;
 	struct cgroup_controller *cgc;
-	int error;
 	struct cgroup *config_cgroup;
+	const char *name, *value;
 	void *iter = NULL;
 	int *table_index;
+	int error;
 
 	switch (flag) {
 	case CGROUP:
@@ -257,7 +257,7 @@ int config_parse_controller_options(char *controller,
 	error = cgroup_dictionary_iterator_begin(values, &iter, &name, &value);
 	while (error == 0) {
 		cgroup_dbg("[1] name value pair being processed is %s=%s\n",
-				name, value);
+			   name, value);
 		if (!name)
 			goto parse_error;
 		error = cgroup_add_value_string(cgc, name, value);
@@ -283,7 +283,8 @@ parse_error:
 	return 0;
 }
 
-/* This function sets the various controller's control
+/*
+ * This function sets the various controller's control
  * files. It will always append values for cgroup_table_index
  * entry in the cgroup_table. The index is incremented in
  * cgroup_config_insert_cgroup
@@ -298,7 +299,8 @@ int cgroup_config_parse_controller_options(char *controller,
 	return ret;
 }
 
-/* This function sets the various controller's control
+/*
+ * This function sets the various controller's control
  * files. It will always append values for config_template_table_index
  * entry in the config_template_table. The index is incremented in
  * template_config_insert_cgroup
@@ -321,11 +323,11 @@ int template_config_parse_controller_options(char *controller,
  */
 int config_group_task_perm(char *perm_type, char *value, int flag)
 {
-	struct passwd *pw, *pw_buffer;
 	struct group *group, *group_buffer;
-	long val = atoi(value);
+	struct passwd *pw, *pw_buffer;
 	char buffer[CGROUP_BUFFER_LEN];
 	struct cgroup *config_cgroup;
+	long val = atoi(value);
 	int table_index;
 
 	switch (flag) {
@@ -351,7 +353,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 				goto group_task_error;
 
 			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN,
-								&pw_buffer);
+				   &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto group_task_error;
@@ -371,7 +373,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 				goto group_task_error;
 
 			getgrnam_r(value, group, buffer,
-					CGROUP_BUFFER_LEN, &group_buffer);
+				   CGROUP_BUFFER_LEN, &group_buffer);
 
 			if (group_buffer == NULL) {
 				free(group);
@@ -386,6 +388,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 
 	if (!strcmp(perm_type, "fperm")) {
 		char *endptr;
+
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto group_task_error;
@@ -434,11 +437,11 @@ int template_config_group_task_perm(char *perm_type, char *value)
  */
 int config_group_admin_perm(char *perm_type, char *value, int flag)
 {
-	struct passwd *pw, *pw_buffer;
 	struct group *group, *group_buffer;
+	struct passwd *pw, *pw_buffer;
+	char buffer[CGROUP_BUFFER_LEN];
 	struct cgroup *config_cgroup;
 	long val = atoi(value);
-	char buffer[CGROUP_BUFFER_LEN];
 	int table_index;
 
 	switch (flag) {
@@ -454,16 +457,14 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 		return 0;
 	}
 
-
 	if (!strcmp(perm_type, "uid")) {
 		if (!val) {
 			pw = (struct passwd *) malloc(sizeof(struct passwd));
-
 			if (!pw)
 				goto admin_error;
 
 			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN,
-								&pw_buffer);
+				   &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto admin_error;
@@ -478,13 +479,11 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 	if (!strcmp(perm_type, "gid")) {
 		if (!val) {
 			group = (struct group *) malloc(sizeof(struct group));
-
 			if (!group)
 				goto admin_error;
 
 			getgrnam_r(value, group, buffer,
-					CGROUP_BUFFER_LEN, &group_buffer);
-
+				   CGROUP_BUFFER_LEN, &group_buffer);
 			if (group_buffer == NULL) {
 				free(group);
 				goto admin_error;
@@ -498,6 +497,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 
 	if (!strcmp(perm_type, "fperm")) {
 		char *endptr;
+
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto admin_error;
@@ -506,6 +506,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 
 	if (!strcmp(perm_type, "dperm")) {
 		char *endptr;
+
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto admin_error;
@@ -564,11 +565,12 @@ int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
 	 */
 	for (i = 0; i < config_table_index; i++) {
 		if (strcmp(config_mount_table[i].mount.path,
-				mount_point) == 0) {
+			   mount_point) == 0) {
 			char *cname = config_mount_table[i].name;
+
 			strncat(cname, ",", FILENAME_MAX - strlen(cname) - 1);
 			strncat(cname, name,
-					FILENAME_MAX - strlen(cname) - 1);
+				FILENAME_MAX - strlen(cname) - 1);
 			goto done;
 		}
 	}
@@ -590,7 +592,7 @@ done:
 void cgroup_config_cleanup_mount_table(void)
 {
 	memset(&config_mount_table, 0,
-			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
+	       sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
 }
 
 /*
@@ -606,7 +608,7 @@ int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 
 	strcpy(config_namespace_table[namespace_table_index].name, name);
 	strcpy(config_namespace_table[namespace_table_index].mount.path,
-			nspath);
+	       nspath);
 	config_namespace_table[namespace_table_index].mount.next = NULL;
 	namespace_table_index++;
 
@@ -622,7 +624,7 @@ int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 void cgroup_config_cleanup_namespace_table(void)
 {
 	memset(&config_namespace_table, 0,
-			sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
+	       sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
 }
 
 /**
@@ -630,13 +632,13 @@ void cgroup_config_cleanup_namespace_table(void)
  * for mounts with only 'name=xxx' and without real controller.
  */
 static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
-						unsigned long *flags)
+					      unsigned long *flags)
 {
-	char *save = NULL;
 	char *opts = strdup(mount->name);
-	char *token;
+	char *controller = NULL;
+	char *save = NULL;
 	int name_only = 1;
-	char *controller= NULL;
+	char *token;
 
 	*flags = 0;
 	if (opts == NULL)
@@ -651,28 +653,29 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
 				controller = strdup(token);
 				if (controller == NULL)
 					break;
+
 				strncpy(mount->name, controller, sizeof(mount->name));
 				mount->name[sizeof(mount->name)-1] = '\0';
 			}
 
-			if (strncmp(token, "nodev", strlen("nodev")) == 0) {
+			if (strncmp(token, "nodev", strlen("nodev")) == 0)
 				*flags |= MS_NODEV;
-			}
-			if (strncmp(token, "noexec", strlen("noexec")) == 0) {
+
+			if (strncmp(token, "noexec", strlen("noexec")) == 0)
 				*flags |= MS_NOEXEC;
-			}
-			if (strncmp(token, "nosuid", strlen("nosuid")) == 0) {
+
+			if (strncmp(token, "nosuid", strlen("nosuid")) == 0)
 				*flags |= MS_NOSUID;
-			}
 
 		} else if (!name_only) {
 			/*
-			 * We have controller + name=, do the right thing, since
-			 * we are rebuuilding mount->name
+			 * We have controller + name=, do the right thing,
+			 * since  we are rebuilding mount->name
 			 */
-			strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
+			strncat(mount->name, ",",
+				FILENAME_MAX - strlen(mount->name)-1);
 			strncat(mount->name, token,
-					FILENAME_MAX - strlen(mount->name) - 1);
+				FILENAME_MAX - strlen(mount->name) - 1);
 		}
 		token = strtok_r(NULL, ",", &save);
 	}
@@ -681,24 +684,25 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount,
 	free(opts);
 
 	if (name_only) {
-		strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
+		strncat(mount->name, ",",
+			FILENAME_MAX - strlen(mount->name)-1);
 		strncat(mount->name, "none",
-				FILENAME_MAX - strlen(mount->name) - 1);
+			FILENAME_MAX - strlen(mount->name) - 1);
 	}
 
 	return 0;
 }
 
 /*
- * Start mounting the mount table.
+ * Start mounting the mount table
  */
 static int cgroup_config_mount_fs(void)
 {
-	int ret;
-	struct stat buff;
-	int i;
-	int error;
 	unsigned long flags;
+	struct stat buff;
+	int error;
+	int ret;
+	int i;
 
 	for (i = 0; i < config_table_index; i++) {
 		struct cg_mount_table_s *curr =	&(config_mount_table[i]);
@@ -707,7 +711,7 @@ static int cgroup_config_mount_fs(void)
 
 		if (ret < 0 && errno != ENOENT) {
 			cgroup_err("Error: cannot access %s: %s\n",
-					curr->mount.path, strerror(errno));
+				   curr->mount.path, strerror(errno));
 			last_errno = errno;
 			error = ECGOTHER;
 			goto out_err;
@@ -716,14 +720,14 @@ static int cgroup_config_mount_fs(void)
 		if (errno == ENOENT) {
 			ret = cg_mkdir_p(curr->mount.path);
 			if (ret) {
-				cgroup_err("Error: cannot create directory %s\n",
-						curr->mount.path);
+				cgroup_err("Error: cannot create directory ");
+				cgroup_err("%s\n", curr->mount.path);
 				error = ret;
 				goto out_err;
 			}
 		} else if (!S_ISDIR(buff.st_mode)) {
-			cgroup_err("Error: %s already exists but it is not a directory\n",
-					curr->mount.path);
+			cgroup_err("Error: %s already exists but it is not ");
+			cgroup_err("a directory\n", curr->mount.path);
 			errno = ENOTDIR;
 			last_errno = errno;
 			error = ECGOTHER;
@@ -735,12 +739,12 @@ static int cgroup_config_mount_fs(void)
 			goto out_err;
 
 		ret = mount(CGROUP_FILESYSTEM, curr->mount.path,
-				CGROUP_FILESYSTEM, flags, curr->name);
+			    CGROUP_FILESYSTEM, flags, curr->name);
 
 		if (ret < 0) {
 			cgroup_err("Error: cannot mount %s to %s: %s\n",
-					curr->name, curr->mount.path,
-					strerror(errno));
+				   curr->name, curr->mount.path,
+				   strerror(errno));
 			error = ECGMOUNTFAIL;
 			goto out_err;
 		}
@@ -756,7 +760,7 @@ out_err:
 }
 
 /*
- * Actually create the groups once the parsing has been finished.
+ * Actually create the groups once the parsing has been finished
  */
 static int cgroup_config_create_groups(void)
 {
@@ -765,9 +769,10 @@ static int cgroup_config_create_groups(void)
 
 	for (i = 0; i < cgroup_table_index; i++) {
 		struct cgroup *cgroup = &config_cgroup_table[i];
+
 		error = cgroup_create_cgroup(cgroup, 0);
 		cgroup_dbg("creating group %s, error %d\n", cgroup->name,
-			error);
+			   error);
 		if (error)
 			return error;
 	}
@@ -784,6 +789,7 @@ static int cgroup_config_destroy_groups(void)
 
 	for (i = 0; i < cgroup_table_index; i++) {
 		struct cgroup *cgroup = &config_cgroup_table[i];
+
 		error = cgroup_delete_cgroup_ext(cgroup,
 				CGFLAG_DELETE_RECURSIVE
 				| CGFLAG_DELETE_IGNORE_MIGRATION);
@@ -800,8 +806,8 @@ static int cgroup_config_destroy_groups(void)
  */
 static int cgroup_config_unmount_controllers(void)
 {
-	int i;
 	int error;
+	int i;
 
 	for (i = 0; i < config_table_index; i++) {
 		/*
@@ -821,11 +827,11 @@ static int cgroup_config_unmount_controllers(void)
 
 static int config_validate_namespaces(void)
 {
-	int i;
 	char *namespace = NULL;
 	char *mount_path = NULL;
 	int j, subsys_count;
 	int error = 0;
+	int i;
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
@@ -935,18 +941,16 @@ out_error:
  */
 static int config_order_namespace_table(void)
 {
-	int i = 0;
 	int error = 0;
+	int i = 0;
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
-	/*
-	 * Set everything to NULL
-	 */
+	/* Set everything to NULL */
 	for (i = 0; i < CG_CONTROLLER_MAX; i++)
 		cg_namespace_table[i] = NULL;
 
 	memset(cg_namespace_table, 0,
-			CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
+	       CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
 
 	/*
 	 * Now fill up the namespace table looking at the table we have
@@ -956,6 +960,7 @@ static int config_order_namespace_table(void)
 	for (i = 0; i < namespace_table_index; i++) {
 		int j;
 		int flag = 0;
+
 		for (j = 0; cg_mount_table[j].name[0] != '\0'; j++) {
 			if (strncmp(config_namespace_table[i].name,
 				cg_mount_table[j].name, FILENAME_MAX) == 0) {
@@ -991,6 +996,7 @@ error_out:
 static void cgroup_free_config(void)
 {
 	int i;
+
 	if (config_cgroup_table) {
 		for (i = 0; i < cgroup_table_index; i++)
 			cgroup_free_controllers(
@@ -998,11 +1004,13 @@ static void cgroup_free_config(void)
 		free(config_cgroup_table);
 		config_cgroup_table = NULL;
 	}
+
 	config_table_index = 0;
 	if (config_template_table) {
 		for (i = 0; i < config_template_table_index; i++)
 			cgroup_free_controllers(
 				&config_template_table[i]);
+
 		free(config_template_table);
 		config_template_table = NULL;
 	}
@@ -1012,9 +1020,10 @@ static void cgroup_free_config(void)
 /**
  * Applies default permissions/uid/gid to all groups in config file.
  */
-static void cgroup_config_apply_default()
+static void cgroup_config_apply_default(void)
 {
 	int i;
+
 	if (config_cgroup_table) {
 		for (i = 0; i < cgroup_table_index; i++) {
 			struct cgroup *c = &config_cgroup_table[i];
@@ -1094,9 +1103,9 @@ static int cgroup_parse_config(const char *pathname)
 err:
 	if (yyin)
 		fclose(yyin);
-	if (ret) {
+	if (ret)
 		cgroup_free_config();
-	}
+
 	return ret;
 }
 
@@ -1108,10 +1117,10 @@ int _cgroup_config_compare_groups(const void *p1, const void *p2)
 	return strcmp(g1->name, g2->name);
 }
 
-static void cgroup_config_sort_groups()
+static void cgroup_config_sort_groups(void)
 {
 	qsort(config_cgroup_table, cgroup_table_index, sizeof(struct cgroup),
-			_cgroup_config_compare_groups);
+	      _cgroup_config_compare_groups);
 }
 
 /*
@@ -1120,9 +1129,9 @@ static void cgroup_config_sort_groups()
  */
 int cgroup_config_load_config(const char *pathname)
 {
-	int error;
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
+	int error;
 	int ret;
 
 	ret = cgroup_parse_config(pathname);
@@ -1146,7 +1155,7 @@ int cgroup_config_load_config(const char *pathname)
 
 	error = cgroup_init();
 	if (error == ECGROUPNOTMOUNTED && cgroup_table_index == 0
-		&& config_template_table_index == 0) {
+	    && config_template_table_index == 0) {
 		/*
 		 * The config file seems to be empty.
 		 */
@@ -1189,12 +1198,12 @@ err_mnt:
 /* unmounts given mount, but only if it is empty */
 static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 {
-	char *controller, *controller_list;
 	struct cg_mount_point *mount = &(mount_info->mount);
-	void *handle = NULL;
-	int ret, lvl;
+	char *controller, *controller_list;
 	struct cgroup_file_info info;
+	void *handle = NULL;
 	char *saveptr = NULL;
+	int ret, lvl;
 
 	/* parse the first controller name from list of controllers */
 	controller_list = strdup(mount_info->name);
@@ -1215,6 +1224,7 @@ static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 		return 0;
 	if (ret)
 		return ret;
+
 	/* skip the first found directory, it's '/' */
 	ret = cgroup_walk_tree_next(0, &handle, &info, lvl);
 	/* find any other subdirectory */
@@ -1232,7 +1242,6 @@ static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 	if (ret != ECGEOF)
 		return ret;
 
-
 	/*
 	 * ret must be ECGEOF now = there is only root group in the hierarchy
 	 * -> unmount all mount points.
@@ -1240,8 +1249,9 @@ static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 	ret = 0;
 	while (mount) {
 		int err;
+
 		cgroup_dbg("unmounting %s at %s\n", mount_info->name,
-				mount->path);
+			   mount->path);
 		err = umount(mount->path);
 
 		if (err && !ret) {
@@ -1255,11 +1265,11 @@ static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 
 int cgroup_config_unload_config(const char *pathname, int flags)
 {
-	int ret, i, error;
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
+	int ret, i, error;
 
-	cgroup_dbg("cgroup_config_unload_config: parsing %s\n", pathname);
+	cgroup_dbg("%s: parsing %s\n", __func__, pathname);
 	ret = cgroup_parse_config(pathname);
 	if (ret)
 		goto err;
@@ -1289,6 +1299,7 @@ int cgroup_config_unload_config(const char *pathname, int flags)
 	cgroup_config_sort_groups();
 	for (i = cgroup_table_index-1; i >= 0; i--) {
 		struct cgroup *cgroup = &config_cgroup_table[i];
+
 		cgroup_dbg("removing %s\n", pathname);
 		error = cgroup_delete_cgroup_ext(cgroup, flags);
 		if (error && !ret) {
@@ -1300,6 +1311,7 @@ int cgroup_config_unload_config(const char *pathname, int flags)
 	/* Delete templates */
 	for (i = 0; i < config_template_table_index; i++) {
 		struct cgroup *cgroup = &config_template_table[i];
+
 		cgroup_dbg("removing %s\n", pathname);
 		error = cgroup_delete_cgroup_ext(cgroup, flags);
 		if (error && !ret) {
@@ -1312,6 +1324,7 @@ int cgroup_config_unload_config(const char *pathname, int flags)
 	if (mount_enabled) {
 		for (i = 0; i < config_table_index; i++) {
 			struct cg_mount_table_s *m = &(config_mount_table[i]);
+
 			cgroup_dbg("unmounting %s\n", m->name);
 			error = cgroup_config_try_unmount(m);
 			if (error && !ret)
@@ -1324,14 +1337,15 @@ err:
 	return ret;
 }
 
-static int cgroup_config_unload_controller(const struct cgroup_mount_point *mount_info)
+static int cgroup_config_unload_controller(
+		const struct cgroup_mount_point *mount_info)
 {
-	int ret, error;
-	struct cgroup *cgroup = NULL;
 	struct cgroup_controller *cgc = NULL;
-	char path[FILENAME_MAX];
-	void *handle;
+	struct cgroup *cgroup = NULL;
 	enum cg_version_t version;
+	char path[FILENAME_MAX];
+	int ret, error;
+	void *handle;
 
 	cgroup = cgroup_new_cgroup(".");
 	if (cgroup == NULL)
@@ -1357,13 +1371,13 @@ static int cgroup_config_unload_controller(const struct cgroup_mount_point *moun
 
 	/* unmount everything */
 	ret = cgroup_get_subsys_mount_point_begin(mount_info->name, &handle,
-			path);
+						  path);
 	while (ret == 0) {
 		error = umount(path);
 		if (error) {
-			cgroup_warn("Warning: cannot unmount controller %s on %s: %s\n",
-					mount_info->name, path,
-					strerror(errno));
+			cgroup_warn("Warning: cannot unmount controller %s ");
+			cgroup_warn("on %s: %s\n", mount_info->name, path,
+				    strerror(errno));
 			last_errno = errno;
 			ret = ECGOTHER;
 			goto out_error;
@@ -1381,11 +1395,11 @@ out_error:
 
 int cgroup_unload_cgroups(void)
 {
-	int error = 0;
-	void *ctrl_handle = NULL;
-	int ret = 0;
-	char *curr_path = NULL;
 	struct cgroup_mount_point info;
+	void *ctrl_handle = NULL;
+	char *curr_path = NULL;
+	int error = 0;
+	int ret = 0;
 
 	error = cgroup_init();
 
@@ -1406,10 +1420,12 @@ int cgroup_unload_cgroups(void)
 
 			error = cgroup_config_unload_controller(&info);
 			if (error) {
-				/* remember the error and continue unloading
-				 * the rest */
-				cgroup_warn("Warning: cannot clear controller %s\n",
-						info.name);
+				/*
+				 * remember the error and continue unloading
+				 * the rest.
+				 */
+				cgroup_warn("Warning: cannot clear controller");
+				cgroup_warn(" %s\n", info.name);
 				ret = error;
 				error = 0;
 			}
@@ -1492,13 +1508,14 @@ int cgroup_config_set_default(struct cgroup *new_default)
  */
 int cgroup_reload_cached_templates(char *pathname)
 {
-	int i;
 	int ret = 0;
+	int i;
 
 	if (template_table) {
 		/* template structures have to be free */
 		for (i = 0; i < template_table_index; i++)
 			cgroup_free_controllers(&template_table[i]);
+
 		free(template_table);
 		template_table = NULL;
 	}
@@ -1514,7 +1531,7 @@ int cgroup_reload_cached_templates(char *pathname)
 	ret = cgroup_parse_config(pathname);
 	if (ret) {
 		cgroup_dbg("Could not reload template cache, error was: %d\n",
-			ret);
+			   ret);
 		return ret;
 	}
 
@@ -1563,6 +1580,7 @@ int cgroup_init_templates_cache(char *pathname)
 		/* template structures have to be free */
 		for (i = 0; i < template_table_index; i++)
 			cgroup_free_controllers(&template_table[i]);
+
 		free(template_table);
 		template_table = NULL;
 	}
@@ -1578,7 +1596,7 @@ int cgroup_init_templates_cache(char *pathname)
 	ret = cgroup_parse_config(pathname);
 	if (ret) {
 		cgroup_dbg("Could not initialize rule cache, error was: %d\n",
-			ret);
+			   ret);
 		return ret;
 	}
 
@@ -1638,7 +1656,7 @@ int cgroup_add_cgroup_templates(int offset)
 	for (i = 0; i < config_template_table_index; i++) {
 		ti = i + offset;
 		ret = cgroup_copy_cgroup(&template_table[ti],
-			&config_template_table[i]);
+					 &config_template_table[i]);
 		if (ret)
 			return ret;
 
@@ -1696,10 +1714,10 @@ int cgroup_expand_template_table(void)
  */
 int cgroup_load_templates_cache_from_files(int *file_index)
 {
-	int ret;
-	int i, j;
 	int template_table_last_index;
 	char *pathname;
+	int i, j;
+	int ret;
 
 	if (!template_files) {
 		/* source files has not been set */
@@ -1720,6 +1738,7 @@ int cgroup_load_templates_cache_from_files(int *file_index)
 		/* template structures have to be free */
 		for (i = 0; i < template_table_index; i++)
 			cgroup_free_controllers(&template_table[i]);
+
 		free(template_table);
 		template_table = NULL;
 	}
@@ -1734,8 +1753,10 @@ int cgroup_load_templates_cache_from_files(int *file_index)
 		pathname = template_files->items[j];
 
 		cgroup_dbg("Parsing templates from %s.\n", pathname);
-		/* Attempt to read the configuration file
-		 * and cache the rules. */
+		/*
+		 * Attempt to read the configuration file
+		 * and cache the rules.
+		 */
 		ret = cgroup_parse_config(pathname);
 		if (ret) {
 			cgroup_dbg("Could not initialize rule cache, ");
@@ -1778,12 +1799,12 @@ int cgroup_load_templates_cache_from_files(int *file_index)
 int cgroup_config_create_template_group(struct cgroup *cgroup,
 	char *template_name, int flags)
 {
-	int ret = 0;
-	int i, j, k;
-	struct cgroup *t_cgroup;
-	char buffer[FILENAME_MAX];
 	struct cgroup *aux_cgroup = NULL;
 	struct cgroup_controller *cgc;
+	char buffer[FILENAME_MAX];
+	struct cgroup *t_cgroup;
+	int i, j, k;
+	int ret = 0;
 	int found;
 
 	/*
@@ -1802,9 +1823,9 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 				cgroup_dbg("Error: Template source files ");
 				cgroup_dbg("have not been set\n");
 			} else {
-			    cgroup_dbg("Error: Failed to load template");
-			    cgroup_dbg("rules from %s. ",
-				    template_files->items[fileindex]);
+				cgroup_dbg("Error: Failed to load template");
+				cgroup_dbg("rules from %s. ",
+					   template_files->items[fileindex]);
 			}
 		}
 
@@ -1815,8 +1836,10 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 	}
 
 	for (i = 0; cgroup->controller[i] != NULL; i++) {
-		/* for each controller we have to add to cgroup structure
-		 * either template cgroup or empty controller  */
+		/*
+		 * for each controller we have to add to cgroup structure
+		 * either template cgroup or empty controller.
+		 */
 
 		found = 0;
 		/* look for relevant template - test name x controller pair */
@@ -1851,8 +1874,9 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 					FILENAME_MAX-1);
 				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 				if (ret) {
-					cgroup_dbg("creating group %s, error %d\n",
-					cgroup->name, ret);
+					cgroup_dbg("creating group %s, ");
+					cgroup_dbg("error %d\n",
+						   cgroup->name, ret);
 					goto end;
 				} else {
 					/* go to new controller */
@@ -1867,8 +1891,10 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 		if (found == 1)
 			continue;
 
-		/* no template is present for given name x controller pair
-		 * add controller to result cgroup */
+		/*
+		 * no template is present for given name x controller pair
+		 * add controller to result cgroup.
+		 */
 		aux_cgroup = cgroup_new_cgroup(cgroup->name);
 		if (!aux_cgroup) {
 			ret = ECGINVAL;
