@@ -25,9 +25,9 @@ extern "C" {
 #include <libcgroup.h>
 #include "../libcgroup-internal.h"
 
-#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)
-#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)
-#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)
+#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, "Error: " x)
+#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, "Warning: " x)
+#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, "Info: " x)
 #define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
 
 /**
