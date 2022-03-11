@@ -1,8 +1,12 @@
-INCLUDES = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include
 LDADD = $(top_builddir)/src/.libs/libcgroup.la
 
-libcgrouptest01_SOURCES=libcgrouptest01.c test_functions.c libcgrouptest.h
-libcg_ba_SOURCES=libcg_ba.cpp
+# Uncomment to build the sample programs.
+#noinst_PROGRAMS = setuid walk_test read_stats walk_task get_controller	\
+#		  get_mount_point proctest get_all_controller		\
+#		  get_variable_names test_named_hierarchy		\
+#		  get_procs wrapper_test logger
+
 setuid_SOURCES=setuid.c
 walk_test_SOURCES=walk_test.c
 read_stats_SOURCES=read_stats.c
