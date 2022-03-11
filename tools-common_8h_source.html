@@ -96,9 +96,9 @@ $(function() {
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &lt;libcgroup.h&gt;</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &quot;../libcgroup-internal.h&quot;</span></div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, x)</span></div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, x)</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, x)</span></div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, &quot;Error: &quot;</span> x)</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="preprocessor">#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, &quot;Warning: &quot;</span> x)</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, &quot;Info: &quot;</span> x)</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)</span></div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
 <div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="structcgroup__group__spec.html">   36</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup__group__spec.html">cgroup_group_spec</a> {</div>
@@ -151,7 +151,7 @@ $(function() {
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="preprocessor">#endif </span><span class="comment">/* TOOLS_COMMON */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="astructcgroup__group__spec_html"><div class="ttname"><a href="structcgroup__group__spec.html">cgroup_group_spec</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:36</div></div>
 <div class="ttc" id="astructcgroup__string__list_html"><div class="ttname"><a href="structcgroup__string__list.html">cgroup_string_list</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:45</div></div>
-<div class="ttc" id="astructcontrol__value_html"><div class="ttname"><a href="structcontrol__value.html">control_value</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:89</div></div>
+<div class="ttc" id="astructcontrol__value_html"><div class="ttname"><a href="structcontrol__value.html">control_value</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:92</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
