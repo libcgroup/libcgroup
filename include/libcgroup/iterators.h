@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: LGPL-2.1-only */
 #ifndef _LIBCGROUP_ITERATORS_H
 #define _LIBCGROUP_ITERATORS_H
 
