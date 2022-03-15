@@ -37,7 +37,7 @@ CONFIG_DIR=/etc/cgconfig.d
 servicename=cgconfig
 
 
-lockfile=/run/subsys/$servicename
+lockfile=/run/lock/subsys/$servicename
 #
 # Source LSB routines
 #
@@ -47,9 +47,9 @@ if [[ -x  $SYSLIBFILE ]] ; then
   source $SYSLIBFILE
 elif  [[ -x $OLDSYSLIBFILE ]] ; then
   source $OLDSYSLIBFILE
-  log_warning_msg() ( warning $@ ; printf "\n" 1>&2 ; )
-  log_failure_msg() ( failure $@ ; printf "\n" 1>&2 ; )
-  log_success_msg() ( success $@ ; printf "\n" 1>&2 ; )
+  log_warning_msg() ( warning "$@" ; printf "\n" 1>&2 ; )
+  log_failure_msg() ( failure "$@" ; printf "\n" 1>&2 ; )
+  log_success_msg() ( success "$@" ; printf "\n" 1>&2 ; )
 else
   log_warning_msg() ( printf "warning:%s\n" "$@" 1>&2 ;)
   log_failure_msg() ( printf "failure:%s\n" "$@" 1>&2 ;)
@@ -113,7 +113,7 @@ create_default_groups() {
 }
 
 start() {
-        printf "Starting cgconfig service: "
+        printf "Starting %s service: " "$servicename"
 	if [[ -f "$lockfile" ]]; then
             log_warning_msg "lock file already exists"
             return 0
@@ -150,8 +150,7 @@ start() {
 }
 
 stop() {
-    echo -n "Stopping cgconfig service is not supported!: "
-    # rm -f "$lockfile"
+    printf "Stopping %s service is not supported!: " "$servicename"
     log_failure_msg "Failed to stop $servicename"
     return 1
 }
