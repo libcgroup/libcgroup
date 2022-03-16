@@ -13,9 +13,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include "config.h"
-#include <libcgroup.h>
 #include "../libcgroup-internal.h"
+
+#include <libcgroup.h>
 
 #define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, "Error: " x)
 #define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, "Warning: " x)
@@ -29,7 +31,6 @@ struct cgroup_group_spec {
 	char path[FILENAME_MAX];
 	char *controllers[CG_CONTROLLER_MAX];
 };
-
 
 /**
  * Simple dynamic array of strings.
@@ -48,9 +49,9 @@ struct cgroup_string_list {
  * provided cdptr, i.e. on place of first NULL cgroup_group_spec*.
  *
  * @param cdptr Target data structure to fill. New item is allocated and added
- * 		at the end.
+ *		at the end.
  * @param optarg Argument to parse.
- * @param capacity Capacity of the cdptr array.
+ * @param capacity The capacity of the cdptr array.
  * @return 0 on success, != 0 on error.
  */
 int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
@@ -58,33 +59,33 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 
 /**
  * Free a single cgroup_group_spec structure.
- * 	@param cl The structure to free from memory
+ *	@param cl The structure to free from memory
  */
 void cgroup_free_group_spec(struct cgroup_group_spec *cl);
 
 
 /**
  * Initialize a new list.
- * @param list List to initialize.
- * @param initial_size Initial size of the list to pre-allocate.
+ * @param list The list to initialize.
+ * @param initial_size The initial size of the list to pre-allocate.
  */
 int cgroup_string_list_init(struct cgroup_string_list *list,
-		int initial_size);
+			    int initial_size);
 
 /**
  * Destroy a list, automatically freeing all its items.
- * @param list List to destroy.
+ * @param list The list to destroy.
  */
 void cgroup_string_list_free(struct cgroup_string_list *list);
 
 /**
  * Adds new item to the list. It automatically resizes underlying array if
  * needed.
- * @param list List to modify.
- * @param item Item to add. The item is automatically copied to new buffer.
+ * @param list The list to modify.
+ * @param item The item to add. The item is automatically copied to new buffer.
  */
 int cgroup_string_list_add_item(struct cgroup_string_list *list,
-		const char *item);
+				const char *item);
 
 /**
  * Add alphabetically sorted files present in given directory (without subdirs)
@@ -96,7 +97,7 @@ int cgroup_string_list_add_item(struct cgroup_string_list *list,
  *
  */
 int cgroup_string_list_add_directory(struct cgroup_string_list *list,
-		char *dirname, char *program_name);
+				     char *dirname, char *program_name);
 
 
 /**
@@ -115,7 +116,7 @@ int parse_mode(char *string, mode_t *pmode, const char *program_name);
  * @param program_name Argv[0] to show error messages.
  */
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
-		const char *program_name);
+		  const char *program_name);
 
 /**
  * Functions that are defined as STATIC can be placed within the UNIT_TEST
