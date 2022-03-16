@@ -39,7 +39,7 @@ mount {
 .TP
 .B controller
 Name of the kernel subsystem. The list of subsystems supported by the kernel
-can be found in 
+can be found in
 .I /proc/cgroups
 file. Named hierarchy can be specified as controller
 \fB"name=<somename>"\fR. Do not forget to use double quotes around
@@ -92,9 +92,9 @@ group <name> {
 .TP
 .B name
 Name of the control group. It can contain only characters, which are
-allowed for directory names. 
+allowed for directory names.
 The groups form a tree, i.e. a control group can contain zero or more
-subgroups. Subgroups can be specified using '/' delimiter. 
+subgroups. Subgroups can be specified using '/' delimiter.
 
 The root control group is always created automatically in all hierarchies
 and it is the base of the group hierarchy. It can be explicitly specified in
