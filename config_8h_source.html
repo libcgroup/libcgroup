@@ -69,59 +69,60 @@ $(function() {
   <div class="headertitle"><div class="title">config.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef _LIBCGROUP_CONFIG_H</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define _LIBCGROUP_CONFIG_H</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef _LIBCGROUP_H_INSIDE</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#error &quot;Only &lt;libcgroup.h&gt; should be included directly.&quot;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#ifndef SWIG</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;features.h&gt;</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga8adfaca013333acf922a167f55b84140">cgroup_config_load_config</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *pathname);</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga85b285712354faca495193075035938d">cgroup_unload_cgroups</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#gaff77affa0b80ccf507b4b46cc0a8c085">cgroup_config_unload_config</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *pathname, <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga2d3a252b2c0c61c8f64cb1fc41e370ea">cgroup_config_set_default</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *new_default);</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga6f8c41bb920565e674787fe6dabaef00">cgroup_init_templates_cache</a>(<span class="keywordtype">char</span> *pathname);</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga89fe0d7943b29cc10d57b07abcdfa7b5">cgroup_reload_cached_templates</a>(<span class="keywordtype">char</span> *pathname);</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span> </div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga924860998c37da53cababe24163fc89b">cgroup_load_templates_cache_from_files</a>(<span class="keywordtype">int</span> *file_index);</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a>;</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">void</span> <a class="code hl_function" href="group__group__config.html#gacb09024dc469a1a1ff8cdebd8d0ab422">cgroup_templates_cache_set_source_files</a>(</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *tmpl_files);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga72066260cd31ceed7ecc1a648eba37f2">cgroup_config_create_template_group</a>(</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>    <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, <span class="keywordtype">char</span> *template_name,</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span> </div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="preprocessor">#endif </span><span class="comment">/*_LIBCGROUP_CONFIG_H*/</span><span class="preprocessor"></span></div>
-<div class="ttc" id="agroup__group__config_html_ga2d3a252b2c0c61c8f64cb1fc41e370ea"><div class="ttname"><a href="group__group__config.html#ga2d3a252b2c0c61c8f64cb1fc41e370ea">cgroup_config_set_default</a></div><div class="ttdeci">int cgroup_config_set_default(struct cgroup *new_default)</div><div class="ttdef"><b>Definition:</b> config.c:1486</div></div>
-<div class="ttc" id="agroup__group__config_html_ga6f8c41bb920565e674787fe6dabaef00"><div class="ttname"><a href="group__group__config.html#ga6f8c41bb920565e674787fe6dabaef00">cgroup_init_templates_cache</a></div><div class="ttdeci">int cgroup_init_templates_cache(char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1574</div></div>
-<div class="ttc" id="agroup__group__config_html_ga72066260cd31ceed7ecc1a648eba37f2"><div class="ttname"><a href="group__group__config.html#ga72066260cd31ceed7ecc1a648eba37f2">cgroup_config_create_template_group</a></div><div class="ttdeci">int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_name, int flags)</div><div class="ttdef"><b>Definition:</b> config.c:1799</div></div>
-<div class="ttc" id="agroup__group__config_html_ga85b285712354faca495193075035938d"><div class="ttname"><a href="group__group__config.html#ga85b285712354faca495193075035938d">cgroup_unload_cgroups</a></div><div class="ttdeci">int cgroup_unload_cgroups(void)</div><div class="ttdef"><b>Definition:</b> config.c:1396</div></div>
-<div class="ttc" id="agroup__group__config_html_ga89fe0d7943b29cc10d57b07abcdfa7b5"><div class="ttname"><a href="group__group__config.html#ga89fe0d7943b29cc10d57b07abcdfa7b5">cgroup_reload_cached_templates</a></div><div class="ttdeci">int cgroup_reload_cached_templates(char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1509</div></div>
-<div class="ttc" id="agroup__group__config_html_ga8adfaca013333acf922a167f55b84140"><div class="ttname"><a href="group__group__config.html#ga8adfaca013333acf922a167f55b84140">cgroup_config_load_config</a></div><div class="ttdeci">int cgroup_config_load_config(const char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1130</div></div>
-<div class="ttc" id="agroup__group__config_html_ga924860998c37da53cababe24163fc89b"><div class="ttname"><a href="group__group__config.html#ga924860998c37da53cababe24163fc89b">cgroup_load_templates_cache_from_files</a></div><div class="ttdeci">int cgroup_load_templates_cache_from_files(int *file_index)</div><div class="ttdef"><b>Definition:</b> config.c:1715</div></div>
-<div class="ttc" id="agroup__group__config_html_gacb09024dc469a1a1ff8cdebd8d0ab422"><div class="ttname"><a href="group__group__config.html#gacb09024dc469a1a1ff8cdebd8d0ab422">cgroup_templates_cache_set_source_files</a></div><div class="ttdeci">void cgroup_templates_cache_set_source_files(struct cgroup_string_list *tmpl_files)</div><div class="ttdef"><b>Definition:</b> config.c:1642</div></div>
-<div class="ttc" id="agroup__group__config_html_gaff77affa0b80ccf507b4b46cc0a8c085"><div class="ttname"><a href="group__group__config.html#gaff77affa0b80ccf507b4b46cc0a8c085">cgroup_config_unload_config</a></div><div class="ttdeci">int cgroup_config_unload_config(const char *pathname, int flags)</div><div class="ttdef"><b>Definition:</b> config.c:1266</div></div>
-<div class="ttc" id="astructcgroup__string__list_html"><div class="ttname"><a href="structcgroup__string__list.html">cgroup_string_list</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:45</div></div>
-<div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:116</div></div>
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/* SPDX-License-Identifier: LGPL-2.1-only */</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#ifndef _LIBCGROUP_CONFIG_H</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#define _LIBCGROUP_CONFIG_H</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#ifndef _LIBCGROUP_H_INSIDE</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#error &quot;Only &lt;libcgroup.h&gt; should be included directly.&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#ifndef SWIG</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &lt;features.h&gt;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga8adfaca013333acf922a167f55b84140">cgroup_config_load_config</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *pathname);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga85b285712354faca495193075035938d">cgroup_unload_cgroups</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#gaff77affa0b80ccf507b4b46cc0a8c085">cgroup_config_unload_config</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *pathname, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga2d3a252b2c0c61c8f64cb1fc41e370ea">cgroup_config_set_default</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *new_default);</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga6f8c41bb920565e674787fe6dabaef00">cgroup_init_templates_cache</a>(<span class="keywordtype">char</span> *pathname);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga89fe0d7943b29cc10d57b07abcdfa7b5">cgroup_reload_cached_templates</a>(<span class="keywordtype">char</span> *pathname);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga924860998c37da53cababe24163fc89b">cgroup_load_templates_cache_from_files</a>(<span class="keywordtype">int</span> *file_index);</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a>;</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="keywordtype">void</span> <a class="code hl_function" href="group__group__config.html#gacb09024dc469a1a1ff8cdebd8d0ab422">cgroup_templates_cache_set_source_files</a>(</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *tmpl_files);</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__config.html#ga72066260cd31ceed7ecc1a648eba37f2">cgroup_config_create_template_group</a>(</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>    <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, <span class="keywordtype">char</span> *template_name,</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>    <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span> </div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="preprocessor">#endif </span><span class="comment">/*_LIBCGROUP_CONFIG_H*/</span><span class="preprocessor"></span></div>
+<div class="ttc" id="agroup__group__config_html_ga2d3a252b2c0c61c8f64cb1fc41e370ea"><div class="ttname"><a href="group__group__config.html#ga2d3a252b2c0c61c8f64cb1fc41e370ea">cgroup_config_set_default</a></div><div class="ttdeci">int cgroup_config_set_default(struct cgroup *new_default)</div><div class="ttdef"><b>Definition:</b> config.c:1479</div></div>
+<div class="ttc" id="agroup__group__config_html_ga6f8c41bb920565e674787fe6dabaef00"><div class="ttname"><a href="group__group__config.html#ga6f8c41bb920565e674787fe6dabaef00">cgroup_init_templates_cache</a></div><div class="ttdeci">int cgroup_init_templates_cache(char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1567</div></div>
+<div class="ttc" id="agroup__group__config_html_ga72066260cd31ceed7ecc1a648eba37f2"><div class="ttname"><a href="group__group__config.html#ga72066260cd31ceed7ecc1a648eba37f2">cgroup_config_create_template_group</a></div><div class="ttdeci">int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_name, int flags)</div><div class="ttdef"><b>Definition:</b> config.c:1792</div></div>
+<div class="ttc" id="agroup__group__config_html_ga85b285712354faca495193075035938d"><div class="ttname"><a href="group__group__config.html#ga85b285712354faca495193075035938d">cgroup_unload_cgroups</a></div><div class="ttdeci">int cgroup_unload_cgroups(void)</div><div class="ttdef"><b>Definition:</b> config.c:1389</div></div>
+<div class="ttc" id="agroup__group__config_html_ga89fe0d7943b29cc10d57b07abcdfa7b5"><div class="ttname"><a href="group__group__config.html#ga89fe0d7943b29cc10d57b07abcdfa7b5">cgroup_reload_cached_templates</a></div><div class="ttdeci">int cgroup_reload_cached_templates(char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1502</div></div>
+<div class="ttc" id="agroup__group__config_html_ga8adfaca013333acf922a167f55b84140"><div class="ttname"><a href="group__group__config.html#ga8adfaca013333acf922a167f55b84140">cgroup_config_load_config</a></div><div class="ttdeci">int cgroup_config_load_config(const char *pathname)</div><div class="ttdef"><b>Definition:</b> config.c:1123</div></div>
+<div class="ttc" id="agroup__group__config_html_ga924860998c37da53cababe24163fc89b"><div class="ttname"><a href="group__group__config.html#ga924860998c37da53cababe24163fc89b">cgroup_load_templates_cache_from_files</a></div><div class="ttdeci">int cgroup_load_templates_cache_from_files(int *file_index)</div><div class="ttdef"><b>Definition:</b> config.c:1708</div></div>
+<div class="ttc" id="agroup__group__config_html_gacb09024dc469a1a1ff8cdebd8d0ab422"><div class="ttname"><a href="group__group__config.html#gacb09024dc469a1a1ff8cdebd8d0ab422">cgroup_templates_cache_set_source_files</a></div><div class="ttdeci">void cgroup_templates_cache_set_source_files(struct cgroup_string_list *tmpl_files)</div><div class="ttdef"><b>Definition:</b> config.c:1635</div></div>
+<div class="ttc" id="agroup__group__config_html_gaff77affa0b80ccf507b4b46cc0a8c085"><div class="ttname"><a href="group__group__config.html#gaff77affa0b80ccf507b4b46cc0a8c085">cgroup_config_unload_config</a></div><div class="ttdeci">int cgroup_config_unload_config(const char *pathname, int flags)</div><div class="ttdef"><b>Definition:</b> config.c:1259</div></div>
+<div class="ttc" id="astructcgroup__string__list_html"><div class="ttname"><a href="structcgroup__string__list.html">cgroup_string_list</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:37</div></div>
+<div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:109</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

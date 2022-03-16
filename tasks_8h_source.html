@@ -69,80 +69,81 @@ $(function() {
   <div class="headertitle"><div class="title">tasks.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef _LIBCGROUP_TASKS_H</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define _LIBCGROUP_TASKS_H</span></div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef _LIBCGROUP_H_INSIDE</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#error &quot;Only &lt;libcgroup.h&gt; should be included directly.&quot;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;libcgroup/groups.h&gt;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#ifndef SWIG</span></div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &lt;features.h&gt;</span></div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="keyword">enum</span> cgflags {</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    CGFLAG_USECACHE = 0x01,</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    CGFLAG_USE_TEMPLATE_CACHE = 0x02,</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>};</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">enum</span> cgroup_daemon_type {</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    CGROUP_DAEMON_UNCHANGE_CHILDREN       = 0x1,</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS = 0x2,</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>};</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga43414ac2b1fc73bbb46b6278c7500188">cgroup_attach_task</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>);</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, pid_t tid);</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, pid_t pid,</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> controllers[]);</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span> </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a>(pid_t pid, <span class="keyword">const</span> <span class="keywordtype">char</span> *controller,</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>                    <span class="keywordtype">char</span> **current_path);</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gaf81ebd9cb5575c75b4c85f385ebda1ce">cgroup_reload_cached_rules</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span> </div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="keywordtype">void</span> <a class="code hl_function" href="group__group__tasks.html#gac4e3f29cfbdc3d77f08c9fe60857274a">cgroup_print_rules_config</a>(FILE *fp);</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gafc69658b012b6f1c11ba078ffccd70a2">cgroup_change_all_cgroups</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span> </div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a>(uid_t uid, gid_t gid,</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *procname, pid_t pid, <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span> </div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a>(uid_t uid, gid_t gid,</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>                pid_t pid, <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga5eab78a922dbacd368360f03c70146be">cgroup_change_cgroup_uid_gid</a>(uid_t uid, gid_t gid, pid_t pid);</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga64f7967d6d5edfff9afddaa6a6974b1c">cgroup_register_unchanged_process</a>(pid_t pid, <span class="keywordtype">int</span> flags);</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span> </div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_TASKS_H */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="agroup__group__tasks_html_ga2d4677baef780c003fc6fba6b5dc78f2"><div class="ttname"><a href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a></div><div class="ttdeci">int cgroup_change_cgroup_path(const char *path, pid_t pid, const char *const controllers[])</div><div class="ttdef"><b>Definition:</b> api.c:4277</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga368e7b8e19b3943ab6fb50e76a09e6ea"><div class="ttname"><a href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a></div><div class="ttdeci">int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:4043</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga43414ac2b1fc73bbb46b6278c7500188"><div class="ttname"><a href="group__group__tasks.html#ga43414ac2b1fc73bbb46b6278c7500188">cgroup_attach_task</a></div><div class="ttdeci">int cgroup_attach_task(struct cgroup *cgroup)</div><div class="ttdef"><b>Definition:</b> api.c:1870</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga5eab78a922dbacd368360f03c70146be"><div class="ttname"><a href="group__group__tasks.html#ga5eab78a922dbacd368360f03c70146be">cgroup_change_cgroup_uid_gid</a></div><div class="ttdeci">int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)</div><div class="ttdef"><b>Definition:</b> api.c:4265</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga64f7967d6d5edfff9afddaa6a6974b1c"><div class="ttname"><a href="group__group__tasks.html#ga64f7967d6d5edfff9afddaa6a6974b1c">cgroup_register_unchanged_process</a></div><div class="ttdeci">int cgroup_register_unchanged_process(pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:5467</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga6f2c17b99cf2526cb46df4769eb3f46e"><div class="ttname"><a href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a></div><div class="ttdeci">int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path)</div><div class="ttdef"><b>Definition:</b> api.c:4499</div></div>
-<div class="ttc" id="agroup__group__tasks_html_ga9c7532681986d156ac3f6bac1fcf6aab"><div class="ttname"><a href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a></div><div class="ttdeci">int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)</div><div class="ttdef"><b>Definition:</b> api.c:1802</div></div>
-<div class="ttc" id="agroup__group__tasks_html_gac4e3f29cfbdc3d77f08c9fe60857274a"><div class="ttname"><a href="group__group__tasks.html#gac4e3f29cfbdc3d77f08c9fe60857274a">cgroup_print_rules_config</a></div><div class="ttdeci">void cgroup_print_rules_config(FILE *fp)</div><div class="ttdef"><b>Definition:</b> api.c:4391</div></div>
-<div class="ttc" id="agroup__group__tasks_html_gad7fa5a2c4db08d31da5bfbecaf482d3d"><div class="ttname"><a href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a></div><div class="ttdeci">int cgroup_init_rules_cache(void)</div><div class="ttdef"><b>Definition:</b> api.c:4477</div></div>
-<div class="ttc" id="agroup__group__tasks_html_gae472183a7c9a37826ef15c77014c47fb"><div class="ttname"><a href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a></div><div class="ttdeci">int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid, pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:4248</div></div>
-<div class="ttc" id="agroup__group__tasks_html_gaf81ebd9cb5575c75b4c85f385ebda1ce"><div class="ttname"><a href="group__group__tasks.html#gaf81ebd9cb5575c75b4c85f385ebda1ce">cgroup_reload_cached_rules</a></div><div class="ttdeci">int cgroup_reload_cached_rules(void)</div><div class="ttdef"><b>Definition:</b> api.c:4451</div></div>
-<div class="ttc" id="agroup__group__tasks_html_gafc69658b012b6f1c11ba078ffccd70a2"><div class="ttname"><a href="group__group__tasks.html#gafc69658b012b6f1c11ba078ffccd70a2">cgroup_change_all_cgroups</a></div><div class="ttdeci">int cgroup_change_all_cgroups(void)</div><div class="ttdef"><b>Definition:</b> api.c:4345</div></div>
-<div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:116</div></div>
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">/* SPDX-License-Identifier: LGPL-2.1-only */</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#ifndef _LIBCGROUP_TASKS_H</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#define _LIBCGROUP_TASKS_H</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#ifndef _LIBCGROUP_H_INSIDE</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#error &quot;Only &lt;libcgroup.h&gt; should be included directly.&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;libcgroup/groups.h&gt;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#ifndef SWIG</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="preprocessor">#include &lt;features.h&gt;</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword">enum</span> cgflags {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    CGFLAG_USECACHE = 0x01,</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    CGFLAG_USE_TEMPLATE_CACHE = 0x02,</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>};</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">enum</span> cgroup_daemon_type {</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    CGROUP_DAEMON_UNCHANGE_CHILDREN       = 0x1,</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS = 0x2,</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>};</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga43414ac2b1fc73bbb46b6278c7500188">cgroup_attach_task</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, pid_t tid);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, pid_t pid,</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> controllers[]);</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a>(pid_t pid, <span class="keyword">const</span> <span class="keywordtype">char</span> *controller,</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>                    <span class="keywordtype">char</span> **current_path);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gaf81ebd9cb5575c75b4c85f385ebda1ce">cgroup_reload_cached_rules</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="keywordtype">void</span> <a class="code hl_function" href="group__group__tasks.html#gac4e3f29cfbdc3d77f08c9fe60857274a">cgroup_print_rules_config</a>(FILE *fp);</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gafc69658b012b6f1c11ba078ffccd70a2">cgroup_change_all_cgroups</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a>(uid_t uid, gid_t gid,</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *procname, pid_t pid, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a>(uid_t uid, gid_t gid,</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                pid_t pid, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga5eab78a922dbacd368360f03c70146be">cgroup_change_cgroup_uid_gid</a>(uid_t uid, gid_t gid, pid_t pid);</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga64f7967d6d5edfff9afddaa6a6974b1c">cgroup_register_unchanged_process</a>(pid_t pid, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_TASKS_H */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="agroup__group__tasks_html_ga2d4677baef780c003fc6fba6b5dc78f2"><div class="ttname"><a href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a></div><div class="ttdeci">int cgroup_change_cgroup_path(const char *path, pid_t pid, const char *const controllers[])</div><div class="ttdef"><b>Definition:</b> api.c:4270</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga368e7b8e19b3943ab6fb50e76a09e6ea"><div class="ttname"><a href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a></div><div class="ttdeci">int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:4036</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga43414ac2b1fc73bbb46b6278c7500188"><div class="ttname"><a href="group__group__tasks.html#ga43414ac2b1fc73bbb46b6278c7500188">cgroup_attach_task</a></div><div class="ttdeci">int cgroup_attach_task(struct cgroup *cgroup)</div><div class="ttdef"><b>Definition:</b> api.c:1863</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga5eab78a922dbacd368360f03c70146be"><div class="ttname"><a href="group__group__tasks.html#ga5eab78a922dbacd368360f03c70146be">cgroup_change_cgroup_uid_gid</a></div><div class="ttdeci">int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid)</div><div class="ttdef"><b>Definition:</b> api.c:4258</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga64f7967d6d5edfff9afddaa6a6974b1c"><div class="ttname"><a href="group__group__tasks.html#ga64f7967d6d5edfff9afddaa6a6974b1c">cgroup_register_unchanged_process</a></div><div class="ttdeci">int cgroup_register_unchanged_process(pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:5460</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga6f2c17b99cf2526cb46df4769eb3f46e"><div class="ttname"><a href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a></div><div class="ttdeci">int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path)</div><div class="ttdef"><b>Definition:</b> api.c:4492</div></div>
+<div class="ttc" id="agroup__group__tasks_html_ga9c7532681986d156ac3f6bac1fcf6aab"><div class="ttname"><a href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a></div><div class="ttdeci">int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)</div><div class="ttdef"><b>Definition:</b> api.c:1795</div></div>
+<div class="ttc" id="agroup__group__tasks_html_gac4e3f29cfbdc3d77f08c9fe60857274a"><div class="ttname"><a href="group__group__tasks.html#gac4e3f29cfbdc3d77f08c9fe60857274a">cgroup_print_rules_config</a></div><div class="ttdeci">void cgroup_print_rules_config(FILE *fp)</div><div class="ttdef"><b>Definition:</b> api.c:4384</div></div>
+<div class="ttc" id="agroup__group__tasks_html_gad7fa5a2c4db08d31da5bfbecaf482d3d"><div class="ttname"><a href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a></div><div class="ttdeci">int cgroup_init_rules_cache(void)</div><div class="ttdef"><b>Definition:</b> api.c:4470</div></div>
+<div class="ttc" id="agroup__group__tasks_html_gae472183a7c9a37826ef15c77014c47fb"><div class="ttname"><a href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a></div><div class="ttdeci">int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid, pid_t pid, int flags)</div><div class="ttdef"><b>Definition:</b> api.c:4241</div></div>
+<div class="ttc" id="agroup__group__tasks_html_gaf81ebd9cb5575c75b4c85f385ebda1ce"><div class="ttname"><a href="group__group__tasks.html#gaf81ebd9cb5575c75b4c85f385ebda1ce">cgroup_reload_cached_rules</a></div><div class="ttdeci">int cgroup_reload_cached_rules(void)</div><div class="ttdef"><b>Definition:</b> api.c:4444</div></div>
+<div class="ttc" id="agroup__group__tasks_html_gafc69658b012b6f1c11ba078ffccd70a2"><div class="ttname"><a href="group__group__tasks.html#gafc69658b012b6f1c11ba078ffccd70a2">cgroup_change_all_cgroups</a></div><div class="ttdeci">int cgroup_change_all_cgroups(void)</div><div class="ttdef"><b>Definition:</b> api.c:4338</div></div>
+<div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:109</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
