@@ -42,7 +42,7 @@ enum cgroup_delete_flag {
 	 * no processes inside. This flag cannot be used with
 	 * CGFLAG_DELETE_RECURSIVE.
 	 */
-	CGFLAG_DELETE_EMPTY_ONLY	= 4,
+	CGFLAG_DELETE_EMPTY_ONLY = 4,
 };
 
 /**
@@ -141,9 +141,9 @@ struct cgroup_controller;
  * control group in kernel, only new <tt>struct cgroup</tt> inside libcgroup!
  *
  * @param name Path to the group, relative from root group. Use @c "/" or @c "."
- * 	for the root group itself and @c "/foo/bar/baz" or @c "foo/bar/baz" for
- * 	subgroups.
- * 	@todo suggest one preferred way, either "/foo" or "foo".
+ *	for the root group itself and @c "/foo/bar/baz" or @c "foo/bar/baz" for
+ *	subgroups.
+ *	@todo suggest one preferred way, either "/foo" or "foo".
  * @returns Created group or NULL on error.
  */
 struct cgroup *cgroup_new_cgroup(const char *name);
@@ -153,7 +153,7 @@ struct cgroup *cgroup_new_cgroup(const char *name);
  * libcgroup structure, not the kernel control group.
  *
  * @param cgroup
- * @param name Name of the controller, e.g. "freezer".
+ * @param name The name of the controller, e.g. "freezer".
  * @return Created controller or NULL on error.
  */
 struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
@@ -174,10 +174,10 @@ int cgroup_add_all_controllers(struct cgroup *cgroup);
  * The controller must be added before using cgroup_add_controller() or loaded
  * from kernel using cgroup_get_cgroup().
  * @param cgroup
- * @param name Name of the controller, e.g. "freezer".
+ * @param name The name of the controller, e.g. "freezer".
  */
 struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
-							const char *name);
+						const char *name);
 
 /**
  * Free internal @c cgroup structure. This function frees also all controllers
@@ -192,7 +192,6 @@ void cgroup_free(struct cgroup **cgroup);
  * @param cgroup
  */
 void cgroup_free_controllers(struct cgroup *cgroup);
-
 
 /**
  * @}
@@ -212,8 +211,8 @@ void cgroup_free_controllers(struct cgroup *cgroup);
  * permissions set by cgroup_set_permissions.
  * @param cgroup
  * @param ignore_ownership When nozero, all errors are ignored when setting
- * 	owner of the group and/or its tasks file.
- * 	@todo what is ignore_ownership good for?
+ *	owner of the group and/or its tasks file.
+ *	@todo what is ignore_ownership good for?
  * @retval #ECGROUPNOTEQUAL if not all specified controller parameters
  *      were successfully set.
  */
@@ -233,15 +232,15 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
  * crate subgroup of root group in just one hierarchy with this function!
  *
  * @param cgroup The cgroup to create. Only it's name is used, everything else
- * 	is discarded.
+ *	is discarded.
  * @param ignore_ownership When nozero, all errors are ignored when setting
- * 	owner of the group and/or its tasks file.
- * 	@todo what is ignore_ownership good for?
+ *	owner of the group and/or its tasks file.
+ *	@todo what is ignore_ownership good for?
  * @retval #ECGROUPNOTEQUAL if not all inherited controller parameters
  *      were successfully set (this is expected).
  */
 int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
-		int ignore_ownership);
+				     int ignore_ownership);
 
 /**
  * Physically modify a control group in kernel. All parameters added by
@@ -284,7 +283,6 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
  */
 int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
 
-
 /**
  * @}
  * @name Other functions
@@ -310,7 +308,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
  * different owner of tasks file?
  *
  * @param cgroup The cgroup to load. Only it's name is used, everything else
- * 	is replaced.
+ *	is replaced.
  */
 int cgroup_get_cgroup(struct cgroup *cgroup);
 
@@ -333,7 +331,7 @@ int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
  * @retval 0  if the groups are the same.
  * @retval #ECGROUPNOTEQUAL if the groups are not the same.
  * @retval #ECGCONTROLLERNOTEQUAL if the only difference are controllers,
- * 	parameters or their values.
+ *	parameters or their values.
  */
 int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
 
@@ -348,7 +346,7 @@ int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
  * @retval #ECGCONTROLLERNOTEQUAL if the controllers are not equal.
  */
 int cgroup_compare_controllers(struct cgroup_controller *cgca,
-					struct cgroup_controller *cgcb);
+			       struct cgroup_controller *cgcb);
 
 /**
  * Set owner of the group control files and the @c tasks file. This function
@@ -359,12 +357,12 @@ int cgroup_compare_controllers(struct cgroup_controller *cgca,
  * @param tasks_uid UID of the owner of group's @c tasks file.
  * @param tasks_gid GID of the owner of group's @c tasks file.
  * @param control_uid UID of the owner of group's control files (i.e.
- * 	parameters).
+ *	parameters).
  * @param control_gid GID of the owner of group's control files (i.e.
- * 	parameters).
+ *	parameters).
  */
 int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
-					uid_t control_uid, gid_t control_gid);
+		       uid_t control_uid, gid_t control_gid);
 
 /**
  * Return owners of the group's @c tasks file and control files.
@@ -372,7 +370,8 @@ int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
  * cgroup_set_uid_gid() or cgroup_get_cgroup() to fill it.
  */
 int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
-		gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid);
+		       gid_t *tasks_gid, uid_t *control_uid,
+		       gid_t *control_gid);
 
 /**
  * Stores given file permissions of the group's control and tasks files
@@ -387,8 +386,8 @@ int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
  * @param task_fperm File permissions for task file.
  */
 void cgroup_set_permissions(struct cgroup *cgroup,
-		mode_t control_dperm, mode_t control_fperm,
-		mode_t task_fperm);
+			    mode_t control_dperm, mode_t control_fperm,
+			    mode_t task_fperm);
 
 /**
  * @}
@@ -406,12 +405,13 @@ void cgroup_set_permissions(struct cgroup *cgroup,
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  *
  */
 int cgroup_add_value_string(struct cgroup_controller *controller,
-				const char *name, const char *value);
+			    const char *name, const char *value);
+
 /**
  * Add parameter and its value to internal @c libcgroup structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
@@ -419,34 +419,36 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
  * after return from the function.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  *
  */
 int cgroup_add_value_int64(struct cgroup_controller *controller,
-				const char *name, int64_t value);
+			   const char *name, int64_t value);
+
 /**
  * Add parameter and its value to internal @c libcgroup structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  *
  */
 int cgroup_add_value_uint64(struct cgroup_controller *controller,
-				const char *name, u_int64_t value);
+			    const char *name, u_int64_t value);
+
 /**
  * Add parameter and its value to internal @c libcgroup structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  *
  */
 int cgroup_add_value_bool(struct cgroup_controller *controller,
-				const char *name, bool value);
+			  const char *name, bool value);
 
 /**
  * Read a parameter value from @c libcgroup internal structures.
@@ -460,52 +462,55 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
  * @todo rephrase, it's too vague... How big is the buffer actually?
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_get_value_string(struct cgroup_controller *controller,
-					const char *name, char **value);
+			    const char *name, char **value);
 /**
  * Read a parameter value from @c libcgroup internal structures.
  * Use @c cgroup_get_cgroup() to fill these structures with data from kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_get_value_int64(struct cgroup_controller *controller,
-					const char *name, int64_t *value);
+			   const char *name, int64_t *value);
+
 /**
  * Read a parameter value from @c libcgroup internal structures.
  * Use @c cgroup_get_cgroup() to fill these structures with data from kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_get_value_uint64(struct cgroup_controller *controller,
-					const char *name, u_int64_t *value);
+			    const char *name, u_int64_t *value);
+
 /**
  * Read a parameter value from @c libcgroup internal structures.
  * Use @c cgroup_get_cgroup() to fill these structures with data from kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_get_value_bool(struct cgroup_controller *controller,
-						const char *name, bool *value);
+			  const char *name, bool *value);
 
 /**
  * Set a parameter value in @c libcgroup internal structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_set_value_string(struct cgroup_controller *controller,
-					const char *name, const char *value);
+			    const char *name, const char *value);
+
 /**
  * Set a parameter value in @c libcgroup internal structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
@@ -513,31 +518,33 @@ int cgroup_set_value_string(struct cgroup_controller *controller,
  * after return from the function.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_set_value_int64(struct cgroup_controller *controller,
-					const char *name, int64_t value);
+			   const char *name, int64_t value);
 /**
  * Set a parameter value in @c libcgroup internal structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_set_value_uint64(struct cgroup_controller *controller,
-					const char *name, u_int64_t value);
+			    const char *name, u_int64_t value);
+
 /**
  * Set a parameter value in @c libcgroup internal structures.
  * Use cgroup_modify_cgroup() or cgroup_create_cgroup() to write it to kernel.
  *
  * @param controller
- * @param name Name of the parameter.
+ * @param name The name of the parameter.
  * @param value
  */
 int cgroup_set_value_bool(struct cgroup_controller *controller,
-						const char *name, bool value);
+			  const char *name, bool value);
+
 /**
  * Return the number of variables for the specified controller in @c libcgroup
  * internal structures. Use cgroup_get_cgroup() to fill these structures with
@@ -558,7 +565,7 @@ int cgroup_get_value_name_count(struct cgroup_controller *controller);
  * do not free it.
  *
  * @param controller
- * @param index Index of the parameter.
+ * @param index The index of the parameter.
  * @return Name of the parameter.
  */
 char *cgroup_get_value_name(struct cgroup_controller *controller, int index);
@@ -583,7 +590,7 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size);
  * @param filem_change Denotes whether the directory change should be done
  */
 int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
-	int dirm_change, mode_t file_mode, int filem_change);
+		       int dirm_change, mode_t file_mode, int filem_change);
 
 /**
  *  Get the name of the cgroup from a given cgroup
@@ -616,7 +623,7 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
  * @param version The version of the controller
  */
 int cgroup_get_controller_version(const char * const controller,
-		enum cg_version_t * const version);
+				  enum cg_version_t * const version);
 
 /**
  * @}
