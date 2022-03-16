@@ -184,11 +184,11 @@ Data Structures</h2></td></tr>
 <div class="line"><span class="keywordtype">int</span> ret;</div>
 <div class="line">ret = iterator_name_begin(&amp;handle, &amp;item);</div>
 <div class="line"><span class="keywordflow">while</span> (ret == 0) {</div>
-<div class="line">    <span class="comment">// process the item here</span></div>
+<div class="line"> <span class="comment">// process the item here</span></div>
 <div class="line"> ret = iterator_name_begin(&amp;handle, &amp;item);</div>
 <div class="line">}</div>
 <div class="line"><span class="keywordflow">if</span> (ret != <a class="code hl_enumvalue" href="group__group__errors.html#gga06fc87d81c62e9abb8790b6e5713c55ba2724c2f0af0d3e3cea66027f6bf2e436">ECGEOF</a>) {</div>
-<div class="line">    <span class="comment">// process the error here</span></div>
+<div class="line"> <span class="comment">// process the error here</span></div>
 <div class="line">}</div>
 <div class="line">iterator_name_end(&amp;handle);</div>
 <div class="ttc" id="agroup__group__errors_html_gga06fc87d81c62e9abb8790b6e5713c55ba2724c2f0af0d3e3cea66027f6bf2e436"><div class="ttname"><a href="group__group__errors.html#gga06fc87d81c62e9abb8790b6e5713c55ba2724c2f0af0d3e3cea66027f6bf2e436">ECGEOF</a></div><div class="ttdeci">@ ECGEOF</div><div class="ttdef"><b>Definition:</b> error.h:68</div></div>
@@ -292,7 +292,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the first of controllers from /proc/cgroups. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
     <tr><td class="paramname">info</td><td>The structure which will be filled with controller data. </td></tr>
   </table>
   </dd>
@@ -346,7 +346,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read next controllers from /proc/cgroups. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
     <tr><td class="paramname">info</td><td>The structure which will be filled with controller data. </td></tr>
   </table>
   </dd>
@@ -381,7 +381,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the mount table to give a list where each controller is mounted. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
     <tr><td class="paramname">info</td><td>The variable where the path to the controller is stored. </td></tr>
   </table>
   </dd>
@@ -436,7 +436,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the next mounted controller. While walking through the mount table, the controllers are returned in order of their mount points, i.e. controllers mounted together in one hierarchy are returned next to each other. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
     <tr><td class="paramname">info</td><td>The variable where the path to the controller is stored. </td></tr>
   </table>
   </dd>
@@ -478,8 +478,8 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the first mount point of the hierarchy with given controller. The first is the same as the mount point returned by cgroup_get_subsys_mount_point(). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
-    <tr><td class="paramname">controller</td><td>Controller name. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">controller</td><td>The controller name. </td></tr>
     <tr><td class="paramname">path</td><td>Buffer to fill the path into. The buffer must be at least FILENAME_MAX characters long. </td></tr>
   </table>
   </dd>
@@ -533,7 +533,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read next mount point of the hierarchy with given controller. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used for iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used for iteration. </td></tr>
     <tr><td class="paramname">path</td><td>Buffer to fill the path into. The buffer must be at least FILENAME_MAX characters long. </td></tr>
   </table>
   </dd>
@@ -582,7 +582,7 @@ Data Structures</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">cgroup</td><td>Name of the cgroup. </td></tr>
     <tr><td class="paramname">controller</td><td>Name of the cgroup subsystem. </td></tr>
-    <tr><td class="paramname">handle</td><td>Handle to be used in the iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used in the iteration. </td></tr>
     <tr><td class="paramname">pid</td><td>The pid read from the tasks file. </td></tr>
   </table>
   </dd>
@@ -686,8 +686,8 @@ Data Structures</h2></td></tr>
 <p >Read the statistics values (= <code>stats</code> parameter) for the specified controller and control group. One line is returned per <a class="el" href="group__group__iterators.html#ga1138e47f124f0f634586db5e0c4ae5de">cgroup_read_stats_begin()</a> and <a class="el" href="group__group__iterators.html#gaf95587508fc15d74fd5ed0df58024be7">cgroup_read_stats_next()</a> call. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td>Name of the controller for which stats are requested. </td></tr>
-    <tr><td class="paramname">path</td><td>Path to control group, relative to hierarchy root. </td></tr>
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">path</td><td>The path to control group, relative to hierarchy root. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
     <tr><td class="paramname">stat</td><td>Returned first item in the stats file. </td></tr>
   </table>
   </dd>
@@ -742,7 +742,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the next stat value. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
     <tr><td class="paramname">stat</td><td>Returned next item in the stats file. </td></tr>
   </table>
   </dd>
@@ -803,10 +803,10 @@ Data Structures</h2></td></tr>
 <p >Read the value of the given variable for the specified controller and control group. The value is read up to newline character or at most max-1 characters, whichever comes first (i.e. similar to fgets()). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td>Name of the controller for which stats are requested. </td></tr>
-    <tr><td class="paramname">path</td><td>Path to control group, relative to hierarchy root. </td></tr>
+    <tr><td class="paramname">path</td><td>The path to control group, relative to hierarchy root. </td></tr>
     <tr><td class="paramname">name</td><td>is variable name. </td></tr>
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
-    <tr><td class="paramname">buffer</td><td>Buffer to read the value into. The buffer is always zero-terminated. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">buffer</td><td>The buffer to read the value into. The buffer is always zero-terminated. </td></tr>
     <tr><td class="paramname">max</td><td>Maximal lenght of the buffer </td></tr>
   </table>
   </dd>
@@ -867,9 +867,9 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Read the next string from the given variable handle which is generated by <a class="el" href="group__group__iterators.html#ga1138e47f124f0f634586db5e0c4ae5de">cgroup_read_stats_begin()</a> function. the value is read up to newline character or at most max-1 characters, whichever comes first (i.e. similar to fgets()) per <a class="el" href="group__group__iterators.html#gaf95587508fc15d74fd5ed0df58024be7">cgroup_read_stats_next()</a> call </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
     <tr><td class="paramname">data</td><td>returned the string. </td></tr>
-    <tr><td class="paramname">buffer</td><td>Buffer to read the value into. The buffer is always zero-terminated. </td></tr>
+    <tr><td class="paramname">buffer</td><td>The buffer to read the value into. The buffer is always zero-terminated. </td></tr>
     <tr><td class="paramname">max</td><td>Maximal lenght of the buffer </td></tr>
   </table>
   </dd>
@@ -932,8 +932,8 @@ Data Structures</h2></td></tr>
     <tr><td class="paramname">controller</td><td>Name of the controller, for which we want to walk the directory tree. </td></tr>
     <tr><td class="paramname">base_path</td><td>Begin walking from this path. Use "/" to walk through full hierarchy. </td></tr>
     <tr><td class="paramname">depth</td><td>The maximum depth to which the function should walk, 0 implies all the way down. </td></tr>
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
-    <tr><td class="paramname">info</td><td>Info filled and returned about directory information. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">info</td><td>The info filled and returned about directory information. </td></tr>
     <tr><td class="paramname">base_level</td><td>Opaque integer which you must pass to subsequent cgroup_walk_tree_next. </td></tr>
   </table>
   </dd>
@@ -1002,8 +1002,8 @@ Data Structures</h2></td></tr>
 <p >Get the next directory in the walk. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">depth</td><td>The maximum depth to which the function should walk, 0 implies all the way down. </td></tr>
-    <tr><td class="paramname">handle</td><td>Handle to be used during iteration. </td></tr>
-    <tr><td class="paramname">info</td><td>Info filled and returned about the next directory. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
+    <tr><td class="paramname">info</td><td>The info filled and returned about the next directory. </td></tr>
     <tr><td class="paramname">base_level</td><td>Value of base_level returned by <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a>. </td></tr>
   </table>
   </dd>
@@ -1039,7 +1039,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p >Set the flags for walk_tree. Currently available flags are in <a class="el" href="group__group__iterators.html#ga29a572cbc0c07e2b02dfa0f1ac0067d3">cgroup_walk_type</a> enum. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">handle</td><td>Handle of the iterator. </td></tr>
+    <tr><td class="paramname">handle</td><td>The handle of the iterator. </td></tr>
     <tr><td class="paramname">flags</td><td></td></tr>
   </table>
   </dd>

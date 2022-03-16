@@ -103,10 +103,10 @@ $(function() {
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a>(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, pid_t tid);</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, pid_t pid,</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> controllers[]);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>                  <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> controllers[]);</div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a>(pid_t pid, <span class="keyword">const</span> <span class="keywordtype">char</span> *controller,</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>                    <span class="keywordtype">char</span> **current_path);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>                       <span class="keywordtype">char</span> **current_path);</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span> </div>
@@ -117,10 +117,10 @@ $(function() {
 <div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gafc69658b012b6f1c11ba078ffccd70a2">cgroup_change_all_cgroups</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga368e7b8e19b3943ab6fb50e76a09e6ea">cgroup_change_cgroup_flags</a>(uid_t uid, gid_t gid,</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        <span class="keyword">const</span> <span class="keywordtype">char</span> *procname, pid_t pid, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                   <span class="keyword">const</span> <span class="keywordtype">char</span> *procname, pid_t pid, <span class="keywordtype">int</span> flags);</div>
 <div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span> </div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a>(uid_t uid, gid_t gid,</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                pid_t pid, <span class="keywordtype">int</span> flags);</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                       pid_t pid, <span class="keywordtype">int</span> flags);</div>
 <div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span> </div>
 <div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="keywordtype">int</span> <a class="code hl_function" href="group__group__tasks.html#ga5eab78a922dbacd368360f03c70146be">cgroup_change_cgroup_uid_gid</a>(uid_t uid, gid_t gid, pid_t pid);</div>
 <div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span> </div>
