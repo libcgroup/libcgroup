@@ -4,32 +4,33 @@
  * Written by Ivana Hutarova Varekova <varekova@redhat.com>
  */
 
-#include <stdio.h>
+#include <libcgroup.h>
+#include <libcgroup-internal.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdio.h>
 #include <errno.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <libcgroup.h>
-#include <libcgroup-internal.h>
 #include <pwd.h>
 #include <grp.h>
 
-enum flag{
-    FL_LIST =		1,
-    FL_SILENT =		2,  /* do-not show any warning/error output */
-    FL_STRICT =		4,  /* don show the variables which are not on
-			    whitelist */
-    FL_OUTPUT =		8,  /* output should be redirect to the given file */
-    FL_BLACK =		16, /* blacklist set */
-    FL_WHITE =		32, /* whitelist set */
+#include <sys/types.h>
+#include <sys/stat.h>
+
+enum flag {
+	FL_LIST =	1,
+	FL_SILENT =	2,  /* do-not show any warning/error output */
+	FL_STRICT =	4,  /* don show the variables which are not on */
+			    /* whitelist */
+	FL_OUTPUT =	8,  /* output should be redirect to the given file */
+	FL_BLACK =	16, /* blacklist set */
+	FL_WHITE =	32, /* whitelist set */
 };
 
-#define BLACKLIST_CONF		"/etc/cgsnapshot_blacklist.conf"
-#define WHITELIST_CONF		"/etc/cgsnapshot_whitelist.conf"
+#define BLACKLIST_CONF	"/etc/cgsnapshot_blacklist.conf"
+#define WHITELIST_CONF	"/etc/cgsnapshot_whitelist.conf"
 
 struct black_list_type {
 	char *name;			/* variable name */
@@ -50,39 +51,39 @@ FILE *output_f;
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,"
-			" try %s -h' for more information.\n",
+		fprintf(stderr, "Wrong input parameters,");
+		fprintf(stderr,	" try %s -h' for more information.\n",
 			program_name);
 		return;
 	}
-	printf("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] "\
-		"[controller] [...]\n", program_name);
+	printf("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] ",
+	       program_name);
+	printf("[controller] [...]\n");
 	printf("Generate the configuration file for given controllers\n");
-	printf("  -b, --blacklist=FILE		Set the blacklist"\
-		" configuration file (default %s)\n", BLACKLIST_CONF);
-	printf("  -f, --file=FILE		Redirect the output"\
-		" to output_file\n");
+	printf("  -b, --blacklist=FILE		Set the blacklist");
+	printf(" configuration file (default %s)\n", BLACKLIST_CONF);
+	printf("  -f, --file=FILE		Redirect the output");
+	printf(" to output_file\n");
 	printf("  -h, --help			Display this help\n");
 	printf("  -s, --silent			Ignore all warnings\n");
-	printf("  -t, --strict			Don't show variables "\
-		"which are not on the whitelist\n");
-	printf("  -w, --whitelist=FILE		Set the whitelist"\
-		" configuration file (don't used by default)\n");
+	printf("  -t, --strict			Don't show variables ");
+	printf("which are not on the whitelist\n");
+	printf("  -w, --whitelist=FILE		Set the whitelist");
+	printf(" configuration file (don't used by default)\n");
 }
 
 /* cache values from blacklist file to the list structure */
-
 int load_list(char *filename, struct black_list_type **p_list)
 {
-	FILE *fw;
-	int i = 0;
-	int ret;
-	char buf[FILENAME_MAX];
-	char name[FILENAME_MAX];
-
 	struct black_list_type *start = NULL;
 	struct black_list_type *end = NULL;
 	struct black_list_type *new;
+
+	char buf[FILENAME_MAX];
+	char name[FILENAME_MAX];
+	int i = 0;
+	FILE *fw;
+	int ret;
 
 	fw = fopen(filename, "r");
 	if (fw == NULL) {
@@ -108,19 +109,19 @@ int load_list(char *filename, struct black_list_type **p_list)
 		if (ret == 0)
 			continue;
 
-		new = (struct black_list_type *)malloc(sizeof
-			(struct black_list_type));
+		new = (struct black_list_type *)
+			malloc(sizeof(struct black_list_type));
 		if (new == NULL) {
-			fprintf(stderr, "ERROR: Memory allocation problem "
-				"(%s)\n", strerror(errno));
+			fprintf(stderr, "ERROR: Memory allocation problem ");
+			fprintf(stderr,	"(%s)\n", strerror(errno));
 			ret = 1;
 			goto err;
 		}
 
 		new->name = strdup(name);
 		if (new->name == NULL) {
-			fprintf(stderr, "ERROR: Memory allocation problem "
-				"(%s)\n", strerror(errno));
+			fprintf(stderr, "ERROR: Memory allocation problem ");
+			fprintf(stderr,	"(%s)\n", strerror(errno));
 			ret = 1;
 			free(new);
 			goto err;
@@ -140,6 +141,7 @@ int load_list(char *filename, struct black_list_type **p_list)
 	fclose(fw);
 
 	*p_list = start;
+
 	return 0;
 
 err:
@@ -152,6 +154,7 @@ err:
 		new = end;
 	}
 	*p_list = NULL;
+
 	return ret;
 }
 
@@ -168,10 +171,10 @@ void free_list(struct black_list_type *list)
 		free(now);
 		now = next;
 	}
-	return;
 }
 
-/* Test whether the variable is on the list
+/*
+ * Test whether the variable is on the list
  * return values are:
  * 1 ... was found
  * 0 ... no record was found
@@ -193,21 +196,21 @@ int is_on_list(char *name, struct black_list_type *list)
 
 	/* the variable was not found */
 	return 0;
-
 }
 
-/* Display permissions record for the given group
+/*
+ * Display permissions record for the given group
  * defined by path
  */
 static int display_permissions(const char *path, const char * const cg_name,
 			       const char * const ctrl_name)
 {
-	int ret;
-	struct stat sba;
-	struct stat sbt;
+	char tasks_path[FILENAME_MAX];
 	struct passwd *pw;
 	struct group *gr;
-	char tasks_path[FILENAME_MAX];
+	struct stat sba;
+	struct stat sbt;
+	int ret;
 
 	/* admin permissions record */
 	/* get the directory statistic */
@@ -236,9 +239,11 @@ static int display_permissions(const char *path, const char * const cg_name,
 	}
 
 	if ((sba.st_uid) || (sba.st_gid) ||
-		(sbt.st_uid) || (sbt.st_gid)) {
-		/* some uid or gid is nonroot, admin permission
-		   tag is necessery */
+	    (sbt.st_uid) || (sbt.st_gid)) {
+		/*
+		 * some uid or gid is nonroot, admin permission
+		 * tag is necessary
+		 */
 
 		/* print the header */
 		fprintf(output_f, "\tperm {\n");
@@ -259,10 +264,10 @@ static int display_permissions(const char *path, const char * const cg_name,
 		}
 
 		/* print the admin record */
-		fprintf(output_f, "\t\tadmin {\n"\
-			"\t\t\tuid = %s;\n"\
-			"\t\t\tgid = %s;\n"\
-			"\t\t}\n", pw->pw_name, gr->gr_name);
+		fprintf(output_f, "\t\tadmin {\n");
+		fprintf(output_f, "\t\t\tuid = %s;\n", pw->pw_name);
+		fprintf(output_f, "\t\t\tgid = %s;\n", gr->gr_name);
+		fprintf(output_f, "\t\t}\n");
 
 		/* find out the user and group name */
 		pw = getpwuid(sbt.st_uid);
@@ -280,10 +285,10 @@ static int display_permissions(const char *path, const char * const cg_name,
 		}
 
 		/* print the task record */
-		fprintf(output_f, "\t\ttask {\n"\
-			"\t\t\tuid = %s;\n"\
-			"\t\t\tgid = %s;\n"\
-			"\t\t}\n", pw->pw_name, gr->gr_name);
+		fprintf(output_f, "\t\ttask {\n");
+		fprintf(output_f, "\t\t\ttuid = %s;\n", pw->pw_name);
+		fprintf(output_f, "\t\t\ttgid = %s;\n", gr->gr_name);
+		fprintf(output_f, "\t\t}\n");
 
 		fprintf(output_f, "\t}\n");
 	}
@@ -291,28 +296,28 @@ static int display_permissions(const char *path, const char * const cg_name,
 	return 0;
 }
 
-/* Displey the control group record:
+/*
+ * Display the control group record:
  * header
  *   permission record
  *   controllers records
  * tail
  */
-
 static int display_cgroup_data(struct cgroup *group,
 		char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
 		const char *group_path, int root_path_len, int first,
 		const char *program_name)
 {
-	int i = 0, j;
+	struct cgroup_controller *group_controller = NULL;
+	char var_path[FILENAME_MAX];
+	char *value = NULL;
+	char *output_name;
+	struct stat sb;
 	int bl, wl = 0; /* is on the blacklist/whitelist flag */
 	int nr_var = 0;
-	char *name;
-	char *output_name;
-	struct cgroup_controller *group_controller = NULL;
-	char *value = NULL;
-	char var_path[FILENAME_MAX];
+	int i = 0, j;
 	int ret = 0;
-	struct stat sb;
+	char *name;
 
 	/* print the  group definition header */
 	fprintf(output_f, "group %s {\n", group->name);
@@ -327,8 +332,7 @@ static int display_cgroup_data(struct cgroup *group,
 
 		group_controller = cgroup_get_controller(group, controller[i]);
 		if (group_controller == NULL) {
-			printf("cannot find controller "\
-				"'%s' in group '%s'\n",
+			printf("cannot find controller '%s' in group '%s'\n",
 				controller[i], group->name);
 			i++;
 			ret = -1;
@@ -346,38 +350,46 @@ static int display_cgroup_data(struct cgroup *group,
 		for (j = 0; j < nr_var; j++) {
 			name = cgroup_get_value_name(group_controller, j);
 
-			/* For the non-root groups cgconfigparser set
-			   permissions of variable files to 777. Thus
-			   It is necessary to test the permissions of
-			   variable files in the root group to find out
-			   whether the variable is writable.
+			/*
+			 * For the non-root groups cgconfigparser set
+			 * permissions of variable files to 777. Thus
+			 * it is necessary to test the permissions of
+			 * variable files in the root group to find out
+			 * whether the variable is writable.
 			 */
 			if (root_path_len >= FILENAME_MAX)
 				root_path_len = FILENAME_MAX - 1;
+
 			strncpy(var_path, group_path, root_path_len);
 			var_path[root_path_len] = '\0';
-			strncat(var_path, "/", FILENAME_MAX -
-					strlen(var_path) - 1);
+
+			strncat(var_path, "/",
+				FILENAME_MAX - strlen(var_path) - 1);
 			var_path[FILENAME_MAX-1] = '\0';
-			strncat(var_path, name, FILENAME_MAX -
-					strlen(var_path) - 1);
+
+			strncat(var_path, name,
+				FILENAME_MAX - strlen(var_path) - 1);
 			var_path[FILENAME_MAX-1] = '\0';
 
 			/* test whether the  write permissions */
 			ret = stat(var_path, &sb);
-			/* freezer.state is not in root group so ret != 0,
+			/*
+			 * freezer.state is not in root group so ret != 0,
 			 * but it should be listed
 			 * device.list should be read to create
 			 * device.allow input
 			 */
-			if ((ret == 0) && ((sb.st_mode & S_IWUSR) == 0) &&
+			/* 0200 == S_IWUSR */
+			if ((ret == 0) && ((sb.st_mode & 0200) == 0) &&
 			    (strcmp("devices.list", name) != 0)) {
 				/* variable is not writable */
 				continue;
 			}
 
-			/* find whether the variable is blacklisted or
-			   whitelisted */
+			/*
+			 * find whether the variable is blacklisted or
+			 * whitelisted
+			 */
 			bl = is_on_list(name, black_list);
 			wl = is_on_list(name, white_list);
 
@@ -385,29 +397,37 @@ static int display_cgroup_data(struct cgroup *group,
 			if (bl)
 				continue;
 
-			/* if it is not whitelisted and strict tag is used
-			   skip it and continue too */
+			/*
+			 * if it is not whitelisted and strict tag is used
+			 * skip it and continue too
+			 */
 			if ((!wl) && (flags &  FL_STRICT))
 				continue;
 
-			/* if it is not whitelisted and silent tag is not
-			   used write an warning */
-			if ((!wl) && !(flags &  FL_SILENT) && (first))
-				fprintf(stderr, "WARNING: variable %s is "\
-					"neither blacklisted nor "\
-					"whitelisted\n", name);
+			/*
+			 * if it is not whitelisted and silent tag is not
+			 * used write an warning
+			 */
+			if ((!wl) && !(flags &  FL_SILENT) && (first)) {
+				fprintf(stderr, "WARNING: variable %s is ",
+					name);
+				fprintf(stderr,	"neither blacklisted nor ");
+				fprintf(stderr,	"whitelisted\n");
+			}
 
 			output_name = name;
 
-			/* deal with devices variables:
+			/*
+			 * deal with devices variables:
 			 * - omit devices.deny and device.allow,
 			 * - generate devices.{deny,allow} from
 			 * device.list variable (deny all and then
-			 * all device.list devices */
+			 * all device.list devices
+			 */
 			if ((strcmp("devices.deny", name) == 0) ||
-				(strcmp("devices.allow", name) == 0)) {
+			    (strcmp("devices.allow", name) == 0))
 				continue;
-			}
+
 			if (strcmp("devices.list", name) == 0) {
 				output_name = "devices.allow";
 				fprintf(output_f,
@@ -415,13 +435,13 @@ static int display_cgroup_data(struct cgroup *group,
 			}
 
 			ret = cgroup_get_value_string(group_controller,
-				name, &value);
+						      name, &value);
 
 			/* variable can not be read */
 			if (ret != 0) {
 				ret = 0;
-				fprintf(stderr, "ERROR: Value of "\
-					"variable %s can be read\n",
+				fprintf(stderr, "ERROR: Value of ");
+				fprintf(stderr,	"variable %s can be read\n",
 					name);
 				goto err;
 			}
@@ -443,25 +463,24 @@ err:
  * "controller" subsystem
  */
 static int display_controller_data(
-		char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
-		const char *program_name)
+			char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
+			const char *program_name)
 {
-	int ret;
+	char cgroup_name[FILENAME_MAX];
+	struct cgroup_file_info info;
+	struct cgroup *group = NULL;
+	int prefix_len;
 	void *handle;
 	int first = 1;
-
-	struct cgroup_file_info info;
 	int lvl;
+	int ret;
 
-	int prefix_len;
-	char cgroup_name[FILENAME_MAX];
-
-	struct cgroup *group = NULL;
-
-	/* start to parse the structure for the first controller -
-	   controller[0] attached to hierarchie */
+	/*
+	 * start to parse the structure for the first controller -
+	 * controller[0] attached to hierarchy
+	 */
 	ret = cgroup_walk_tree_begin(controller[0], "/", 0,
-		&handle, &info, &lvl);
+				     &handle, &info, &lvl);
 	if (ret != 0)
 		return ret;
 
@@ -476,7 +495,6 @@ static int display_controller_data(
 				FILENAME_MAX);
 			cgroup_name[FILENAME_MAX-1] = '\0';
 
-
 			/* start to grab data about the new group */
 			group = cgroup_new_cgroup(cgroup_name);
 			if (group == NULL) {
@@ -489,12 +507,12 @@ static int display_controller_data(
 			ret = cgroup_get_cgroup(group);
 			if (ret != 0) {
 				printf("cannot read group '%s': %s\n",
-				cgroup_name, cgroup_strerror(ret));
+					cgroup_name, cgroup_strerror(ret));
 				goto err;
 			}
 
 			display_cgroup_data(group, controller, info.full_path,
-				prefix_len, first, program_name);
+					    prefix_len, first, program_name);
 			first = 0;
 			cgroup_free(&group);
 		}
@@ -506,11 +524,10 @@ err:
 		ret = 0;
 
 	return ret;
-
 }
 
 static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
-			cont_name_t wanted_conts[FILENAME_MAX])
+			   cont_name_t wanted_conts[FILENAME_MAX])
 {
 	int i = 0;
 	int j = 0;
@@ -531,14 +548,13 @@ static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
 
 /* print data about input cont_name controller */
 static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
-	const char *program_name)
+			     const char *program_name)
 {
-	int ret = 0;
-	void *handle;
-	char path[FILENAME_MAX];
-	struct cgroup_mount_point controller;
-
 	char controllers[CG_CONTROLLER_MAX][FILENAME_MAX];
+	struct cgroup_mount_point controller;
+	char path[FILENAME_MAX];
+	void *handle;
+	int ret = 0;
 	int max = 0;
 
 	path[0] = '\0';
@@ -559,11 +575,11 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 			/* we got new mount point, print it if needed */
 			if ((!(flags & FL_LIST) ||
-				(is_ctlr_on_list(controllers, cont_names)))
-				&& (max != 0)) {
+			     (is_ctlr_on_list(controllers, cont_names)))
+			    && (max != 0)) {
 				(controllers[max])[0] = '\0';
-				ret = display_controller_data(
-					controllers, program_name);
+				ret = display_controller_data(controllers,
+							      program_name);
 			}
 
 			strncpy(controllers[0], controller.name, FILENAME_MAX);
@@ -579,25 +595,25 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	}
 
 	if ((!(flags & FL_LIST) ||
-		(is_ctlr_on_list(controllers, cont_names)))
-		&& (max != 0)) {
+	     (is_ctlr_on_list(controllers, cont_names)))
+	    && (max != 0)) {
 		(controllers[max])[0] = '\0';
-		ret = display_controller_data(
-			controllers, program_name);
+		ret = display_controller_data(controllers, program_name);
 	}
 
 	cgroup_get_controller_end(&handle);
 	if (ret != ECGEOF)
 		return ret;
+
 	return 0;
 }
 
 static int show_mountpoints(const char *controller)
 {
 	char path[FILENAME_MAX];
-	int ret;
-	void *handle;
 	int quote = 0;
+	void *handle;
+	int ret;
 
 	if (strncmp(controller, "name=", 5) == 0)
 		quote = 1;
@@ -617,15 +633,17 @@ static int show_mountpoints(const char *controller)
 
 	if (ret != ECGEOF)
 		return ret;
+
 	return 0;
 }
 
-/* parse whether data about given controller "name" should be displayed.
+/*
+ * parse whether data about given controller "name" should be displayed.
  * If yes then the data are printed. "cont_names" is list of controllers
  * which should be shown.
  */
 static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
-	char *name)
+			     char *name)
 {
 	int i;
 
@@ -633,9 +651,10 @@ static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	if (!(flags & FL_LIST)) {
 		if (show_mountpoints(name)) {
 			/* the controller is not mounted */
-			if ((flags & FL_SILENT) == 0)
-				fprintf(stderr, "ERROR: %s hierarchy "\
-					"not mounted\n", name);
+			if ((flags & FL_SILENT) == 0) {
+				fprintf(stderr, "ERROR: %s hierarchy ", name);
+				fprintf(stderr,	"not mounted\n");
+			}
 		}
 		return;
 	}
@@ -647,26 +666,25 @@ static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			if (show_mountpoints(name)) {
 				/* the controller is not mounted */
 				if ((flags & FL_SILENT) == 0) {
-					fprintf(stderr, "ERROR: %s hierarchy "\
-						"not mounted\n", name);
+					fprintf(stderr, "ERROR: %s ", name);
+					fprintf(stderr, "hierarchy not ");
+					fprintf(stderr, "mounted\n");
 				}
 			break;
 			}
 		break;
 		}
 	}
-
-	return;
 }
 
 /* print data about input mount points */
 static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
-	const char *program_name)
+			     const char *program_name)
 {
+	struct cgroup_mount_point mount;
+	struct controller_data info;
 	int ret, final_ret = 0;
 	void *handle;
-	struct controller_data info;
-	struct cgroup_mount_point mount;
 
 	/* start mount section */
 	fprintf(output_f, "mount {\n");
@@ -682,6 +700,7 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		/* next controller */
 		ret = cgroup_get_all_controller_next(&handle, &info);
 	}
+
 	if (ret != ECGEOF) {
 		if ((flags &  FL_SILENT) != 0) {
 			fprintf(stderr,
@@ -690,6 +709,7 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		}
 		final_ret = ret;
 	}
+
 	cgroup_get_all_controller_end(&handle);
 
 	/* process also named hierarchies */
@@ -708,42 +728,43 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 		}
 		final_ret = ret;
 	}
+
 	cgroup_get_controller_end(&handle);
 
 	/* finish mount section */
 	fprintf(output_f, "}\n\n");
+
 	return final_ret;
 }
 
 int main(int argc, char *argv[])
 {
-	int ret = 0, err;
-	int c;
-
-	int i;
-	int c_number = 0;
-	cont_name_t wanted_cont[CG_CONTROLLER_MAX];
-
-	char bl_file[FILENAME_MAX];  /* blacklist file name */
-	char wl_file[FILENAME_MAX];  /* whitelist file name */
-
 	static struct option long_opts[] = {
-		{"help", no_argument, NULL, 'h'},
-		{"silent" , no_argument, NULL, 's'},
-		{"blacklist", required_argument, NULL, 'b'},
-		{"whitelist", required_argument, NULL, 'w'},
-		{"strict", no_argument, NULL, 't'},
-		{"file", required_argument, NULL, 'f'},
+		{"help",	      no_argument, NULL, 'h'},
+		{"silent",	      no_argument, NULL, 's'},
+		{"blacklist",	required_argument, NULL, 'b'},
+		{"whitelist",	required_argument, NULL, 'w'},
+		{"strict",	      no_argument, NULL, 't'},
+		{"file",	required_argument, NULL, 'f'},
 		{0, 0, 0, 0}
 	};
 
+	cont_name_t wanted_cont[CG_CONTROLLER_MAX];
+	char bl_file[FILENAME_MAX];  /* blacklist file name */
+	char wl_file[FILENAME_MAX];  /* whitelist file name */
+	int ret = 0, err;
+	int c_number = 0;
+	int c, i;
+
+
 	for (i = 0; i < CG_CONTROLLER_MAX; i++)
 		wanted_cont[i][0] = '\0';
+
 	flags = 0;
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "hsb:w:tf:", long_opts, NULL))
-		> 0) {
+	while ((c = getopt_long(argc, argv, "hsb:w:tf:", long_opts,
+				NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -825,7 +846,7 @@ int main(int argc, char *argv[])
 	/* continue with processing on error*/
 
 	/* print hierarchies section */
-	/*replace error from parse_mountpoints() only with another error*/
+	/* replace error from parse_mountpoints() only with another error */
 	err = parse_controllers(wanted_cont, argv[0]);
 	if (err)
 		ret = err;
