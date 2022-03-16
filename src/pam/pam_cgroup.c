@@ -43,14 +43,15 @@
  * End of original copyright notice.
  */
 
-#include <stdio.h>
+#include <libcgroup.h>
+
+#include <syslog.h>
 #include <unistd.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 #include <errno.h>
-#include <syslog.h>
-#include <libcgroup.h>
 #include <pwd.h>
 
 /*
@@ -70,27 +71,27 @@
 
 static int _pam_parse(const pam_handle_t *pamh, int argc, const char **argv)
 {
-    int ctrl = 0;
+	int ctrl = 0;
 
-    /* step through arguments */
-    for (ctrl = 0; argc-- > 0; ++argv) {
-	if (!strcmp(*argv, "debug"))
-		ctrl |= PAM_DEBUG_ARG;
-	else
-		pam_syslog(pamh, LOG_ERR, "unknown option: %s", *argv);
-    }
+	/* step through arguments */
+	for (ctrl = 0; argc-- > 0; ++argv) {
+		if (!strcmp(*argv, "debug"))
+			ctrl |= PAM_DEBUG_ARG;
+		else
+			pam_syslog(pamh, LOG_ERR, "unknown option: %s", *argv);
+	}
 
-    return ctrl;
+	return ctrl;
 }
 
 /* now the session stuff */
 PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
-					int argc, const char **argv)
+				   int argc, const char **argv)
 {
-	pid_t pid;
-	int ctrl, ret;
-	char *user_name;
 	struct passwd *pwd;
+	char *user_name;
+	int ctrl, ret;
+	pid_t pid;
 
 	D(("called."));
 
@@ -98,16 +99,17 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
 
 	ret = pam_get_item(pamh, PAM_USER, (void *) &user_name);
 	if (user_name == NULL || ret != PAM_SUCCESS)  {
-		pam_syslog(pamh, LOG_ERR, "open_session - error recovering"
-				"username");
+		pam_syslog(pamh, LOG_ERR,
+			   "open_session - error recovering username");
 		return PAM_SESSION_ERR;
 	}
 
 	pwd = pam_modutil_getpwnam(pamh, user_name);
 	if (!pwd) {
 		if (ctrl & PAM_DEBUG_ARG)
-			pam_syslog(pamh, LOG_ERR, "open_session username"
-					" '%s' does not exist", user_name);
+			pam_syslog(pamh, LOG_ERR,
+				   "open_session username '%s' does not exist",
+				   user_name);
 		return PAM_SESSION_ERR;
 	}
 
@@ -117,8 +119,8 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
 	ret = cgroup_init();
 	if (ret) {
 		if (ctrl & PAM_DEBUG_ARG)
-			pam_syslog(pamh, LOG_ERR, "libcgroup initialization"
-							" failed");
+			pam_syslog(pamh, LOG_ERR,
+				   "libcgroup initialization failed");
 		return PAM_SESSION_ERR;
 	}
 
@@ -127,27 +129,32 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
 	/* Determine the pid of the task */
 	pid = getpid();
 
-	/* Note: We are using default gid here. Is there a way to determine
+	/*
+	 * Note: We are using default gid here. Is there a way to determine
 	 * under what egid service will be provided?
 	 */
 	ret = cgroup_change_cgroup_uid_gid_flags(pwd->pw_uid,
 		pwd->pw_gid, pid, CGFLAG_USECACHE);
 	if (ret) {
-		if (ctrl & PAM_DEBUG_ARG)
-			pam_syslog(pamh, LOG_ERR, "Change of cgroup for process"
-				" with username %s failed.\n", user_name);
+		if (ctrl & PAM_DEBUG_ARG) {
+			pam_syslog(pamh, LOG_ERR,
+				   "Change of cgroup for process with username");
+			pam_syslog(pamh, LOG_ERR, "%s failed.\n", user_name);
+		}
 		return PAM_SESSION_ERR;
 	}
 
-	if (ctrl & PAM_DEBUG_ARG)
-		pam_syslog(pamh, LOG_DEBUG, "Changed cgroup for process %d"
-				"  with username %s.\n", pid, user_name);
+	if (ctrl & PAM_DEBUG_ARG) {
+		pam_syslog(pamh, LOG_DEBUG,
+			   "Changed cgroup for process %d", pid);
+		pam_syslog(pamh, LOG_DEBUG, "  with username %s.\n", user_name);
+	}
 
 	return PAM_SUCCESS;
 }
 
 PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc,
-					const char **argv)
+				    const char **argv)
 {
 	D(("called pam_cgroup close session"));
 
