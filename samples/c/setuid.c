@@ -5,14 +5,15 @@
  * Author:      Steve Olivieri <sjo@redhat.com>
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
 #include <pwd.h>
 #include <grp.h>
-#include <errno.h>
-#include <string.h>
+
+#include <sys/types.h>
 
 /*
  * This is just a simple program for changing a UID or a GID.  Comment out
@@ -30,22 +31,24 @@ int main(int argc, char *argv[])
 	int ret = 0;
 
 	if (argc < 2) {
-		printf("Usage: %s <uid_value> \n", argv[0]);
+		printf("Usage: %s <uid_value>\n", argv[0]);
 		goto finished;
 	}
 
 	pwd = getpwnam(argv[1]);
 	if (!pwd) {
 		fprintf(stderr, "getpwnam() failed: %s\n",
-				strerror(errno));
+			strerror(errno));
 		ret = -errno;
 		goto finished;
 	}
+
 	uid = pwd->pw_uid;
 	fprintf(stdout, "Setting UID to %s (%d).\n", pwd->pw_name, uid);
-	if ((ret = setuid(uid))) {
+	ret = setuid(uid);
+	if (ret != 0) {
 		fprintf(stderr, "Call to setuid() failed with error: %s\n",
-				strerror(errno));
+			strerror(errno));
 		ret = -errno;
 		goto finished;
 	}
@@ -63,9 +66,8 @@ int main(int argc, char *argv[])
 //		}
 //	}
 
-	while (1) {
+	while (1)
 		usleep(3000000);
-	}
 
 finished:
 	return ret;
