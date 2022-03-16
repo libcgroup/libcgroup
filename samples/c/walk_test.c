@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: LGPL-2.1-only
-#include <stdio.h>
+#include <libcgroup.h>
+
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#include <libcgroup.h>
+#include <stdio.h>
+
+#include <sys/types.h>
 
 void visit_node(struct cgroup_file_info *info, char *root)
 {
 	if (info->type == CGROUP_FILE_TYPE_DIR) {
 		printf("path %s, parent %s, relative %s, full %s\n",
-			info->path, info->parent, info->full_path +
-				+ strlen(root) - 1,
-				info->full_path);
+			info->path, info->parent,
+			info->full_path + strlen(root) - 1,
+			info->full_path);
 	}
 }
 
 int main(int argc, char *argv[])
 {
-	int ret;
-	char *controller;
-	void *handle;
 	struct cgroup_file_info info;
 	char root[FILENAME_MAX];
+	char *controller;
+	void *handle;
 	int lvl, i;
+	int ret;
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage %s: <controller name>\n",
@@ -45,6 +47,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Walk failed\n");
 		exit(EXIT_FAILURE);
 	}
+
 	strcpy(root, info.full_path);
 	printf("Begin pre-order walk\n");
 	printf("root is %s\n", root);
@@ -118,5 +121,6 @@ int main(int argc, char *argv[])
 			break;
 	}
 	cgroup_walk_tree_end(&handle);
+
 	return EXIT_SUCCESS;
 }
