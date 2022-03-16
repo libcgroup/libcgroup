@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: LGPL-2.1-only
-#include <stdio.h>
+#include <libcgroup.h>
+
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-#include <libcgroup.h>
+#include <stdio.h>
+
+#include <sys/types.h>
 
 int read_stats(char *path, char *controller)
 {
-	int ret;
-	void *handle;
 	struct cgroup_stat stat;
+	void *handle;
+	int ret;
 
 	ret = cgroup_read_stats_begin(controller, path,  &handle, &stat);
-
 	if (ret != 0) {
 		fprintf(stderr, "stats read failed\n");
 		return -1;
@@ -34,13 +35,13 @@ int read_stats(char *path, char *controller)
 
 int main(int argc, char *argv[])
 {
-	int ret;
-	char *controller;
-	void *handle;
 	struct cgroup_file_info info;
-	int lvl;
 	char cgroup_path[FILENAME_MAX];
+	char *controller;
 	int root_len;
+	void *handle;
+	int lvl;
+	int ret;
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage %s: <controller name>\n",
