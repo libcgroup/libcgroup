@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: LGPL-2.1-only
 #include <libcgroup.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-int main()
+#include <stdlib.h>
+#include <stdio.h>
+
+int main(void)
 {
-	int error;
-	void *handle;
 	struct controller_data info;
+	void *handle;
+	int error;
 
 	error = cgroup_init();
 
@@ -24,7 +25,7 @@ int main()
 		error = cgroup_get_all_controller_next(&handle, &info);
 		if (error && error != ECGEOF) {
 			printf("cgroup_get_controller_next failed with %s\n",
-							cgroup_strerror(error));
+			       cgroup_strerror(error));
 			exit(1);
 		}
 	}
