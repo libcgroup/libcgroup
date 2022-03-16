@@ -5,20 +5,21 @@
  * Authors:	Ivana Hutarova Varekova <varekova@redhat.com>
  */
 
+#include "tools-common.h"
+
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 
-#include <stdio.h>
+#include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pwd.h>
-#include <sys/types.h>
-#include <errno.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
+#include <pwd.h>
 #include <grp.h>
-#include <getopt.h>
 
-#include "tools-common.h"
+#include <sys/types.h>
 
 /*
  * Display the usage
@@ -26,21 +27,22 @@
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,"
-			" try %s -h' for more information.\n",
+		fprintf(stderr, "Wrong input parameters, ");
+		fprintf(stderr, " try %s -h' for more information.\n",
 			program_name);
 		return;
 	}
-	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] "\
-		"[-t <tuid>:<tgid>] [-a <agid>:<auid>] "\
-		"-g <controllers>:<path> [-g ...]\n", program_name);
+
+	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] ", program_name);
+	printf("[-t <tuid>:<tgid>] [-a <agid>:<auid>] ");
+	printf("-g <controllers>:<path> [-g ...]\n");
 	printf("Create control group(s)\n");
-	printf("  -a <tuid>:<tgid>		Owner of the group and all "\
-		"its files\n");
+	printf("  -a <tuid>:<tgid>		Owner of the group and all ");
+	printf("its files\n");
 	printf("  -d, --dperm=mode		Group directory permissions\n");
 	printf("  -f, --fperm=mode		Group file permissions\n");
-	printf("  -g <controllers>:<path>	Control group which should be "\
-		"added\n");
+	printf("  -g <controllers>:<path>	Control group which should ");
+	printf("be added\n");
 	printf("  -h, --help			Display this help\n");
 	printf("  -s, --tperm=mode		Tasks file permissions\n");
 	printf("  -t <tuid>:<tgid>		Owner of the tasks file\n");
@@ -48,18 +50,14 @@ static void usage(int status, const char *program_name)
 
 int main(int argc, char *argv[])
 {
-	int ret = 0;
-	int i, j;
-	int c;
-
 	static struct option long_opts[] = {
-		{"help", no_argument, NULL, 'h'},
-		{"task", required_argument, NULL, 't'},
-		{"admin", required_argument, NULL, 'a'},
-		{"", required_argument, NULL, 'g'},
-		{"dperm", required_argument, NULL, 'd'},
-		{"fperm", required_argument, NULL, 'f' },
-		{"tperm", required_argument, NULL, 's' },
+		{"help",	      no_argument, NULL, 'h'},
+		{"task",	required_argument, NULL, 't'},
+		{"admin",	required_argument, NULL, 'a'},
+		{"",		required_argument, NULL, 'g'},
+		{"dperm",	required_argument, NULL, 'd'},
+		{"fperm",	required_argument, NULL, 'f'},
+		{"tperm",	required_argument, NULL, 's'},
 		{0, 0, 0, 0},
 	};
 
@@ -67,24 +65,29 @@ int main(int argc, char *argv[])
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
 
 	struct cgroup_group_spec **cgroup_list;
-	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
+	struct cgroup *cgroup;
 
 	/* approximation of max. numbers of groups that will be created */
 	int capacity = argc;
 
 	/* permission variables */
-	mode_t dir_mode = NO_PERMS;
-	mode_t file_mode = NO_PERMS;
 	mode_t tasks_mode = NO_PERMS;
-	int dirm_change = 0;
+	mode_t file_mode = NO_PERMS;
+	mode_t dir_mode = NO_PERMS;
 	int filem_change = 0;
+	int dirm_change = 0;
+
+	int ret = 0;
+	int i, j;
+	int c;
 
 	/* no parametr on input */
 	if (argc < 2) {
 		usage(1, argv[0]);
 		return -1;
 	}
+
 	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
 	if (cgroup_list == NULL) {
 		fprintf(stderr, "%s: out of memory\n", argv[0]);
@@ -93,8 +96,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts, NULL))
-		> 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts,
+				NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -113,10 +116,10 @@ int main(int argc, char *argv[])
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
 			if (ret) {
-				fprintf(stderr, "%s: "
-					"cgroup controller and path"
-					"parsing failed (%s)\n",
-					argv[0], argv[optind]);
+				fprintf(stderr, "%s: ", argv[0]);
+				fprintf(stderr,	"cgroup controller and path");
+				fprintf(stderr, "parsing failed (%s)\n",
+					argv[optind]);
 				ret = -1;
 				goto err;
 			}
@@ -148,9 +151,8 @@ int main(int argc, char *argv[])
 
 	/* no cgroup name */
 	if (argv[optind]) {
-		fprintf(stderr, "%s: "
-			"wrong arguments (%s)\n",
-			argv[0], argv[optind]);
+		fprintf(stderr, "%s: wrong arguments (%s)\n", argv[0],
+			argv[optind]);
 		ret = -1;
 		goto err;
 	}
@@ -158,8 +160,7 @@ int main(int argc, char *argv[])
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "%s: "
-			"libcgroup initialization failed: %s\n",
+		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
 			argv[0], cgroup_strerror(ret));
 		goto err;
 	}
@@ -216,17 +217,18 @@ int main(int argc, char *argv[])
 		/* all variables set so create cgroup */
 		if (dirm_change | filem_change)
 			cgroup_set_permissions(cgroup, dir_mode, file_mode,
-					tasks_mode);
+					       tasks_mode);
+
 		ret = cgroup_create_cgroup(cgroup, 0);
 		if (ret) {
-			fprintf(stderr, "%s: "
-				"can't create cgroup %s: %s\n",
+			fprintf(stderr, "%s: can't create cgroup %s: %s\n",
 				argv[0], cgroup->name, cgroup_strerror(ret));
 			cgroup_free(&cgroup);
 			goto err;
 		}
 		cgroup_free(&cgroup);
 	}
+
 err:
 	if (cgroup_list) {
 		for (i = 0; i < capacity; i++) {
@@ -235,5 +237,6 @@ err:
 		}
 		free(cgroup_list);
 	}
+
 	return ret;
 }
