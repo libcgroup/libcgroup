@@ -11,7 +11,7 @@
 
 /* The messages that may be useful to the user */
 char info[][SIZE] = {
-	" Parameter nullcgroup\n", 			/* NULLGRP */
+	" Parameter nullcgroup\n",			/* NULLGRP */
 	" Parameter commoncgroup\n",			/* COMMONGRP */
 	" Parameter not created group\n",		/* NOTCRTDGRP */
 	" Parameter same cgroup\n",			/* SAMEGRP */
@@ -59,10 +59,12 @@ void test_cgroup_init(int retcode, int i)
  * @param k the message enum number to print the useful message
  */
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
-	 const char *group1, const char *group2, pid_t pid, int k, int i)
+			     const char *group1, const char *group2, pid_t pid,
+			     int k, int i)
 {
-	int retval;
 	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
+	int retval;
+
 	/* Check, In case some error is expected due to a negative scenario */
 	if (retcode) {
 		if (pid)
@@ -86,29 +88,28 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 
 	/* API returned success, so perform check */
 	if (retval == 0) {
-		build_path(tasksfile, mountpoint,
-					 group1, "tasks");
+		build_path(tasksfile, mountpoint, group1, "tasks");
 
 		if (check_task(tasksfile, 0)) {
 			if (fs_mounted == 2) {
 				/* multiple mounts */
 				build_path(tasksfile2, mountpoint2,
-							 group2, "tasks");
+					   group2, "tasks");
 				if (check_task(tasksfile2, 0)) {
 					message(i, PASS, "attach_task()",
-						 retval, info[TASKINGRP]);
+						retval, info[TASKINGRP]);
 				} else {
 					message(i, FAIL, "attach_task()",
-						 retval, info[TASKNOTINANYGRP]);
+						retval, info[TASKNOTINANYGRP]);
 				}
 			} else {
 				/* single mount */
 				message(i, PASS, "attach_task()",
-						 retval, info[TASKINGRP]);
+					retval, info[TASKINGRP]);
 			}
 		} else {
 			message(i, FAIL, "attach_task()", retval,
-							 info[TASKNOTINGRP]);
+				info[TASKNOTINGRP]);
 		}
 	} else {
 		message(i, FAIL, "attach_task()", retval, (char *)"\n");
@@ -126,11 +127,12 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
  * @param the test number
  */
 struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
-	 int value_type, struct cntl_val_t cval, struct uid_gid_t ids, int i)
+				    int value_type, struct cntl_val_t cval,
+				    struct uid_gid_t ids, int i)
 {
-	int retval;
-	char group[FILENAME_MAX];
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	char group[FILENAME_MAX];
+	int retval;
 
 	strncpy(group, grpname, sizeof(group) - 1);
 	retval = set_controller(ctl, controller_name, control_file);
@@ -140,8 +142,10 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	}
 
 	switch (ctl) {
-		/* control values are controller specific, so will be set
-		 * accordingly from the config file */
+		/*
+		 * control values are controller specific, so will be set
+		 * accordingly from the config file
+		 */
 	case CPU:
 		strncpy(cval.val_string, "260000", sizeof(cval.val_string));
 		break;
@@ -152,10 +156,9 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 
 	/* To be added for other controllers */
 	default:
-		printf("Invalid controller name passed. Setting control value"
-					" failed. Dependent tests may fail\n");
+		printf("Invalid controller name passed. Setting control ");
+		printf("value failed. Dependent tests may fail\n");
 		return NULL;
-		break;
 	}
 
 	return new_cgroup(group, controller_name, control_file,
@@ -173,19 +176,21 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
  * @param the test number
  */
 void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
-			 const char *name, int common, int mpnt, int ign, int i)
+			       const char *name, int common, int mpnt,
+			       int ign, int i)
 {
-	int retval;
 	char path1_group[FILENAME_MAX], path2_group[FILENAME_MAX];
+	int retval;
+
 	/* Check, In case some error is expected due to a negative scenario */
 	if (retcode) {
 		retval = cgroup_create_cgroup(cgrp, ign);
 		if (retval == retcode)
 			message(i, PASS, "create_cgroup()", retval,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 		else
 			message(i, FAIL, "create_cgroup()", retval,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 
 		return;
 	}
@@ -209,10 +214,10 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 
 		if (group_exist(path1_group) == 0)
 			message(i, PASS, "create_cgroup()", retval,
-							 info[GRPINFS]);
+				info[GRPINFS]);
 		else
 			message(i, FAIL, "create_cgroup()", retval,
-							 info[GRPNOTINFS]);
+				info[GRPNOTINFS]);
 
 	 /* group under both mountpoints */
 	} else {
@@ -223,17 +228,15 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
 
 			if (group_exist(path2_group) == 0)
 				message(i, PASS, "create_cgroup()",
-						 retval, info[GRPINBOTHCTLS]);
+					retval, info[GRPINBOTHCTLS]);
 			else
 				message(i, FAIL, "create_cgroup()",
-						 retval, info[GRPNOTIN2NDCTL]);
+					retval, info[GRPNOTIN2NDCTL]);
 		} else {
 			message(i, FAIL, "create_cgroup()", retval,
-							 info[GRPNOTIN1STCTL]);
+				info[GRPNOTIN1STCTL]);
 		}
 	}
-
-	return;
 }
 
 /**
@@ -247,19 +250,21 @@ void test_cgroup_create_cgroup(int retcode, struct cgroup *cgrp,
  * @param the test number
  */
 void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
-			 const char *name, int common, int mpnt, int ign, int i)
+			       const char *name, int common, int mpnt, int ign,
+			       int i)
 {
-	int retval;
 	char path1_group[FILENAME_MAX], path2_group[FILENAME_MAX];
+	int retval;
+
 	/* Check, In case some error is expected due to a negative scenario */
 	if (retcode) {
 		retval = cgroup_delete_cgroup(cgrp, ign);
 		if (retval == retcode)
 			message(i, PASS, "delete_cgroup()", retval,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 		else
 			message(i, FAIL, "delete_cgroup()", retval,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 
 		return;
 	}
@@ -283,10 +288,10 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 
 		if (group_exist(path1_group) == ENOENT)
 			message(i, PASS, "delete_cgroup()", retval,
-						 info[GRPDELETEDINFS]);
+				info[GRPDELETEDINFS]);
 		else
 			message(i, FAIL, "delete_cgroup()", retval,
-						 info[GRPNOTDELETEDINFS]);
+				info[GRPNOTDELETEDINFS]);
 
 	} else {
 		/* check group under both mountpoints */
@@ -297,13 +302,13 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 
 			if (group_exist(path2_group) == ENOENT)
 				message(i, PASS, "delete_cgroup()",
-						 retval, info[GRPDELETEDINFS]);
+					retval, info[GRPDELETEDINFS]);
 			else
 				message(i, FAIL, "delete_cgroup()",
-					 retval, info[GRPNOTDELETEDGLOBALY]);
+					retval, info[GRPNOTDELETEDGLOBALY]);
 		} else {
 			message(i, FAIL, "delete_cgroup()", retval,
-						 info[GRPNOTDELETEDINFS]);
+				info[GRPNOTDELETEDINFS]);
 		}
 	}
 
@@ -317,8 +322,8 @@ void test_cgroup_delete_cgroup(int retcode, struct cgroup *cgrp,
 void is_subsystem_enabled(const char *name, int *exist)
 {
 	int hierarchy, num_cgroups, enabled;
-	FILE *fd;
 	char subsys_name[FILENAME_MAX];
+	FILE *fd;
 
 	fd = fopen("/proc/cgroups", "r");
 	if (!fd)
@@ -326,7 +331,7 @@ void is_subsystem_enabled(const char *name, int *exist)
 
 	while (!feof(fd)) {
 		fscanf(fd, "%s, %d, %d, %d", subsys_name,
-					 &hierarchy, &num_cgroups, &enabled);
+		       &hierarchy, &num_cgroups, &enabled);
 		if (strncmp(name, subsys_name, sizeof(*name)) == 0)
 			*exist = 1;
 	}
@@ -341,6 +346,7 @@ void is_subsystem_enabled(const char *name, int *exist)
 int group_exist(char *path_group)
 {
 	struct stat statbuf;
+
 	if (stat(path_group, &statbuf) == -1) {
 		/* Group deleted. OK */
 		if (errno == ENOENT)
@@ -372,7 +378,6 @@ int set_controller(int controller, char *controller_name, char *control_file)
 		strncpy(controller_name, "memory", FILENAME_MAX);
 		strncpy(control_file, "memory.limit_in_bytes", FILENAME_MAX);
 		return 0;
-		break;
 
 	case CPU:
 		if (cpu == 0)
@@ -381,20 +386,17 @@ int set_controller(int controller, char *controller_name, char *control_file)
 		strncpy(controller_name, "cpu", FILENAME_MAX);
 		strncpy(control_file, "cpu.shares", FILENAME_MAX);
 		return 0;
-		break;
 
 	case CPUSET:
 		strncpy(controller_name, "cpuset", FILENAME_MAX);
 		strncpy(control_file, "cpuset.cpus", FILENAME_MAX);
 		return 0;
-		break;
 		/* Future controllers can be added here */
 
 	default:
-		printf("Invalid controller name passed. Setting controller"
-					" failed. Dependent tests may fail\n");
+		printf("Invalid controller name passed. Setting controller");
+		printf(" failed. Dependent tests may fail\n");
 		return 1;
-		break;
 	}
 }
 
@@ -405,15 +407,15 @@ int set_controller(int controller, char *controller_name, char *control_file)
  * @param struct cval the control value structure
  */
 int group_modified(char *path_control_file, int value_type,
-						 struct cntl_val_t cval)
+		   struct cntl_val_t cval)
 {
-	bool bool_val;
-	int64_t int64_val;
 	u_int64_t uint64_val;
 	/* 100 char looks ok for a control value as string */
 	char string_val[100];
-	FILE *fd;
+	int64_t int64_val;
+	bool bool_val;
 	int error = 1;
+	FILE *fd;
 	int aux;
 
 	fd = fopen(path_control_file, "r");
@@ -447,8 +449,7 @@ int group_modified(char *path_control_file, int value_type,
 			error = 0;
 		break;
 	default:
-		fprintf(stderr, "Wrong value_type passed "
-						"in group_modified()\n");
+		fprintf(stderr, "Wrong value_type passed in %s\n", __func__);
 		fprintf(stderr, "Skipping modified values check....\n");
 		/* Can not report test result as failure */
 		error = 0;
@@ -468,7 +469,8 @@ int group_modified(char *path_control_file, int value_type,
  * @param struct cval the control value structure
  */
 int add_control_value(struct cgroup_controller *newcontroller,
-	 char *control_file, char *wr, int value_type, struct cntl_val_t cval)
+		      char *control_file, char *wr, int value_type,
+		      struct cntl_val_t cval)
 {
 	int retval;
 
@@ -476,29 +478,29 @@ int add_control_value(struct cgroup_controller *newcontroller,
 
 	case BOOL:
 		retval = cgroup_add_value_bool(newcontroller,
-					 control_file, cval.val_bool);
+					       control_file, cval.val_bool);
 		snprintf(wr, SIZE, "add_value_bool()");
 		break;
 	case INT64:
 		retval = cgroup_add_value_int64(newcontroller,
-					 control_file, cval.val_int64);
+						control_file, cval.val_int64);
 		snprintf(wr, SIZE, "add_value_int64()");
 		break;
 	case UINT64:
 		retval = cgroup_add_value_uint64(newcontroller,
-					 control_file, cval.val_uint64);
+						 control_file, cval.val_uint64);
 		snprintf(wr, SIZE, "add_value_uint64()");
 		break;
 	case STRING:
 		retval = cgroup_add_value_string(newcontroller,
-					 control_file, cval.val_string);
+						 control_file, cval.val_string);
 		snprintf(wr, SIZE, "add_value_string()");
 		break;
 	default:
-		printf("ERROR: wrong value in add_control_value()\n");
+		printf("ERROR: wrong value in %s\n", __func__);
 		return 1;
-		break;
 	}
+
 	return retval;
 }
 
@@ -513,20 +515,21 @@ int add_control_value(struct cgroup_controller *newcontroller,
  * @param the test number
  */
 struct cgroup *new_cgroup(char *group, char *controller_name,
-			 char *control_file, int value_type,
-			 struct cntl_val_t cval, struct uid_gid_t ids, int i)
+			  char *control_file, int value_type,
+			  struct cntl_val_t cval, struct uid_gid_t ids, int i)
 {
-	int retval;
+	struct cgroup_controller *newcontroller;
+	struct cgroup *newcgroup;
 	/* Names of wrapper apis */
 	char wr[SIZE];
-	struct cgroup *newcgroup;
-	struct cgroup_controller *newcontroller;
+	int retval;
 
 	newcgroup = cgroup_new_cgroup(group);
 
 	if (newcgroup) {
-		retval = cgroup_set_uid_gid(newcgroup, ids.tasks_uid,
-			 ids.tasks_gid,	ids.control_uid, ids.control_gid);
+		retval = cgroup_set_uid_gid(newcgroup,
+					    ids.tasks_uid, ids.tasks_gid,
+					    ids.control_uid, ids.control_gid);
 
 		if (retval) {
 			snprintf(wr, SIZE, "set_uid_gid()");
@@ -534,24 +537,24 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 		}
 
 		newcontroller = cgroup_add_controller(newcgroup,
-							 controller_name);
+						      controller_name);
 		if (newcontroller) {
 			retval =  add_control_value(newcontroller,
-					 control_file, wr, value_type, cval);
+						    control_file, wr, value_type, cval);
 
 			if (!retval) {
-				message(i++, PASS, "new_cgroup()",
-						 retval, info[NOMESSAGE]);
+				message(i++, PASS, __func__,
+					retval, info[NOMESSAGE]);
 			} else {
-				message(i++, FAIL, wr, retval ,
-							 info[NOMESSAGE]);
+				message(i++, FAIL, wr, retval,
+					info[NOMESSAGE]);
 				cgroup_free(&newcgroup);
 				return NULL;
 			}
-		 } else {
+		} else {
 			/* Since these wrappers do not return an int so -1 */
 			message(i++, FAIL, "add_controller", -1,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 			cgroup_free(&newcgroup);
 			return NULL;
 		}
@@ -559,6 +562,7 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
 		message(i++, FAIL, "new_cgroup", -1, info[NOMESSAGE]);
 		return NULL;
 	}
+
 	return newcgroup;
 }
 
@@ -568,12 +572,12 @@ struct cgroup *new_cgroup(char *group, char *controller_name,
  */
 int check_fsmounted(int multimnt)
 {
-	int count = 0;
-	int ret = 1;
 	struct mntent *entry = NULL, *tmp_entry = NULL;
 	/* Need a better mechanism to decide memory allocation size here */
 	char entry_buffer[FILENAME_MAX * 4];
 	FILE *proc_file = NULL;
+	int count = 0;
+	int ret = 1;
 
 	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent));
 	if (!tmp_entry) {
@@ -589,19 +593,19 @@ int check_fsmounted(int multimnt)
 		goto error;
 	}
 	while ((entry = getmntent_r(proc_file, tmp_entry, entry_buffer,
-						 FILENAME_MAX*4)) != NULL) {
+				    FILENAME_MAX*4)) != NULL) {
 		if (!strncmp(entry->mnt_type, "cgroup", strlen("cgroup"))) {
 			count++;
 			if (multimnt) {
 				if (count >= 2) {
 					printf("sanity check pass. %s\n",
-							 entry->mnt_type);
+					       entry->mnt_type);
 					ret = 0;
 					goto error;
 				}
 			} else {
 				printf("sanity check pass. %s\n",
-							 entry->mnt_type);
+				       entry->mnt_type);
 				ret = 0;
 				goto error;
 			}
@@ -612,6 +616,7 @@ error:
 		free(tmp_entry);
 	if (proc_file)
 		fclose(proc_file);
+
 	return ret;
 }
 
@@ -621,9 +626,9 @@ error:
  */
 int check_task(char *tasksfile, pid_t pid)
 {
-	FILE *file;
 	pid_t curr_tid, tid;
 	int pass = 0;
+	FILE *file;
 
 	file = fopen(tasksfile, "r");
 	if (!file) {
@@ -659,8 +664,10 @@ int check_task(char *tasksfile, pid_t pid)
  */
 void message(int num, int pass, const char *api, int retval, char *extra)
 {
-	char res[10];
 	char buf[2*SIZE];
+	char res[10];
+	char res[10];
+
 	if (pass)
 		strncpy(res, "PASS :", 10);
 	else
@@ -705,18 +712,20 @@ build_path(char *target, char *mountpoint, const char *group, const char *file)
  */
 void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 {
-	int retval;
+
+
+	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	char wr[SIZE], extra[] = "in cgroup_compare_cgroup";
+	struct cgroup *cgroup1 = NULL, *cgroup2 = NULL;
+	struct cgroup_controller *controller = NULL;
 
 	struct cntl_val_t cval;
+	int retval;
+
 	cval.val_int64 = 0;
 	cval.val_uint64 = 0;
 	cval.val_bool = 0;
 	strcpy(cval.val_string, "5000");
-
-	struct cgroup *cgroup1 = NULL, *cgroup2 = NULL;
-	struct cgroup_controller *controller = NULL;
-	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
-	char wr[SIZE], extra[] = "in cgroup_compare_cgroup";
 
 	retval = cgroup_compare_cgroup(NULL, NULL);
 	if (retval)
@@ -734,7 +743,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup1, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-					 control_file, wr, STRING, cval);
+					    control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -742,7 +751,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-					 control_file, wr, STRING, cval);
+					    control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -758,7 +767,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	controller = cgroup_add_controller(cgroup2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
-					 control_file, wr, STRING, cval);
+					    control_file, wr, STRING, cval);
 		if (retval)
 			message(i++, FAIL, wr, retval, extra);
 	}
@@ -783,8 +792,8 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 {
 	struct cgroup *cgroup_filled = NULL, *cgroup_a = NULL, *cgroup_b = NULL;
-	struct cgroup_controller *controller = NULL;
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
+	struct cgroup_controller *controller = NULL;
 	struct cntl_val_t cval = {0, 0, 0, "5000"};
 	int ret;
 
@@ -808,10 +817,10 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 		ret = cgroup_get_cgroup(cgroup_filled);
 		if (ret)
 			message(i++, PASS, "get_cgroup()", ret,
-							 info[NOTCRTDGRP]);
+				info[NOTCRTDGRP]);
 		else
 			message(i++, FAIL, "get_cgroup()", ret,
-							 info[NOTCRTDGRP]);
+				info[NOTCRTDGRP]);
 		/* Free the allocated cgroup before reallocation */
 		cgroup_free(&cgroup_filled);
 
@@ -826,10 +835,10 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 		ret = cgroup_get_cgroup(cgroup_filled);
 		if (!ret)
 			message(i++, PASS, "get_cgroup()", ret,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 		else
 			message(i++, FAIL, "get_cgroup()", ret,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 	}
 
 	/* SINGLE & MULTI MOUNT: Create, get and compare a cgroup */
@@ -842,10 +851,10 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 		controller = cgroup_add_controller(cgroup_a, controller_name);
 		if (controller)
 			message(i++, PASS, "cgroup_add_controller()",
-					0, info[NOMESSAGE]);
+				0, info[NOMESSAGE]);
 		else
 			message(i++, FAIL, "cgroup_add_controller()",
-					-1, info[NOMESSAGE]);
+				-1, info[NOMESSAGE]);
 	}
 	test_cgroup_create_cgroup(0, cgroup_a, "group_a", 0, 1, 1, 00);
 
@@ -861,7 +870,7 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 			message(i++, PASS, "get_cgroup()", ret, info[SAMEGRP]);
 		else
 			message(i++, FAIL, "get_cgroup()", ret,
-							 info[NOMESSAGE]);
+				info[NOMESSAGE]);
 	} else {
 		message(i++, FAIL, "get_cgroup()", ret, info[NOMESSAGE]);
 	}
@@ -914,7 +923,7 @@ void test_cgroup_add_free_controller(int i)
 /**
  * Returns the tid of the current thread
  */
-pid_t cgrouptest_gettid()
+pid_t cgrouptest_gettid(void)
 {
 	return syscall(__NR_gettid);
 }
