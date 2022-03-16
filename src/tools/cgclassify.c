@@ -5,42 +5,45 @@
  * Authors:	Vivek Goyal <vgoyal@redhat.com>
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
+#include "tools-common.h"
+
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
+
+#include <stdlib.h>
+#include <string.h>
 #include <limits.h>
-#include <pwd.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <sys/mount.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <errno.h>
+#include <stdio.h>
+#include <pwd.h>
 
-#include "tools-common.h"
+#include <sys/mount.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 #define TEMP_BUF	81
 
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,"
-			" try %s -h' for more information.\n",
+		fprintf(stderr, "Wrong input parameters,");
+		fprintf(stderr,	" try %s -h' for more information.\n",
 			program_name);
 		return;
 	}
-	printf("Usage: %s [[-g] <controllers>:<path>] "\
-		"[--sticky | --cancel-sticky] <list of pids>\n", program_name);
+	printf("Usage: %s [[-g] <controllers>:<path>] ", program_name);
+	printf("[--sticky | --cancel-sticky] <list of pids>\n");
 	printf("Move running task(s) to given cgroups\n");
 	printf("  -h, --help			Display this help\n");
-	printf("  -g <controllers>:<path>	Control group to be used "\
-		"as target\n");
-	printf("  --cancel-sticky		cgred daemon change pidlist "\
-		"and children tasks\n");
-	printf("  --sticky			cgred daemon does not change "\
-		"pidlist and children tasks\n");
+	printf("  -g <controllers>:<path>	Control group to be used ");
+	printf("as target\n");
+	printf("  --cancel-sticky		cgred daemon change pidlist ");
+	printf("and children tasks\n");
+	printf("  --sticky			cgred daemon does not change ");
+	printf("pidlist and children tasks\n");
 }
 
 /*
@@ -48,15 +51,15 @@ static void usage(int status, const char *program_name)
  */
 static int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
 {
-	int i;
 	int ret = 0;
+	int i;
 
 	for (i = 0; i < CG_HIER_MAX; i++) {
 		if (!cgroup_list[i])
 			break;
 
 		ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
-                                                (const char*const*) cgroup_list[i]->controllers);
+						(const char *const*) cgroup_list[i]->controllers);
 		if (ret) {
 			fprintf(stderr, "Error changing group of pid %d: %s\n",
 				pid, cgroup_strerror(ret));
@@ -72,55 +75,57 @@ static int change_group_path(pid_t pid, struct cgroup_group_spec *cgroup_list[])
  */
 static int change_group_based_on_rule(pid_t pid)
 {
-	uid_t euid;
-	gid_t egid;
 	char *procname = NULL;
 	int ret = -1;
+	uid_t euid;
+	gid_t egid;
 
 	/* Put pid into right cgroup as per rules in /etc/cgrules.conf */
 	if (cgroup_get_uid_gid_from_procfs(pid, &euid, &egid)) {
-		fprintf(stderr, "Error in determining euid/egid of"
-		" pid %d\n", pid);
+		fprintf(stderr, "Error in determining euid/egid of ");
+		fprintf(stderr, "pid %d\n", pid);
 		goto out;
 	}
+
 	ret = cgroup_get_procname_from_procfs(pid, &procname);
 	if (ret) {
-		fprintf(stderr, "Error in determining process name of"
-		" pid %d\n", pid);
+		fprintf(stderr, "Error in determining process name of ");
+		fprintf(stderr, "pid %d\n", pid);
 		goto out;
 	}
 
 	/* Change the cgroup by determining the rules */
 	ret = cgroup_change_cgroup_flags(euid, egid, procname, pid, 0);
 	if (ret) {
-		fprintf(stderr, "Error: change of cgroup failed for"
-		" pid %d: %s\n", pid, cgroup_strerror(ret));
+		fprintf(stderr, "Error: change of cgroup failed for ");
+		fprintf(stderr, "pid %d: %s\n", pid, cgroup_strerror(ret));
 		goto out;
 	}
 	ret = 0;
+
 out:
 	if (procname)
 		free(procname);
+
 	return ret;
 }
 
 static struct option longopts[] = {
-	{"sticky", no_argument, NULL, 's'},
-	{"cancel-sticky", no_argument, NULL, 'u'},
-	{"help", no_argument, NULL, 'h'},
+	{"sticky",		no_argument, NULL, 's'},
+	{"cancel-sticky",	no_argument, NULL, 'u'},
+	{"help",		no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
 };
 
 int main(int argc, char *argv[])
 {
+	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 	int ret = 0, i, exit_code = 0;
-	pid_t pid;
 	int cg_specified = 0;
 	int flag = 0;
-	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
-	int c;
 	char *endptr;
-
+	pid_t pid;
+	int c;
 
 	if (argc < 2) {
 		usage(1, argv[0]);
@@ -136,10 +141,10 @@ int main(int argc, char *argv[])
 			break;
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg,
-					CG_HIER_MAX);
+						CG_HIER_MAX);
 			if (ret) {
-				fprintf(stderr, "cgroup controller and path "
-						"parsing failed\n");
+				fprintf(stderr, "cgroup controller and path ");
+				fprintf(stderr,	"parsing failed\n");
 				return -1;
 			}
 			cg_specified = 1;
@@ -156,7 +161,6 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-
 
 	/* Initialize libcg */
 	ret = cgroup_init();
@@ -190,6 +194,6 @@ int main(int argc, char *argv[])
 		if (ret)
 			exit_code = 1;
 	}
-	return exit_code;
 
+	return exit_code;
 }
