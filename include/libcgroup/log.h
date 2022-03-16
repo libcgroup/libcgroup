@@ -92,7 +92,7 @@ enum cgroup_log_level {
 };
 
 typedef void (*cgroup_logger_callback)(void *userdata, int level,
-		const char *fmt, va_list ap);
+				       const char *fmt, va_list ap);
 
 /**
  * Set libcgroup logging callback. All log messages with equal or lower log
@@ -108,7 +108,7 @@ typedef void (*cgroup_logger_callback)(void *userdata, int level,
  * callback.
  */
 extern void cgroup_set_logger(cgroup_logger_callback logger, int loglevel,
-		void *userdata);
+			      void *userdata);
 
 /**
  * Set libcgroup logging to stdout. All messages with the given loglevel
@@ -141,6 +141,7 @@ extern void cgroup_log(int loglevel, const char *fmt, ...);
  * @param levelstr String containing desired loglevel.
  */
 extern int cgroup_parse_log_level_str(const char *levelstr);
+
 /**
  * @}
  * @}
