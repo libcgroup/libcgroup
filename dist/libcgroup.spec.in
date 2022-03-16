@@ -95,7 +95,7 @@ fi
 
 %postun -p /sbin/ldconfig
 
-%files 
+%files
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/sysconfig/cgred.conf
 %config(noreplace) %{_sysconfdir}/sysconfig/cgconfig
@@ -133,7 +133,7 @@ fi
 %{_includedir}/libcgroup/*.h
 %{_libdir}/libcgroup.*
 /%{_libdir}/pkgconfig/libcgroup.pc
-%doc COPYING INSTALL 
+%doc COPYING INSTALL
 
 
 %changelog
