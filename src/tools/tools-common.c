@@ -9,24 +9,26 @@
 /* for asprintf */
 #define _GNU_SOURCE
 
-#include <errno.h>
-#include <stdio.h>
+#include "tools-common.h"
+
+#include <libcgroup.h>
+
 #include <string.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <dirent.h>
+#include <errno.h>
+#include <stdio.h>
 #include <pwd.h>
 #include <grp.h>
 
-#include <libcgroup.h>
-#include "tools-common.h"
+#include <sys/types.h>
 
 int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
-		int capacity)
+		      int capacity)
 {
+	char *cptr = NULL, *pathptr = NULL, *temp;
 	struct cgroup_group_spec *ptr;
 	int i, j;
-	char *cptr = NULL, *pathptr = NULL, *temp;
 
 	ptr = *cdptr;
 
@@ -39,7 +41,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 	if (i == capacity) {
 		/* No free slot found */
 		fprintf(stderr, "Max allowed hierarchies %d reached\n",
-				capacity);
+			capacity);
 		return -1;
 	}
 
@@ -87,7 +89,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 				}
 			}
 			j++;
-		} while (temp && j<CG_CONTROLLER_MAX-1);
+		} while (temp && j < CG_CONTROLLER_MAX-1);
 	}
 
 	/* Store path to the cgroup */
@@ -124,15 +126,18 @@ void cgroup_free_group_spec(struct cgroup_group_spec *cl)
 
 
 int cgroup_string_list_init(struct cgroup_string_list *list,
-		int initial_size)
+			    int initial_size)
 {
 	if (list == NULL)
 		return ECGINVAL;
+
 	list->items = calloc(initial_size, sizeof(char *));
 	if (!list->items)
 		return ECGFAIL;
+
 	list->count = 0;
 	list->size = initial_size;
+
 	return 0;
 }
 
@@ -153,10 +158,11 @@ void cgroup_string_list_free(struct cgroup_string_list *list)
 }
 
 int cgroup_string_list_add_item(struct cgroup_string_list *list,
-		const char *item)
+				const char *item)
 {
 	if (list == NULL)
 		return ECGINVAL;
+
 	if (list->size <= list->count) {
 		char **tmp = realloc(list->items,
 				sizeof(char *) * list->size*2);
@@ -170,6 +176,7 @@ int cgroup_string_list_add_item(struct cgroup_string_list *list,
 	if (list->items[list->count] == NULL)
 		return ECGFAIL;
 	list->count++;
+
 	return 0;
 }
 
@@ -177,16 +184,17 @@ static int _compare_string(const void *a, const void *b)
 {
 	const char *sa = * (char * const *) a;
 	const char *sb = * (char * const *) b;
+
 	return strcmp(sa, sb);
 }
 
 
 int cgroup_string_list_add_directory(struct cgroup_string_list *list,
-		char *dirname, char *program_name)
+				     char *dirname, char *program_name)
 {
 	int start, ret, count = 0;
-	DIR *d;
 	struct dirent *item;
+	DIR *d;
 
 	if (list == NULL)
 		return ECGINVAL;
@@ -196,35 +204,35 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 	d = opendir(dirname);
 	if (!d) {
 		fprintf(stderr, "%s: cannot open %s: %s\n", program_name,
-				dirname, strerror(errno));
+			dirname, strerror(errno));
 		exit(1);
 	}
 
 	do {
 		errno = 0;
 		item = readdir(d);
-		if (item && (item->d_type == DT_REG
-				|| item->d_type == DT_LNK)) {
+		if (item && (item->d_type == DT_REG ||
+			     item->d_type == DT_LNK)) {
 			char *tmp;
+
 			ret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
 			if (ret < 0) {
 				fprintf(stderr, "%s: out of memory\n",
-						program_name);
+					program_name);
 				exit(1);
 			}
 			ret = cgroup_string_list_add_item(list, tmp);
 			free(tmp);
 			count++;
 			if (ret) {
-				fprintf(stderr, "%s: %s\n",
-						program_name,
-						cgroup_strerror(ret));
+				fprintf(stderr, "%s: %s\n", program_name,
+					cgroup_strerror(ret));
 				exit(1);
 			}
 		}
 		if (!item && errno) {
 			fprintf(stderr, "%s: cannot read %s: %s\n",
-					program_name, dirname, strerror(errno));
+				program_name, dirname, strerror(errno));
 			exit(1);
 		}
 	} while (item != NULL);
@@ -233,7 +241,7 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 	/* sort the names found in the directory */
 	if (count > 0)
 		qsort(&list->items[start], count, sizeof(char *),
-				_compare_string);
+		      _compare_string);
 	return 0;
 }
 
@@ -241,9 +249,9 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 /* allowed mode strings are octal version: "755" */
 int parse_mode(char *string, mode_t *pmode, const char *program_name)
 {
+	size_t len;
 	char *end;
 	long mode;
-	size_t len;
 
 	len = strlen(string);
 	if (len < 3 || len > 4)
@@ -259,11 +267,12 @@ int parse_mode(char *string, mode_t *pmode, const char *program_name)
 err:
 	*pmode = 0;
 	fprintf(stdout, "%s wrong mode format %s\n", program_name, string);
+
 	return -1;
 }
 
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
-		const char *program_name)
+		  const char *program_name)
 {
 	char *grp_string = NULL;
 	char *pwd_string = NULL;
@@ -286,7 +295,7 @@ int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
 			*uid = pwd->pw_uid;
 		} else {
 			fprintf(stderr, "%s: can't find uid of user %s.\n",
-					program_name, pwd_string);
+				program_name, pwd_string);
 			return -1;
 		}
 	}
@@ -300,5 +309,6 @@ int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
 			return -1;
 		}
 	}
+
 	return 0;
 }
