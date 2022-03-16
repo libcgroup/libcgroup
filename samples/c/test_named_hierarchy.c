@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: LGPL-2.1-only
-#include <stdio.h>
+#include <libcgroup.h>
+
 #include <stdlib.h>
 #include <unistd.h>
-#include <libcgroup.h>
+#include <stdio.h>
 
 /*
  * Assumes cgroup is mounted at /cgroup using
- *
  * mount -t cgroup -o none,name=test none /cgroup
  */
-int main()
+int main(void)
 {
-	int ret;
-	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
+	struct cgroup *cgroup;
+	int ret;
 
 	ret = cgroup_init();
 	if (ret) {
-		printf("FAIL: cgroup_init failed with %s\n", cgroup_strerror(ret));
+		printf("FAIL: cgroup_init failed with %s\n",
+		       cgroup_strerror(ret));
 		exit(3);
 	}
 
@@ -35,7 +36,8 @@ int main()
 
 	ret = cgroup_create_cgroup(cgroup, 1);
 	if (ret) {
-		printf("FAIL: cgroup_create_cgroup failed with %s\n", cgroup_strerror(ret));
+		printf("FAIL: cgroup_create_cgroup failed with %s\n",
+		       cgroup_strerror(ret));
 		exit(3);
 	}
 
