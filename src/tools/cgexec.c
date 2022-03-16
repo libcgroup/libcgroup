@@ -9,58 +9,63 @@
 #define _GNU_SOURCE
 #endif
 
-#include <errno.h>
-#include <grp.h>
+#include "tools-common.h"
+
 #include <libcgroup.h>
+
 #include <limits.h>
-#include <pwd.h>
 #include <search.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <errno.h>
+#include <grp.h>
+#include <pwd.h>
+
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "tools-common.h"
 
 static struct option longopts[] = {
-	{"sticky", no_argument, NULL, 's'},
-	{"help", no_argument, NULL, 'h'},
+	{"sticky",	no_argument, NULL, 's'},
+	{"help",	no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
 };
 
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,"
-			" try %s --help' for more information.\n",
+		fprintf(stderr, "Wrong input parameters,");
+		fprintf(stderr, " try %s --help' for more information.\n",
 			program_name);
 		return;
 	}
-	printf("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] "\
-		"command [arguments] ...\n", program_name);
+
+	printf("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] ",
+	       program_name);
+	printf("command [arguments] ...\n");
 	printf("Run the task in given control group(s)\n");
-	printf("  -g <controllers>:<path>	Control group which "\
-		"should be added\n");
+	printf("  -g <controllers>:<path>	Control group which ");
+	printf("should be added\n");
 	printf("  -h, --help			Display this help\n");
-	printf("  --sticky			cgred daemon does not "\
-		"change pidlist and children tasks\n");
+	printf("  --sticky			cgred daemon does not ");
+	printf("change pidlist and children tasks\n");
 }
 
 
 int main(int argc, char *argv[])
 {
-	int ret = 0, i;
+	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 	int cg_specified = 0;
 	int flag_child = 0;
+	int i, ret = 0;
 	uid_t uid;
 	gid_t gid;
 	pid_t pid;
 	int c;
-	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
 
 	memset(cgroup_list, 0, sizeof(cgroup_list));
 
@@ -68,10 +73,10 @@ int main(int argc, char *argv[])
 		switch (c) {
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg,
-					CG_HIER_MAX);
+						CG_HIER_MAX);
 			if (ret) {
-				fprintf(stderr, "cgroup controller and path"
-						"parsing failed\n");
+				fprintf(stderr, "cgroup controller and path");
+				fprintf(stderr,	"parsing failed\n");
 				return -1;
 			}
 			cg_specified = 1;
@@ -127,22 +132,24 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
+
 	if (setresgid(gid, gid, gid)) {
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
+
 	if (cg_specified) {
 		/*
 		 * User has specified the list of control group and
 		 * controllers
-		 * */
+		 */
 		for (i = 0; i < CG_HIER_MAX; i++) {
 			if (!cgroup_list[i])
 				break;
 
 			ret = cgroup_change_cgroup_path(cgroup_list[i]->path,
-							pid,
-                                                        (const char*const*) cgroup_list[i]->controllers);
+				pid,
+				(const char *const*) cgroup_list[i]->controllers);
 			if (ret) {
 				fprintf(stderr,
 					"cgroup change of group failed\n");
@@ -166,5 +173,6 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s", strerror(errno));
 		return -1;
 	}
+
 	return 0;
 }
