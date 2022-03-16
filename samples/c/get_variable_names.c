@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: LGPL-2.1-only
+#include "../src/libcgroup-internal.h"
 #include <libcgroup.h>
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
-#include "../src/libcgroup-internal.h"
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
-	int ret;
-	int i, j;
-	int count;
-	char *name;
 	struct cgroup_controller *group_controller = NULL;
 	struct cgroup *group = NULL;
 	char group_name[] = "/";
+	char *name;
+	int count;
+	int ret;
+	int i, j;
 
 	if (argc < 2) {
 		printf("no list of groups provided\n");
@@ -21,7 +22,6 @@ int main(int argc, char *argv[])
 	}
 
 	ret = cgroup_init();
-
 	if (ret) {
 		printf("cgroup_init failed with %s\n", cgroup_strerror(ret));
 		exit(1);
@@ -43,16 +43,17 @@ int main(int argc, char *argv[])
 
 		group_controller = cgroup_get_controller(group, argv[i]);
 		if (group_controller == NULL) {
-			printf("cannot find controller "\
-			    "'%s' in group '%s'\n", argv[i], group_name);
+			printf("cannot find controller '%s' in group '%s'\n",
+			       argv[i], group_name);
 			ret = -1;
 			continue;
 		}
+
 		count = cgroup_get_value_name_count(group_controller);
 		for (j = 0; j < count; j++) {
 			name = cgroup_get_value_name(group_controller, j);
 			if (name != NULL)
-				printf("%s \n", name);
+				printf("%s\n", name);
 		}
 	}
 
