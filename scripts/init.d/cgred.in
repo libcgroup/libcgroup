@@ -19,8 +19,8 @@
 # Provides:		cgrulesengd
 # Required-Start:	$local_fs $syslog $cgconfig
 # Required-Stop:	$local_fs $syslog
-# Should-Start:		
-# Should-Stop:		
+# Should-Start:
+# Should-Stop:
 # Short-Description:	start and stop the cgroups rules engine daemon
 # Description:		CGroup Rules Engine is a tool for automatically using \
 #			cgroups to classify processes
