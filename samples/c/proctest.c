@@ -5,24 +5,26 @@
  * Author:	Ken'ichi Ohmichi <oomichi@mxs.nes.nec.co.jp>
  */
 
+#include "../src/libcgroup-internal.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/libcgroup-internal.h"
 
 int main(int argc, char *argv[])
 {
-	int i;
-	int ret;
+	char *procname;
 	pid_t pid;
 	uid_t uid;
 	gid_t gid;
-	char *procname;
+	int ret;
+	int i;
 
 	if (argc < 2) {
 		printf("Specify process-id.\n");
 		return 1;
 	}
-	printf("  Pid  |        Process name              |  Uid  |  Gid  \n");
+
+	printf("  Pid  |        Process name              |  Uid  |  Gid\n");
 	printf("-------+----------------------------------+-------+-------\n");
 
 	for (i = 1; i < argc; i++) {
@@ -41,5 +43,6 @@ int main(int argc, char *argv[])
 		printf("%6d | %32s | %5d | %5d\n", pid, procname, uid, gid);
 		free(procname);
 	}
+
 	return 0;
 }
