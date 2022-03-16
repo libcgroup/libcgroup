@@ -32,13 +32,13 @@ extern "C" {
  *
  * @param cg Input/Output cgroup. Must be initialized and freed by the caller
  * @param version Cgroup version of cg  If set to CGROUP_UNK, the versions
- * 		  stored within each controller will be used.  Otherwise this
- * 		  value will be used to override the cg param's controller
- * 		  versions
+ *		  stored within each controller will be used.  Otherwise this
+ *		  value will be used to override the cg param's controller
+ *		  versions
  * @param ignore_unmappable Ignore failures due to settings that cannot be
- *                          converted from one cgroup version to another
+ *			    converted from one cgroup version to another
  */
-int cgroup_cgxget(struct cgroup ** cg,
+int cgroup_cgxget(struct cgroup **cg,
 		  enum cg_version_t version, bool ignore_unmappable);
 
 /**
