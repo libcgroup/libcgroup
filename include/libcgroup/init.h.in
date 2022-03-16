@@ -71,7 +71,7 @@ int cgroup_init(void);
  * and cgroup_get_subsys_mount_point_end() to get all of them.
  * @param controller Name of the controller
  * @param mount_point The string where the mount point location is stored.
- * 	Please note, the caller must free the mount_point.
+ *	Please note, the caller must free the mount_point.
  */
 int cgroup_get_subsys_mount_point(const char *controller, char **mount_point);
 
