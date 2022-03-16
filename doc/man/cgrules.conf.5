@@ -1,9 +1,9 @@
-.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved. 
-.\" Written by Ivana Varekova <varekova@redhat.com> 
+.\" Copyright (C) 2009 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Varekova <varekova@redhat.com>
 
 .TH CGRULES.CONF  5 2009-03-10 "Linux" "libcgroup Manual"
 .SH NAME
-cgrules.conf \- libcgroup configuration file 
+cgrules.conf \- libcgroup configuration file
 .SH DESCRIPTION
 .B "cgrules.conf"
 configuration file is used by
@@ -14,7 +14,7 @@ to define control groups to which a process belongs.
 The file contains a list of rules which assign to a defined group/user a control
 group in a subsystem (or control groups in subsystems).
 
-Rules have two formats: 
+Rules have two formats:
 
 .in +4n
 .nf
@@ -33,8 +33,8 @@ can be:
     - a user name
     - a group name with @group syntax
     - the wildcard '*', for any user or group
-    - '%', which is equivalent to "ditto" (useful for 
-      multi-line rules where different cgroups need to be 
+    - '%', which is equivalent to "ditto" (useful for
+      multi-line rules where different cgroups need to be
       specified for various hierarchies for a single user)
 .fi
 
@@ -48,7 +48,7 @@ is optional and it can be:
 .I controllers
 can be:
 .nf
-    - comma separated controller names (no spaces) or 
+    - comma separated controller names (no spaces) or
     - * (for all mounted controllers)
 .fi
 
@@ -114,8 +114,8 @@ The first line says Peter's task for cpu controller belongs to test1 control
 group. The second one says Peter's tasks for memory controller belong to test2/
 control group.
 
-.nf 
-*               *               default/ 
+.nf
+*               *               default/
 .fi
 All processes in any subsystem belong to the control group default/. Since
 the earliest matched rule is applied, it makes sense to have this line
