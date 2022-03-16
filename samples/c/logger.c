@@ -10,6 +10,7 @@
 #include "config.h"
 #include "libcgroup.h"
 #include "../src/libcgroup-internal.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -21,8 +22,8 @@ static void mylogger(void *userdata, int loglevel, const char *fmt, va_list ap)
 
 int main(int argc, char **argv)
 {
-	int custom = 0;
 	int loglevel = -1;
+	int custom = 0;
 	int i;
 
 	for (i = 1; i < argc; i++) {
