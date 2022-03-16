@@ -4,21 +4,22 @@
  * Written by Ivana Hutarova Varekova <varekova@redhat.com>
  */
 
-#include <stdio.h>
+#include <libcgroup.h>
+#include <libcgroup-internal.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdio.h>
 
-#include <libcgroup.h>
-#include <libcgroup-internal.h>
 
-enum flag{
-    FL_MOUNT = 1,	/* show the mount points */
-    FL_LIST = 2,
-    FL_ALL = 4,		/* show all subsystems - not mounted too */
-    FL_HIERARCHY = 8,	/* show info about hierarchies */
-    FL_MOUNT_ALL = 16	/* show all mount points of hierarchies */
+enum flag {
+	FL_MOUNT = 1,	/* show the mount points */
+	FL_LIST = 2,
+	FL_ALL = 4,		/* show all subsystems - not mounted too */
+	FL_HIERARCHY = 8,	/* show info about hierarchies */
+	FL_MOUNT_ALL = 16	/* show all mount points of hierarchies */
 };
 
 typedef char cont_name_t[FILENAME_MAX];
@@ -26,30 +27,31 @@ typedef char cont_name_t[FILENAME_MAX];
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,"
-			" try %s -h' for more information.\n",
+		fprintf(stderr, "Wrong input parameters,");
+		fprintf(stderr,	" try %s -h' for more information.\n",
 			program_name);
 		return;
 	}
-	printf("Usage: %s [-i] [-m] [-M] [controller] [...]\n"\
-		"   or: %s [-a] [-i] [-m] [-M]\n", program_name, program_name);
-	printf("List information about given controller(s) If no controller "\
-		"is set list information about all mounted controllers.\n");
-	printf("  -a, --all			Display information "\
-		"about all controllers (including not mounted ones)\n");
+
+	printf("Usage: %s [-i] [-m] [-M] [controller] [...]\n", program_name);
+	printf("   or: %s [-a] [-i] [-m] [-M]\n", program_name);
+	printf("List information about given controller(s) If no controller ");
+	printf("is set list information about all mounted controllers.\n");
+	printf("  -a, --all			Display information ");
+	printf("about all controllers (including not mounted ones)\n");
 	printf("  -h, --help			Display this help\n");
-	printf("  -i, --hierarchies		Display information about "\
-		"hierarchies\n");
+	printf("  -i, --hierarchies		Display information about ");
+	printf("hierarchies\n");
 	printf("  -m, --mount-points		Display mount points\n");
 	printf("  -M, --all-mount-points	Display all mount points\n");
 }
 
-static int print_controller_mount(const char *controller,
-		int flags,  cont_name_t cont_names, int hierarchy)
+static int print_controller_mount(const char *controller, int flags,
+				  cont_name_t cont_names, int hierarchy)
 {
-	int ret = 0;
-	void *handle;
 	char path[FILENAME_MAX];
+	void *handle;
+	int ret = 0;
 
 	if (!(flags & FL_MOUNT) && !(flags & FL_HIERARCHY)) {
 		/* print only hierarchy name */
@@ -62,7 +64,7 @@ static int print_controller_mount(const char *controller,
 	if (flags & FL_MOUNT) {
 		/* print hierarchy name and mount point(s) */
 		ret = cgroup_get_subsys_mount_point_begin(controller, &handle,
-				path);
+							  path);
 		/* intentionally ignore error from above call */
 		while (ret == 0) {
 			printf("%s %s\n", cont_names, path);
@@ -81,15 +83,15 @@ stop:
 
 /* display all controllers attached to the given hierarchy */
 static int print_all_controllers_in_hierarchy(const char *tname,
-	int hierarchy, int flags)
+					      int hierarchy, int flags)
 {
-	int ret = 0;
-	void *handle;
 	struct controller_data info;
-	int first = 1;
+	enum cg_version_t version;
 	cont_name_t cont_names;
 	cont_name_t cont_name;
-	enum cg_version_t version;
+	int first = 1;
+	void *handle;
+	int ret = 0;
 
 	/*
 	 * Initialize libcgroup and intentionally ignore its result,
@@ -109,7 +111,8 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 		if (ret)
 			goto end;
 
-		/* v1 controllers should be in the hierachy.  v2 controllers
+		/*
+		 * v1 controllers should be in the hierachy.  v2 controllers
 		 * will have a hierarchy value of zero
 		 */
 		if (version == CGROUP_V1 && info.hierarchy != hierarchy)
@@ -148,19 +151,20 @@ end:
 }
 
 
-/* go through the list of all controllers gather them based on hierarchy number
- and print them */
+/*
+ * go through the list of all controllers gather them based on hierarchy number
+ * and print them
+ */
 static int cgroup_list_all_controllers(const char *tname,
 	cont_name_t cont_name[CG_CONTROLLER_MAX], int c_number, int flags)
 {
-	int ret = 0;
-	void *handle;
 	struct controller_data info;
-
 	int h_list[CG_CONTROLLER_MAX];	/* list of hierarchies */
-	int counter = 0;
-	int j;
 	int is_on_list = 0;
+	int counter = 0;
+	void *handle;
+	int ret;
+	int j;
 
 	ret = cgroup_get_all_controller_begin(&handle, &info);
 	while (ret == 0) {
@@ -183,9 +187,11 @@ static int cgroup_list_all_controllers(const char *tname,
 		if ((info.hierarchy != 0) &&
 			((flags & FL_ALL) ||
 			(!(flags & FL_LIST) || (is_on_list == 1)))) {
-			/* the controller is attached to some hierarchy
-			   and either should be output all controllers,
-			   or the controller is on the output list */
+			/*
+			 * the controller is attached to some hierarchy and
+			 * either should be output all controllers, or the
+			 * controller is on the output list
+			 */
 
 			h_list[counter] = info.hierarchy;
 			counter++;
@@ -219,29 +225,25 @@ static int cgroup_list_all_controllers(const char *tname,
 			h_list[j], flags);
 
 	return ret;
-
 }
 
 int main(int argc, char *argv[])
 {
-
-	int ret = 0;
-	int c;
-
-	int flags = 0;
-
-	int i;
-	int c_number = 0;
-	cont_name_t cont_name[CG_CONTROLLER_MAX];
-
 	static struct option options[] = {
-		{"help", 0, 0, 'h'},
-		{"mount-points", 0, 0, 'm'},
-		{"all-mount-points", 0, 0, 'M'},
-		{"all", 0, 0, 'a'},
-		{"hierarchies", 0, 0, 'i'},
+		{"help",		0, 0, 'h'},
+		{"mount-points",	0, 0, 'm'},
+		{"all-mount-points",	0, 0, 'M'},
+		{"all",			0, 0, 'a'},
+		{"hierarchies",		0, 0, 'i'},
 		{0, 0, 0, 0}
 	};
+
+	cont_name_t cont_name[CG_CONTROLLER_MAX];
+	int c_number = 0;
+	int flags = 0;
+	int ret = 0;
+	int c;
+	int i;
 
 	for (i = 0; i < CG_CONTROLLER_MAX; i++)
 		cont_name[i][0] = '\0';
