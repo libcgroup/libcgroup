@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: LGPL-2.1-only
 #include <libcgroup.h>
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
-int main()
+int main(void)
 {
-	int ret;
 	char *mount_point;
 	char string[100];
+	int ret;
 
 	strcpy(string, "cpu");
 
@@ -22,7 +23,7 @@ int main()
 	ret = cgroup_get_subsys_mount_point(string, &mount_point);
 	if (ret) {
 		printf("get_mount_point failed with %s\n",
-					cgroup_strerror(ret));
+		       cgroup_strerror(ret));
 		exit(3);
 	}
 
@@ -32,10 +33,9 @@ int main()
 	strcpy(string, "obviouslynonexistsubsys");
 
 	ret = cgroup_get_subsys_mount_point(string, &mount_point);
-
 	if (!ret) {
-		printf("get_mount_point failed as it got a "
-					"non existant subsys\n");
+		printf("get_mount_point failed as it got a ");
+		printf("non existent subsys\n");
 		exit(3);
 	}
 
