@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-2.1-only
-#include <libcgroup.h>
-#include <stdio.h>
-#include <string.h>
 #include "../src/libcgroup-internal.h"
+#include <libcgroup.h>
 
-int main()
+#include <string.h>
+#include <stdio.h>
+
+int main(void)
 {
 	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
