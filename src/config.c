@@ -703,8 +703,8 @@ static int cgroup_config_mount_fs(void)
 		ret = stat(curr->mount.path, &buff);
 
 		if (ret < 0 && errno != ENOENT) {
-			cgroup_err("Error: cannot access %s: %s\n",
-				   curr->mount.path, strerror(errno));
+			cgroup_err("cannot access %s: %s\n", curr->mount.path,
+				   strerror(errno));
 			last_errno = errno;
 			error = ECGOTHER;
 			goto out_err;
@@ -713,13 +713,13 @@ static int cgroup_config_mount_fs(void)
 		if (errno == ENOENT) {
 			ret = cg_mkdir_p(curr->mount.path);
 			if (ret) {
-				cgroup_err("Error: cannot create directory ");
-				cgroup_err("%s\n", curr->mount.path);
+				cgroup_err("cannot create directory %s\n",
+					   curr->mount.path);
 				error = ret;
 				goto out_err;
 			}
 		} else if (!S_ISDIR(buff.st_mode)) {
-			cgroup_err("Error: %s already exists but it is not ");
+			cgroup_err("%s already exists but it is not ");
 			cgroup_err("a directory\n", curr->mount.path);
 			errno = ENOTDIR;
 			last_errno = errno;
@@ -735,9 +735,8 @@ static int cgroup_config_mount_fs(void)
 			    CGROUP_FILESYSTEM, flags, curr->name);
 
 		if (ret < 0) {
-			cgroup_err("Error: cannot mount %s to %s: %s\n",
-				   curr->name, curr->mount.path,
-				   strerror(errno));
+			cgroup_err("cannot mount %s to %s: %s\n", curr->name,
+				   curr->mount.path, strerror(errno));
 			error = ECGMOUNTFAIL;
 			goto out_err;
 		}
@@ -1046,7 +1045,7 @@ static int cgroup_parse_config(const char *pathname)
 	yyin = fopen(pathname, "re");
 
 	if (!yyin) {
-		cgroup_err("Error: failed to open file %s\n", pathname);
+		cgroup_err("failed to open file %s\n", pathname);
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -1088,7 +1087,7 @@ static int cgroup_parse_config(const char *pathname)
 		/*
 		 * Either yyparse failed or longjmp() was called.
 		 */
-		cgroup_err("Error: failed to parse file %s\n", pathname);
+		cgroup_err("failed to parse file %s\n", pathname);
 		ret = ECGCONFIGPARSEFAIL;
 		goto err;
 	}
@@ -1368,9 +1367,8 @@ static int cgroup_config_unload_controller(
 	while (ret == 0) {
 		error = umount(path);
 		if (error) {
-			cgroup_warn("Warning: cannot unmount controller %s ");
-			cgroup_warn("on %s: %s\n", mount_info->name, path,
-				    strerror(errno));
+			cgroup_warn("cannot unmount controller %s on %s: %s\n",
+				    mount_info->name, path, strerror(errno));
 			last_errno = errno;
 			ret = ECGOTHER;
 			goto out_error;
@@ -1417,8 +1415,8 @@ int cgroup_unload_cgroups(void)
 				 * remember the error and continue unloading
 				 * the rest.
 				 */
-				cgroup_warn("Warning: cannot clear controller");
-				cgroup_warn(" %s\n", info.name);
+				cgroup_warn("cannot clear controller %s\n",
+					    info.name);
 				ret = error;
 				error = 0;
 			}
@@ -1813,10 +1811,10 @@ int cgroup_config_create_template_group(struct cgroup *cgroup,
 			&fileindex);
 		if (ret != 0) {
 			if (fileindex < 0) {
-				cgroup_dbg("Error: Template source files ");
+				cgroup_dbg("Template source files ");
 				cgroup_dbg("have not been set\n");
 			} else {
-				cgroup_dbg("Error: Failed to load template");
+				cgroup_dbg("Failed to load template");
 				cgroup_dbg("rules from %s. ",
 					   template_files->items[fileindex]);
 			}
