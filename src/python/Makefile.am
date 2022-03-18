@@ -53,4 +53,4 @@ uninstall-local:
 
 clean-local:
 	[ ${srcdir} == ${builddir} ] || ${RM} -f ${builddir}/libcgroup.pyx
-	${RM} -rf libcgroup.c build
+	${RM} -rf libcgroup.c build libcgroup.egg-info dist
