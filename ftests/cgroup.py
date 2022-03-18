@@ -556,6 +556,8 @@ class Cgroup(object):
             if re.ret == 0 and \
                'neither blacklisted nor whitelisted' in re.stderr:
                 res = re.stdout
+            else:
+                raise(re)
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
