@@ -9,8 +9,8 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_srcdir)/src \
 	      -I$(top_srcdir)/src/tools \
-	      -I$(top_builddir)/googletest/googletest/include \
-	      -I$(top_builddir)/googletest/googletest \
+	      -I$(top_srcdir)/googletest/googletest/include \
+	      -I$(top_srcdir)/googletest/googletest \
 	      -std=c++11 \
 	      -Wno-write-strings \
 	      -DSTATIC= \
@@ -43,5 +43,8 @@ gtest_SOURCES = gtest.cpp \
 		014-cgroupv2_get_subtree_control.cpp \
 		015-cgroupv2_controller_enabled.cpp \
 		016-cgset_parse_r_flag.cpp
-gtest_LDFLAGS = -L$(top_builddir)/googletest/googletest -l:libgtest.so \
-		-rpath $(abs_top_builddir)/googletest/googletest
+gtest_LDFLAGS = -L$(top_srcdir)/googletest/googletest -l:libgtest.so \
+		-rpath $(abs_top_srcdir)/googletest/googletest
+
+clean-local:
+	${RM} test-procpidcgroup
