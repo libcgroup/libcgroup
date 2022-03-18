@@ -107,6 +107,26 @@ jobs:
         name: Unit Test Code Coverage
         path: lcov.*
 
+  distcheckv1:
+    name: Cgroup v1 Dist Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install container dependencies
+      run: sudo apt-get install lxc lxd
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run make distcheck
+      run: make distcheck
+    - name: Display test logs
+      if: ${{ failure() }}
+      run: |
+        cat libcgroup-*/_build/sub/tests/ftests/ftests.sh.log
+        cat libcgroup-*/_build/sub/tests/ftests/ftests-nocontainer.sh.log
+
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
     runs-on: ubuntu-latest
