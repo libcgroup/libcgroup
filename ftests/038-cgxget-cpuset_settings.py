@@ -8,7 +8,7 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
-from run import Run
+from run import Run, RunError
 import consts
 import ftests
 import sys
@@ -94,8 +94,15 @@ def test(config):
     cause = None
 
     for entry in TABLE:
-        Cgroup.xset(config, cgname=CGNAME, setting=entry[0], value=entry[1],
-                    version=entry[2])
+        try:
+            Cgroup.xset(config, cgname=CGNAME, setting=entry[0],
+                        value=entry[1], version=entry[2])
+        except RunError as re:
+            if re.stderr.find('Invalid argument') >= 0:
+                # The kernel disallowed this setting, likely due to the many
+                # complexities of exclusive cpusets
+                continue
+            raise re
 
         out = Cgroup.xget(config, cgname=CGNAME, setting=entry[3],
                           version=entry[5], values_only=True,
