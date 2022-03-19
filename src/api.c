@@ -169,8 +169,8 @@ static int cg_chown_file(FTS *fts, FTSENT *ent, uid_t owner, gid_t group)
 		break;
 	}
 	if (ret < 0) {
-		cgroup_warn("Warning: cannot change owner of file %s: %s\n",
-			    filename, strerror(errno));
+		cgroup_warn("cannot change owner of file %s: %s\n", filename,
+			    strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 	}
@@ -189,8 +189,8 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 	fts = fts_open(path, FTS_PHYSICAL | FTS_NOCHDIR |
 		       FTS_NOSTAT, NULL);
 	if (fts == NULL) {
-		cgroup_warn("Warning: cannot open directory %s: %s\n",
-			    path, strerror(errno));
+		cgroup_warn("cannot open directory %s: %s\n", path,
+			    strerror(errno));
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -199,7 +199,7 @@ static int cg_chown_recursive(char **path, uid_t owner, gid_t group)
 
 		ent = fts_read(fts);
 		if (!ent) {
-			cgroup_warn("Warning: fts_read failed\n");
+			cgroup_warn("fts_read failed\n");
 			break;
 		}
 		ret = cg_chown_file(fts, ent, owner, group);
@@ -238,7 +238,7 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 	return 0;
 
 fail:
-	cgroup_warn("Warning: cannot change permissions of file %s: %s\n", path,
+	cgroup_warn("cannot change permissions of file %s: %s\n", path,
 		    strerror(errno));
 	last_errno = errno;
 	return ECGOTHER;
@@ -299,8 +299,8 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 	fts = fts_open(fts_path, FTS_PHYSICAL | FTS_NOCHDIR |
 		       FTS_NOSTAT, NULL);
 	if (fts == NULL) {
-		cgroup_warn("Warning: cannot open directory %s: %s\n",
-			    fts_path, strerror(errno));
+		cgroup_warn("cannot open directory %s: %s\n", fts_path,
+			    strerror(errno));
 		last_errno = errno;
 		return ECGOTHER;
 	}
@@ -330,7 +330,7 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode,
 				    file_mode, filem_change,
 				    owner_is_umask);
 		if (ret) {
-			cgroup_warn("Warning: cannot change file mode %s: %s\n",
+			cgroup_warn("cannot change file mode %s: %s\n",
 				    fts_path, strerror(errno));
 			last_errno = errno;
 			final_ret = ECGOTHER;
@@ -435,7 +435,7 @@ static void cgroup_free_rule(struct cgroup_rule *r)
 
 	/* Make sure our rule is not NULL, first. */
 	if (!r) {
-		cgroup_warn("Warning: attempted to free NULL rule\n");
+		cgroup_warn("attempted to free NULL rule\n");
 		return;
 	}
 	if (r->procname) {
@@ -463,7 +463,7 @@ static void cgroup_free_rule_list(struct cgroup_rule_list *cg_rl)
 
 	/* Make sure we're not freeing NULL memory! */
 	if (!(cg_rl->head)) {
-		cgroup_warn("Warning: attempted to free NULL list\n");
+		cgroup_warn("attempted to free NULL list\n");
 		return;
 	}
 
@@ -522,8 +522,7 @@ STATIC int cgroup_parse_rules_options(char *options,
 
 	stok_buff = strtok(options, ",");
 	if (!stok_buff) {
-		cgroup_err("Error: failed to parse options: %s\n",
-			   options);
+		cgroup_err("failed to parse options: %s\n", options);
 		return -EINVAL;
 	}
 
@@ -539,7 +538,7 @@ STATIC int cgroup_parse_rules_options(char *options,
 		 * "ignore" is the only currently supported option.  raise
 		 * an error if we get here
 		 */
-		cgroup_err("Error: Unsupported option: %s\n", stok_buff);
+		cgroup_err("Unsupported option: %s\n", stok_buff);
 		ret = -EINVAL;
 		break;
 	} while ((stok_buff = strtok(NULL, ",")));
@@ -633,7 +632,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 	/* Open the configuration file. */
 	fp = fopen(filename, "re");
 	if (!fp) {
-		cgroup_warn("Warning: failed to open configuration file %s: %s\n",
+		cgroup_warn("failed to open configuration file %s: %s\n",
 			    filename, strerror(errno));
 
 		ret = ECGRULESPARSEFAIL;  /* originally ret = 0, but */
@@ -655,8 +654,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		 * of it (begins with %), then we should skip this rule too.
 		 */
 		if (skipped && *itr == '%') {
-			cgroup_warn("Warning: skipped child of invalid rule, ");
-			cgroup_warn("line %d.\n", linenum);
+			cgroup_warn("skipped child of invalid rule, line %d.\n",
+				    linenum);
 			continue;
 		}
 
@@ -668,7 +667,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		i = sscanf(itr, "%s%s%s%s", key, controllers, destination,
 			   options);
 		if (i < 3) {
-			cgroup_err("Error: failed to parse configuration file");
+			cgroup_err("failed to parse configuration file");
 			cgroup_err(" on line %d\n", linenum);
 			goto parsefail;
 		} else if (i == 3) {
@@ -684,9 +683,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 			len_username = procname - key - 1;
 			len_procname = strlen(procname);
 			if (len_procname < 0) {
-				cgroup_err("Error: failed to parse ");
-				cgroup_err("configuration file on line %d\n",
-					    linenum);
+				cgroup_err("failed to parse configuration ");
+				cgroup_err("file on line %d\n", linenum);
 				goto parsefail;
 			}
 		} else {
@@ -721,9 +719,9 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = CGRULE_INVALID;
 				gid = grp->gr_gid;
 			} else {
-				cgroup_warn("Warning: Entry for %s not found.");
-				cgroup_warn(" Skipping rule on line %d.\n",
-					    itr, linenum);
+				cgroup_warn("Entry for %s not found.");
+				cgroup_warn(" Skipping rule on line %d.\n", itr,
+					    linenum);
 				skipped = true;
 				continue;
 			}
@@ -738,8 +736,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 				uid = pwd->pw_uid;
 				gid = CGRULE_INVALID;
 			} else {
-				cgroup_warn("Warning: Entry for %s not found.");
-				cgroup_warn("Skipping rule on line %d.\n",
+				cgroup_warn("Entry for %s not found.");
+				cgroup_warn(" Skipping rule on line %d.\n",
 					    user, linenum);
 				skipped = true;
 				continue;
@@ -804,7 +802,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		 */
 		newrule = calloc(1, sizeof(struct cgroup_rule));
 		if (!newrule) {
-			cgroup_err("Error: out of memory? Error was: %s\n",
+			cgroup_err("out of memory? Error was: %s\n",
 				   strerror(errno));
 			last_errno = errno;
 			ret = ECGOTHER;
@@ -822,8 +820,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		if (len_procname) {
 			newrule->procname = strdup(procname);
 			if (!newrule->procname) {
-				cgroup_err("Error: strdup failed to allocate");
-				cgroup_err(" memory %s\n", strerror(errno));
+				cgroup_err("strdup failed to allocate ");
+				cgroup_err("memory %s\n", strerror(errno));
 				free(newrule);
 				last_errno = errno;
 				ret = ECGOTHER;
@@ -847,24 +845,24 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid,
 		/* Parse the controller list, and add that to newrule too. */
 		stok_buff = strtok(controllers, ",");
 		if (!stok_buff) {
-			cgroup_err("Error: failed to parse controllers on ");
-			cgroup_err("line %d\n", linenum);
+			cgroup_err("failed to parse controllers on line %d\n",
+				   linenum);
 			goto destroyrule;
 		}
 
 		i = 0;
 		do {
 			if (i >= MAX_MNT_ELEMENTS) {
-				cgroup_err("Error: too many controllers ");
-				cgroup_err("listed on line %d\n", linenum);
+				cgroup_err("too many controllers listed on ");
+				cgroup_err("line %d\n", linenum);
 				goto destroyrule;
 			}
 
 			newrule->controllers[i] =
 				strndup(stok_buff, strlen(stok_buff) + 1);
 			if (!(newrule->controllers[i])) {
-				cgroup_err("Error: out of memory? Error was:");
-				cgroup_err(" %s\n", strerror(errno));
+				cgroup_err("out of memory? Error was: %s\n",
+					   strerror(errno));
 				goto destroyrule;
 			}
 			i++;
@@ -984,8 +982,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 	/* Continue parsing */
 	d = opendir(dirname);
 	if (!d) {
-		cgroup_warn("Warning: Failed to open directory %s: %s\n",
-			    dirname, strerror(errno));
+		cgroup_warn("Failed to open directory %s: %s\n", dirname,
+			    strerror(errno));
 
 		/*
 		 * Cannot read directory. However, CGRULES_CONF_FILE is
@@ -1028,8 +1026,8 @@ static int cgroup_parse_rules(bool cache, uid_t muid,
 				goto unlock_list;
 		}
 		if (!item && errno) {
-			cgroup_warn("Warning: cannot read %s: %s\n",
-				    dirname, strerror(errno));
+			cgroup_warn("cannot read %s: %s\n", dirname,
+				    strerror(errno));
 			/*
 			 * Cannot read an item. But continue for
 			 * back compatibility as a success.
@@ -1340,8 +1338,7 @@ int cgroup_init(void)
 	proc_cgroup = fopen("/proc/cgroups", "re");
 
 	if (!proc_cgroup) {
-		cgroup_err("Error: cannot open /proc/cgroups: %s\n",
-			   strerror(errno));
+		cgroup_err("cannot open /proc/cgroups: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
@@ -1359,8 +1356,7 @@ int cgroup_init(void)
 	}
 	if (!fgets(buf, LL_MAX, proc_cgroup)) {
 		free(buf);
-		cgroup_err("Error: cannot read /proc/cgroups: %s\n",
-			   strerror(errno));
+		cgroup_err("cannot read /proc/cgroups: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
@@ -1380,8 +1376,7 @@ int cgroup_init(void)
 
 	proc_mount = fopen("/proc/mounts", "re");
 	if (proc_mount == NULL) {
-		cgroup_err("Error: cannot open /proc/mounts: %s\n",
-			   strerror(errno));
+		cgroup_err("cannot open /proc/mounts: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
@@ -1526,7 +1521,7 @@ char *cg_build_path_locked(const char *name, char *path,
 		ret = snprintf(path, FILENAME_MAX, "%s/",
 			       cg_cgroup_v2_mount_path);
 		if (ret >= FILENAME_MAX)
-			cgroup_dbg("Warning: filename too long: %s/",
+			cgroup_dbg("filename too long: %s/",
 				   cg_cgroup_v2_mount_path);
 
 		if (name) {
@@ -1558,7 +1553,7 @@ char *cg_build_path_locked(const char *name, char *path,
 					       cg_mount_table[i].mount.path,
 					       cg_namespace_table[i]);
 				if (ret >= FILENAME_MAX) {
-					cgroup_dbg("Warning: filename too long");
+					cgroup_dbg("filename too long");
 					cgroup_dbg(":%s/%s/",
 						   cg_mount_table[i].mount.path,
 						   cg_namespace_table[i]);
@@ -1567,7 +1562,7 @@ char *cg_build_path_locked(const char *name, char *path,
 				ret = snprintf(path, FILENAME_MAX, "%s/",
 					       cg_mount_table[i].mount.path);
 				if (ret >= FILENAME_MAX) {
-					cgroup_dbg("Warning: filename too long");
+					cgroup_dbg("filename too long");
 					cgroup_dbg(":%s/",
 						   cg_mount_table[i].mount.path);
 				}
@@ -1614,7 +1609,7 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 			snprintf(type, type_sz, "cgroup.procs");
 			goto out;
 		} else {
-			cgroup_warn("Warning: failed to open file %s: %s\n",
+			cgroup_warn("failed to open file %s: %s\n",
 				    cg_type_path, strerror(errno));
 			err = ECGOTHER;
 			goto out;
@@ -1622,8 +1617,8 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 	}
 
 	if (fgets(cg_type, LL_MAX, fp) == NULL) {
-		cgroup_warn("Warning: failed to read file %s: %s\n",
-			    cg_type_path, strerror(errno));
+		cgroup_warn("failed to read file %s: %s\n", cg_type_path,
+			    strerror(errno));
 		err = ECGOTHER;
 		goto out;
 	}
@@ -1643,8 +1638,7 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 	} else if (strncmp(cg_type, "threaded", len) == 0) {
 		snprintf(type, type_sz, "cgroup.threads");
 	} else {
-		cgroup_warn("Warning: invalid %scgroup.type: %s\n",
-			    path, cg_type);
+		cgroup_warn("invalid %scgroup.type: %s\n", path, cg_type);
 		err = ECGOTHER;
 	}
 
@@ -1777,8 +1771,8 @@ static int __cgroup_attach_task_pid(char *path, pid_t tid)
 	fclose(tasks);
 	return 0;
 err:
-	cgroup_warn("Warning: cannot write tid %d to %s:%s\n",
-		    tid, path, strerror(errno));
+	cgroup_warn("cannot write tid %d to %s:%s\n", tid, path,
+		    strerror(errno));
 	if (tasks)
 		fclose(tasks);
 	return ret;
@@ -1799,7 +1793,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
-		cgroup_warn("Warning: libcgroup is not initialized\n");
+		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
 	if (!cgroup) {
@@ -1828,8 +1822,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		for (i = 0; i < cgroup->index; i++) {
 			if (!cgroup_test_subsys_mounted(
 						cgroup->controller[i]->name)) {
-				cgroup_warn("Warning: subsystem %s is not");
-				cgroup_warn(" mounted\n",
+				cgroup_warn("subsystem %s is not mounted\n",
 					    cgroup->controller[i]->name);
 				return ECGROUPSUBSYSNOTMOUNTED;
 			}
@@ -2043,8 +2036,7 @@ static int cg_set_control_value(char *path, const char *val)
 				return ECGOTHER;
 			}
 		} else
-			cgroup_warn("Warning: skipping empty line for %s\n",
-				    path);
+			cgroup_warn("skipping empty line for %s\n", path);
 	} while (pos);
 
 	if (close(ctl_file)) {
@@ -2146,7 +2138,7 @@ STATIC int cgroupv2_get_subtree_control(const char *path,
 
 	fp = fopen(path_copy, "re");
 	if (!fp) {
-		cgroup_warn("Warning: fopen failed\n");
+		cgroup_warn("fopen failed\n");
 		last_errno = errno;
 		goto out;
 	}
@@ -2317,7 +2309,7 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name)) {
-			cgroup_warn("Warning: subsystem %s is not mounted\n",
+			cgroup_warn("subsystem %s is not mounted\n",
 				    cgroup->controller[i]->name);
 			return ECGROUPSUBSYSNOTMOUNTED;
 		}
@@ -2898,9 +2890,9 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 		if (delete_tasks) {
 			ret = cg_move_task_files(delete_tasks, target_tasks);
 			if (ret != 0) {
-				cgroup_warn("Warning: removing tasks from %s ");
-				cgroup_warn("failed: %s\n",
-					    path, cgroup_strerror(ret));
+				cgroup_warn("removing tasks from %s ");
+				cgroup_warn("failed: %s\n", path,
+					    cgroup_strerror(ret));
 			}
 			fclose(delete_tasks);
 		} else {
@@ -2910,8 +2902,8 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 			 * removed.
 			 */
 			if (errno != ENOENT) {
-				cgroup_err("Error: cannot open %s: %s\n",
-					   path, strerror(errno));
+				cgroup_err("cannot open %s: %s\n", path,
+					   strerror(errno));
 				last_errno = errno;
 				ret = ECGOTHER;
 			}
@@ -2934,8 +2926,7 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller,
 	if ((flags & CGFLAG_DELETE_EMPTY_ONLY) && (errno == EBUSY))
 		return ECGNONEMPTY;
 
-	cgroup_warn("Warning: cannot remove directory %s: %s\n",
-		    path, strerror(errno));
+	cgroup_warn("cannot remove directory %s: %s\n", path, strerror(errno));
 	last_errno = errno;
 	return ECGOTHER;
 }
@@ -3103,8 +3094,8 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			parent_tasks = fopen(parent_path, "we");
 			if (!parent_tasks) {
 				if (first_error == 0) {
-					cgroup_warn("Warning: cannot open ");
-					cgroup_warn("tasks file %s: %s\n",
+					cgroup_warn("cannot open tasks ");
+					cgroup_warn("file %s: %s\n",
 						    parent_path, strerror(errno));
 					first_errno = errno;
 					first_error = ECGOTHER;
@@ -3506,8 +3497,8 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 				cptr = cgroup_add_controller(cgroup,
 						cg_mount_table[j].name);
 				if (!cptr) {
-					cgroup_warn("Warning: adding controller");
-					cgroup_warn("'%s' failed\n",
+					cgroup_warn("adding controller '%s' ");
+					cgroup_warn("failed\n",
 						    cg_mount_table[j].name);
 					pthread_rwlock_unlock(&cg_mount_table_lock);
 					cgroup_free_controllers(cgroup);
@@ -3522,7 +3513,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 		cgroup_dbg("Adding controller %s\n", controller);
 		cptr = cgroup_add_controller(cgroup, controller);
 		if (!cptr) {
-			cgroup_warn("Warning: adding controller '%s' failed\n",
+			cgroup_warn("adding controller '%s' failed\n",
 				    controller);
 			cgroup_free_controllers(cgroup);
 			return ECGROUPNOTALLOWED;
@@ -4053,7 +4044,7 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 
 	/* We need to check this before doing anything else! */
 	if (!cgroup_initialized) {
-		cgroup_warn("Warning: libcgroup is not initialized\n");
+		cgroup_warn("libcgroup is not initialized\n");
 		ret = ECGROUPNOTINITIALIZED;
 		goto finished;
 	}
@@ -4065,8 +4056,8 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 	 * by reloading the rules from the configuration file.
 	 */
 	if ((flags & CGFLAG_USECACHE) && (rl.head == NULL)) {
-		cgroup_warn("Warning: no cached rules found, trying to ");
-		cgroup_warn("reload from %s.\n", CGRULES_CONF_FILE);
+		cgroup_warn("no cached rules found, trying to reload ");
+		cgroup_warn("from %s.\n", CGRULES_CONF_FILE);
 
 		ret = cgroup_reload_cached_rules();
 		if (ret != 0)
@@ -4084,7 +4075,7 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 
 		/* The configuration file has an error!  We must exit now. */
 		if (ret != -1 && ret != 0) {
-			cgroup_err("Error: failed to parse the configuration ");
+			cgroup_err("failed to parse the configuration ");
 			cgroup_err("rules\n");
 			goto finished;
 		}
@@ -4221,8 +4212,8 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 		ret = cgroup_change_cgroup_path(newdest,
 				pid, (const char * const *)tmp->controllers);
 		if (ret) {
-			cgroup_warn("Warning: failed to apply the rule. ");
-			cgroup_warn("Error was: %d\n", ret);
+			cgroup_warn("failed to apply the rule. Error ");
+			cgroup_warn("was: %d\n", ret);
 			goto finished;
 		}
 		cgroup_dbg("OK!\n");
@@ -4279,7 +4270,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 	DIR *dir;
 
 	if (!cgroup_initialized) {
-		cgroup_warn("Warning: libcgroup is not initialized\n");
+		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
 	memset(&cgroup, 0, sizeof(struct cgroup));
@@ -4290,8 +4281,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 	/* Add process to cgroup */
 	ret = cgroup_attach_task_pid(&cgroup, pid);
 	if (ret) {
-		cgroup_warn("Warning: cgroup_attach_task_pid failed: %d\n",
-			    ret);
+		cgroup_warn("cgroup_attach_task_pid failed: %d\n", ret);
 		goto finished;
 	}
 
@@ -4314,8 +4304,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid,
 
 		ret = cgroup_attach_task_pid(&cgroup, tid);
 		if (ret) {
-			cgroup_warn("Warning: cgroup_attach_task_pid ");
-			cgroup_warn("failed: %d\n", ret);
+			cgroup_warn("cgroup_attach_task_pid failed: %d\n", ret);
 			break;
 		}
 	}
@@ -4450,8 +4439,8 @@ int cgroup_reload_cached_rules(void)
 	cgroup_dbg("Reloading cached rules from %s.\n", CGRULES_CONF_FILE);
 	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID, NULL);
 	if (ret) {
-		cgroup_warn("Warning: error parsing configuration file ");
-		cgroup_warn("'%s': %d\n", CGRULES_CONF_FILE, ret);
+		cgroup_warn("error parsing configuration file '%s': %d\n",
+			    CGRULES_CONF_FILE, ret);
 		ret = ECGRULESPARSEFAIL;
 		goto finished;
 	}
@@ -4501,14 +4490,14 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		return ECGOTHER;
 
 	if (!cgroup_initialized) {
-		cgroup_warn("Warning: libcgroup is not initialized\n");
+		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
 
 	ret = asprintf(&path, "/proc/%d/cgroup", pid);
 	if (ret <= 0) {
-		cgroup_warn("Warning: cannot allocate memory ");
-		cgroup_warn("(/proc/pid/cgroup) ret %d\n", ret);
+		cgroup_warn("cannot allocate memory (/proc/pid/cgroup) ");
+		cgroup_warn("ret %d\n", ret);
 		return ret;
 	}
 
@@ -4541,8 +4530,8 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		 * disappear :)
 		 */
 		if (ret != 3) {
-			cgroup_warn("Warning: read failed for pid_cgroup_fd ");
-			cgroup_warn("ret %d\n", ret);
+			cgroup_warn("read failed for pid_cgroup_fd ret %d\n",
+				    ret);
 			last_errno = errno;
 			ret = ECGOTHER;
 			goto done;
@@ -4727,7 +4716,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path,
 	}
 	ent = fts_read(entry->fts);
 	if (!ent) {
-		cgroup_warn("Warning: fts_read failed\n");
+		cgroup_warn("fts_read failed\n");
 		fts_close(entry->fts);
 		free(entry);
 		*handle = NULL;
@@ -4865,7 +4854,7 @@ int cgroup_read_value_begin(const char * const controller, const char *path,
 		 name);
 	fp = fopen(stat_file, "re");
 	if (!fp) {
-		cgroup_warn("Warning: fopen failed\n");
+		cgroup_warn("fopen failed\n");
 		last_errno = errno;
 		*handle = NULL;
 		return ECGOTHER;
@@ -4941,7 +4930,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path,
 
 	fp = fopen(stat_file, "re");
 	if (!fp) {
-		cgroup_warn("Warning: fopen failed\n");
+		cgroup_warn("fopen failed\n");
 		return ECGINVAL;
 	}
 
@@ -5140,8 +5129,7 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 		 * /proc/<pid>/status. The format has been changed
 		 * and we should catch up the change.
 		 */
-		cgroup_warn("Warning: invalid file format of /proc/%d/status\n",
-			    pid);
+		cgroup_warn("invalid file format of /proc/%d/status\n", pid);
 		return ECGFAIL;
 	}
 	return 0;
