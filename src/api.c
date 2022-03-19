@@ -1416,8 +1416,6 @@ int cgroup_init(void)
 		}
 	}
 
-	free(temp_ent);
-
 	if (!found_mnt) {
 		cg_mount_table[0].name[0] = '\0';
 		ret = ECGROUPNOTMOUNTED;
@@ -1435,6 +1433,9 @@ unlock_exit:
 
 	if (proc_mount)
 		fclose(proc_mount);
+
+	if (temp_ent)
+		free(temp_ent);
 
 	for (i = 0; controllers[i]; i++) {
 		free(controllers[i]);
