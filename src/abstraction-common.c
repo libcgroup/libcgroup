@@ -26,7 +26,7 @@ int cgroup_strtol(const char * const in_str, int base,
 	int ret = 0;
 
 	if (out_value == NULL) {
-		cgroup_err("Error: Invalid parameter to %s\n", __func__);
+		cgroup_err("Invalid parameter to %s\n", __func__);
 		ret = ECGINVAL;
 		goto out;
 	}
@@ -38,14 +38,13 @@ int cgroup_strtol(const char * const in_str, int base,
 	if ((errno == ERANGE &&
 	     (*out_value == LONG_MAX || *out_value == LONG_MIN))
 	    || (errno != 0 && *out_value == 0)) {
-		cgroup_err("Error: Failed to convert %s from strtol: %s\n",
-			   in_str);
+		cgroup_err("Failed to convert %s from strtol: %s\n", in_str);
 		ret = ECGFAIL;
 		goto out;
 	}
 
 	if (endptr == in_str) {
-		cgroup_err("Error: No long value found in %s\n",
+		cgroup_err("No long value found in %s\n",
 			   in_str);
 		ret = ECGFAIL;
 		goto out;
@@ -88,7 +87,7 @@ int cgroup_convert_int(struct cgroup_controller * const dst_cgc,
 		ret = snprintf(out_value_str, OUT_VALUE_STR_LEN, "%ld", out_value);
 		if (ret == OUT_VALUE_STR_LEN) {
 			/* we ran out of room in the string. throw an error */
-			cgroup_err("Error: output value too large for string: %d\n",
+			cgroup_err("output value too large for string: %d\n",
 				   out_value);
 			ret = ECGFAIL;
 			goto out;
