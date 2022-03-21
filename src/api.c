@@ -126,6 +126,16 @@ const char * const cgroup_strerror_codes[] = {
 	"Failed to remove a non-empty group",
 };
 
+/*
+ * common free util, not static for potential reuse across the library. We might
+ * need a better name and location as this evolves
+ */
+void common_charptr_free(char **ptr)
+{
+	if (ptr)
+		free(*ptr);
+}
+
 static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
 #ifndef UNIT_TEST
@@ -344,7 +354,7 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 		       int dirm_change, mode_t file_mode, int filem_change)
 {
 	int final_ret = 0;
-	char *path;
+	char defer(common_charptr_free) *path;
 	int i, ret;
 
 	path = malloc(FILENAME_MAX);
@@ -365,7 +375,6 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
 		if (ret)
 			final_ret = ret;
 	}
-	free(path);
 	return final_ret;
 }
 
@@ -380,7 +389,7 @@ void cgroup_set_permissions(struct cgroup *cgroup,
 
 static char *cgroup_basename(const char *path)
 {
-	char *tmp_string;
+	char defer(common_charptr_free) *tmp_string;
 	char *base;
 
 	tmp_string = strdup(path);
@@ -389,8 +398,6 @@ static char *cgroup_basename(const char *path)
 		return NULL;
 
 	base = strdup(basename(tmp_string));
-
-	free(tmp_string);
 
 	return base;
 }
@@ -1313,7 +1320,7 @@ int cgroup_init(void)
 	FILE *proc_cgroup = NULL;
 	FILE *proc_mount = NULL;
 	int found_mnt = 0;
-	char *buf = NULL;
+	char defer(common_charptr_free) *buf = NULL;
 	int ret = 0;
 	int i = 0;
 	int err;
@@ -1358,14 +1365,12 @@ int cgroup_init(void)
 		goto unlock_exit;
 	}
 	if (!fgets(buf, LL_MAX, proc_cgroup)) {
-		free(buf);
 		cgroup_err("Error: cannot read /proc/cgroups: %s\n",
 			   strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto unlock_exit;
 	}
-	free(buf);
 
 	i = 0;
 	while (!feof(proc_cgroup)) {
@@ -1530,14 +1535,13 @@ char *cg_build_path_locked(const char *name, char *path,
 				   cg_cgroup_v2_mount_path);
 
 		if (name) {
-			char *tmp;
+			char defer(common_charptr_free) *tmp;
 
 			tmp = strdup(path);
 			if (tmp == NULL)
 				return NULL;
 
 			cg_concat_path(tmp, name, path);
-			free(tmp);
 		}
 		return path;
 	}
@@ -1574,14 +1578,13 @@ char *cg_build_path_locked(const char *name, char *path,
 			}
 
 			if (name) {
-				char *tmp;
+				char defer(common_charptr_free) *tmp;
 
 				tmp = strdup(path);
 				if (tmp == NULL)
 					break;
 
 				cg_concat_path(tmp, name, path);
-				free(tmp);
 			}
 			return path;
 		}
@@ -1877,7 +1880,7 @@ int cgroup_attach_task(struct cgroup *cgroup)
  */
 int cg_mkdir_p(const char *path)
 {
-	char *real_path = NULL;
+	char defer(common_charptr_free) *real_path = NULL;
 	int stat_ret, ret = 0;
 	struct stat st;
 	int i = 0;
@@ -1912,7 +1915,7 @@ int cg_mkdir_p(const char *path)
 				break;
 			case EPERM:
 				ret = ECGROUPNOTOWNER;
-				goto done;
+				return ret;
 			default:
 				/* Check if path exists */
 				real_path[i] = '\0';
@@ -1923,13 +1926,11 @@ int cg_mkdir_p(const char *path)
 					break;
 				}
 				ret = ECGROUPNOTALLOWED;
-				goto done;
+				return ret;
 			}
 		}
 	} while (real_path[i]);
 
-done:
-	free(real_path);
 	return ret;
 }
 
@@ -1958,7 +1959,7 @@ static int cg_create_control_group(const char *path)
  */
 static int cg_set_control_value(char *path, const char *val)
 {
-	char *str_val_start;
+	char defer(common_charptr_free) *str_val_start = NULL;
 	char *str_val;
 	int ctl_file;
 	size_t len;
@@ -1980,7 +1981,7 @@ static int cg_set_control_value(char *path, const char *val)
 			 */
 			char *path_dir_end;
 			FILE *control_file;
-			char *tasks_path;
+			char defer(common_charptr_free) *tasks_path = NULL;
 
 			path_dir_end = strrchr(path, '/');
 			if (path_dir_end == NULL)
@@ -2000,14 +2001,12 @@ static int cg_set_control_value(char *path, const char *val)
 			control_file = fopen(tasks_path, "re");
 			if (!control_file) {
 				if (errno == ENOENT) {
-					free(tasks_path);
 					return ECGROUPSUBSYSNOTMOUNTED;
 				}
 			} else {
 				fclose(control_file);
 			}
 
-			free(tasks_path);
 			return ECGROUPNOTALLOWED;
 		}
 		return ECGROUPVALUENOTEXIST;
@@ -2038,7 +2037,6 @@ static int cg_set_control_value(char *path, const char *val)
 		if (len > 0) {
 			if (write(ctl_file, str_val, len) == -1) {
 				last_errno = errno;
-				free(str_val_start);
 				close(ctl_file);
 				return ECGOTHER;
 			}
@@ -2049,11 +2047,9 @@ static int cg_set_control_value(char *path, const char *val)
 
 	if (close(ctl_file)) {
 		last_errno = errno;
-		free(str_val_start);
 		return ECGOTHER;
 	}
 
-	free(str_val_start);
 	return 0;
 }
 
@@ -2068,7 +2064,7 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 	bool ignore_non_dirty_failures)
 {
 	int ret, j, error = 0;
-	char *path = NULL;
+	char defer(common_charptr_free) *path = NULL;
 
 	for (j = 0; j < controller->index; j++) {
 		ret = asprintf(&path, "%s%s", base,
@@ -2083,7 +2079,6 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 
 		error = cg_set_control_value(path,
 					     controller->values[j]->value);
-		free(path);
 		path = NULL;
 
 		if (error && ignore_non_dirty_failures &&
@@ -2103,14 +2098,6 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 	}
 
 err:
-	/*
-	 * As currently written, path should always be null as we are exiting
-	 * this function, but let's check just in case, and free it if it's
-	 * non-null
-	 */
-	if (path)
-		free(path);
-
 	return error;
 }
 
@@ -2125,7 +2112,8 @@ STATIC int cgroupv2_get_subtree_control(const char *path,
 					const char *ctrl_name,
 					bool * const enabled)
 {
-	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c;
+	char defer(common_charptr_free) *path_copy = NULL;
+	char *saveptr = NULL, *token, *ret_c;
 	int ret, error = ECGROUPNOTMOUNTED;
 	char buffer[FILENAME_MAX];
 	FILE *fp = NULL;
@@ -2173,8 +2161,6 @@ STATIC int cgroupv2_get_subtree_control(const char *path,
 	} while ((token = strtok_r(NULL, " ", &saveptr)));
 
 out:
-	if (path_copy)
-		free(path_copy);
 	if (fp)
 		fclose(fp);
 
@@ -2193,7 +2179,7 @@ STATIC int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
 {
 	int ret, error = ECGOTHER;
 	char *path_copy = NULL;
-	char *value = NULL;
+	char defer(common_charptr_free) *value = NULL;
 
 	if (!path || !ctrl_name)
 		return ECGOTHER;
@@ -2223,8 +2209,6 @@ STATIC int cgroupv2_subtree_control(const char *path, const char *ctrl_name,
 		goto out;
 
 out:
-	if (value)
-		free(value);
 	if (path_copy)
 		free(path_copy);
 	return error;
@@ -2461,7 +2445,7 @@ STATIC int cgroup_chown_chmod_tasks(const char * const cg_path,
 				    uid_t uid, gid_t gid, mode_t fperm)
 {
 	int ret, error;
-	char *tasks_path = NULL;
+	char defer(common_charptr_free) *tasks_path = NULL;
 
 	tasks_path = (char *)malloc(FILENAME_MAX);
 	if (tasks_path == NULL)
@@ -2471,7 +2455,7 @@ STATIC int cgroup_chown_chmod_tasks(const char * const cg_path,
 	if (ret < 0 || ret >= FILENAME_MAX) {
 		last_errno = errno;
 		error = ECGOTHER;
-		goto err;
+		return error;
 	}
 
 	error = cg_chown(tasks_path, uid, gid);
@@ -2483,10 +2467,6 @@ STATIC int cgroup_chown_chmod_tasks(const char * const cg_path,
 		error = ECGOTHER;
 	}
 
-err:
-	if (tasks_path)
-		free(tasks_path);
-
 	return error;
 }
 
@@ -2496,8 +2476,8 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 {
 	enum cg_version_t version;
 	char *fts_path[2];
-	char *base = NULL;
-	char *path = NULL;
+	char defer(common_charptr_free) *base = NULL;
+	char defer(common_charptr_free) *path = NULL;
 	int error;
 
 	fts_path[0] = (char *)malloc(FILENAME_MAX);
@@ -2511,13 +2491,13 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	if (controller) {
 		if (!cg_build_path(cgroup->name, path, controller->name)) {
 			error = ECGOTHER;
-			goto err;
+			return error;
 		}
 
 		error = cgroup_get_controller_version(controller->name,
 						      &version);
 		if (error)
-			goto err;
+			return error;
 
 		if (version == CGROUP_V2) {
 			char *parent, *dname;
@@ -2525,7 +2505,7 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 			parent = strdup(path);
 			if (!parent) {
 				error = ECGOTHER;
-				goto err;
+				return error;
 			}
 
 			dname = dirname(parent);
@@ -2534,25 +2514,25 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 					controller->name, true);
 			free(parent);
 			if (error)
-				goto err;
+				return error;
 		}
 	} else {
 		if (!cg_build_path(cgroup->name, path, NULL)) {
 			error = ECGOTHER;
-			goto err;
+			return error;
 		}
 	}
 
 	error = cg_create_control_group(path);
 	if (error)
-		goto err;
+		return error;
 
 	base = strdup(path);
 
 	if (!base) {
 		last_errno = errno;
 		error = ECGOTHER;
-		goto err;
+		return error;
 	}
 
 	if (!ignore_ownership) {
@@ -2569,12 +2549,12 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	}
 
 	if (error)
-		goto err;
+		return error;
 
 	if (controller) {
 		error = cgroup_set_values_recursive(base, controller, false);
 		if (error)
-			goto err;
+			return error;
 	}
 
 	if (!ignore_ownership && version == CGROUP_V1) {
@@ -2582,14 +2562,9 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 				cgroup->tasks_uid, cgroup->tasks_gid,
 				cgroup->task_fperm);
 		if (error)
-			goto err;
+			return error;
 	}
 
-err:
-	if (path)
-		free(path);
-	if (base)
-		free(base);
 	return error;
 }
 
@@ -2658,7 +2633,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 {
 	char *pdir = NULL;
-	char *dir = NULL;
+	char defer(common_charptr_free) *dir = NULL;
 	int ret = 0;
 
 	dir = strdup(cgroup->name);
@@ -2683,7 +2658,6 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 			ret = ECGOTHER;
 		}
 	}
-	free(dir);
 
 	return ret;
 }
@@ -2709,7 +2683,7 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller,
 {
 	struct stat stat_child, stat_parent;
 	char child_path[FILENAME_MAX];
-	char *parent_path = NULL;
+	char defer(common_charptr_free) *parent_path = NULL;
 	int ret = 0;
 
 	*parent = NULL;
@@ -2731,13 +2705,13 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller,
 	if (stat(child_path, &stat_child) < 0) {
 		last_errno = errno;
 		ret = ECGOTHER;
-		goto free_parent;
+		return ret;
 	}
 
 	if (stat(parent_path, &stat_parent) < 0) {
 		last_errno = errno;
 		ret = ECGOTHER;
-		goto free_parent;
+		return ret;
 	}
 
 	/* Is the specified "name" a mount point? */
@@ -2749,8 +2723,6 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller,
 		ret = cgroup_get_parent_name(cgroup, parent);
 	}
 
-free_parent:
-	free(parent_path);
 	return ret;
 }
 
@@ -2766,7 +2738,7 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 				     int ignore_ownership)
 {
 	struct cgroup *parent_cgroup = NULL;
-	char *parent = NULL;
+	char defer(common_charptr_free) *parent = NULL;
 	int ret = ECGFAIL;
 
 	if (!cgroup_initialized)
@@ -2788,7 +2760,7 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 	parent_cgroup = cgroup_new_cgroup(parent);
 	if (!parent_cgroup) {
 		ret = ECGFAIL;
-		goto err_nomem;
+		return ret;
 	}
 
 	if (cgroup_get_cgroup(parent_cgroup)) {
@@ -2807,8 +2779,6 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
 
 err_parent:
 	cgroup_free(&parent_cgroup);
-err_nomem:
-	free(parent);
 	return ret;
 }
 
@@ -3214,11 +3184,11 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 {
 	char path[FILENAME_MAX+1];
 	struct stat stat_buffer;
-	char *ctrl_value = NULL;
+	char defer(common_charptr_free) *ctrl_value = NULL;
 	char *ctrl_name = NULL;
 	char *ctrl_file = NULL;
 	char *tmp_path = NULL;
-	char *d_name = NULL;
+	char defer(common_charptr_free) *d_name = NULL;
 	char *buffer = NULL;
 	int tmp_len = 0;
 	int error = 0;
@@ -3227,7 +3197,7 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 
 	if (!strcmp(d_name, ".") || !strcmp(d_name, "..")) {
 		error = ECGINVAL;
-		goto fill_error;
+		return error;
 	}
 
 
@@ -3243,7 +3213,7 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 
 	if (error) {
 		error = ECGFAIL;
-		goto fill_error;
+		return error;
 	}
 
 	/*
@@ -3276,14 +3246,14 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 
 	if (!ctrl_name) {
 		error = ECGFAIL;
-		goto fill_error;
+		return error;
 	}
 
 	ctrl_file = strtok_r(NULL, ".", &buffer);
 
 	if (!ctrl_file) {
 		error = ECGINVAL;
-		goto fill_error;
+		return error;
 	}
 
 	if (strcmp(ctrl_name, cg_mount_table[cg_index].name) == 0) {
@@ -3291,18 +3261,14 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 					cgroup->name, ctrl_dir->d_name,
 					&ctrl_value);
 		if (error || !ctrl_value)
-			goto fill_error;
+			return error;
 
 		if (cgroup_add_value_string(cgc, ctrl_dir->d_name,
 					    ctrl_value)) {
 			error = ECGFAIL;
-			goto fill_error;
+			return error;
 		}
 	}
-fill_error:
-	if (ctrl_value)
-		free(ctrl_value);
-	free(d_name);
 	return error;
 }
 
@@ -4494,7 +4460,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 				       char **current_path)
 {
 	FILE *pid_cgroup_fd = NULL;
-	char *path = NULL;
+	char defer(common_charptr_free) *path = NULL;
 	int ret;
 
 	if (!controller)
@@ -4515,7 +4481,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 	ret = ECGROUPNOTEXIST;
 	pid_cgroup_fd = fopen(path, "re");
 	if (!pid_cgroup_fd)
-		goto cleanup_path;
+		return ret;
 
 	/*
 	 * Why do we grab the cg_mount_table_lock?, the reason is that
@@ -4568,8 +4534,6 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 done:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	fclose(pid_cgroup_fd);
-cleanup_path:
-	free(path);
 	return ret;
 }
 
@@ -4776,7 +4740,7 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 {
 	char *saveptr = NULL;
 	ssize_t read_bytes;
-	char *line = NULL;
+	char defer(common_charptr_free) *line = NULL;
 	size_t len = 0;
 	char *token;
 	int ret = 0;
@@ -4784,25 +4748,23 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 	read_bytes = getline(&line, &len, fp);
 	if (read_bytes == -1) {
 		ret = ECGEOF;
-		goto out_free;
+		return ret;
 	}
 
 	token = strtok_r(line, " ", &saveptr);
 	if (!token) {
 		ret = ECGINVAL;
-		goto out_free;
+		return ret;
 	}
 	strncpy(cgroup_stat->name, token, FILENAME_MAX - 1);
 
 	token = strtok_r(NULL, " ", &saveptr);
 	if (!token) {
 		ret = ECGINVAL;
-		goto out_free;
+		return ret;
 	}
 	strncpy(cgroup_stat->value, token, CG_VALUE_MAX - 1);
 
-out_free:
-	free(line);
 	return ret;
 }
 
@@ -4990,7 +4952,7 @@ int cgroup_get_task_begin(const char *cgroup, const char *controller,
 			  void **handle, pid_t *pid)
 {
 	char path[FILENAME_MAX];
-	char *fullpath = NULL;
+	char defer(common_charptr_free) *fullpath = NULL;
 	int ret = 0;
 
 	if (!cgroup_initialized)
@@ -5007,7 +4969,6 @@ int cgroup_get_task_begin(const char *cgroup, const char *controller,
 	}
 
 	*handle = (void *) fopen(fullpath, "re");
-	free(fullpath);
 
 	if (!*handle) {
 		last_errno = errno;
@@ -5439,8 +5400,8 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
 	ret = cg_get_procname_from_proc_cmdline(pid, pname_status,
 						&pname_cmdline);
 	if (!ret) {
-		*procname = pname_cmdline;
 		free(pname_status);
+		*procname = pname_cmdline;
 		return 0;
 	}
 
