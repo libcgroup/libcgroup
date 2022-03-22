@@ -4,6 +4,8 @@
  * Written by Ivana Hutarova Varekova <varekova@redhat.com>
  */
 
+#include "tools-common.h"
+
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 
@@ -27,23 +29,22 @@ typedef char cont_name_t[FILENAME_MAX];
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr,	" try %s -h' for more information.\n",
-			program_name);
+		err("Wrong input parameters, ");
+		err("try %s -h' for more information.\n", program_name);
 		return;
 	}
 
-	printf("Usage: %s [-i] [-m] [-M] [controller] [...]\n", program_name);
-	printf("   or: %s [-a] [-i] [-m] [-M]\n", program_name);
-	printf("List information about given controller(s) If no controller ");
-	printf("is set list information about all mounted controllers.\n");
-	printf("  -a, --all			Display information ");
-	printf("about all controllers (including not mounted ones)\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -i, --hierarchies		Display information about ");
-	printf("hierarchies\n");
-	printf("  -m, --mount-points		Display mount points\n");
-	printf("  -M, --all-mount-points	Display all mount points\n");
+	info("Usage: %s [-i] [-m] [-M] [controller] [...]\n", program_name);
+	info("   or: %s [-a] [-i] [-m] [-M]\n", program_name);
+	info("List information about given controller(s) If no controller ");
+	info("is set list information about all mounted controllers.\n");
+	info("  -a, --all			Display information ");
+	info("about all controllers (including not mounted ones)\n");
+	info("  -h, --help			Display this help\n");
+	info("  -i, --hierarchies		Display information about ");
+	info("hierarchies\n");
+	info("  -m, --mount-points		Display mount points\n");
+	info("  -M, --all-mount-points	Display all mount points\n");
 }
 
 static int print_controller_mount(const char *controller, int flags,
@@ -55,11 +56,11 @@ static int print_controller_mount(const char *controller, int flags,
 
 	if (!(flags & FL_MOUNT) && !(flags & FL_HIERARCHY)) {
 		/* print only hierarchy name */
-		printf("%s\n", cont_names);
+		info("%s\n", cont_names);
 	}
 	if (!(flags & FL_MOUNT) && (flags & FL_HIERARCHY)) {
 		/* print only hierarchy name and number*/
-		printf("%s %d\n", cont_names, hierarchy);
+		info("%s %d\n", cont_names, hierarchy);
 	}
 	if (flags & FL_MOUNT) {
 		/* print hierarchy name and mount point(s) */
@@ -67,7 +68,7 @@ static int print_controller_mount(const char *controller, int flags,
 							  path);
 		/* intentionally ignore error from above call */
 		while (ret == 0) {
-			printf("%s %s\n", cont_names, path);
+			info("%s %s\n", cont_names, path);
 			if (!(flags & FL_MOUNT_ALL))
 				/* first mount record is enough */
 				goto stop;
@@ -101,8 +102,7 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 
 	ret = cgroup_get_all_controller_begin(&handle, &info);
 	if ((ret != 0) && (ret != ECGEOF)) {
-		fprintf(stderr, "cannot read controller data: %s\n",
-			cgroup_strerror(ret));
+		err("cannot read controller data: %s\n", cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -172,7 +172,7 @@ static int cgroup_list_all_controllers(const char *tname,
 			/* the controller is not attached to any hierachy */
 			if (flags & FL_ALL)
 				/* display only if -a flag is set */
-				printf("%s\n", info.name);
+				info("%s\n", info.name);
 		}
 		is_on_list = 0;
 		j = 0;
@@ -213,9 +213,8 @@ static int cgroup_list_all_controllers(const char *tname,
 	if (ret == ECGEOF)
 		ret = 0;
 	if (ret) {
-		fprintf(stderr,
-			"cgroup_get_controller_begin/next failed (%s)\n",
-			cgroup_strerror(ret));
+		err("cgroup_get_controller_begin/next failed (%s)\n",
+		    cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -280,7 +279,7 @@ int main(int argc, char *argv[])
 		c_number++;
 		optind++;
 		if (optind == CG_CONTROLLER_MAX) {
-			fprintf(stderr, "Warning: too many parameters\n");
+			err("Warning: too many parameters\n");
 			break;
 		}
 	}
