@@ -27,25 +27,23 @@
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters, ");
-		fprintf(stderr, " try %s -h' for more information.\n",
-			program_name);
+		err("Wrong input parameters, ");
+		err(" try %s -h' for more information.\n", program_name);
 		return;
 	}
 
-	printf("Usage: %s [-h] [-f mode] [-d mode] [-s mode] ", program_name);
-	printf("[-t <tuid>:<tgid>] [-a <agid>:<auid>] ");
-	printf("-g <controllers>:<path> [-g ...]\n");
-	printf("Create control group(s)\n");
-	printf("  -a <tuid>:<tgid>		Owner of the group and all ");
-	printf("its files\n");
-	printf("  -d, --dperm=mode		Group directory permissions\n");
-	printf("  -f, --fperm=mode		Group file permissions\n");
-	printf("  -g <controllers>:<path>	Control group which should ");
-	printf("be added\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -s, --tperm=mode		Tasks file permissions\n");
-	printf("  -t <tuid>:<tgid>		Owner of the tasks file\n");
+	info("Usage: %s [-h] [-f mode] [-d mode] [-s mode] ", program_name);
+	info("[-t <tuid>:<tgid>] [-a <agid>:<auid>] ");
+	info("-g <controllers>:<path> [-g ...]\n");
+	info("Create control group(s)\n");
+	info("  -a <tuid>:<tgid>		Owner of the group and all ");
+	info("its files\n");
+	info("  -d, --dperm=mode		Group directory permissions\n");
+	info("  -f, --fperm=mode		Group file permissions\n");
+	info("  -g <controllers>:<path>	Control group which should be added\n");
+	info("  -h, --help			Display this help\n");
+	info("  -s, --tperm=mode		Tasks file permissions\n");
+	info("  -t <tuid>:<tgid>		Owner of the tasks file\n");
 }
 
 int main(int argc, char *argv[])
@@ -90,7 +88,7 @@ int main(int argc, char *argv[])
 
 	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
 	if (cgroup_list == NULL) {
-		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
 	}
@@ -116,10 +114,8 @@ int main(int argc, char *argv[])
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
 			if (ret) {
-				fprintf(stderr, "%s: ", argv[0]);
-				fprintf(stderr,	"cgroup controller and path");
-				fprintf(stderr, "parsing failed (%s)\n",
-					argv[optind]);
+				err("%s: cgroup controller and path", argv[0]);
+				err("parsing failed (%s)\n", argv[optind]);
 				ret = -1;
 				goto err;
 			}
@@ -151,8 +147,7 @@ int main(int argc, char *argv[])
 
 	/* no cgroup name */
 	if (argv[optind]) {
-		fprintf(stderr, "%s: wrong arguments (%s)\n", argv[0],
-			argv[optind]);
+		err("%s: wrong arguments (%s)\n", argv[0], argv[optind]);
 		ret = -1;
 		goto err;
 	}
@@ -160,8 +155,8 @@ int main(int argc, char *argv[])
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
-			argv[0], cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0],
+		    cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -174,8 +169,8 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			fprintf(stderr, "%s: can't add new cgroup: %s\n",
-				argv[0], cgroup_strerror(ret));
+			err("%s: can't add new cgroup: %s\n", argv[0],
+			    cgroup_strerror(ret));
 			goto err;
 		}
 
@@ -192,9 +187,8 @@ int main(int argc, char *argv[])
 				ret = cgroup_add_all_controllers(cgroup);
 				if (ret != 0) {
 					ret = ECGINVAL;
-					fprintf(stderr, "%s: can't add ",
-						argv[0]);
-					fprintf(stderr, "all controllers\n");
+					err("%s: can't add all controllers\n",
+					    argv[0]);
 					cgroup_free(&cgroup);
 					goto err;
 				}
@@ -203,10 +197,9 @@ int main(int argc, char *argv[])
 					cgroup_list[i]->controllers[j]);
 				if (!cgc) {
 					ret = ECGINVAL;
-					fprintf(stderr, "%s: ", argv[0]);
-					fprintf(stderr, "controller %s",
-						cgroup_list[i]->controllers[j]);
-					fprintf(stderr, "can't be add\n");
+					err("%s: controller %s can't be add\n",
+					    argv[0],
+					    cgroup_list[i]->controllers[j]);
 					cgroup_free(&cgroup);
 					goto err;
 				}
@@ -221,8 +214,8 @@ int main(int argc, char *argv[])
 
 		ret = cgroup_create_cgroup(cgroup, 0);
 		if (ret) {
-			fprintf(stderr, "%s: can't create cgroup %s: %s\n",
-				argv[0], cgroup->name, cgroup_strerror(ret));
+			err("%s: can't create cgroup %s: %s\n",
+			    argv[0], cgroup->name, cgroup_strerror(ret));
 			cgroup_free(&cgroup);
 			goto err;
 		}
