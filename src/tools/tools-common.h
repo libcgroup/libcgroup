@@ -24,6 +24,9 @@ extern "C" {
 #define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, "Info: " x)
 #define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
 
+#define err(x...)	fprintf(stderr, x)
+#define info(x...)	fprintf(stdout, x)
+
 /**
  * Auxiliary specifier of group, used to store parsed command line options.
  */
