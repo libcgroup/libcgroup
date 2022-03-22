@@ -4,6 +4,8 @@
  * Written by Ivana Hutarova Varekova <varekova@redhat.com>
  */
 
+#include "tools-common.h"
+
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
 
@@ -51,25 +53,25 @@ FILE *output_f;
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr,	" try %s -h' for more information.\n",
-			program_name);
+		err("Wrong input parameters, ");
+		err("try %s -h' for more information.\n", program_name);
 		return;
 	}
-	printf("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] ",
-	       program_name);
-	printf("[controller] [...]\n");
-	printf("Generate the configuration file for given controllers\n");
-	printf("  -b, --blacklist=FILE		Set the blacklist");
-	printf(" configuration file (default %s)\n", BLACKLIST_CONF);
-	printf("  -f, --file=FILE		Redirect the output");
-	printf(" to output_file\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -s, --silent			Ignore all warnings\n");
-	printf("  -t, --strict			Don't show variables ");
-	printf("which are not on the whitelist\n");
-	printf("  -w, --whitelist=FILE		Set the whitelist");
-	printf(" configuration file (don't used by default)\n");
+
+	info("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] ",
+	     program_name);
+	info("[controller] [...]\n");
+	info("Generate the configuration file for given controllers\n");
+	info("  -b, --blacklist=FILE		Set the blacklist");
+	info(" configuration file (default %s)\n", BLACKLIST_CONF);
+	info("  -f, --file=FILE		Redirect the output ");
+	info("to output_file\n");
+	info("  -h, --help			Display this help\n");
+	info("  -s, --silent			Ignore all warnings\n");
+	info("  -t, --strict			Don't show variables ");
+	info("which are not on the whitelist\n");
+	info("  -w, --whitelist=FILE		Set the whitelist ");
+	info("configuration file (don't used by default)\n");
 }
 
 /* cache values from blacklist file to the list structure */
@@ -87,8 +89,8 @@ int load_list(char *filename, struct black_list_type **p_list)
 
 	fw = fopen(filename, "r");
 	if (fw == NULL) {
-		fprintf(stderr, "ERROR: Failed to open file %s: %s\n",
-			filename, strerror(errno));
+		err("ERROR: Failed to open file %s: %s\n", filename,
+		    strerror(errno));
 		*p_list = NULL;
 		return 1;
 	}
@@ -112,16 +114,16 @@ int load_list(char *filename, struct black_list_type **p_list)
 		new = (struct black_list_type *)
 			malloc(sizeof(struct black_list_type));
 		if (new == NULL) {
-			fprintf(stderr, "ERROR: Memory allocation problem ");
-			fprintf(stderr,	"(%s)\n", strerror(errno));
+			err("ERROR: Memory allocation problem (%s)\n",
+			    strerror(errno));
 			ret = 1;
 			goto err;
 		}
 
 		new->name = strdup(name);
 		if (new->name == NULL) {
-			fprintf(stderr, "ERROR: Memory allocation problem ");
-			fprintf(stderr,	"(%s)\n", strerror(errno));
+			err("ERROR: Memory allocation problem (%s)\n",
+			    strerror(errno));
 			ret = 1;
 			free(new);
 			goto err;
@@ -216,8 +218,7 @@ static int display_permissions(const char *path, const char * const cg_name,
 	/* get the directory statistic */
 	ret = stat(path, &sba);
 	if (ret) {
-		fprintf(stderr, "ERROR: can't read statistics about %s\n",
-			path);
+		err("ERROR: can't read statistics about %s\n", path);
 		return -1;
 	}
 
@@ -226,15 +227,13 @@ static int display_permissions(const char *path, const char * const cg_name,
 	ret = cgroup_build_tasks_procs_path(tasks_path, sizeof(tasks_path),
 					    cg_name, ctrl_name);
 	if (ret) {
-		fprintf(stderr, "ERROR: can't build tasks/procs path: %d\n",
-			ret);
+		err("ERROR: can't build tasks/procs path: %d\n", ret);
 		return -1;
 	}
 
 	ret = stat(tasks_path, &sbt);
 	if (ret) {
-		fprintf(stderr, "ERROR: can't read statistics about %s\n",
-			tasks_path);
+		err("ERROR: can't read statistics about %s\n", tasks_path);
 		return -1;
 	}
 
@@ -251,15 +250,13 @@ static int display_permissions(const char *path, const char * const cg_name,
 		/* find out the user and group name */
 		pw = getpwuid(sba.st_uid);
 		if (pw == NULL) {
-			fprintf(stderr, "ERROR: can't get %d user name\n",
-				sba.st_uid);
+			err("ERROR: can't get %d user name\n", sba.st_uid);
 			return -1;
 		}
 
 		gr = getgrgid(sba.st_gid);
 		if (gr == NULL) {
-			fprintf(stderr, "ERROR: can't get %d group name\n",
-				sba.st_gid);
+			err("ERROR: can't get %d group name\n", sba.st_gid);
 			return -1;
 		}
 
@@ -272,15 +269,13 @@ static int display_permissions(const char *path, const char * const cg_name,
 		/* find out the user and group name */
 		pw = getpwuid(sbt.st_uid);
 		if (pw == NULL) {
-			fprintf(stderr, "ERROR: can't get %d user name\n",
-				sbt.st_uid);
+			err("ERROR: can't get %d user name\n", sbt.st_uid);
 			return -1;
 		}
 
 		gr = getgrgid(sbt.st_gid);
 		if (gr == NULL) {
-			fprintf(stderr, "ERROR: can't get %d group name\n",
-				sbt.st_gid);
+			err("ERROR: can't get %d group name\n", sbt.st_gid);
 			return -1;
 		}
 
@@ -332,8 +327,8 @@ static int display_cgroup_data(struct cgroup *group,
 
 		group_controller = cgroup_get_controller(group, controller[i]);
 		if (group_controller == NULL) {
-			printf("cannot find controller '%s' in group '%s'\n",
-				controller[i], group->name);
+			info("cannot find controller '%s' in group '%s'\n",
+			     controller[i], group->name);
 			i++;
 			ret = -1;
 			continue;
@@ -409,10 +404,8 @@ static int display_cgroup_data(struct cgroup *group,
 			 * used write an warning
 			 */
 			if ((!wl) && !(flags &  FL_SILENT) && (first)) {
-				fprintf(stderr, "WARNING: variable %s is ",
-					name);
-				fprintf(stderr,	"neither blacklisted nor ");
-				fprintf(stderr,	"whitelisted\n");
+				err("WARNING: variable %s is neither ", name);
+				err("blacklisted nor whitelisted\n");
 			}
 
 			output_name = name;
@@ -440,9 +433,8 @@ static int display_cgroup_data(struct cgroup *group,
 			/* variable can not be read */
 			if (ret != 0) {
 				ret = 0;
-				fprintf(stderr, "ERROR: Value of ");
-				fprintf(stderr,	"variable %s can be read\n",
-					name);
+				err("ERROR: Value of variable %s can be read\n",
+				    name);
 				goto err;
 			}
 			fprintf(output_f, "\t\t%s=\"%s\";\n", output_name, value);
@@ -498,7 +490,7 @@ static int display_controller_data(
 			/* start to grab data about the new group */
 			group = cgroup_new_cgroup(cgroup_name);
 			if (group == NULL) {
-				printf("cannot create group '%s'\n",
+				info("cannot create group '%s'\n",
 					cgroup_name);
 				ret = ECGFAIL;
 				goto err;
@@ -506,7 +498,7 @@ static int display_controller_data(
 
 			ret = cgroup_get_cgroup(group);
 			if (ret != 0) {
-				printf("cannot read group '%s': %s\n",
+				info("cannot read group '%s': %s\n",
 					cgroup_name, cgroup_strerror(ret));
 				goto err;
 			}
@@ -651,10 +643,8 @@ static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	if (!(flags & FL_LIST)) {
 		if (show_mountpoints(name)) {
 			/* the controller is not mounted */
-			if ((flags & FL_SILENT) == 0) {
-				fprintf(stderr, "ERROR: %s hierarchy ", name);
-				fprintf(stderr,	"not mounted\n");
-			}
+			if ((flags & FL_SILENT) == 0)
+				err("ERROR: %s hierarchy not mounted\n", name);
 		}
 		return;
 	}
@@ -666,9 +656,8 @@ static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			if (show_mountpoints(name)) {
 				/* the controller is not mounted */
 				if ((flags & FL_SILENT) == 0) {
-					fprintf(stderr, "ERROR: %s ", name);
-					fprintf(stderr, "hierarchy not ");
-					fprintf(stderr, "mounted\n");
+					err("ERROR: %s hierarchy not mounted\n",
+					    name);
 				}
 			break;
 			}
@@ -703,9 +692,8 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 	if (ret != ECGEOF) {
 		if ((flags &  FL_SILENT) != 0) {
-			fprintf(stderr,
-				"E: in get next controller %s\n",
-				cgroup_strerror(ret));
+			err("E: in get next controller %s\n",
+			    cgroup_strerror(ret));
 		}
 		final_ret = ret;
 	}
@@ -722,9 +710,8 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 	if (ret != ECGEOF) {
 		if ((flags &  FL_SILENT) != 0) {
-			fprintf(stderr,
-				"E: in get next controller %s\n",
-				cgroup_strerror(ret));
+			err("E: in get next controller %s\n",
+			    cgroup_strerror(ret));
 		}
 		final_ret = ret;
 	}
@@ -789,8 +776,8 @@ int main(int argc, char *argv[])
 			flags |= FL_OUTPUT;
 			output_f = fopen(optarg, "w");
 			if (output_f == NULL) {
-				fprintf(stderr, "%s: Failed to open file %s\n",
-					argv[0], optarg);
+				err("%s: Failed to open file %s\n", argv[0],
+				    optarg);
 				return ECGOTHER;
 			}
 			break;
@@ -808,7 +795,7 @@ int main(int argc, char *argv[])
 		c_number++;
 		optind++;
 		if (optind == CG_CONTROLLER_MAX-1) {
-			fprintf(stderr, "too many parameters\n");
+			err("too many parameters\n");
 			break;
 		}
 	}
