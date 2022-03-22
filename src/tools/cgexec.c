@@ -38,21 +38,20 @@ static struct option longopts[] = {
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr, " try %s --help' for more information.\n",
-			program_name);
+		err("Wrong input parameters,");
+		err(" try %s --help' for more information.\n", program_name);
 		return;
 	}
 
-	printf("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] ",
-	       program_name);
-	printf("command [arguments] ...\n");
-	printf("Run the task in given control group(s)\n");
-	printf("  -g <controllers>:<path>	Control group which ");
-	printf("should be added\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  --sticky			cgred daemon does not ");
-	printf("change pidlist and children tasks\n");
+	info("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] ",
+	     program_name);
+	info("command [arguments] ...\n");
+	info("Run the task in given control group(s)\n");
+	info("  -g <controllers>:<path>	Control group which ");
+	info("should be added\n");
+	info("  -h, --help			Display this help\n");
+	info("  --sticky			cgred daemon does not ");
+	info("change pidlist and children tasks\n");
 }
 
 
@@ -75,8 +74,8 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg,
 						CG_HIER_MAX);
 			if (ret) {
-				fprintf(stderr, "cgroup controller and path");
-				fprintf(stderr,	"parsing failed\n");
+				err("cgroup controller and path parsing ");
+				err("failed\n");
 				return -1;
 			}
 			cg_specified = 1;
@@ -102,8 +101,8 @@ int main(int argc, char *argv[])
 	/* Initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "libcgroup initialization failed: %s\n",
-			cgroup_strerror(ret));
+		err("libcgroup initialization failed: %s\n",
+		    cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -118,7 +117,7 @@ int main(int argc, char *argv[])
 
 	ret = cgroup_register_unchanged_process(pid, flag_child);
 	if (ret) {
-		fprintf(stderr, "registration of process failed\n");
+		err("registration of process failed\n");
 		return ret;
 	}
 
@@ -129,12 +128,12 @@ int main(int argc, char *argv[])
 	 * from a root user.
 	 */
 	if (setresuid(uid, uid, uid)) {
-		fprintf(stderr, "%s", strerror(errno));
+		err("%s", strerror(errno));
 		return -1;
 	}
 
 	if (setresgid(gid, gid, gid)) {
-		fprintf(stderr, "%s", strerror(errno));
+		err("%s", strerror(errno));
 		return -1;
 	}
 
@@ -151,8 +150,7 @@ int main(int argc, char *argv[])
 				pid,
 				(const char *const*) cgroup_list[i]->controllers);
 			if (ret) {
-				fprintf(stderr,
-					"cgroup change of group failed\n");
+				err("cgroup change of group failed\n");
 				return ret;
 			}
 		}
@@ -162,7 +160,7 @@ int main(int argc, char *argv[])
 		ret = cgroup_change_cgroup_flags(uid, gid,
 						 argv[optind], pid, 0);
 		if (ret) {
-			fprintf(stderr, "cgroup change of group failed\n");
+			err("cgroup change of group failed\n");
 			return ret;
 		}
 	}
@@ -170,7 +168,7 @@ int main(int argc, char *argv[])
 	/* Now exec the new process */
 	ret = execvp(argv[optind], &argv[optind]);
 	if (ret == -1) {
-		fprintf(stderr, "%s", strerror(errno));
+		err("%s", strerror(errno));
 		return -1;
 	}
 
