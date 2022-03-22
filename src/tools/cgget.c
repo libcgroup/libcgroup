@@ -28,27 +28,26 @@ static const struct option long_options[] = {
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr,	" try %s -h' for more information.\n",
-			program_name);
+		err("Wrong input parameters,");
+		err(" try %s -h' for more information.\n", program_name);
 		return;
 	}
-	printf("Usage: %s [-nv] [-r <name>] [-g <controllers>] ", program_name);
-	printf("[-a] <path> ...\n");
-	printf("   or: %s [-nv] [-r <name>] -g <controllers>:<path> ...\n",
-	       program_name);
-	printf("Print parameter(s) of given group(s).\n");
-	printf("  -a, --all			Print info about all relevant ");
-	printf("controllers\n");
-	printf("  -g <controllers>		Controller which info should ");
-	printf("be displayed\n");
-	printf("  -g <controllers>:<path>	Control group which info ");
-	printf("should be displayed\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -n				Do not print headers\n");
-	printf("  -r, --variable  <name>	Define parameter to display\n");
-	printf("  -v, --values-only		Print only values, not ");
-	printf("parameter names\n");
+	info("Usage: %s [-nv] [-r <name>] [-g <controllers>] ", program_name);
+	info("[-a] <path> ...\n");
+	info("   or: %s [-nv] [-r <name>] -g <controllers>:<path> ...\n",
+	     program_name);
+	info("Print parameter(s) of given group(s).\n");
+	info("  -a, --all			Print info about all relevant ");
+	info("controllers\n");
+	info("  -g <controllers>		Controller which info should ");
+	info("be displayed\n");
+	info("  -g <controllers>:<path>	Control group which info ");
+	info("should be displayed\n");
+	info("  -h, --help			Display this help\n");
+	info("  -n				Do not print headers\n");
+	info("  -r, --variable <name>		Define parameter to display\n");
+	info("  -v, --values-only		Print only values, not ");
+	info("parameter names\n");
 }
 
 static int get_controller_from_name(const char * const name,
@@ -62,8 +61,8 @@ static int get_controller_from_name(const char * const name,
 
 	dot = strchr(*controller, '.');
 	if (dot == NULL) {
-		fprintf(stderr, "cgget: error parsing parameter name\n");
-		fprintf(stderr,	" '%s'", name);
+		err("cgget: error parsing parameter name\n");
+		err(	" '%s'", name);
 		return ECGINVAL;
 	}
 
@@ -115,8 +114,8 @@ static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
 		if (!cgc) {
 			cgc = cgroup_add_controller(cg, controller.name);
 			if (!cgc) {
-				fprintf(stderr, "cgget: cannot find controller '%s'\n",
-					controller.name);
+				err("cgget: cannot find controller '%s'\n",
+				    controller.name);
 				ret = ECGOTHER;
 				goto out;
 			}
@@ -168,8 +167,8 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, cntl_value_controller);
 		if (!cgc) {
-			fprintf(stderr, "cgget: cannot find controller '%s'\n",
-				cntl_value_controller);
+			err("cgget: cannot find controller '%s'\n",
+			    cntl_value_controller);
 			ret = ECGOTHER;
 			goto out;
 		}
@@ -213,8 +212,7 @@ static int parse_g_flag_no_colon(struct cgroup **cg_list[],
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, ctrl_str);
 		if (!cgc) {
-			fprintf(stderr, "cgget: cannot find controller '%s'\n",
-				ctrl_str);
+			err("cgget: cannot find controller '%s'\n", ctrl_str);
 			ret = ECGOTHER;
 			goto out;
 		}
@@ -308,8 +306,8 @@ static int parse_g_flag_with_colon(struct cgroup **cg_list[],
 		if (!cgc) {
 			cgc = cgroup_add_controller(cg, controllers[i]);
 			if (!cgc) {
-				fprintf(stderr, "cgget: cannot find controller '%s'\n",
-					controllers[i]);
+				err("cgget: cannot find controller '%s'\n",
+				    controllers[i]);
 				ret = ECGOTHER;
 				goto out;
 			}
@@ -499,13 +497,12 @@ static int get_cv_value(struct control_value * const cv,
 			 */
 			tmp_ret = cgroup_test_subsys_mounted(controller_name);
 			if (tmp_ret == 0) {
-				fprintf(stderr, "cgget: cannot find ");
-				fprintf(stderr, "controller '%s' in group ",
-					controller_name);
-				fprintf(stderr, "'%s'\n", cg_name);
+				err("cgget: cannot find controller '%s' ",
+				    controller_name);
+				err("in group '%s'\n", cg_name);
 			} else {
-				fprintf(stderr, "variable file read failed %s\n",
-					cgroup_strerror(ret));
+				err("variable file read failed %s\n",
+				    cgroup_strerror(ret));
 			}
 		}
 
@@ -707,12 +704,12 @@ static int get_values(struct cgroup *cg_list[], int cg_list_len)
 void print_control_values(const struct control_value * const cv, int mode)
 {
 	if (mode & MODE_SHOW_NAMES)
-		printf("%s: ", cv->name);
+		info("%s: ", cv->name);
 
 	if (cv->multiline_value)
-		printf("%s\n", cv->multiline_value);
+		info("%s\n", cv->multiline_value);
 	else
-		printf("%s\n", cv->value);
+		info("%s\n", cv->value);
 }
 
 void print_controller(const struct cgroup_controller * const cgc, int mode)
@@ -728,13 +725,13 @@ static void print_cgroup(const struct cgroup * const cg, int mode)
 	int i;
 
 	if (mode & MODE_SHOW_HEADERS)
-		printf("%s:\n", cg->name);
+		info("%s:\n", cg->name);
 
 	for (i = 0; i < cg->index; i++)
 		print_controller(cg->controller[i], mode);
 
 	if (mode & MODE_SHOW_HEADERS)
-		printf("\n");
+		info("\n");
 }
 
 static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
@@ -760,8 +757,8 @@ int main(int argc, char *argv[])
 
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
-			argv[0], cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0],
+		    cgroup_strerror(ret));
 		goto err;
 	}
 
