@@ -37,17 +37,17 @@ static inline void trim_filepath(char *path)
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr, " try %s -h' for more information.\n",
-			program_name);
+		err("Wrong input parameters, ");
+		err("try %s -h' for more information.\n", program_name);
 		return;
 	}
-	printf("Usage: %s [-h] [[-g] <controllers>:<path>] [...]\n",
-		program_name);
-	printf("List all cgroups\n");
-	printf("  -g <controllers>:<path>	Control group to be ");
-	printf("displayed (-g is optional)\n");
-	printf("  -h, --help			Display this help\n");
+
+	info("Usage: %s [-h] [[-g] <controllers>:<path>] [...]\n",
+	     program_name);
+	info("List all cgroups\n");
+	info("  -g <controllers>:<path>	Control group to be ");
+	info("displayed (-g is optional)\n");
+	info("  -h, --help			Display this help\n");
 }
 
 /*
@@ -70,9 +70,9 @@ static void print_info(struct cgroup_file_info *info, char *name, int pref)
 {
 	if (info->type == CGROUP_FILE_TYPE_DIR) {
 		if (info->full_path[pref] ==  '/')
-			printf("%s:%s\n", name, &info->full_path[pref]);
+			info("%s:%s\n", name, &info->full_path[pref]);
 		else
-			printf("%s:/%s\n", name, &info->full_path[pref]);
+			info("%s:/%s\n", name, &info->full_path[pref]);
 	}
 }
 
@@ -203,8 +203,7 @@ static int cgroup_list_cgroups(char *tname,
 	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "cgroups can't be listed: %s\n",
-			cgroup_strerror(ret));
+		err("cgroups can't be listed: %s\n", cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -219,8 +218,8 @@ static int cgroup_list_cgroups(char *tname,
 			final_ret = 0;
 		} else {
 			final_ret = ret;
-			fprintf(stderr, "cgroups can't be listed: %s\n",
-				cgroup_strerror(ret));
+			err("cgroups can't be listed: %s\n",
+			    cgroup_strerror(ret));
 		}
 	} else {
 		/* we have he list of controllers which should be print */
@@ -236,11 +235,10 @@ static int cgroup_list_cgroups(char *tname,
 					/* other problem */
 					final_ret = ret;
 				}
-				fprintf(stderr,
-					"%s: cannot find group %s..:%s: %s\n",
-					tname, cgroup_list[i]->controllers[0],
-					cgroup_list[i]->path,
-					cgroup_strerror(final_ret));
+				err("%s: cannot find group %s..:%s: %s\n",
+				    tname, cgroup_list[i]->controllers[0],
+				    cgroup_list[i]->path,
+				    cgroup_strerror(final_ret));
 			}
 			i++;
 		}
@@ -276,10 +274,8 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg,
 				CG_HIER_MAX);
 			if (ret) {
-				fprintf(stderr, "%s: cgroup controller and ",
-					argv[0]);
-				fprintf(stderr,	"path parsing failed (%s)\n",
-					optarg);
+				err("%s: cgroup controller and path", argv[0]);
+				err(" path parsing failed (%s)\n", optarg);
 				return ret;
 			}
 			break;
@@ -295,9 +291,8 @@ int main(int argc, char *argv[])
 		ret = parse_cgroup_spec(cgroup_list, argv[optind],
 				CG_HIER_MAX);
 		if (ret) {
-			fprintf(stderr, "%s: cgroup controller", argv[0]);
-			fprintf(stderr,	" and path parsing failed (%s)\n",
-				argv[optind]);
+			err("%s: cgroup controller an path parsing ", argv[0]);
+			err("failed (%s)\n", argv[optind]);
 			return -1;
 		}
 		optind++;
