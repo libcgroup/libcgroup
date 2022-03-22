@@ -45,16 +45,14 @@ static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX]
 	/* create source cgroup */
 	src_cgroup = cgroup_new_cgroup(src_cg_path);
 	if (!src_cgroup) {
-		fprintf(stderr, "can't create cgroup: %s\n",
-			cgroup_strerror(ECGFAIL));
+		err("can't create cgroup: %s\n", cgroup_strerror(ECGFAIL));
 		goto scgroup_err;
 	}
 
 	/* copy the name-version values to the cgroup structure */
 	ret = cgroup_get_cgroup(src_cgroup);
 	if (ret != 0) {
-		fprintf(stderr, "cgroup %s error: %s\n",
-			src_cg_path, cgroup_strerror(ret));
+		err("cgroup %s error: %s\n", src_cg_path, cgroup_strerror(ret));
 		goto scgroup_err;
 	}
 
@@ -69,27 +67,26 @@ scgroup_err:
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr, " try %s --help' for more information.\n",
-			program_name);
+		err("Wrong input parameters, ");
+		err("try %s --help' for more information.\n", program_name);
 		return;
 	}
 
-	printf("Usage: %s [-r <name=value>] <cgroup_path> ...\n",
-	       program_name);
-	printf("   or: %s --copy-from <source_cgroup_path> ", program_name);
-	printf("<cgroup_path> ...\n");
-	printf("Set the parameters of given cgroup(s)\n");
-	printf("  -1, --v1                      Provided parameters are in ");
-	printf("v1 format\n");
-	printf("  -2, --v2                      Provided parameters are in ");
-	printf("v2 format\n");
-	printf("  -i, --ignore-unmappable       Do not return an error for settings ");
-	printf("that cannot be converted\n");
-	printf("  -r, --variable <name>			Define parameter ");
-	printf("to set\n");
-	printf("  --copy-from <source_cgroup_path>	Control group whose ");
-	printf("parameters will be copied\n");
+	info("Usage: %s [-r <name=value>] <cgroup_path> ...\n",
+	     program_name);
+	info("   or: %s --copy-from <source_cgroup_path> ", program_name);
+	info("<cgroup_path> ...\n");
+	info("Set the parameters of given cgroup(s)\n");
+	info("  -1, --v1                      Provided parameters are in ");
+	info("v1 format\n");
+	info("  -2, --v2                      Provided parameters are in ");
+	info("v2 format\n");
+	info("  -i, --ignore-unmappable       Do not return an error for ");
+	info("settings that cannot be converted\n");
+	info("  -r, --variable <name>			Define parameter ");
+	info("to set\n");
+	info("  --copy-from <source_cgroup_path>	Control group whose ");
+	info("parameters will be copied\n");
 }
 #endif /* !UNIT_TEST */
 
@@ -102,7 +99,7 @@ STATIC int parse_r_flag(const char * const program_name,
 
 	copy = strdup(name_value_str);
 	if (copy == NULL) {
-		fprintf(stderr, "%s: not enough memory\n", program_name);
+		err("%s: not enough memory\n", program_name);
 		ret = -1;
 		goto err;
 	}
@@ -110,8 +107,8 @@ STATIC int parse_r_flag(const char * const program_name,
 	/* parse optarg value */
 	buf = strtok(copy, "=");
 	if (buf == NULL) {
-		fprintf(stderr, "%s: wrong parameter of option -r: %s\n",
-			program_name, optarg);
+		err("%s: wrong parameter of option -r: %s\n", program_name,
+		    optarg);
 		ret = -1;
 		goto err;
 	}
@@ -127,8 +124,8 @@ STATIC int parse_r_flag(const char * const program_name,
 	buf++;
 
 	if (strlen(buf) == 0) {
-		fprintf(stderr, "%s: wrong parameter of option -r: %s\n",
-			program_name, optarg);
+		err("%s: wrong parameter of option -r: %s\n", program_name,
+		    optarg);
 		ret = -1;
 		goto err;
 	}
@@ -162,8 +159,8 @@ int main(int argc, char *argv[])
 
 	/* no parametr on input */
 	if (argc < 2) {
-		fprintf(stderr, "Usage is %s -r <name=value> ", argv[0]);
-		fprintf(stderr, "<relative path to cgroup>\n");
+		err("Usage is %s -r <name=value> <relative path to cgroup>\n",
+		    argv[0]);
 		return -1;
 	}
 
@@ -193,8 +190,8 @@ int main(int argc, char *argv[])
 					realloc(name_value,
 					nv_max * sizeof(struct control_value));
 				if (!name_value) {
-					fprintf(stderr, "%s: ", argv[0]);
-					fprintf(stderr,	"not enough memory\n");
+					err("%s: not enough memory\n",
+					    argv[0]);
 					ret = -1;
 					goto err;
 				}
@@ -235,13 +232,13 @@ int main(int argc, char *argv[])
 
 	/* no cgroup name */
 	if (!argv[optind]) {
-		fprintf(stderr, "%s: no cgroup specified\n", argv[0]);
+		err("%s: no cgroup specified\n", argv[0]);
 		ret = -1;
 		goto err;
 	}
 
 	if (flags == 0) {
-		fprintf(stderr, "%s: no name-value pair was set\n", argv[0]);
+		err("%s: no name-value pair was set\n", argv[0]);
 		ret = -1;
 		goto err;
 	}
@@ -249,8 +246,8 @@ int main(int argc, char *argv[])
 	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
-			argv[0], cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0],
+		    cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -274,16 +271,16 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(argv[optind]);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			fprintf(stderr, "%s: can't add new cgroup: %s\n",
-				argv[0], cgroup_strerror(ret));
+			err("%s: can't add new cgroup: %s\n", argv[0],
+			    cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
 		/* copy the values from the source cgroup to new one */
 		ret = cgroup_copy_cgroup(cgroup, src_cgroup);
 		if (ret != 0) {
-			fprintf(stderr, "%s: cgroup %s error: %s\n",
-				argv[0], src_cg_path, cgroup_strerror(ret));
+			err("%s: cgroup %s error: %s\n", argv[0], src_cg_path,
+			    cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
@@ -311,8 +308,8 @@ int main(int argc, char *argv[])
 		/* modify cgroup based on values of the new one */
 		ret = cgroup_modify_cgroup(cgroup);
 		if (ret) {
-			fprintf(stderr, "%s: cgroup modify error: %s\n",
-				argv[0], cgroup_strerror(ret));
+			err("%s: cgroup modify error: %s\n", argv[0],
+			    cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
