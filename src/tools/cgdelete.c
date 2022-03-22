@@ -34,20 +34,18 @@ struct ext_cgroup_record {
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		fprintf(stderr, "Wrong input parameters,");
-		fprintf(stderr,	" try %s --help' for more information.\n",
-			program_name);
+		err("Wrong input parameters,");
+		err(" try %s --help' for more information.\n", program_name);
 		return;
 	}
 
-	printf("Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
-		program_name);
-	printf("Remove control group(s)\n");
-	printf("  -g <controllers>:<path>	Control group to be removed ");
-	printf("(-g is optional)\n");
-	printf("  -h, --help			Display this help\n");
-	printf("  -r, --recursive		Recursively remove ");
-	printf("all subgroups\n");
+	info("Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
+	     program_name);
+	info("Remove control group(s)\n");
+	info("  -g <controllers>:<path>	Control group to be removed ");
+	info("(-g is optional)\n");
+	info("  -h, --help			Display this help\n");
+	info("  -r, --recursive		Recursively remove all subgroups\n");
 }
 
 /*
@@ -81,8 +79,8 @@ static int skip_add_controller(int counter, int *skip,
 	if (ret == ECGEOF)
 		ret = 0;
 	if (ret) {
-		fprintf(stderr, "cgroup_get_controller_begin/next failed(%s)\n",
-			cgroup_strerror(ret));
+		err("cgroup_get_controller_begin/next failed(%s)\n",
+		    cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -133,21 +131,21 @@ int main(int argc, char *argv[])
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		fprintf(stderr, "%s: libcgroup initialization failed: %s\n",
-			argv[0], cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0],
+		    cgroup_strerror(ret));
 		goto err;
 	}
 
 	cgroup_list = calloc(argc, sizeof(struct cgroup_group_spec *));
 	if (cgroup_list == NULL) {
-		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
 	}
 
 	ecg_list = calloc(argc, sizeof(struct ext_cgroup_record *));
 	if (cgroup_list == NULL) {
-		fprintf(stderr, "%s: out of memory\n", argv[0]);
+		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
 	}
@@ -162,8 +160,8 @@ int main(int argc, char *argv[])
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, argc);
 			if (ret != 0) {
-				fprintf(stderr,	"%s: error parsing ", argv[0]);
-				fprintf(stderr, "cgroup '%s'\n", optarg);
+				err("%s: error parsing cgroup '%s'", argv[0],
+				    optarg);
 				ret = -1;
 				goto err;
 			}
@@ -183,8 +181,8 @@ int main(int argc, char *argv[])
 	for (i = optind; i < argc; i++) {
 		ret = parse_cgroup_spec(cgroup_list, argv[i], argc);
 		if (ret != 0) {
-			fprintf(stderr, "%s: error parsing cgroup '%s'\n",
-				argv[0], argv[i]);
+			err("%s: error parsing cgroup '%s'\n", argv[0],
+			    argv[i]);
 			ret = -1;
 			goto err;
 		}
@@ -199,8 +197,8 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			fprintf(stderr, "%s: can't create new cgroup: %s\n",
-				argv[0], cgroup_strerror(ret));
+			err("%s: can't create new cgroup: %s\n", argv[0],
+			    cgroup_strerror(ret));
 			goto err;
 		}
 
@@ -222,8 +220,7 @@ int main(int argc, char *argv[])
 					realloc(ecg_list,
 						max * sizeof(struct ext_cgroup_record));
 				if (!ecg_list) {
-					fprintf(stderr, "%s: ", argv[0]);
-					fprintf(stderr, "not enough memory\n");
+					err("%s: not enough memory\n", argv[0]);
 					final_ret = -1;
 					goto err;
 				}
@@ -252,9 +249,8 @@ int main(int argc, char *argv[])
 						cgroup_list[i]->controllers[j]);
 			if (!cgc) {
 				ret = ECGFAIL;
-				fprintf(stderr, "%s: ", argv[0]);
-				fprintf(stderr,	"controller %s can't be added\n",
-					cgroup_list[i]->controllers[j]);
+				err("%s: controller %s can't be added\n", argv[0],
+				    cgroup_list[i]->controllers[j]);
 				cgroup_free(&cgroup);
 				goto err;
 			}
@@ -266,8 +262,8 @@ next:
 		ret = cgroup_delete_cgroup_ext(cgroup, flags);
 		/* Remember the errors and continue, try to remove all groups. */
 		if (ret != 0) {
-			fprintf(stderr, "%s: cannot remove group '%s': %s\n",
-				argv[0], cgroup->name, cgroup_strerror(ret));
+			err("%s: cannot remove group '%s': %s\n", argv[0],
+			    cgroup->name, cgroup_strerror(ret));
 			final_ret = ret;
 		}
 		cgroup_free(&cgroup);
