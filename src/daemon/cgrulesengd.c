@@ -100,7 +100,7 @@ static void usage(FILE *fd, const char *msg, ...)
 	fprintf(fd, "file\n");
 	fprintf(fd, "    -s[facility] | --syslog=[facility]\t  write log to ");
 	fprintf(fd, "syslog\n");
-	fprintf(fd, "    -n           | --nodaemom\t\t  don't fork ");
+	fprintf(fd, "    -n           | --nodaemon\t\t  don't fork ");
 	fprintf(fd, "daemon\n");
 	fprintf(fd, "    -d           | --debug\t\t  same as -v -v -n");
 	fprintf(fd, " -f -\n");
