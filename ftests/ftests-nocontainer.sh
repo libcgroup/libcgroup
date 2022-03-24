@@ -14,7 +14,8 @@ if [ -d ../../src/python/build/lib.* ]; then
 	popd
 fi
 
-./ftests.py -l 10 -L "$START_DIR/ftests-nocontainer.py.log" --no-container
+./ftests.py -l 10 -L "$START_DIR/ftests-nocontainer.py.log" --no-container \
+	-n Libcg"$RANDOM"
 RET=$?
 
 if [ "$START_DIR" != "$SCRIPT_DIR" ]; then
