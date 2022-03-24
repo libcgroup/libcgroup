@@ -23,7 +23,7 @@ class Config(object):
                 self.container = container
             else:
                 # Use the default container settings
-                self.container = Container(name=consts.DEFAULT_CONTAINER_NAME,
+                self.container = Container(name=args.name,
                                            stop_timeout=args.timeout,
                                            arch=None,
                                            distro=args.distro,

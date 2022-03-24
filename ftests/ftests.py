@@ -30,7 +30,7 @@ def parse_args():
                             help='name of the container',
                             required=False,
                             type=str,
-                            default=None
+                            default=consts.DEFAULT_CONTAINER_NAME
                         )
     parser.add_argument(
                             '-d', '--distro',
