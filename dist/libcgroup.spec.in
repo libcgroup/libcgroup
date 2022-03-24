@@ -56,11 +56,11 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 # install config files
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig
-cp samples/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
-cp samples/cgconfig.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgconfig
-cp samples/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
-cp samples/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
-cp samples/cgsnapshot_blacklist.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgsnapshot_blacklist.conf
+cp samples/config/cgred.conf $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgred.conf
+cp samples/config/cgconfig.sysconfig $RPM_BUILD_ROOT/%{_sysconfdir}/sysconfig/cgconfig
+cp samples/config/cgconfig.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgconfig.conf
+cp samples/config/cgrules.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgrules.conf
+cp samples/config/cgsnapshot_blacklist.conf $RPM_BUILD_ROOT/%{_sysconfdir}/cgsnapshot_blacklist.conf
 
 # sanitize pam module, we need only pam_cgroup.so
 mv -f $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so.*.*.* $RPM_BUILD_ROOT/%{_lib}/security/pam_cgroup.so
