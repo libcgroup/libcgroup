@@ -26,28 +26,30 @@
 #			cgroups to classify processes
 ### END INIT INFO
 
-prefix=@prefix@;exec_prefix=@exec_prefix@;sbindir=@sbindir@
+sbindir=@sbindir@
 CGRED_BIN=$sbindir/cgrulesengd
-CGRED_CONF=/etc/cgrules.conf
 
 # Sanity checks
-[ -x $CGRED_BIN ] || exit 1
+[[ -x $CGRED_BIN ]] || exit 1
 
 # Source function library & LSB routines
-. /etc/rc.d/init.d/functions
-. /lib/lsb/init-functions
+# shellcheck disable=SC1091
+source /etc/rc.d/init.d/functions
+# shellcheck disable=SC1091
+source /lib/lsb/init-functions
 
 # Read in configuration options.
-if [ -f "/etc/sysconfig/cgred.conf" ] ; then
-	. /etc/sysconfig/cgred.conf
+if [[ -f "/etc/sysconfig/cgred.conf" ]] ; then
+	# shellcheck disable=SC1091
+	source /etc/sysconfig/cgred.conf
 	OPTIONS="$NODAEMON $LOG"
-	if [ -n "$LOG_FILE" ]; then
+	if [[ -n "$LOG_FILE" ]]; then
 		OPTIONS="$OPTIONS --logfile=$LOG_FILE"
 	fi
-	if [ -n "$SOCKET_USER" ]; then
+	if [[ -n "$SOCKET_USER" ]]; then
 		OPTIONS="$OPTIONS -u $SOCKET_USER"
 	fi
-	if [ -n "$SOCKET_GROUP" ]; then
+	if [[ -n "$SOCKET_GROUP" ]]; then
 		OPTIONS="$OPTIONS -g $SOCKET_GROUP"
 	fi
 else
@@ -63,12 +65,12 @@ pidfile=/var/run/cgred.pid
 start()
 {
 	echo -n $"Starting CGroup Rules Engine Daemon: "
-	if [ -f "$lockfile" ]; then
-		log_failure_msg "$servicename is already running with PID `cat ${pidfile}`"
+	if [[ -f "$lockfile" ]]; then
+		log_failure_msg "$servicename is already running with PID $(cat ${pidfile})"
 		return 0
 	fi
-	num=`grep "cgroup" /proc/mounts | awk '$3=="cgroup"' | wc -l`
-	if [ $num -eq 0 ]; then
+	num=$(grep "cgroup" /proc/mounts | awk '$3=="cgroup"' | wc -l)
+	if [[ "$num" -eq 0 ]]; then
 		echo
 		log_failure_msg $"Cannot find cgroups, is cgconfig service running?"
 		return 1
@@ -76,28 +78,27 @@ start()
 	daemon --check $servicename --pidfile $pidfile $CGRED_BIN $OPTIONS
 	retval=$?
 	echo
-	if [ $retval -ne 0 ]; then
+	if [[ $retval -ne 0 ]]; then
 		return 7
 	fi
-	touch "$lockfile"
-	if [ $? -ne 0 ]; then
+	if ! touch "$lockfile"; then
 		return 1
 	fi
-	echo "`pidof $processname`" > $pidfile
+	pidof "$processname" > $pidfile
 	return 0
 }
 
 stop()
 {
 	echo -n $"Stopping CGroup Rules Engine Daemon..."
-	if [ ! -f $pidfile ]; then
+	if [[ ! -f $pidfile ]]; then
 		log_success_msg
 		return 0
 	fi
 	killproc -p $pidfile -TERM "$processname"
 	retval=$?
 	echo
-	if [ $retval -ne 0 ]; then
+	if [[ $retval -ne 0 ]]; then
 		return 1
 	fi
 	rm -f "$lockfile" "$pidfile"
@@ -126,18 +127,18 @@ case "$1" in
 		RETVAL=$?
 		;;
 	condrestart)
-		if [ -f "$lockfile" ]; then
+		if [[ -f "$lockfile" ]]; then
 			stop
 			start
 			RETVAL=$?
 		fi
 		;;
 	reload|flash)
-		if [ -f "$lockfile" ]; then
+		if [[ -f "$lockfile" ]]; then
 			echo $"Reloading rules configuration..."
-			kill -s 12 `cat ${pidfile}`
+			kill -s 12 "$(cat ${pidfile})"
 			RETVAL=$?
-			if [ $RETVAL -eq 0 ] ; then
+			if [[ $RETVAL -eq 0 ]] ; then
 				log_success_msg
 			else
 				log_failure_msg
