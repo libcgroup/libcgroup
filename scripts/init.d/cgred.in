@@ -32,11 +32,25 @@ CGRED_BIN=$sbindir/cgrulesengd
 # Sanity checks
 [[ -x $CGRED_BIN ]] || exit 1
 
-# Source function library & LSB routines
-# shellcheck disable=SC1091
-source /etc/rc.d/init.d/functions
-# shellcheck disable=SC1091
-source /lib/lsb/init-functions
+#
+# Source LSB routines
+#
+SYSLIBFILE=/lib/lsb/init-functions
+OLDSYSLIBFILE=/etc/init.d/functions
+if [[ -x  $SYSLIBFILE ]] ; then
+  # shellcheck disable=SC1090
+  source $SYSLIBFILE
+elif  [[ -x $OLDSYSLIBFILE ]] ; then
+  # shellcheck disable=SC1090
+  source $OLDSYSLIBFILE
+  log_warning_msg() ( warning "$@" ; printf "\n" 1>&2 ; )
+  log_failure_msg() ( failure "$@" ; printf "\n" 1>&2 ; )
+  log_success_msg() ( success "$@" ; printf "\n" 1>&2 ; )
+else
+  log_warning_msg() ( printf "warning:%s\n" "$@" 1>&2 ;)
+  log_failure_msg() ( printf "failure:%s\n" "$@" 1>&2 ;)
+  log_success_msg() ( printf "success:%s\n" "$@" 1>&2 ;)
+fi
 
 # Read in configuration options.
 if [[ -f "/etc/sysconfig/cgred.conf" ]] ; then
@@ -139,9 +153,9 @@ case "$1" in
 			kill -s 12 "$(cat ${pidfile})"
 			RETVAL=$?
 			if [[ $RETVAL -eq 0 ]] ; then
-				log_success_msg
+				log_success_msg ""
 			else
-				log_failure_msg
+				log_failure_msg ""
 			fi
 		else
 			log_failure_msg "$servicename is not running."
