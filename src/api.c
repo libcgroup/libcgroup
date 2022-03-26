@@ -1292,6 +1292,169 @@ out:
 	return ret;
 }
 
+/*
+ * Free global variables filled by previous cgroup_init(). This function
+ * should be called with cg_mount_table_lock taken.
+ */
+static void cgroup_free_cg_mount_table(void)
+{
+	struct cg_mount_point *mount, *tmp;
+	int i;
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		mount = cg_mount_table[i].mount.next;
+
+		while (mount) {
+			tmp = mount;
+			mount = mount->next;
+			free(tmp);
+		}
+	}
+
+	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
+	memset(&cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
+}
+
+/*
+ * Reads /proc/cgroups and populates the controllers/subsys_name. This function
+ * should be called with cg_mount_table_lock taken.
+ */
+static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
+{
+	int hierarchy, num_cgroups, enabled;
+	char subsys_name[FILENAME_MAX];
+	FILE *proc_cgroup;
+	int ret = 0;
+	int i, err;
+	char *buf;
+
+	proc_cgroup = fopen("/proc/cgroups", "re");
+	if (!proc_cgroup) {
+		cgroup_err("cannot open /proc/cgroups: %s\n", strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	/*
+	 * The first line of the file has stuff we are not interested in.
+	 * So just read it and discard the information.
+	 */
+	buf = malloc(LL_MAX);
+	if (!buf) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	if (!fgets(buf, LL_MAX, proc_cgroup)) {
+		cgroup_err("cannot read /proc/cgroups: %s\n", strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	i = 0;
+	while (!feof(proc_cgroup)) {
+		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
+			     &hierarchy, &num_cgroups, &enabled);
+		if (err < 0)
+			break;
+
+		controllers[i] = strdup(subsys_name);
+		if (controllers[i] == NULL) {
+			last_errno = errno;
+			ret = ECGOTHER;
+			break;
+		}
+		i++;
+	}
+
+err:
+	if (proc_cgroup)
+		fclose(proc_cgroup);
+
+	if (buf)
+		free(buf);
+
+	if (ret != 0) {
+		for (i = 0; controllers[i]; i++) {
+			free(controllers[i]);
+			controllers[i] = NULL;
+		}
+	}
+
+	return ret;
+}
+
+/*
+ * Reads /proc/mounts and populates the cgroup v1/v2 mount points into the
+ * global cg_mount_table. This function should be called with
+ * cg_mount_table_lock taken.
+ */
+static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
+{
+	char mntent_buffer[4 * FILENAME_MAX];
+	struct mntent *temp_ent, *ent;
+	int found_mnt = 0;
+	FILE *proc_mount;
+	int ret = 0;
+
+	proc_mount = fopen("/proc/mounts", "re");
+	if (proc_mount == NULL) {
+		cgroup_err("cannot open /proc/mounts: %s\n", strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+	if (!temp_ent) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	while ((ent = getmntent_r(proc_mount, temp_ent,	mntent_buffer,
+				  sizeof(mntent_buffer))) != NULL) {
+
+		if (strcmp(ent->mnt_type, "cgroup") == 0) {
+			ret = cgroup_process_v1_mnt(controllers, ent,
+						    &found_mnt);
+			if (ret)
+				goto err;
+
+			continue;
+		}
+
+		if (strcmp(ent->mnt_type, "cgroup2") == 0) {
+			ret = cgroup_process_v2_mnt(ent, &found_mnt);
+			if (ret == ECGEOF) {
+			/*
+			 * The controllers file was empty.  Ignore and move on.
+			 */
+				ret = 0;
+				continue;
+			}
+
+			if (ret)
+				goto err;
+		}
+	}
+
+	if (!found_mnt)
+		ret = ECGROUPNOTMOUNTED;
+
+err:
+	if (proc_mount)
+		fclose(proc_mount);
+
+	if (temp_ent)
+		free(temp_ent);
+
+	return ret;
+}
+
 /**
  * cgroup_init(), initializes the MOUNT_POINT.
  *
@@ -1303,135 +1466,27 @@ out:
 int cgroup_init(void)
 {
 	static char *controllers[CG_CONTROLLER_MAX];
-	int hierarchy, num_cgroups, enabled;
-	char mntent_buffer[4 * FILENAME_MAX];
-	char subsys_name[FILENAME_MAX];
-	struct mntent *temp_ent = NULL;
-	struct mntent *ent = NULL;
-	FILE *proc_cgroup = NULL;
-	FILE *proc_mount = NULL;
-	int found_mnt = 0;
-	char *buf = NULL;
 	int ret = 0;
-	int i = 0;
-	int err;
+	int i;
 
 	cgroup_set_default_logger(-1);
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
 
 	/* Free global variables filled by previous cgroup_init() */
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
-		struct cg_mount_point *mount = cg_mount_table[i].mount.next;
+	cgroup_free_cg_mount_table();
 
-		while (mount) {
-			struct cg_mount_point *tmp = mount;
-
-			mount = mount->next;
-			free(tmp);
-		}
-	}
-	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
-
-	memset(&cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
-
-	proc_cgroup = fopen("/proc/cgroups", "re");
-
-	if (!proc_cgroup) {
-		cgroup_err("cannot open /proc/cgroups: %s\n", strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
+	ret = cgroup_populate_controllers(controllers);
+	if (ret)
 		goto unlock_exit;
-	}
 
-	/*
-	 * The first line of the file has stuff we are not interested in.
-	 * So just read it and discard the information.
-	 */
-	buf = malloc(LL_MAX);
-	if (!buf) {
-		last_errno = errno;
-		ret = ECGOTHER;
+	ret = cgroup_populate_mount_points(controllers);
+	if (ret)
 		goto unlock_exit;
-	}
-	if (!fgets(buf, LL_MAX, proc_cgroup)) {
-		free(buf);
-		cgroup_err("cannot read /proc/cgroups: %s\n", strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto unlock_exit;
-	}
-	free(buf);
-
-	i = 0;
-	while (!feof(proc_cgroup)) {
-		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name,
-			     &hierarchy, &num_cgroups, &enabled);
-		if (err < 0)
-			break;
-		controllers[i] = strdup(subsys_name);
-		i++;
-	}
-	controllers[i] = NULL;
-
-	proc_mount = fopen("/proc/mounts", "re");
-	if (proc_mount == NULL) {
-		cgroup_err("cannot open /proc/mounts: %s\n", strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto unlock_exit;
-	}
-
-	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
-	if (!temp_ent) {
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto unlock_exit;
-	}
-
-	while ((ent = getmntent_r(proc_mount, temp_ent,	mntent_buffer,
-				  sizeof(mntent_buffer))) != NULL) {
-
-		if (strcmp(ent->mnt_type, "cgroup") == 0) {
-			ret = cgroup_process_v1_mnt(controllers, ent,
-						    &found_mnt);
-			if (ret)
-				goto unlock_exit;
-		} else if (strcmp(ent->mnt_type, "cgroup2") == 0) {
-			ret = cgroup_process_v2_mnt(ent, &found_mnt);
-			if (ret == ECGEOF) {
-				/* The controllers file was empty.  Ignore and
-				 * move on.
-				 */
-				ret = 0;
-				continue;
-			} else if (ret) {
-				goto unlock_exit;
-			}
-		}
-	}
-
-	if (!found_mnt) {
-		cg_mount_table[0].name[0] = '\0';
-		ret = ECGROUPNOTMOUNTED;
-		goto unlock_exit;
-	}
-
-	found_mnt++;
-	cg_mount_table[found_mnt].name[0] = '\0';
 
 	cgroup_initialized = 1;
 
 unlock_exit:
-	if (proc_cgroup)
-		fclose(proc_cgroup);
-
-	if (proc_mount)
-		fclose(proc_mount);
-
-	if (temp_ent)
-		free(temp_ent);
-
 	for (i = 0; controllers[i]; i++) {
 		free(controllers[i]);
 		controllers[i] = NULL;
