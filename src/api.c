@@ -1070,6 +1070,27 @@ int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
 	return 0;
 }
 
+static void cgroup_cg_mount_table_append(const char *name,
+					 const char *mount_path,
+					 enum cg_version_t version,
+					 int *mnt_tbl_idx,
+					 const char *mnt_opts)
+{
+	int i = *mnt_tbl_idx;
+
+	strncpy(cg_mount_table[i].name,	name, FILENAME_MAX);
+	cg_mount_table[i].name[FILENAME_MAX-1] = '\0';
+
+	strncpy(cg_mount_table[i].mount.path, mount_path, FILENAME_MAX);
+	cg_mount_table[i].mount.path[FILENAME_MAX-1] = '\0';
+
+	cg_mount_table[i].version = version;
+	cg_mount_table[i].mount.next = NULL;
+	cgroup_dbg("Found cgroup option %s, count %d\n", mnt_opts, i);
+
+	(*mnt_tbl_idx)++;
+}
+
 /**
  * Process a cgroup v1 mount and add it to cg_mount_table if it's not a
  * duplicate.
@@ -1114,23 +1135,9 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 			continue;
 		}
 
-		strncpy(cg_mount_table[*mnt_tbl_idx].name,
-			controllers[i], FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
-
-		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
-			ent->mnt_dir, FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
-			'\0';
-
-		cg_mount_table[*mnt_tbl_idx].version = CGROUP_V1;
-		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
-		cgroup_dbg("Found cgroup option %s, count %d\n",
-			   ent->mnt_opts, *mnt_tbl_idx);
-
-		(*mnt_tbl_idx)++;
+		cgroup_cg_mount_table_append(controllers[i], ent->mnt_dir,
+					     CGROUP_V1, mnt_tbl_idx,
+					     ent->mnt_opts);
 	}
 
 	/*
@@ -1172,23 +1179,9 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 			goto out;
 		}
 
-		strncpy(cg_mount_table[*mnt_tbl_idx].name,
-			mntopt, FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
-
-		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
-			ent->mnt_dir, FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
-			'\0';
-
-		cg_mount_table[*mnt_tbl_idx].version = CGROUP_V1;
-		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
-		cgroup_dbg("Found cgroup option %s, count %d\n",
-			   ent->mnt_opts, *mnt_tbl_idx);
-
-		(*mnt_tbl_idx)++;
+		cgroup_cg_mount_table_append(mntopt, ent->mnt_dir,
+					     CGROUP_V1, mnt_tbl_idx,
+					     ent->mnt_opts);
 	}
 
 out:
@@ -1266,23 +1259,9 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 		}
 
 		/* This controller is not in the mount table.  add it */
-		strncpy(cg_mount_table[*mnt_tbl_idx].name,
-			controller, FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].name[FILENAME_MAX-1] = '\0';
-
-		strncpy(cg_mount_table[*mnt_tbl_idx].mount.path,
-			ent->mnt_dir, FILENAME_MAX);
-
-		cg_mount_table[*mnt_tbl_idx].mount.path[FILENAME_MAX-1] =
-			'\0';
-
-		cg_mount_table[*mnt_tbl_idx].version = CGROUP_V2;
-		cg_mount_table[*mnt_tbl_idx].mount.next = NULL;
-		cgroup_dbg("Found cgroup option %s, count %d\n",
-			   controller, *mnt_tbl_idx);
-
-		(*mnt_tbl_idx)++;
+		cgroup_cg_mount_table_append(controller, ent->mnt_dir,
+					     CGROUP_V2, mnt_tbl_idx,
+					     controller);
 	} while ((controller = strtok_r(NULL, " ", &stok_buff)));
 
 out:
@@ -1439,6 +1418,7 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 
 			if (ret)
 				goto err;
+
 		}
 	}
 
