@@ -296,11 +296,6 @@ def run_tests(config):
                         failure_cause = e
                         Log.log_debug(e)
                         ret = consts.TEST_FAILED
-
-                        # if the test does cause an exception, it may not have
-                        # cleaned up after itself.  re-create the container
-                        teardown(config)
-                        setup(config, do_teardown=False)
                     finally:
                         run_time = time.time() - start_time
                         if ret == consts.TEST_PASSED:
