@@ -343,13 +343,7 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            try:
-                ret = Run.run(cmd)
-            except RunError as re:
-                if 'profiling' in re.stderr:
-                    ret = re.stdout
-                else:
-                    raise re
+            ret = Run.run(cmd)
 
         return ret
 
@@ -820,13 +814,7 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            try:
-                ret = Run.run(cmd)
-            except RunError as re:
-                if 'profiling' in re.stderr:
-                    ret = re.stdout
-                else:
-                    raise re
+            ret = Run.run(cmd)
 
         return ret
 
@@ -881,13 +869,7 @@ class Cgroup(object):
         if config.args.container:
             ret = config.container.run(cmd)
         else:
-            try:
-                ret = Run.run(cmd)
-            except RunError as re:
-                if 'profiling' in re.stderr:
-                    ret = re.stdout
-                else:
-                    raise re
+            ret = Run.run(cmd)
 
         return ret
 

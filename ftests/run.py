@@ -12,7 +12,7 @@ import subprocess
 
 class Run(object):
     @staticmethod
-    def run(command, shell_bool=False):
+    def run(command, shell_bool=False, ignore_profiling_errors=True):
         if shell_bool:
             if isinstance(command, str):
                 # nothing to do.  command is already formatted as a string
@@ -48,10 +48,14 @@ class Run(object):
             raise RunError("Command '{}' failed".format(''.join(command)),
                            command, ret, out, err)
         if ret != 0 or len(err) > 0:
-            if err.find('WARNING: cgroup v2 is not fully supported yet') == -1:
+            if err.find('WARNING: cgroup v2 is not fully supported yet') >= 0:
                 # LXD throws the above warning on systems that are fully
                 # running cgroup v2.  Ignore this warning, but fail if any
                 # other warnings/errors are raised
+                pass
+            elif ignore_profiling_errors and err.find('profiling') >= 0:
+                pass
+            else:
                 raise RunError("Command '{}' failed".format(''.join(command)),
                                command, ret, out, err)
 
