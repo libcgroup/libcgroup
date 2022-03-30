@@ -93,6 +93,9 @@ __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
+/* Cgroup v2 mount paths, with empty controllers */
+struct cg_mount_point *cg_cgroup_v2_empty_mount_paths;
+
 const char * const cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
 	"Cgroup is not mounted",
@@ -1221,7 +1224,32 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 
 	ret_c = fgets(line, LL_MAX, fp);
 	if (ret_c == NULL) {
+		struct cg_mount_point *tmp, *t;
+
 		ret = ECGEOF;
+
+		tmp = malloc(sizeof(struct cg_mount_point));
+		if (tmp == NULL) {
+			last_errno = errno;
+			ret = ECGOTHER;
+			goto out;
+		}
+
+		strncpy(tmp->path, cg_cgroup_v2_mount_path,
+			sizeof(tmp->path) - 1);
+		tmp->path[sizeof(tmp->path)-1] = '\0';
+		tmp->next = NULL;
+
+		t = cg_cgroup_v2_empty_mount_paths;
+		if (t == NULL) {
+			cg_cgroup_v2_empty_mount_paths = tmp;
+			goto out;
+		}
+
+		while(t->next != NULL)
+			t = t->next;
+		t->next = tmp;
+
 		goto out;
 	}
 
@@ -1292,6 +1320,8 @@ static void cgroup_free_cg_mount_table(void)
 
 	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
 	memset(&cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
+	memset(&cg_cgroup_v2_empty_mount_paths, 0,
+	       sizeof(cg_cgroup_v2_empty_mount_paths));
 }
 
 /*
@@ -5921,6 +5951,140 @@ int cgroup_get_controller_version(const char * const controller,
 	}
 
 	return ECGROUPNOTEXIST;
+}
+
+static int search_and_append_mnt_path(struct cg_mount_point **mount_point,
+				      char *path)
+{
+	struct cg_mount_point *mnt_point, *mnt_tmp, *mnt_prev;
+
+	mnt_tmp = *mount_point;
+	while(mnt_tmp) {
+		if (strcmp(mnt_tmp->path, path) == 0)
+			return ECGVALUEEXISTS;
+
+		mnt_prev = mnt_tmp;
+		mnt_tmp = mnt_tmp->next;
+	}
+
+	mnt_point = malloc(sizeof(struct cg_mount_point));
+	if (mnt_point == NULL) {
+		last_errno = errno;
+		return ECGOTHER;
+	}
+
+	strcpy(mnt_point->path, path);
+	mnt_point->next = NULL;
+
+	if (*mount_point == NULL)
+		*mount_point = mnt_point;
+	else
+		mnt_prev->next = mnt_point;
+
+	return 0;
+}
+
+/**
+ * List the mount paths, that matches the specified version
+ *
+ *	@param cgrp_version The cgroup type/version
+ *	@param mount_paths Holds the list of mount paths
+ *	@return 0 success and list of mounts paths in mount_paths
+ *		ECGOTHER on failure and mount_paths is NULL.
+ */
+int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
+			     char ***mount_paths)
+{
+	struct cg_mount_point *mount_point, *mnt_tmp = NULL;
+	char **mnt_paths = NULL;
+	int i, idx = 0;
+	int ret;
+
+	if (!cgroup_initialized)
+		return ECGROUPNOTINITIALIZED;
+
+	if (cgrp_version != CGROUP_V1 && cgrp_version != CGROUP_V2)
+		return ECGINVAL;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		if (cg_mount_table[i].version != cgrp_version)
+			continue;
+
+		mount_point = &cg_mount_table[i].mount;
+		while (mount_point) {
+			ret = search_and_append_mnt_path(&mnt_tmp,
+							 mount_point->path);
+			if (ret != 0 && ret != ECGVALUEEXISTS)
+				goto err;
+
+			/* Avoid adding duplicate mount points */
+			if (ret != ECGVALUEEXISTS)
+				idx++;
+
+			mount_point = mount_point->next;
+		}
+	}
+
+	/*
+	 * Cgroup v2 can be mounted without any controller and these mount
+	 * paths are not part of the cg_mount_table.  Check and append them
+	 * to mnt_paths.
+	 */
+	if (cgrp_version == CGROUP_V2 && cg_cgroup_v2_empty_mount_paths ) {
+		mount_point = cg_cgroup_v2_empty_mount_paths;
+		while(mount_point) {
+			ret = search_and_append_mnt_path(&mnt_tmp,
+							 mount_point->path);
+			if (ret)
+				goto err;
+
+			idx++;
+			mount_point = mount_point->next;
+		}
+	}
+
+	mnt_paths = malloc(sizeof(char*) * (idx + 1));
+	if (mnt_paths == NULL) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	for (i = 0, mount_point = mnt_tmp;
+	     mount_point;
+	     mount_point = mount_point->next, i++) {
+
+		mnt_paths[i] = strdup(mount_point->path);
+		if (mnt_paths[i] == NULL) {
+			last_errno = errno;
+			ret = ECGOTHER;
+			goto err;
+		}
+	}
+	mnt_paths[i] = '\0';
+
+	ret = 0;
+	*mount_paths = mnt_paths;
+
+err:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+
+	while(mnt_tmp) {
+		mount_point = mnt_tmp;
+		mnt_tmp = mnt_tmp->next;
+		free(mount_point);
+	}
+
+	if (ret != 0 && mnt_paths) {
+		for (i = 0; i < idx; i++)
+			free(mnt_paths[i]);
+		free(mnt_paths);
+		*mount_paths = NULL;
+	}
+
+	return ret;
 }
 
 const struct cgroup_library_version *cgroup_version(void)
