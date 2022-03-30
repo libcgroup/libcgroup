@@ -277,6 +277,29 @@ cdef class Cgroup:
         if ret != 0:
             raise RuntimeError("Failed to create cgroup: {}".format(ret))
 
+    def cgroup_list_mount_points(self, version):
+        """List cgroup mount points of the specified version
+
+        Arguments:
+        version - It specifies the cgroup version
+
+        Description:
+        Parse the /proc/mounts and list the cgroup mount points matching the
+        version
+        """
+        cdef char **a
+
+        mount_points = []
+        ret = cgroup.cgroup_list_mount_points(version, &a)
+        if ret is not 0:
+            raise RuntimeError("cgroup_list_mount_points failed: {}".format(ret));
+
+        i = 0
+        while a[i]:
+            mount_points.append(<str>(a[i]).decode("utf-8"))
+            i = i + 1
+        return mount_points
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 

@@ -51,4 +51,7 @@ cdef extern from "libcgroup.h":
     int cgroup_cgxset(const cgroup * const cg, cg_version_t version,
                       bint ignore_unmappable)
 
+    int cgroup_list_mount_points(const cg_version_t cgrp_version,
+                                 char ***mount_paths)
+
 # vim: set et ts=4 sw=4:
