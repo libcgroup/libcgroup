@@ -6,8 +6,12 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from run import Run
+from run import Run, RunError
+from queue import Queue
+import threading as tp
+from log import Log
 import consts
+import time
 import os
 
 
@@ -82,7 +86,7 @@ class Container(object):
 
         return Run.run(cmd2)
 
-    def create(self):
+    def _init_container(self, q):
         cmd = list()
 
         if self.privileged:
@@ -95,7 +99,46 @@ class Container(object):
 
         cmd.append(self.name)
 
-        return Run.run(cmd)
+        try:
+            Run.run(cmd)
+            q.put(True)
+        except Exception:  # noqa: E722
+            q.put(False)
+        except BaseException:  # noqa: E722
+            q.put(False)
+
+    def create(self):
+        # Github Actions sometimes has timeout issues with the LXC sockets.
+        # Try this command multiple times in an attempt to work around this
+        # limitation
+
+        queue = Queue()
+        sleep_time = 5
+        ret = False
+
+        for i in range(5):
+            thread = tp.Thread(target=self._init_container, args=(queue, ))
+            thread.start()
+
+            time_cnt = 0
+            while thread.is_alive():
+                time.sleep(sleep_time)
+                time_cnt += sleep_time
+                Log.log_debug('Waiting... {}'.format(time_cnt))
+
+            ret = queue.get()
+            if ret:
+                break
+            else:
+                try:
+                    self.delete()
+                except RunError:
+                    pass
+
+            thread.join()
+
+        if not ret:
+            raise ContainerError('Failed to create the container')
 
     def delete(self):
         cmd = list()
