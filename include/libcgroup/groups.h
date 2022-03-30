@@ -616,6 +616,17 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
 			  enum cg_version_t in_version);
 
 /**
+ * List the mount paths, that matches the specified version
+ *
+ *	@param cgrp_version The cgroup type/version
+ *	@param mount_paths Holds the list of mount paths
+ *	@return 0 success and list of mounts paths in mount_paths
+ *		ECGOTHER on failure and mount_paths is NULL.
+ */
+int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
+			     char ***mount_paths);
+
+/**
  * Get the cgroup version of a controller.  Version is set to CGROUP_UNK
  * if the version cannot be determined.
  *

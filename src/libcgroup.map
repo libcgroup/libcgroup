@@ -145,4 +145,5 @@ CGROUP_3.0 {
 	cgroup_cgxget;
 	cgroup_cgxset;
 	cgroup_version;
+	cgroup_list_mount_points;
 } CGROUP_2.0;
