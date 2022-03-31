@@ -3053,9 +3053,11 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 {
 	int first_error = 0, first_errno = 0;
 	char parent_path[FILENAME_MAX];
+	char *controller_name = NULL;
 	FILE *parent_tasks = NULL;
 	char *parent_name = NULL;
 	int delete_group = 1;
+	int empty_cgroup = 0;
 	int i, ret;
 
 	if (!cgroup_initialized)
@@ -3068,19 +3070,31 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	    && (flags & CGFLAG_DELETE_EMPTY_ONLY))
 		return ECGINVAL;
 
+	if (cgroup->index == 0)
+		/* Valid empty cgroup v2 with not controllers added. */
+		empty_cgroup = 1;
+
 	for (i = 0; i < cgroup->index; i++) {
 		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	/* Remove the group from all controllers. */
-	for (i = 0; i < cgroup->index; i++) {
+	/*
+	 * Remove the group from all controllers and in the case of cgroup
+	 * with no controllers, perform all actions of a single controller.
+	 */
+	for (i = 0;
+	     empty_cgroup > 0 || i < cgroup->index; i++, empty_cgroup--) {
+
 		ret = 0;
+		controller_name = NULL;
+
+		if (cgroup->controller[i])
+			controller_name = cgroup->controller[i]->name;
 
 		/* Find parent, it can be different for each controller */
 		if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
-			ret = cgroup_find_parent(cgroup,
-						 cgroup->controller[i]->name,
+			ret = cgroup_find_parent(cgroup, controller_name,
 						 &parent_name);
 			if (ret) {
 				if (first_error == 0) {
@@ -3117,7 +3131,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			/* Tasks need to be moved, pre-open target tasks file */
 			ret = cgroup_build_tasks_procs_path(parent_path,
 					sizeof(parent_path), parent_name,
-					cgroup->controller[i]->name);
+					controller_name);
 			if (ret != 0) {
 				if (first_error == 0)
 					first_error = ECGFAIL;
@@ -3141,12 +3155,12 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 		if (flags & CGFLAG_DELETE_RECURSIVE) {
 			ret = cg_delete_cgroup_controller_recursive(
 					cgroup->name,
-					cgroup->controller[i]->name,
+					controller_name,
 					parent_tasks, flags,
 					delete_group);
 		} else {
 			ret = cg_delete_cgroup_controller(cgroup->name,
-					cgroup->controller[i]->name,
+					controller_name,
 					parent_tasks, flags);
 		}
 
@@ -5909,6 +5923,11 @@ int cgroup_get_controller_version(const char * const controller,
 
 	if (!version)
 		return ECGINVAL;
+
+	if (!controller && strlen(cg_cgroup_v2_mount_path) > 0) {
+		*version = CGROUP_V2;
+		return 0;
+	}
 
 	*version = CGROUP_UNK;
 
