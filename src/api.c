@@ -1858,6 +1858,8 @@ err:
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX] = {0};
+	char *controller_name;
+	int empty_cgroup = 0;
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -1896,15 +1898,24 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 			}
 		}
 
-		for (i = 0; i < cgroup->index; i++) {
+		if (cgroup->index == 0)
+			/* Valid empty cgroup v2 with no controllers added. */
+			empty_cgroup = 1;
+
+		for (i = 0, controller_name = NULL;
+		     empty_cgroup > 0 || i < cgroup->index;
+		     i++, empty_cgroup--) {
+
+			if (cgroup->controller[i])
+				controller_name = cgroup->controller[i]->name;
+
 			ret = cgroupv2_controller_enabled(cgroup->name,
-				cgroup->controller[i]->name);
+						          controller_name);
 			if (ret)
 				return ret;
 
 			ret = cgroup_build_tasks_procs_path(path,
-				sizeof(path), cgroup->name,
-				cgroup->controller[i]->name);
+				sizeof(path), cgroup->name, controller_name);
 			if (ret)
 				return ret;
 
