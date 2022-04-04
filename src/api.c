@@ -1770,6 +1770,10 @@ STATIC int cgroupv2_controller_enabled(const char * const cg_name,
 	if (version != CGROUP_V2)
 		return 0;
 
+	if (ctrl_name == NULL)
+		/* cgroup v2 supports cgroups with no controllers. */
+		return 0;
+
 	if (strncmp(cg_name, "/", strlen(cg_name)) == 0)
 		/*
 		 * The root cgroup has been requested.  All version 2
