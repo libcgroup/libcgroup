@@ -1333,9 +1333,9 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 	int hierarchy, num_cgroups, enabled;
 	char subsys_name[FILENAME_MAX];
 	FILE *proc_cgroup;
+	char *buf = NULL;
 	int ret = 0;
 	int i, err;
-	char *buf;
 
 	proc_cgroup = fopen("/proc/cgroups", "re");
 	if (!proc_cgroup) {
@@ -1404,7 +1404,7 @@ err:
 static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 {
 	char mntent_buffer[4 * FILENAME_MAX];
-	struct mntent *temp_ent, *ent;
+	struct mntent *ent, *temp_ent = NULL;
 	int found_mnt = 0;
 	FILE *proc_mount;
 	int ret = 0;
