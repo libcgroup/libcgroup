@@ -1073,11 +1073,34 @@ int cg_add_duplicate_mount(struct cg_mount_table_s *item, const char *path)
 	return 0;
 }
 
+/*
+ * Tries to find if any controller in cg_mount_table have already mounted on
+ * the mount_path and if mounted sets the matching controller idx share_mnt
+ * flag and Return 1 or 0 otherwise.
+ */
+static int cgroup_set_cg_mnt_tbl_shared_mnt(char *mount_path, int *mnt_tbl_idx)
+{
+	int i, shared_mnt = 0;
+
+	/* Check if controllers share mount points */
+	for  (i = 0; i < *mnt_tbl_idx; i++) {
+		if (strncmp(mount_path, cg_mount_table[i].mount.path,
+			    FILENAME_MAX) == 0) {
+			cg_mount_table[i].shared_mnt = 1;
+			shared_mnt = 1;
+			break;
+		}
+	}
+
+	return shared_mnt;
+}
+
 static void cgroup_cg_mount_table_append(const char *name,
 					 const char *mount_path,
 					 enum cg_version_t version,
 					 int *mnt_tbl_idx,
-					 const char *mnt_opts)
+					 const char *mnt_opts,
+					 int shared_mnt)
 {
 	int i = *mnt_tbl_idx;
 
@@ -1087,8 +1110,10 @@ static void cgroup_cg_mount_table_append(const char *name,
 	strncpy(cg_mount_table[i].mount.path, mount_path, FILENAME_MAX);
 	cg_mount_table[i].mount.path[FILENAME_MAX-1] = '\0';
 
+	cg_mount_table[i].shared_mnt = shared_mnt;
 	cg_mount_table[i].version = version;
 	cg_mount_table[i].mount.next = NULL;
+
 	cgroup_dbg("Found cgroup option %s, count %d\n", mnt_opts, i);
 
 	(*mnt_tbl_idx)++;
@@ -1106,7 +1131,7 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 				 int *mnt_tbl_idx)
 {
 	char *strtok_buffer = NULL, *mntopt = NULL;
-	int duplicate = 0;
+	int shared_mnt, duplicate;
 	int i, j, ret = 0;
 
 	for (i = 0; controllers[i] != NULL; i++) {
@@ -1116,6 +1141,10 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 			continue;
 
 		cgroup_dbg("found %s in %s\n", controllers[i], ent->mnt_opts);
+
+		/* Check if controllers share mount points */
+		shared_mnt = cgroup_set_cg_mnt_tbl_shared_mnt(ent->mnt_dir,
+							      mnt_tbl_idx);
 
 		/* Do not have duplicates in mount table */
 		duplicate = 0;
@@ -1140,7 +1169,7 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 
 		cgroup_cg_mount_table_append(controllers[i], ent->mnt_dir,
 					     CGROUP_V1, mnt_tbl_idx,
-					     ent->mnt_opts);
+					     ent->mnt_opts, shared_mnt);
 	}
 
 	/*
@@ -1153,10 +1182,6 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 		mntopt = strtok_r(mntopt, ",", &strtok_buffer);
 		if (!mntopt)
 			goto out;
-		/*
-		 * Check if it is a duplicate
-		 */
-		duplicate = 0;
 
 #ifdef OPAQUE_HIERARCHY
 		/*
@@ -1165,7 +1190,12 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 		if (strcmp(mntopt, OPAQUE_HIERARCHY) == 0)
 			goto out;
 #endif
+		/* Check if controllers share mount points */
+		shared_mnt = cgroup_set_cg_mnt_tbl_shared_mnt(ent->mnt_dir,
+							      mnt_tbl_idx);
 
+		/* Check if it is a duplicate */
+		duplicate = 0;
 		for (j = 0; j < *mnt_tbl_idx; j++) {
 			if (strncmp(mntopt, cg_mount_table[j].name,
 				    FILENAME_MAX) == 0) {
@@ -1184,7 +1214,7 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 
 		cgroup_cg_mount_table_append(mntopt, ent->mnt_dir,
 					     CGROUP_V1, mnt_tbl_idx,
-					     ent->mnt_opts);
+					     ent->mnt_opts, shared_mnt);
 	}
 
 out:
@@ -1202,7 +1232,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 {
 	char cgroup_controllers_path[FILENAME_MAX];
 	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller;
-	int ret = 0, i, duplicate;
+	int ret = 0, i, duplicate, shared_mnt;
 	FILE *fp = NULL;
 
 	/*
@@ -1263,9 +1293,12 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	 */
 	controller = strtok_r(ret_c, " ", &stok_buff);
 	do {
+		/* Check if controllers share mount points */
+		shared_mnt = cgroup_set_cg_mnt_tbl_shared_mnt(ent->mnt_dir,
+							      mnt_tbl_idx);
+
 		/* Do not have duplicates in mount table */
 		duplicate = 0;
-
 		for  (i = 0; i < *mnt_tbl_idx; i++) {
 			if (strncmp(cg_mount_table[i].name, controller,
 				    FILENAME_MAX) == 0) {
@@ -1289,7 +1322,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 		/* This controller is not in the mount table.  add it */
 		cgroup_cg_mount_table_append(controller, ent->mnt_dir,
 					     CGROUP_V2, mnt_tbl_idx,
-					     controller);
+					     controller, shared_mnt);
 	} while ((controller = strtok_r(NULL, " ", &stok_buff)));
 
 out:
@@ -2759,6 +2792,31 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 	return ret;
 }
 
+/*
+ * Checks if the cgroup's controller shares the mount point with any other
+ * controller in cg_mount_table. Returns 1 if shared or 0.
+ */
+static int is_cgrp_ctrl_shared_mnt(char *controller)
+{
+	int ret = 0;
+	int i;
+
+	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+
+		if (strncmp(cg_mount_table[i].name, controller,
+			    sizeof(cg_mount_table[i].name)) == 0 &&
+		    cg_mount_table[i].shared_mnt) {
+			ret = 1;
+			break;
+		}
+	}
+
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+
+	return ret;
+}
 /**
  * Find the parent of the specified directory. It returns the parent in
  * hierarchy of given controller (the parent is usually name/.. unless name is
@@ -2800,6 +2858,10 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller,
 	cgroup_dbg("parent's name is %s\n", parent_path);
 
 	if (stat(child_path, &stat_child) < 0) {
+		if (is_cgrp_ctrl_shared_mnt(controller)) {
+			ret = ECGROUPNOTEXIST;
+			goto free_parent;
+		}
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto free_parent;
@@ -3142,7 +3204,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			ret = cgroup_find_parent(cgroup, controller_name,
 						 &parent_name);
 			if (ret) {
-				if (first_error == 0) {
+				if (first_error == 0 && ret != ECGROUPNOTEXIST) {
 					first_errno = last_errno;
 					first_error = ret;
 				}
