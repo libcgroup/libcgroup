@@ -51,10 +51,14 @@ cdef class Cgroup:
     cdef public:
         object name, controllers, version
 
-    def __cinit__(self, name, version):
+    @staticmethod
+    def cgroup_init():
         ret = cgroup.cgroup_init()
         if ret != 0:
             raise RuntimeError("Failed to initialize libcgroup: {}".format(ret))
+
+    def __cinit__(self, name, version):
+        Cgroup.cgroup_init()
 
         self._cgp = cgroup.cgroup_new_cgroup(c_str(name))
         if self._cgp == NULL:
@@ -277,17 +281,23 @@ cdef class Cgroup:
         if ret != 0:
             raise RuntimeError("Failed to create cgroup: {}".format(ret))
 
-    def cgroup_list_mount_points(self, version):
+    @staticmethod
+    def mount_points(version):
         """List cgroup mount points of the specified version
 
         Arguments:
         version - It specifies the cgroup version
+
+        Return:
+        The cgroup mount points in a list
 
         Description:
         Parse the /proc/mounts and list the cgroup mount points matching the
         version
         """
         cdef char **a
+
+        Cgroup.cgroup_init()
 
         mount_points = []
         ret = cgroup.cgroup_list_mount_points(version, &a)
