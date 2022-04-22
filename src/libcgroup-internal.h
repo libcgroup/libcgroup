@@ -132,6 +132,7 @@ struct cg_mount_table_s {
 	 */
 	struct cg_mount_point mount;
 	int index;
+	int shared_mnt;
 	enum cg_version_t version;
 };
 
