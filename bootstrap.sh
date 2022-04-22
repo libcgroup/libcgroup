@@ -14,7 +14,7 @@ git submodule update --init --recursive
 
 # configure libcgroup-tests
 pushd tests
-git checkout main
+git checkout issues/mount-pybindings
 popd
 
 # configure googletest
