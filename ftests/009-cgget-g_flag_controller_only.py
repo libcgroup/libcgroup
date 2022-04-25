@@ -27,6 +27,21 @@ cpu.uclamp.min: 0.00
 cpu.uclamp.max: max
 '''
 
+EXPECTED_OUT_V1_CFS_BANDWIDTH = '''009cgget:
+cpu.cfs_burst_us: 0
+cpu.cfs_period_us: 100000
+cpu.stat: nr_periods 0
+        nr_throttled 0
+        throttled_time 0
+        nr_bursts 0
+        burst_time 0
+cpu.shares: 1024
+cpu.idle: 0
+cpu.cfs_quota_us: -1
+cpu.uclamp.min: 0.00
+cpu.uclamp.max: max
+'''
+
 EXPECTED_OUT_V2 = '''009cgget:
 cpu.weight: 100
 cpu.stat: usage_usec 0
@@ -58,6 +73,26 @@ cpu.uclamp.min: 0.00
 cpu.uclamp.max: max
 '''
 
+EXPECTED_OUT_V2_PSI_CFS_BANDWIDTH = '''009cgget:
+cpu.weight: 100
+cpu.stat: usage_usec 0
+        user_usec 0
+        system_usec 0
+        nr_periods 0
+        nr_throttled 0
+        throttled_usec 0
+        nr_bursts 0
+        burst_usec 0
+cpu.weight.nice: 0
+cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
+        full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+cpu.idle: 0
+cpu.max.burst: 0
+cpu.max: max 100000
+cpu.uclamp.min: 0.00
+cpu.uclamp.max: max
+'''
+
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -80,10 +115,17 @@ def test(config):
 
     if version == CgroupVersion.CGROUP_V1:
         expected_out = EXPECTED_OUT_V1
+
+        if len(out.splitlines()) != len(expected_out.splitlines()):
+            expected_out = EXPECTED_OUT_V1_CFS_BANDWIDTH
     elif version == CgroupVersion.CGROUP_V2:
         expected_out = EXPECTED_OUT_V2
+
         if len(out.splitlines()) != len(expected_out.splitlines()):
             expected_out = EXPECTED_OUT_V2_PSI
+
+            if len(out.splitlines()) != len(expected_out.splitlines()):
+                expected_out = EXPECTED_OUT_V2_PSI_CFS_BANDWIDTH
 
     if len(out.splitlines()) != len(expected_out.splitlines()):
         result = consts.TEST_FAILED
