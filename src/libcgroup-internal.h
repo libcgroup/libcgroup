@@ -233,7 +233,8 @@ void init_cgroup_table(struct cgroup *cgroups, size_t count);
 /*
  * Main mounting structures
  */
-extern struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
+extern int cg_controller_max;
+extern struct cg_mount_table_s *cg_mount_table;
 extern pthread_rwlock_t cg_mount_table_lock;
 
 /*
