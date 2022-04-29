@@ -36,9 +36,8 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    cg1 = Cgroup(CGNAME, Version.CGROUP_V1)
-    mount_points_v1 = cg1.cgroup_list_mount_points(Version.CGROUP_V1)
-    mount_points_v2 = cg1.cgroup_list_mount_points(Version.CGROUP_V2)
+    mount_points_v1 = Cgroup.mount_points(Version.CGROUP_V1)
+    mount_points_v2 = Cgroup.mount_points(Version.CGROUP_V2)
     if not mount_points_v1 and not mount_points_v2:
         result = consts.TEST_FAILED
         cause = ("No cgroup mount point found")
