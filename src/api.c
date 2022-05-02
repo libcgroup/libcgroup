@@ -1466,6 +1466,9 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 			if (ret)
 				goto err;
 
+			if (found_mnt >= CG_CONTROLLER_MAX)
+				break;
+
 			continue;
 		}
 
@@ -1481,11 +1484,19 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 
 			if (ret)
 				goto err;
+
+			if (found_mnt >= CG_CONTROLLER_MAX)
+				break;
 		}
 	}
 
 	if (!found_mnt)
 		ret = ECGROUPNOTMOUNTED;
+
+	if (found_mnt >= CG_CONTROLLER_MAX) {
+		cgroup_err("Mount points exceeds CG_CONTROLLER_MAX");
+		ret = ECGMAXVALUESEXCEEDED;
+	}
 
 err:
 	if (proc_mount)
