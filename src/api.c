@@ -1116,6 +1116,9 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 		cgroup_dbg("Found cgroup option %s, count %d\n",
 			ent->mnt_opts, *mnt_tbl_idx);
 		(*mnt_tbl_idx)++;
+
+		if (*mnt_tbl_idx >= CG_CONTROLLER_MAX)
+			goto out;
 	}
 
 	/*
@@ -1172,6 +1175,11 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 	}
 
 out:
+	if (*mnt_tbl_idx >= CG_CONTROLLER_MAX) {
+		cgroup_err("Error: Mount points exceeds CG_CONTROLLER_MAX\n");
+		ret = ECGMAXVALUESEXCEEDED;
+	}
+
 	return ret;
 }
 
@@ -1251,11 +1259,20 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 		cgroup_dbg("Found cgroup option %s, count %d\n",
 			controller, *mnt_tbl_idx);
 		(*mnt_tbl_idx)++;
+
+		if (*mnt_tbl_idx >= CG_CONTROLLER_MAX)
+			break;
+
 	} while ((controller = strtok_r(NULL, " ", &stok_buff)));
 
 out:
 	if (fp)
 		fclose(fp);
+
+	if (*mnt_tbl_idx >= CG_CONTROLLER_MAX) {
+		cgroup_err("Error: Mount points exceeds CG_CONTROLLER_MAX\n");
+		ret = ECGMAXVALUESEXCEEDED;
+	}
 
 	return ret;
 }
