@@ -43,6 +43,9 @@ extern "C" {
  */
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
+/* Maximum length of a controller's name */
+#define CONTROL_NAMELEN_MAX	32
+
 /* Definitions for the uid and gid members of a cgroup_rules */
 #define CGRULE_INVALID	((uid_t) -1)
 #define CGRULE_WILD	((uid_t) -2)
@@ -99,7 +102,7 @@ struct control_value {
 };
 
 struct cgroup_controller {
-	char name[FILENAME_MAX];
+	char name[CONTROL_NAMELEN_MAX];
 	struct control_value *values[CG_NV_MAX];
 	struct cgroup *cgroup;
 	int index;
@@ -126,7 +129,7 @@ struct cg_mount_point {
 
 struct cg_mount_table_s {
 	/** Controller name. */
-	char name[FILENAME_MAX];
+	char name[CONTROL_NAMELEN_MAX];
 	/**
 	 * List of mount points, at least one mount point is there for sure.
 	 */
