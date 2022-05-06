@@ -1104,8 +1104,8 @@ static void cgroup_cg_mount_table_append(const char *name,
 {
 	int i = *mnt_tbl_idx;
 
-	strncpy(cg_mount_table[i].name,	name, FILENAME_MAX);
-	cg_mount_table[i].name[FILENAME_MAX-1] = '\0';
+	strncpy(cg_mount_table[i].name,	name, CONTROL_NAMELEN_MAX);
+	cg_mount_table[i].name[CONTROL_NAMELEN_MAX-1] = '\0';
 
 	strncpy(cg_mount_table[i].mount.path, mount_path, FILENAME_MAX);
 	cg_mount_table[i].mount.path[FILENAME_MAX-1] = '\0';
@@ -2461,7 +2461,7 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
 	if (!dst || !src)
 		return ECGFAIL;
 
-	strncpy(dst->name, src->name, FILENAME_MAX);
+	strncpy(dst->name, src->name, CONTROL_NAMELEN_MAX);
 	for (i = 0; i < src->index; i++, dst->index++) {
 		struct control_value *src_val = src->values[i];
 		struct control_value *dst_val;
