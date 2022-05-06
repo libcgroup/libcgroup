@@ -59,7 +59,7 @@ class CgroupCreateCgroupTest : public ::testing::Test {
 		memset(&cg_namespace_table, 0, sizeof(cg_namespace_table));
 
 		for (i = 0; i < CONTROLLERS_CNT; i++) {
-			snprintf(cg_mount_table[i].name, FILENAME_MAX,
+			snprintf(cg_mount_table[i].name, CONTROL_NAMELEN_MAX,
 				 "%s", CONTROLLERS[i]);
 			cg_mount_table[i].version = VERSIONS[i];
 
