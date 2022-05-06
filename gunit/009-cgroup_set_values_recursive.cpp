@@ -85,7 +85,7 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 	char *val;
 	FILE *f;
 
-	ret = snprintf(ctrlr.name, FILENAME_MAX - 1, "cpu");
+	ret = snprintf(ctrlr.name, CONTROL_NAMELEN_MAX, "cpu");
 	ASSERT_GT(ret, 0);
 
 	for (i = 0; i < NAMES_CNT; i++) {
