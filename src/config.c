@@ -867,7 +867,8 @@ static int config_validate_namespaces(void)
 		 * Search through the mount table to locate which subsystems
 		 * are mounted together.
 		 */
-		while (!strncmp(cg_mount_table[j].mount.path, mount_path,
+		while (j < cg_controller_max &&
+				!strncmp(cg_mount_table[j].mount.path, mount_path,
 							FILENAME_MAX)) {
 			if (!namespace && cg_namespace_table[j]) {
 				/* In case namespace is not setup, set it up */

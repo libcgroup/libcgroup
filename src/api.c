@@ -90,8 +90,14 @@ static char cg_cgroup_v2_mount_path[FILENAME_MAX];
 /* Namespace */
 __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
+/* Count of cgroup mount points */
+int cg_controller_max;
+
+/* Table of cgroup mount points, allocated based on cg_controller_max */
+struct cg_mount_table_s *cg_mount_table;
+
+/* Lock for the cg_mount_table */
 pthread_rwlock_t cg_mount_table_lock = PTHREAD_RWLOCK_INITIALIZER;
-struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 
 /* Cgroup v2 mount paths, with empty controllers */
 struct cg_mount_point *cg_cgroup_v2_empty_mount_paths;
@@ -404,7 +410,7 @@ int cgroup_test_subsys_mounted(const char *name)
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		if (strncmp(cg_mount_table[i].name, name,
 			    sizeof(cg_mount_table[i].name)) == 0) {
 			pthread_rwlock_unlock(&cg_mount_table_lock);
@@ -1104,7 +1110,7 @@ static void cgroup_cg_mount_table_append(const char *name,
 {
 	int i = *mnt_tbl_idx;
 
-	strncpy(cg_mount_table[i].name,	name, FILENAME_MAX);
+	strncpy(cg_mount_table[i].name, name, FILENAME_MAX);
 	cg_mount_table[i].name[FILENAME_MAX-1] = '\0';
 
 	strncpy(cg_mount_table[i].mount.path, mount_path, FILENAME_MAX);
@@ -1332,18 +1338,17 @@ out:
 	return ret;
 }
 
-/*
- * Free global variables filled by previous cgroup_init(). This function
- * should be called with cg_mount_table_lock taken.
- */
-static void cgroup_free_cg_mount_table(void)
+static void _cgroup_free_cg_mount_table(void)
 {
 	struct cg_mount_point *mount, *tmp;
 	int i;
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
-		mount = cg_mount_table[i].mount.next;
+	if (cg_mount_table == NULL)
+		return;
 
+	for (i = 0; i < cg_controller_max; i++) {
+
+		mount = cg_mount_table[i].mount.next;
 		while (mount) {
 			tmp = mount;
 			mount = mount->next;
@@ -1351,10 +1356,190 @@ static void cgroup_free_cg_mount_table(void)
 		}
 	}
 
-	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
+	free(cg_mount_table);
+
+	cg_controller_max = 0;
+}
+
+/*
+ * Free global variables filled by previous cgroup_init(). This function
+ * should be called with cg_mount_table_lock taken.
+ */
+static void cgroup_free_cg_mount_table(void)
+{
+	_cgroup_free_cg_mount_table();
+
 	memset(&cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
 	memset(&cg_cgroup_v2_empty_mount_paths, 0,
 	       sizeof(cg_cgroup_v2_empty_mount_paths));
+}
+
+static void cgroup_v1_count_controllers(struct mntent *mnt_ent,
+				        char *controllers[CG_CONTROLLER_MAX],
+				        int *controllers_count)
+{
+	static unsigned int controller_bitmap = 0;
+	int count_setbits = 0;
+	unsigned int cb = 0;
+	char *mntopt;
+	int i;
+
+	/*
+	 * Set a bit in controller_bitmap.  The bit set is the index
+	 * of controllers and for every duplicate mount, the bit is
+	 * set again and at the end giving us a count of unique
+	 * controllers mount points.
+	 */
+	for (i = 0; controllers[i] != NULL; i++) {
+		mntopt = hasmntopt(mnt_ent, controllers[i]);
+		if (mntopt == NULL)
+			continue;
+
+		controller_bitmap |= 1U << i;
+	}
+
+	cb = controller_bitmap;
+	while (cb) {
+		cb &= (cb - 1);
+		count_setbits++;
+	}
+
+	*controllers_count = count_setbits;
+}
+
+static int cgroup_v2_count_controllers(struct mntent *mnt_ent,
+				       int *controllers_count)
+{
+	char line[LL_MAX], *ret_c = NULL, *stok_buff = NULL;
+	char cgroup_controllers_path[FILENAME_MAX];
+	FILE *controllers_file = NULL;
+	int ret = 0;
+
+	*controllers_count = 0;
+
+	snprintf(cgroup_controllers_path, FILENAME_MAX, "%s/%s",
+		 mnt_ent->mnt_dir, CGV2_CONTROLLERS_FILE);
+
+	controllers_file = fopen(cgroup_controllers_path, "re");
+	if (controllers_file == NULL) {
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	ret_c = fgets(line, LL_MAX, controllers_file);
+	fclose(controllers_file);
+
+	if (ret_c == NULL) {
+		ret = ECGEOF;
+		goto err;
+	}
+
+	/* Remove the trailing newline */
+	ret_c[strlen(ret_c) - 1] = '\0';
+
+	/*
+	 * cgroup.controllers returns a list of available controllers in
+	 * the following format:
+	 *	cpuset cpu io memory pids rdma
+	 */
+	strtok_r(ret_c, " ", &stok_buff);
+	do {
+		*controllers_count += 1;
+	} while (strtok_r(NULL, " ", &stok_buff));
+
+err:
+	return ret;
+}
+
+/*
+ * Allocate the cg_mount_table dynamically of the size cg_controller_max, that
+ * is calculated based on the cgroup mount points with non-duplicate controller
+ * hierarchy.  This function expects the caller to hold the cg_mount_table_lock
+ * lock.
+ */
+static int cgroup_alloc_cg_mount_table(char *controllers[CG_CONTROLLER_MAX])
+{
+	int cgroup_v2_controllers_count = 0;
+	int cgroup_v1_controllers_count = 0;
+	FILE *proc_mount = NULL;
+	struct mntent *mnt_ent;
+	char *mntopt;
+	int ret = 0;
+
+	proc_mount = fopen("/proc/mounts", "re");
+	if (!proc_mount) {
+		cgroup_err("cannot open /proc/mounts: %s\n", strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	while ((mnt_ent = getmntent(proc_mount)) != NULL) {
+
+		if (strcmp(mnt_ent->mnt_type, "cgroup") == 0) {
+			/* cgroup v1 named hirerachy are unique */
+			mntopt = hasmntopt(mnt_ent, "name");
+			if (mntopt) {
+				cg_controller_max += 1;
+				continue;
+			}
+
+			cgroup_v1_count_controllers(mnt_ent, controllers,
+						&cgroup_v1_controllers_count);
+			continue;
+		}
+
+		if (strcmp(mnt_ent->mnt_type, "cgroup2") == 0) {
+			ret = cgroup_v2_count_controllers(mnt_ent,
+						&cgroup_v2_controllers_count);
+			/*
+			 * There can be cgroup v2 mount points with empty
+			 * cgroup.controllers file. Example, the unified
+			 * cgroup v2 systemd hirerachy.
+			 */
+			if (ret == ECGEOF) {
+				ret = 0;
+				continue;
+			}
+
+			if (ret) {
+				last_errno = errno;
+				ret = ECGOTHER;
+				goto err;
+			}
+			cg_controller_max += cgroup_v2_controllers_count;
+		}
+	}
+	cg_controller_max += cgroup_v1_controllers_count;
+
+	fclose(proc_mount);
+
+	if (cg_controller_max == 0) {
+		cgroup_err("Found no cgroups mounted\n");
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	cgroup_dbg("Setting cg_controller_max to %d\n", cg_controller_max);
+
+	cg_mount_table = malloc(cg_controller_max *
+			        sizeof(struct cg_mount_table_s));
+	if (cg_mount_table == NULL) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	return ret;
+
+err:
+	if (proc_mount)
+		fclose(proc_mount);
+
+	cgroup_free_cg_mount_table();
+
+	return ret;
 }
 
 /*
@@ -1533,6 +1718,10 @@ int cgroup_init(void)
 	if (ret)
 		goto unlock_exit;
 
+	ret = cgroup_alloc_cg_mount_table(controllers);
+	if (ret)
+		goto unlock_exit;
+
 	ret = cgroup_populate_mount_points(controllers);
 	if (ret)
 		goto unlock_exit;
@@ -1645,7 +1834,7 @@ char *cg_build_path_locked(const char *name, char *path,
 		return path;
 	}
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		/* Two ways to successfully move forward here:
 		 * 1. The "type" controller matches the name of a mounted
 		 *    controller
@@ -1663,8 +1852,8 @@ char *cg_build_path_locked(const char *name, char *path,
 				if (ret >= FILENAME_MAX) {
 					cgroup_dbg("filename too long");
 					cgroup_dbg(":%s/%s/",
-						   cg_mount_table[i].mount.path,
-						   cg_namespace_table[i]);
+					   cg_mount_table[i].mount.path,
+					   cg_namespace_table[i]);
 				}
 			} else {
 				ret = snprintf(path, FILENAME_MAX, "%s/",
@@ -1672,7 +1861,7 @@ char *cg_build_path_locked(const char *name, char *path,
 				if (ret >= FILENAME_MAX) {
 					cgroup_dbg("filename too long");
 					cgroup_dbg(":%s/",
-						   cg_mount_table[i].mount.path);
+						cg_mount_table[i].mount.path);
 				}
 			}
 
@@ -1912,16 +2101,15 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 	}
 	if (!cgroup) {
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
-		for (i = 0; i < CG_CONTROLLER_MAX &&
-				cg_mount_table[i].name[0] != '\0'; i++) {
-			ret = cgroupv2_controller_enabled(cgroup->name,
-				cgroup->controller[i]->name);
+		for (i = 0; i < cg_controller_max; i++) {
+			ret = cgroupv2_controller_enabled(
+				cgroup->name, cgroup->controller[i]->name);
 			if (ret)
 				return ret;
 
-			ret = cgroup_build_tasks_procs_path(path,
-				sizeof(path), cgroup->name,
-				cgroup->controller[i]->name);
+			ret = cgroup_build_tasks_procs_path(
+				path, sizeof(path),
+				cgroup->name, cgroup->controller[i]->name);
 			if (ret)
 				return ret;
 
@@ -2361,7 +2549,7 @@ STATIC int cgroupv2_subtree_control_recursive(char *path,
 	size_t mount_len;
 	int i, error = 0;
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		if (strncmp(cg_mount_table[i].name, ctrl_name,
 			    sizeof(cg_mount_table[i].name)) == 0) {
 			found_mount = true;
@@ -2814,7 +3002,7 @@ static int is_cgrp_ctrl_shared_mnt(char *controller)
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 
 		if (strncmp(cg_mount_table[i].name, controller,
 			    sizeof(cg_mount_table[i].name)) == 0 &&
@@ -3393,7 +3581,8 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup,
 	 * some sort of a flag, but this is fine for now.
 	 */
 
-	cg_build_path_locked(cgroup->name, path, cg_mount_table[cg_index].name);
+	cg_build_path_locked(cgroup->name, path,
+			     cg_mount_table[cg_index].name);
 	strncat(path, d_name, sizeof(path) - strlen(path));
 
 	error = stat(path, &stat_buffer);
@@ -3490,14 +3679,12 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 	}
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	for (i = 0; i < CG_CONTROLLER_MAX &&
-			cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		struct cgroup_controller *cgc;
 		struct stat stat_buffer;
 		int path_len;
 
-		if (!cg_build_path_locked(NULL, path,
-					cg_mount_table[i].name))
+		if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
 			continue;
 
 		path_len = strlen(path);
@@ -3656,8 +3843,7 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid,
 		if (strcmp(controller, "*") == 0) {
 			pthread_rwlock_rdlock(&cg_mount_table_lock);
 
-			for (j = 0; j < CG_CONTROLLER_MAX &&
-				cg_mount_table[j].name[0] != '\0'; j++) {
+			for (j = 0; j < cg_controller_max; j++) {
 				cgroup_dbg("Adding controller %s\n",
 					   cg_mount_table[j].name);
 				cptr = cgroup_add_controller(cgroup,
@@ -5206,7 +5392,7 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 
-	if (cg_mount_table[*pos].name[0] == '\0') {
+	if (*pos >= cg_controller_max) {
 		ret = ECGEOF;
 		goto out_unlock;
 	}
@@ -5666,7 +5852,7 @@ int cgroup_get_subsys_mount_point(const char *controller, char **mount_point)
 		return ECGINVAL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		if (strncmp(cg_mount_table[i].name, controller, FILENAME_MAX))
 			continue;
 
@@ -5981,7 +6167,7 @@ int cgroup_get_subsys_mount_point_begin(const char *controller, void **handle,
 		return ECGINVAL;
 
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++)
+	for (i = 0; i < cg_controller_max; i++)
 		if (strcmp(controller, cg_mount_table[i].name) == 0)
 			break;
 
@@ -6049,7 +6235,7 @@ int cgroup_get_controller_version(const char * const controller,
 
 	*version = CGROUP_UNK;
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		if (strncmp(cg_mount_table[i].name, controller,
 			    sizeof(cg_mount_table[i].name)) == 0) {
 			*version = cg_mount_table[i].version;
@@ -6115,7 +6301,7 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 
-	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+	for (i = 0; i < cg_controller_max; i++) {
 		if (cg_mount_table[i].version != cgrp_version)
 			continue;
 
