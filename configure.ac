@@ -47,7 +47,7 @@ AC_ARG_ENABLE([bindings],
 			with_bindings=true
 		fi
 	],
-	[with_bindings = false])
+	[with_bindings=false])
 AM_CONDITIONAL([WITH_BINDINGS], [test x$with_bindings = xtrue])
 
 # Process command line options
