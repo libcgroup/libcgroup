@@ -48,6 +48,7 @@ static void usage(int status, const char *program_name)
 	info("  -g <controllers>:<path>	Control group to be ");
 	info("displayed (-g is optional)\n");
 	info("  -h, --help			Display this help\n");
+	info("(Note: currently supported on cgroups v1 only)\n");
 }
 
 /*
