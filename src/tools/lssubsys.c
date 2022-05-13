@@ -45,6 +45,7 @@ static void usage(int status, const char *program_name)
 	info("hierarchies\n");
 	info("  -m, --mount-points		Display mount points\n");
 	info("  -M, --all-mount-points	Display all mount points\n");
+	info("(Note: currently supported on cgroups v1 only)\n");
 }
 
 static int print_controller_mount(const char *controller, int flags,
