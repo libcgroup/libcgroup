@@ -528,6 +528,9 @@ end:
 		cv->multiline_value = NULL;
 	}
 
+	if ((FILE *)handle)
+		fclose((FILE *)handle);
+
 	return ret;
 }
 
@@ -625,9 +628,10 @@ static int fill_empty_controller(struct cgroup * const cg,
 		}
 	}
 
-	closedir(dir);
-
 out:
+	if (dir)
+		closedir(dir);
+
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }

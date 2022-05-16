@@ -4718,6 +4718,7 @@ int cgroup_read_value_end(void **handle)
 
 	fp = (FILE *)*handle;
 	fclose(fp);
+	*handle = NULL;
 
 	return 0;
 }
