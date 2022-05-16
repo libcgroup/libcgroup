@@ -52,6 +52,7 @@ static void usage(int status, const char *program_name)
 	printf("  -g <controllers>:<path>	Control group to be displayed "\
 		"(-g is optional)\n");
 	printf("  -h, --help			Display this help\n");
+	printf("(Note: currently supported on cgroups v1 only)\n");
 }
 
 /*
