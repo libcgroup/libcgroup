@@ -143,8 +143,8 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	ecg_list = calloc(argc, sizeof(struct ext_cgroup_record *));
-	if (cgroup_list == NULL) {
+	ecg_list = calloc(argc, sizeof(struct ext_cgroup_record));
+	if (ecg_list == NULL) {
 		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
