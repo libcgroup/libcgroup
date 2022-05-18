@@ -26,7 +26,7 @@ def prereqs(config):
     # This causes issues with the error handling of this test
     if not config.args.container:
         result = consts.TEST_SKIPPED
-        cause = 'This test cannot be run outside of a container'
+        cause = 'This test must be run within a container'
         return result, cause
 
     return result, cause
