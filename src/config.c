@@ -976,8 +976,10 @@ static int config_order_namespace_table(void)
 				}
 			}
 		}
-		if (!flag)
-			return ECGNAMESPACECONTROLLER;
+		if (!flag) {
+			error = ECGNAMESPACECONTROLLER;
+			break;
+		}
 	}
 error_out:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
