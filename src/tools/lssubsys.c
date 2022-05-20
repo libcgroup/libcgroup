@@ -89,7 +89,7 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 {
 	struct controller_data info;
 	enum cg_version_t version;
-	cont_name_t cont_names;
+	cont_name_t cont_names = "\0";
 	cont_name_t cont_name;
 	int first = 1;
 	void *handle;
