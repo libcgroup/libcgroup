@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	int nv_number = 0;
 	int nv_max = 0;
 
-	char src_cg_path[FILENAME_MAX];
+	char src_cg_path[FILENAME_MAX] = "\0";
 	struct cgroup *src_cgroup;
 	struct cgroup *cgroup;
 
