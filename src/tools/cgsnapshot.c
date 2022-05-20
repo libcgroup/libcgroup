@@ -542,7 +542,7 @@ static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
 static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			     const char *program_name)
 {
-	char controllers[CG_CONTROLLER_MAX][FILENAME_MAX];
+	char controllers[CG_CONTROLLER_MAX][FILENAME_MAX] = {"\0"};
 	struct cgroup_mount_point controller;
 	char path[FILENAME_MAX];
 	void *handle;
