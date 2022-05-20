@@ -544,7 +544,7 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 	char path[FILENAME_MAX];
 	struct cgroup_mount_point controller;
 
-	char controllers[CG_CONTROLLER_MAX][FILENAME_MAX];
+	char controllers[CG_CONTROLLER_MAX][FILENAME_MAX] = {"\0"};
 	int max = 0;
 
 	path[0] = '\0';
