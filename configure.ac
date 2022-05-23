@@ -134,6 +134,18 @@ AC_ARG_ENABLE([opaque-hierarchy],
 		fi
 	], [])
 
+AC_ARG_ENABLE([tests],
+      [AS_HELP_STRING([--enable-tests],[compile libcgroup tests [default=yes]])],
+      [
+		if test "x$enableval" == xno; then
+			with_tests=false
+		else
+			with_tests=true
+		fi
+       ],
+       [with_tests=true])
+AM_CONDITIONAL([WITH_TESTS], [test x$with_tests = xtrue])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -198,9 +210,6 @@ fi
 AX_CODE_COVERAGE
 
 AC_CONFIG_FILES([Makefile
-	tests/Makefile
-	tests/ftests/Makefile
-	tests/gunit/Makefile
 	src/Makefile
 	src/daemon/Makefile
 	src/tools/Makefile
@@ -218,6 +227,10 @@ AC_CONFIG_FILES([Makefile
 	doc/man/Makefile
 	dist/Makefile
 	libcgroup.pc])
+AM_COND_IF([WITH_TESTS],
+	[AC_CONFIG_FILES([tests/Makefile
+		tests/ftests/Makefile
+		tests/gunit/Makefile])])
 AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
