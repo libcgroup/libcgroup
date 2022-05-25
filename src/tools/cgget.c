@@ -605,10 +605,8 @@ static int fill_empty_controller(struct cgroup * const cg,
 			continue;
 
 		ret = cgroup_fill_cgc(ctrl_dir, cg, cgc, i);
-		if (ret == ECGFAIL) {
-			closedir(dir);
+		if (ret == ECGFAIL)
 			goto out;
-		}
 
 		if (cgc->index > 0) {
 			cgc->values[cgc->index - 1]->dirty = false;
@@ -625,9 +623,10 @@ static int fill_empty_controller(struct cgroup * const cg,
 		}
 	}
 
-	closedir(dir);
-
 out:
+	if (dir)
+		closedir(dir);
+
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return ret;
 }
