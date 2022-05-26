@@ -128,6 +128,7 @@ const char * const cgroup_strerror_codes[] = {
 	"This kernel does not support this feature",
 	"Value setting does not succeed",
 	"Failed to remove a non-empty group",
+	"Failed to convert from cgroup v1 to/from cgroup v2",
 };
 
 static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
