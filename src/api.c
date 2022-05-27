@@ -2611,7 +2611,7 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 				 const struct cgroup_controller * const controller,
 				 int ignore_ownership)
 {
-	enum cg_version_t version;
+	enum cg_version_t version = CGROUP_UNK;
 	char *fts_path[2];
 	char *base = NULL;
 	char *path = NULL;
