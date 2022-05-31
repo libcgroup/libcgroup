@@ -370,10 +370,8 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 			if (!group)
 				goto group_task_error;
 
-			getgrnam_r(value, group, buffer,
-					CGROUP_BUFFER_LEN, &group_buffer);
-
-			if (group_buffer == NULL) {
+			if (getgrnam_r(value, group, buffer,
+				       CGROUP_BUFFER_LEN, &group_buffer) != 0) {
 				free(group);
 				goto group_task_error;
 			}
@@ -482,10 +480,8 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			if (!group)
 				goto admin_error;
 
-			getgrnam_r(value, group, buffer,
-					CGROUP_BUFFER_LEN, &group_buffer);
-
-			if (group_buffer == NULL) {
+			if (getgrnam_r(value, group, buffer,
+				       CGROUP_BUFFER_LEN, &group_buffer) != 0) {
 				free(group);
 				goto admin_error;
 			}
