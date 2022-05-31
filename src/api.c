@@ -5215,8 +5215,10 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 	}
 
 	strncpy(info->name, cg_mount_table[*pos].name, FILENAME_MAX - 1);
+	info->name[FILENAME_MAX - 1] = '\0';
 
 	strncpy(info->path, cg_mount_table[*pos].mount.path, FILENAME_MAX - 1);
+	info->path[FILENAME_MAX - 1] = '\0';
 
 	(*pos)++;
 	*handle = pos;
