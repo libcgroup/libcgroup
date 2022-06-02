@@ -78,7 +78,9 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
 	if (!controller)
 		return NULL;
 
-	strncpy(controller->name, name, sizeof(controller->name) - 1);
+	strncpy(controller->name, name, CONTROL_NAMELEN_MAX - 1);
+	controller->name[CONTROL_NAMELEN_MAX - 1] = '\0';
+
 	controller->cgroup = cgroup;
 	controller->index = 0;
 
