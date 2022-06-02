@@ -1172,6 +1172,9 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 		cgroup_cg_mount_table_append(controllers[i], ent->mnt_dir,
 					     CGROUP_V1, mnt_tbl_idx,
 					     ent->mnt_opts, shared_mnt);
+
+		if ((*mnt_tbl_idx) >= CG_CONTROLLER_MAX)
+			goto out;
 	}
 
 	/*
@@ -1325,6 +1328,9 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 		cgroup_cg_mount_table_append(controller, ent->mnt_dir,
 					     CGROUP_V2, mnt_tbl_idx,
 					     controller, shared_mnt);
+
+		if ((*mnt_tbl_idx) >= CG_CONTROLLER_MAX)
+			goto out;
 	} while ((controller = strtok_r(NULL, " ", &stok_buff)));
 
 out:
@@ -1498,6 +1504,11 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 	if (found_mnt >= CG_CONTROLLER_MAX) {
 		cgroup_err("Mount points exceeds CG_CONTROLLER_MAX");
 		ret = ECGMAXVALUESEXCEEDED;
+		/*
+		 * There are loops in the libcgroup codebase that expect there
+		 * to be a null name entry at the end of the cg_mount_table[].
+		 */
+		cg_mount_table[found_mnt - 1].name[0] = '\0';
 	}
 
 err:
