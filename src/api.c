@@ -6085,7 +6085,9 @@ static int search_and_append_mnt_path(struct cg_mount_point **mount_point,
 		return ECGOTHER;
 	}
 
-	strcpy(mnt_point->path, path);
+	strncpy(mnt_point->path, path, FILENAME_MAX - 1);
+	mnt_point->path[FILENAME_MAX - 1] = '\0';
+
 	mnt_point->next = NULL;
 
 	if (*mount_point == NULL)
