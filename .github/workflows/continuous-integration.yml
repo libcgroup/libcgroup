@@ -113,7 +113,9 @@ jobs:
 
     steps:
     - name: Install container dependencies
-      run: sudo apt-get install lxc lxd
+      run: |
+        sudo apt-get update
+        sudo apt-get install lxc lxd
     - uses: actions/checkout@v2
       with:
         submodules: false
@@ -133,7 +135,9 @@ jobs:
 
     steps:
     - name: Install container dependencies
-      run: sudo apt-get install lxc lxd
+      run: |
+        sudo apt-get update
+        sudo apt-get install lxc lxd
     - uses: actions/checkout@v2
       with:
         submodules: false
@@ -188,7 +192,9 @@ jobs:
         sudo su -c "echo +cpuset > /sys/fs/cgroup/unified/cgroup.subtree_control"
         cat /sys/fs/cgroup/unified/cgroup.subtree_control
     - name: Install container dependencies
-      run: sudo apt-get install lxc lxd
+      run: |
+        sudo apt-get update
+        sudo apt-get install lxc lxd
     - uses: actions/checkout@v2
       with:
         submodules: false
