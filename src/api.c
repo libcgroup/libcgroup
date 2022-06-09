@@ -1273,6 +1273,11 @@ out:
 	if (*mnt_tbl_idx >= CG_CONTROLLER_MAX) {
 		cgroup_err("Error: Mount points exceeds CG_CONTROLLER_MAX\n");
 		ret = ECGMAXVALUESEXCEEDED;
+		/*
+		 * There are loops in the libcgroup codebase that expect there
+		 * to be a null name entry at the end of the cg_mount_table[].
+		 */
+		cg_mount_table[CG_CONTROLLER_MAX - 1].name[0] = '\0';
 	}
 
 	return ret;
