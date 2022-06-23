@@ -622,6 +622,8 @@ struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 		}
 
 		strncpy(con, name_value[i].name, FILENAME_MAX - 1);
+		con[FILENAME_MAX - 1] = '\0';
+
 		strtok(con, ".");
 
 		/* find out whether we have to add the controller or
