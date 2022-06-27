@@ -599,14 +599,21 @@ void cgroup_config_cleanup_mount_table(void)
  */
 int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 {
+	char *ns_tbl_name, *ns_tbl_path;
+
 	if (namespace_table_index >= CG_CONTROLLER_MAX)
 		return 0;
 
 	pthread_rwlock_wrlock(&namespace_table_lock);
 
-	strcpy(config_namespace_table[namespace_table_index].name, name);
-	strcpy(config_namespace_table[namespace_table_index].mount.path,
-			nspath);
+	ns_tbl_name = config_namespace_table[namespace_table_index].name;
+	strncpy(ns_tbl_name, name, FILENAME_MAX - 1);
+	ns_tbl_name[FILENAME_MAX - 1] = '\0';
+
+	ns_tbl_path = config_namespace_table[namespace_table_index].mount.path;
+	strncpy(ns_tbl_path, nspath, FILENAME_MAX - 1);
+	ns_tbl_path[FILENAME_MAX - 1] = '\0';
+
 	config_namespace_table[namespace_table_index].mount.next = NULL;
 	namespace_table_index++;
 
