@@ -32,30 +32,23 @@ static struct cgroup_string_list cfg_files;
 static void usage(int status, char *progname)
 {
 	if (status != 0) {
-		err("Wrong input parameters, ");
-		err("try %s '-h' for more information.\n", progname);
+		err("Wrong input parameters, try %s '-h' for more information.\n", progname);
 		return;
 	}
 
 	info("Usage: %s [-h] [-f mode] [-d mode] [-s mode] ", progname);
-	info("[-t <tuid>:<tgid>] [-a <agid>:<auid>] [-l FILE] ");
-	info("[-L DIR] ...\n");
+	info("[-t <tuid>:<tgid>] [-a <agid>:<auid>] [-l FILE] [-L DIR] ...\n");
 	info("Parse and load the specified cgroups configuration file\n");
 	info("  -a <tuid>:<tgid>		Default owner of groups ");
 	info("files and directories\n");
-	info("  -d, --dperm=mode		Default group directory ");
-	info("permissions\n");
-	info("  -f, --fperm=mode		Default group file ");
-	info("permissions\n");
+	info("  -d, --dperm=mode		Default group directory permissions\n");
+	info("  -f, --fperm=mode		Default group file permissions\n");
 	info("  -h, --help			Display this help\n");
-	info("  -l, --load=FILE		Parse and load the cgroups ");
-	info("configuration file\n");
+	info("  -l, --load=FILE		Parse and load the cgroups configuration file\n");
 	info("  -L, --load-directory=DIR	Parse and load the cgroups ");
 	info("configuration files from a directory\n");
-	info("  -s, --tperm=mode		Default tasks file ");
-	info("permissions\n");
-	info("  -t <tuid>:<tgid>		Default owner of the tasks ");
-	info("file\n");
+	info("  -s, --tperm=mode		Default tasks file permissions\n");
+	info("  -t <tuid>:<tgid>		Default owner of the tasks file\n");
 }
 
 int main(int argc, char *argv[])
@@ -85,7 +78,6 @@ int main(int argc, char *argv[])
 	int c, i;
 
 	cgroup_set_default_logger(-1);
-
 	if (argc < 2) {
 		usage(1, argv[0]);
 		return -1;
@@ -93,8 +85,7 @@ int main(int argc, char *argv[])
 
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0],
-		    cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -102,8 +93,7 @@ int main(int argc, char *argv[])
 	if (error)
 		goto err;
 
-	while ((c = getopt_long(argc, argv, "hl:L:t:a:d:f:s:", options,
-				NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "hl:L:t:a:d:f:s:", options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -112,14 +102,12 @@ int main(int argc, char *argv[])
 		case 'l':
 			error = cgroup_string_list_add_item(&cfg_files, optarg);
 			if (error) {
-				err("%s: cannot add file to list, ", argv[0]);
-				err("out of memory?\n");
+				err("%s: cannot add file to list, out of memory?\n", argv[0]);
 				goto err;
 			}
 			break;
 		case 'L':
-			cgroup_string_list_add_directory(&cfg_files, optarg,
-							 argv[0]);
+			cgroup_string_list_add_directory(&cfg_files, optarg, argv[0]);
 			break;
 		case 'a':
 			/* set admin uid/gid */
@@ -174,14 +162,12 @@ int main(int argc, char *argv[])
 
 	error = cgroup_set_uid_gid(default_group, tuid, tgid, auid, agid);
 	if (error) {
-		err("%s: cannot set default UID and GID: %s\n", argv[0],
-		    cgroup_strerror(error));
+		err("%s: cannot set default UID and GID: %s\n", argv[0], cgroup_strerror(error));
 		goto free_cgroup;
 	}
 
 	if (dirm_change | filem_change) {
-		cgroup_set_permissions(default_group, dir_mode, file_mode,
-				       tasks_mode);
+		cgroup_set_permissions(default_group, dir_mode, file_mode, tasks_mode);
 	}
 
 	error = cgroup_config_set_default(default_group);
@@ -194,8 +180,8 @@ int main(int argc, char *argv[])
 	for (i = 0; i < cfg_files.count; i++) {
 		ret = cgroup_config_load_config(cfg_files.items[i]);
 		if (ret) {
-			err("%s; error loading %s: %s\n", argv[0],
-			    cfg_files.items[i], cgroup_strerror(ret));
+			err("%s; error loading %s: %s\n", argv[0], cfg_files.items[i],
+			    cgroup_strerror(ret));
 			if (!error)
 				error = ret;
 		}
