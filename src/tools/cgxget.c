@@ -20,10 +20,10 @@
 #include <stdio.h>
 
 
-#define MODE_SHOW_HEADERS		1
-#define MODE_SHOW_NAMES			2
+#define MODE_SHOW_HEADERS	1
+#define MODE_SHOW_NAMES		2
 
-#define LL_MAX				100
+#define LL_MAX			100
 
 #ifndef LIBCG_LIB
 static const struct option long_options[] = {
@@ -40,38 +40,27 @@ static const struct option long_options[] = {
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		err("Wrong input parameters, ");
-		err("try %s -h' for more information.\n", program_name);
+		err("Wrong input parameters, try %s -h' for more information.\n", program_name);
 		return;
 	}
 
-	info("Usage: %s [-nv] [-r <name>] [-g <controllers>] ",
-	     program_name);
-	info("[-a] <path> ...\n");
-	info("   or: %s [-nv] [-r <name>] -g <controllers>:<path> ...\n",
-	     program_name);
+	info("Usage: %s [-nv] [-r <name>] [-g <controllers>] [-a] <path> ...\n", program_name);
+	info("   or: %s [-nv] [-r <name>] -g <controllers>:<path> ...\n", program_name);
 	info("Print parameter(s) of given group(s).\n");
-	info("  -1, --v1			Provided parameters are in ");
-	info("v1 format\n");
-	info("  -2, --v2			Provided parameters are in ");
-	info("v2 format\n");
+	info("  -1, --v1			Provided parameters are in v1 format\n");
+	info("  -2, --v2			Provided parameters are in v2 format\n");
 	info("  -i, --ignore-unmappable       Do not return an error for ");
 	info("settings that cannot be converted\n");
-	info("  -a, --all			Print info about all relevant");
-	info(" controllers\n");
-	info("  -g <controllers>		Controller which info should");
-	info(" be displayed\n");
-	info("  -g <controllers>:<path>	Control group which info");
-	info(" should be displayed\n");
+	info("  -a, --all			Print info about all relevant controllers\n");
+	info("  -g <controllers>		Controller which info should be displayed\n");
+	info("  -g <controllers>:<path>	Control group which info should be displayed\n");
 	info("  -h, --help			Display this help\n");
 	info("  -n				Do not print headers\n");
 	info("  -r, --variable  <name>	Define parameter to display\n");
-	info("  -v, --values-only		Print only values, not ");
-	info("parameter names\n");
+	info("  -v, --values-only		Print only values, not parameter names\n");
 }
 
-static int get_controller_from_name(const char * const name,
-				    char **controller)
+static int get_controller_from_name(const char * const name, char **controller)
 {
 	char *dot;
 
@@ -91,8 +80,7 @@ static int get_controller_from_name(const char * const name,
 
 static int create_cg(struct cgroup **cg_list[], int * const cg_list_len)
 {
-	*cg_list = realloc(*cg_list,
-			   ((*cg_list_len) + 1) * sizeof(struct cgroup *));
+	*cg_list = realloc(*cg_list, ((*cg_list_len) + 1) * sizeof(struct cgroup *));
 	if ((*cg_list) == NULL)
 		return ECGCONTROLLERCREATEFAILED;
 
@@ -122,9 +110,9 @@ static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
 	}
 
 	/*
-	 * if "-r" was provided, then we know that the cgroup(s) will be an
-	 * optarg at the end with no flag.  Let's temporarily populate the
-	 * first cgroup with the requested control values.
+	 * if "-r" was provided, then we know that the cgroup(s) will be
+	 * an optarg at the end with no flag.  Let's temporarily populate
+	 * the first cgroup with the requested control values.
 	 */
 	cg = (*cg_list)[0];
 
@@ -173,9 +161,9 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	}
 
 	/*
-	 * if "-r" was provided, then we know that the cgroup(s) will be an
-	 * optarg at the end with no flag.  Let's temporarily populate the
-	 * first cgroup with the requested control values.
+	 * if "-r" was provided, then we know that the cgroup(s) will be
+	 * an optarg at the end with no flag.  Let's temporarily populate
+	 * the first cgroup with the requested control values.
 	 */
 	cg = (*cg_list)[0];
 
@@ -187,8 +175,7 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, cntl_value_controller);
 		if (!cgc) {
-			err("cgget: cannot find controller '%s'\n",
-			    cntl_value_controller);
+			err("cgget: cannot find controller '%s'\n", cntl_value_controller);
 			ret = ECGOTHER;
 			goto out;
 		}
@@ -203,8 +190,7 @@ out:
 	return ret;
 }
 
-static int parse_g_flag_no_colon(struct cgroup **cg_list[],
-				 int * const cg_list_len,
+static int parse_g_flag_no_colon(struct cgroup **cg_list[], int * const cg_list_len,
 				 const char * const ctrl_str)
 {
 	struct cgroup_controller *cgc;
@@ -223,9 +209,10 @@ static int parse_g_flag_no_colon(struct cgroup **cg_list[],
 	}
 
 	/*
-	 * if "-g <controller>" was provided, then we know that the cgroup(s)
-	 * will be an optarg at the end with no flag.  Let's temporarily
-	 * populate the first cgroup with the requested control values.
+	 * if "-g <controller>" was provided, then we know that the
+	 * cgroup(s) will be an optarg at the end with no flag.
+	 * Let's temporarily populate the first cgroup with the requested
+	 * control values.
 	 */
 	cg = *cg_list[0];
 
@@ -258,8 +245,7 @@ static int split_cgroup_name(const char * const ctrl_str, char *cg_name)
 	return 0;
 }
 
-static int split_controllers(const char * const in,
-			     char **ctrl[], int * const ctrl_len)
+static int split_controllers(const char * const in, char **ctrl[], int * const ctrl_len)
 {
 	char *copy, *tok, *colon, *saveptr = NULL;
 	int ret = 0;
@@ -298,8 +284,7 @@ out:
 	return ret;
 }
 
-static int parse_g_flag_with_colon(struct cgroup **cg_list[],
-				   int * const cg_list_len,
+static int parse_g_flag_with_colon(struct cgroup **cg_list[], int * const cg_list_len,
 				   const char * const ctrl_str)
 {
 	struct cgroup_controller *cgc;
@@ -347,8 +332,8 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	int ret = 0;
 
 	/*
-	 * The first cgroup was temporarily populated and requires
-	 * the user to provide a cgroup name as an opt
+	 * The first cgroup was temporarily populated and requires the
+	 * user to provide a cgroup name as an opt
 	 */
 	if (argv[optind] == NULL && first_cg_is_dummy) {
 		usage(1, argv[0]);
@@ -357,15 +342,14 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 
 	/*
 	 * The user has provided a cgroup and controller via the
-	 * -g <controller>:<cgroup> flag and has also provided a cgroup via
-	 * the optind.  This was not supported by the previous cgget
-	 * implementation.  Continue that approach.
+	 * -g <controller>:<cgroup> flag and has also provided a cgroup
+	 *  via the optind.  This was not supported by the previous
+	 * cgget implementation.  Continue that approach.
 	 *
 	 * Example of a command that will hit this code:
 	 *	$ cgget -g cpu:mycgroup mycgroup
 	 */
-	if (argv[optind] != NULL && (*cg_list_len) > 0 &&
-	    strcmp((*cg_list)[0]->name, "") != 0) {
+	if (argv[optind] != NULL && (*cg_list_len) > 0 && strcmp((*cg_list)[0]->name, "") != 0) {
 		usage(1, argv[0]);
 		exit(-1);
 	}
@@ -387,15 +371,13 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 			if (ret)
 				goto out;
 
-			strncpy((*cg_list)[(*cg_list_len) - 1]->name,
-				argv[optind],
+			strncpy((*cg_list)[(*cg_list_len) - 1]->name, argv[optind],
 				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
 		} else if (cg != NULL && strlen(cg->name) == 0) {
 			/*
 			 * this cgroup was created based upon control/value
 			 * pairs or with a -g <controller> option.  we'll
-			 * populate it with the parameter provided by the
-			 * user
+			 * populate it with the parameter provided by the user
 			 */
 			strncpy(cg->name, argv[optind], sizeof(cg->name) - 1);
 		} else {
@@ -408,8 +390,7 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 			if (ret)
 				goto out;
 
-			strncpy((*cg_list)[(*cg_list_len) - 1]->name,
-				argv[optind],
+			strncpy((*cg_list)[(*cg_list_len) - 1]->name, argv[optind],
 				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
 		}
 
@@ -420,9 +401,8 @@ out:
 	return ret;
 }
 
-static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
-		      int * const cg_list_len, int * const mode,
-		      enum cg_version_t * const version,
+static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * const cg_list_len,
+		      int * const mode, enum cg_version_t * const version,
 		      bool * const ignore_unmappable)
 {
 	bool do_not_fill_controller = false;
@@ -432,8 +412,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 	int c;
 
 	/* Parse arguments. */
-	while ((c = getopt_long(argc, argv, "r:hnvg:a12i", long_options,
-				NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "r:hnvg:a12i", long_options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -457,13 +436,11 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 			fill_controller = true;
 			if (strchr(optarg, ':') == NULL) {
 				first_cgroup_is_dummy = true;
-				ret = parse_g_flag_no_colon(cg_list,
-							cg_list_len, optarg);
+				ret = parse_g_flag_no_colon(cg_list, cg_list_len, optarg);
 				if (ret)
 					goto err;
 			} else {
-				ret = parse_g_flag_with_colon(cg_list,
-							cg_list_len, optarg);
+				ret = parse_g_flag_with_colon(cg_list, cg_list_len, optarg);
 				if (ret)
 					goto err;
 			}
@@ -495,8 +472,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[],
 		exit(1);
 	}
 
-	ret = parse_opt_args(argc, argv, cg_list, cg_list_len,
-			     first_cgroup_is_dummy);
+	ret = parse_opt_args(argc, argv, cg_list, cg_list_len, first_cgroup_is_dummy);
 	if (ret)
 		goto err;
 
@@ -505,8 +481,7 @@ err:
 }
 #endif /* !LIBCG_LIB */
 
-static int get_cv_value(struct control_value * const cv,
-			const char * const cg_name,
+static int get_cv_value(struct control_value * const cv, const char * const cg_name,
 			const char * const controller_name)
 {
 	bool is_multiline = false;
@@ -514,8 +489,8 @@ static int get_cv_value(struct control_value * const cv,
 	void *handle, *tmp;
 	int ret;
 
-	ret = cgroup_read_value_begin(controller_name, cg_name, cv->name,
-				      &handle, tmp_line, LL_MAX);
+	ret = cgroup_read_value_begin(controller_name, cg_name, cv->name, &handle, tmp_line,
+				      LL_MAX);
 	if (ret == ECGEOF)
 		goto read_end;
 	if (ret != 0) {
@@ -523,18 +498,16 @@ static int get_cv_value(struct control_value * const cv,
 			int tmp_ret;
 
 			/*
-			 * to maintain compatibility with an earlier version
-			 * of cgget, try to determine if the failure was due
-			 * to an invalid controller
+			 * to maintain compatibility with an earlier
+			 * version of cgget, try to determine if the
+			 * failure was due to an invalid controller
 			 */
 			tmp_ret = cgroup_test_subsys_mounted(controller_name);
 			if (tmp_ret == 0) {
-				err("cgget: cannot find controller '%s' in ",
-				    controller_name);
-				err("in group '%s'\n", cg_name);
+				err("cgget: cannot find controller '%s' in group '%s'\n",
+				    controller_name, cg_name);
 			} else {
-				err("variable file read failed %s\n",
-				    cgroup_strerror(ret));
+				err("variable file read failed %s\n", cgroup_strerror(ret));
 			}
 		}
 
@@ -601,8 +574,7 @@ static int indent_multiline_value(struct control_value * const cv)
 	return 0;
 }
 
-static int fill_empty_controller(struct cgroup * const cg,
-				 struct cgroup_controller * const cgc)
+static int fill_empty_controller(struct cgroup * const cg, struct cgroup_controller * const cgc)
 {
 	struct dirent *ctrl_dir = NULL;
 	char path[FILENAME_MAX];
@@ -616,8 +588,7 @@ static int fill_empty_controller(struct cgroup * const cg,
 			cg_mount_table[i].name[0] != '\0'; i++) {
 
 		if (strlen(cgc->name) == strlen(cg_mount_table[i].name) &&
-		    strncmp(cgc->name, cg_mount_table[i].name,
-			    strlen(cgc->name)) == 0) {
+		    strncmp(cgc->name, cg_mount_table[i].name, strlen(cgc->name)) == 0) {
 			found_mount = true;
 			break;
 		}
@@ -626,10 +597,8 @@ static int fill_empty_controller(struct cgroup * const cg,
 	if (found_mount == false)
 		goto out;
 
-	if (!cg_build_path_locked(NULL, path,
-				  cg_mount_table[i].name)) {
+	if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
 		goto out;
-	}
 
 	path_len = strlen(path);
 	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
@@ -661,12 +630,11 @@ static int fill_empty_controller(struct cgroup * const cg,
 			cgc->values[cgc->index - 1]->dirty = false;
 
 			/*
-			 * previous versions of cgget indented the second and
-			 * all subsequent lines.  continue that behavior
+			 * previous versions of cgget indented the second
+			 * and all subsequent lines. Continue that behavior
 			 */
 			if (strchr(cgc->values[cgc->index - 1]->value, '\n')) {
-				ret = indent_multiline_value(
-					cgc->values[cgc->index - 1]);
+				ret = indent_multiline_value(cgc->values[cgc->index - 1]);
 				if (ret)
 					goto out;
 			}
@@ -682,8 +650,7 @@ out:
 	return ret;
 }
 
-static int get_controller_values(struct cgroup * const cg,
-				 struct cgroup_controller * const cgc)
+static int get_controller_values(struct cgroup * const cg, struct cgroup_controller * const cgc)
 {
 	int ret = 0;
 	int i;
@@ -734,8 +701,7 @@ static int get_values(struct cgroup *cg_list[], int cg_list_len)
 	return ret;
 }
 
-static void print_control_values(const struct control_value * const cv,
-				 int mode)
+static void print_control_values(const struct control_value * const cv, int mode)
 {
 	if (mode & MODE_SHOW_NAMES)
 		info("%s: ", cv->name);
@@ -746,8 +712,7 @@ static void print_control_values(const struct control_value * const cv,
 		info("%s\n", cv->value);
 }
 
-static void print_controller(const struct cgroup_controller * const cgc,
-			     int mode)
+static void print_controller(const struct cgroup_controller * const cgc, int mode)
 {
 	int i;
 
@@ -778,8 +743,7 @@ static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
 }
 
 static int convert_cgroups(struct cgroup **cg_list[], int cg_list_len,
-			   enum cg_version_t in_version,
-			   enum cg_version_t out_version)
+			   enum cg_version_t in_version, enum cg_version_t out_version)
 {
 	struct cgroup **cg_converted_list;
 	int i = 0, j, ret = 0;
@@ -795,8 +759,8 @@ static int convert_cgroups(struct cgroup **cg_list[], int cg_list_len,
 			goto out;
 		}
 
-		ret = cgroup_convert_cgroup(cg_converted_list[i],
-			out_version, (*cg_list)[i], in_version);
+		ret = cgroup_convert_cgroup(cg_converted_list[i], out_version, (*cg_list)[i],
+					    in_version);
 		if (ret)
 			goto out;
 	}
@@ -808,8 +772,8 @@ out:
 			cgroup_free(&(cg_converted_list[i]));
 	} else {
 		/*
-		 * The conversion succeeded or was unmappable.  Free the old
-		 * list.
+		 * The conversion succeeded or was unmappable.
+		 * Free the old list.
 		 */
 		for (i = 0; i < cg_list_len; i++)
 			cgroup_free(cg_list[i]);
@@ -837,13 +801,11 @@ int main(int argc, char *argv[])
 
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0],
-		    cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
 
-	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version,
-			 &ignore_unmappable);
+	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version, &ignore_unmappable);
 	if (ret)
 		goto err;
 
@@ -876,8 +838,7 @@ err:
 #endif /* !LIBCG_LIB */
 
 #ifdef LIBCG_LIB
-int cgroup_cgxget(struct cgroup **cg,
-		  enum cg_version_t version, bool ignore_unmappable)
+int cgroup_cgxget(struct cgroup **cg, enum cg_version_t version, bool ignore_unmappable)
 {
 	struct cgroup *disk_cg, *out_cg;
 	int ret;
