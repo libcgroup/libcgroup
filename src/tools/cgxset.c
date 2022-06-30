@@ -72,26 +72,20 @@ static void usage(int status, const char *program_name)
 		return;
 	}
 
-	info("Usage: %s [-r <name=value>] <cgroup_path> ...\n",
-	     program_name);
-	info("   or: %s --copy-from <source_cgroup_path> ", program_name);
-	info("<cgroup_path> ...\n");
+	info("Usage: %s [-r <name=value>] <cgroup_path> ...\n", program_name);
+	info("   or: %s --copy-from <source_cgroup_path> <cgroup_path> ...\n", program_name);
 	info("Set the parameters of given cgroup(s)\n");
-	info("  -1, --v1                      Provided parameters are in ");
-	info("v1 format\n");
-	info("  -2, --v2                      Provided parameters are in ");
-	info("v2 format\n");
+	info("  -1, --v1                      Provided parameters are in v1 format\n");
+	info("  -2, --v2                      Provided parameters are in v2 format\n");
 	info("  -i, --ignore-unmappable       Do not return an error for ");
 	info("settings that cannot be converted\n");
-	info("  -r, --variable <name>			Define parameter ");
-	info("to set\n");
+	info("  -r, --variable <name>			Define parameter to set\n");
 	info("  --copy-from <source_cgroup_path>	Control group whose ");
 	info("parameters will be copied\n");
 }
 #endif /* !UNIT_TEST */
 
-STATIC int parse_r_flag(const char * const program_name,
-			const char * const name_value_str,
+STATIC int parse_r_flag(const char * const program_name, const char * const name_value_str,
 			struct control_value * const name_value)
 {
 	char *copy, *buf;
@@ -107,8 +101,7 @@ STATIC int parse_r_flag(const char * const program_name,
 	/* parse optarg value */
 	buf = strtok(copy, "=");
 	if (buf == NULL) {
-		err("%s: wrong parameter of option -r: %s\n", program_name,
-		    optarg);
+		err("%s: wrong parameter of option -r: %s\n", program_name, optarg);
 		ret = -1;
 		goto err;
 	}
@@ -124,8 +117,7 @@ STATIC int parse_r_flag(const char * const program_name,
 	buf++;
 
 	if (strlen(buf) == 0) {
-		err("%s: wrong parameter of option -r: %s\n", program_name,
-		    optarg);
+		err("%s: wrong parameter of option -r: %s\n", program_name, optarg);
 		ret = -1;
 		goto err;
 	}
@@ -159,14 +151,12 @@ int main(int argc, char *argv[])
 
 	/* no parametr on input */
 	if (argc < 2) {
-		err("Usage is %s -r <name=value> <relative path to cgroup>\n",
-		    argv[0]);
+		err("Usage is %s -r <name=value> <relative path to cgroup>\n", argv[0]);
 		return -1;
 	}
 
 	/* parse arguments */
-	while ((c = getopt_long (argc, argv,
-		"r:h12i", long_options, NULL)) != -1) {
+	while ((c = getopt_long (argc, argv, "r:h12i", long_options, NULL)) != -1) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -180,25 +170,19 @@ int main(int argc, char *argv[])
 			}
 			flags |= FL_RULES;
 
-			/*
-			 * add name-value pair to buffer
-			 * (= name_value variable)
-			 */
+			/* add name-value pair to buffer (= name_value variable) */
 			if (nv_number >= nv_max) {
 				nv_max += CG_NV_MAX;
 				name_value = (struct control_value *)
-					realloc(name_value,
-					nv_max * sizeof(struct control_value));
+					realloc(name_value, nv_max * sizeof(struct control_value));
 				if (!name_value) {
-					err("%s: not enough memory\n",
-					    argv[0]);
+					err("%s: not enough memory\n", argv[0]);
 					ret = -1;
 					goto err;
 				}
 			}
 
-			ret = parse_r_flag(argv[0], optarg,
-					   &name_value[nv_number]);
+			ret = parse_r_flag(argv[0], optarg, &name_value[nv_number]);
 			if (ret)
 				goto err;
 
@@ -253,8 +237,7 @@ int main(int argc, char *argv[])
 
 	/* copy the name-value pairs from -r options */
 	if ((flags & FL_RULES) != 0) {
-		src_cgroup = create_cgroup_from_name_value_pairs(
-						"tmp", name_value, nv_number);
+		src_cgroup = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
 		if (src_cgroup == NULL)
 			goto err;
 	}
@@ -271,8 +254,7 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(argv[optind]);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			err("%s: can't add new cgroup: %s\n", argv[0],
-			    cgroup_strerror(ret));
+			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
@@ -290,13 +272,13 @@ int main(int argc, char *argv[])
 			goto err;
 		}
 
-		ret = cgroup_convert_cgroup(converted_src_cgroup, CGROUP_DISK,
-					    src_cgroup, src_version);
+		ret = cgroup_convert_cgroup(converted_src_cgroup, CGROUP_DISK, src_cgroup,
+					    src_version);
 		if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
 			/*
 			 * The user has specified that we should ignore
-			 * any errors due to being unable to map from v1 to
-			 * v2 or vice versa
+			 * any errors due to being unable to map from
+			 * v1 to v2 or vice versa
 			 */
 			ret = 0;
 		else if (ret)
@@ -308,8 +290,7 @@ int main(int argc, char *argv[])
 		/* modify cgroup based on values of the new one */
 		ret = cgroup_modify_cgroup(cgroup);
 		if (ret) {
-			err("%s: cgroup modify error: %s\n", argv[0],
-			    cgroup_strerror(ret));
+			err("%s: cgroup modify error: %s\n", argv[0], cgroup_strerror(ret));
 			goto cgroup_free_err;
 		}
 
@@ -329,8 +310,8 @@ err:
 #endif /* !UNIT_TEST */
 
 #ifdef LIBCG_LIB
-int cgroup_cgxset(const struct cgroup * const cgroup,
-		  enum cg_version_t version, bool ignore_unmappable)
+int cgroup_cgxset(const struct cgroup * const cgroup, enum cg_version_t version,
+		  bool ignore_unmappable)
 {
 	struct cgroup *converted_cgroup;
 	int ret;
@@ -341,13 +322,11 @@ int cgroup_cgxset(const struct cgroup * const cgroup,
 		goto err;
 	}
 
-	ret = cgroup_convert_cgroup(converted_cgroup, CGROUP_DISK,
-				    cgroup, version);
+	ret = cgroup_convert_cgroup(converted_cgroup, CGROUP_DISK, cgroup, version);
 	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
 		/*
-		 * The user has specified that we should ignore
-		 * any errors due to being unable to map from v1 to
-		 * v2 or vice versa
+		 * The user has specified that we should ignore any errors
+		 * due to being unable to map from v1 to v2 or vice versa
 		 */
 		ret = 0;
 	else if (ret)
