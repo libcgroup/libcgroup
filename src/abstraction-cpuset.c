@@ -20,11 +20,9 @@
 static const char * const MEMBER = "member";
 static const char * const ROOT = "root";
 
-int cgroup_convert_cpuset_to_exclusive(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpuset_to_exclusive(struct cgroup_controller * const dst_cgc,
+				       const char * const in_value, const char * const out_setting,
+				       void *in_dflt, void *out_dflt)
 {
 	int ret;
 
@@ -36,11 +34,10 @@ int cgroup_convert_cpuset_to_exclusive(
 	return ret;
 }
 
-int cgroup_convert_cpuset_to_partition(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpuset_to_partition(struct cgroup_controller * const dst_cgc,
+				       const char * const in_value,
+				       const char * const out_setting,
+				       void *in_dflt, void *out_dflt)
 {
 	int ret;
 
