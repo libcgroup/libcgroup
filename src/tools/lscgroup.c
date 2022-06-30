@@ -17,8 +17,9 @@
 
 enum flag {
 	/*
-	 * the flag set if there is a cgroup on output
-	 * if there is no one we want to display all cgroups
+	 * the flag set if there is a cgroup on
+	 * output if there is no one we want to
+	 * display all cgroups
 	 */
 	FL_LIST = 1
 };
@@ -37,13 +38,11 @@ static inline void trim_filepath(char *path)
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		err("Wrong input parameters, ");
-		err("try %s -h' for more information.\n", program_name);
+		err("Wrong input parameters, try %s -h' for more information.\n", program_name);
 		return;
 	}
 
-	info("Usage: %s [-h] [[-g] <controllers>:<path>] [...]\n",
-	     program_name);
+	info("Usage: %s [-h] [[-g] <controllers>:<path>] [...]\n", program_name);
 	info("List all cgroups\n");
 	info("  -g <controllers>:<path>	Control group to be ");
 	info("displayed (-g is optional)\n");
@@ -52,11 +51,10 @@ static void usage(int status, const char *program_name)
 }
 
 /*
- * if the info about controller "name" should be printed,
- *  then the function returns nonzero value
+ * if the info about controller "name" should be printed, then the function
+ * returns nonzero value
  */
-static int is_ctlr_on_list(struct cgroup_group_spec *cgroup_list,
-			const char *name)
+static int is_ctlr_on_list(struct cgroup_group_spec *cgroup_list, const char *name)
 {
 	int j;
 
@@ -86,8 +84,7 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 	int lvl, len, ret;
 	void *handle;
 
-	ret = cgroup_walk_tree_begin(controller, input_path, 0,
-				     &handle, &info, &lvl);
+	ret = cgroup_walk_tree_begin(controller, input_path, 0, &handle, &info, &lvl);
 	if (ret != 0)
 		return ret;
 
@@ -115,11 +112,9 @@ static int display_controller_data(char *input_path, char *controller, char *nam
 }
 
 /*
- * print data about input cgroup_list cgroups
- * if FL_LIST flag is set then if the function does not find
- * the cgroup it returns ECGEOF
+ * print data about input cgroup_list cgroups if FL_LIST flag is set then
+ * if the function does not find the cgroup it returns ECGEOF
  */
-
 static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 {
 	struct cgroup_mount_point controller;
@@ -140,17 +135,14 @@ static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 	while (ret == 0) {
 		if (strcmp(path, controller.path) == 0) {
 			/* if it is still the same mount point */
-			strncat(all_conts, ",",
-				FILENAME_MAX-strlen(all_conts)-1);
-			strncat(all_conts, controller.name,
-				FILENAME_MAX-strlen(all_conts)-1);
+			strncat(all_conts, ",",	FILENAME_MAX-strlen(all_conts)-1);
+			strncat(all_conts, controller.name, FILENAME_MAX-strlen(all_conts)-1);
 			all_conts[sizeof(all_conts) - 1] = '\0';
 		} else {
 			/* we got new mount point, print it if needed */
 			if (output) {
-				ret = display_controller_data(
-							cgroup_spec->path,
-							con_name, all_conts);
+				ret = display_controller_data(cgroup_spec->path, con_name,
+							      all_conts);
 				if (ret)
 					return ret;
 				if ((flags & FL_LIST) != 0) {
@@ -184,18 +176,14 @@ static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 	if (ret != ECGEOF)
 		return ret;
 
-	if (output) {
-		ret = display_controller_data(cgroup_spec->path,
-					      con_name, all_conts);
-	}
+	if (output)
+		ret = display_controller_data(cgroup_spec->path, con_name, all_conts);
 
 	return ret;
 }
 
 
-static int cgroup_list_cgroups(char *tname,
-			       struct cgroup_group_spec *cgroup_list[],
-			       int flags)
+static int cgroup_list_cgroups(char *tname, struct cgroup_group_spec *cgroup_list[], int flags)
 {
 	int final_ret = 0;
 	int ret = 0;
@@ -219,13 +207,11 @@ static int cgroup_list_cgroups(char *tname,
 			final_ret = 0;
 		} else {
 			final_ret = ret;
-			err("cgroups can't be listed: %s\n",
-			    cgroup_strerror(ret));
+			err("cgroups can't be listed: %s\n", cgroup_strerror(ret));
 		}
 	} else {
 		/* we have he list of controllers which should be print */
-		while ((cgroup_list[i] != NULL)
-			&& ((ret == ECGEOF) || (ret == 0))) {
+		while ((cgroup_list[i] != NULL)	&& ((ret == ECGEOF) || (ret == 0))) {
 
 			ret = print_cgroup(cgroup_list[i], flags);
 			if (ret != 0) {
@@ -236,9 +222,9 @@ static int cgroup_list_cgroups(char *tname,
 					/* other problem */
 					final_ret = ret;
 				}
-				err("%s: cannot find group %s..:%s: %s\n",
-				    tname, cgroup_list[i]->controllers[0],
-				    cgroup_list[i]->path,
+
+				err("%s: cannot find group %s..:%s: %s\n", tname,
+				    cgroup_list[i]->controllers[0], cgroup_list[i]->path,
 				    cgroup_strerror(final_ret));
 			}
 			i++;
@@ -272,11 +258,10 @@ int main(int argc, char *argv[])
 			ret = 0;
 			goto err;
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg,
-				CG_HIER_MAX);
+			ret = parse_cgroup_spec(cgroup_list, optarg, CG_HIER_MAX);
 			if (ret) {
-				err("%s: cgroup controller and path", argv[0]);
-				err(" path parsing failed (%s)\n", optarg);
+				err("%s: cgroup controller and path parsing failed (%s)\n",
+				    argv[0], optarg);
 				return ret;
 			}
 			break;
@@ -289,11 +274,10 @@ int main(int argc, char *argv[])
 
 	/* read the list of controllers */
 	while (optind < argc) {
-		ret = parse_cgroup_spec(cgroup_list, argv[optind],
-				CG_HIER_MAX);
+		ret = parse_cgroup_spec(cgroup_list, argv[optind], CG_HIER_MAX);
 		if (ret) {
-			err("%s: cgroup controller an path parsing ", argv[0]);
-			err("failed (%s)\n", argv[optind]);
+			err("%s: cgroup controller an path parsing failed (%s)\n", argv[0],
+			    argv[optind]);
 			return -1;
 		}
 		optind++;
