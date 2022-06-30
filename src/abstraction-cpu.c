@@ -25,17 +25,15 @@ static const char * const CPU_MAX = "cpu.max";
 static const char * const CFS_QUOTA_US = "cpu.cfs_quota_us";
 static const char * const CFS_PERIOD_US = "cpu.cfs_period_us";
 
-static int read_setting(const char * const cgroup_name,
-			const char * const controller_name,
-			const char * const setting_name,
-			char ** const value)
+static int read_setting(const char * const cgroup_name, const char * const controller_name,
+			const char * const setting_name, char ** const value)
 {
 	char tmp_line[LL_MAX];
 	void *handle;
 	int ret;
 
-	ret = cgroup_read_value_begin(controller_name, cgroup_name,
-			setting_name, &handle, tmp_line, LL_MAX);
+	ret = cgroup_read_value_begin(controller_name, cgroup_name, setting_name, &handle,
+				      tmp_line, LL_MAX);
 	if (ret == ECGEOF)
 		goto read_end;
 	else if (ret != 0)
@@ -51,19 +49,16 @@ read_end:
 	cgroup_read_value_end(&handle);
 	if (ret == ECGEOF)
 		ret = 0;
-
 end:
 	return ret;
 }
 
-static int get_max(struct cgroup_controller * const cgc,
-		   char ** const max)
+static int get_max(struct cgroup_controller * const cgc, char ** const max)
 {
 	return read_setting(cgc->cgroup->name, "cpu", "cpu.max", max);
 }
 
-static int get_quota_from_max(struct cgroup_controller * const cgc,
-			      char ** const quota)
+static int get_quota_from_max(struct cgroup_controller * const cgc, char ** const quota)
 {
 	char *token, *max = NULL, *saveptr = NULL;
 	int ret;
@@ -85,8 +80,7 @@ out:
 	return ret;
 }
 
-static int get_period_from_max(struct cgroup_controller * const cgc,
-			       char ** const period)
+static int get_period_from_max(struct cgroup_controller * const cgc, char ** const period)
 {
 	char *token, *max = NULL, *saveptr = NULL;
 	int ret;
@@ -109,11 +103,9 @@ out:
 	return ret;
 }
 
-int cgroup_convert_cpu_quota_to_max(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpu_quota_to_max(struct cgroup_controller * const dst_cgc,
+				    const char * const in_value, const char * const out_setting,
+				    void *in_dflt, void *out_dflt)
 {
 	char max_line[LL_MAX] = {0};
 	char *period = NULL;
@@ -139,8 +131,8 @@ int cgroup_convert_cpu_quota_to_max(
 			goto out;
 	}
 
-	dst_cgc->values[dst_cgc->index - 1]->prev_name =
-		strdup(CFS_QUOTA_US);
+	dst_cgc->values[dst_cgc->index - 1]->prev_name = strdup(CFS_QUOTA_US);
+
 out:
 	if (period)
 		free(period);
@@ -148,20 +140,16 @@ out:
 	return ret;
 }
 
-int cgroup_convert_cpu_period_to_max(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpu_period_to_max(struct cgroup_controller * const dst_cgc,
+				     const char * const in_value, const char * const out_setting,
+				     void *in_dflt, void *out_dflt)
 {
 	char max_line[LL_MAX] = {0};
 	char *quota = NULL;
 	int ret;
 
 	if (strlen(in_value) == 0) {
-		/* There's no value to convert.  Populate the setting and
-		 * return
-		 */
+		/* There's no value to convert.  Populate the setting and return */
 		ret = cgroup_add_value_string(dst_cgc, out_setting, NULL);
 		if (ret)
 			goto out;
@@ -179,8 +167,7 @@ int cgroup_convert_cpu_period_to_max(
 			goto out;
 	}
 
-	dst_cgc->values[dst_cgc->index - 1]->prev_name =
-		strdup(CFS_PERIOD_US);
+	dst_cgc->values[dst_cgc->index - 1]->prev_name = strdup(CFS_PERIOD_US);
 
 out:
 	if (quota)
@@ -189,19 +176,15 @@ out:
 	return ret;
 }
 
-int cgroup_convert_cpu_max_to_quota(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpu_max_to_quota(struct cgroup_controller * const dst_cgc,
+				    const char * const in_value, const char * const out_setting,
+				    void *in_dflt, void *out_dflt)
 {
 	char *token, *copy = NULL, *saveptr = NULL;
 	int ret;
 
 	if (strlen(in_value) == 0) {
-		/* There's no value to convert.  Populate the setting and
-		 * return
-		 */
+		/* There's no value to convert.  Populate the setting and return */
 		return cgroup_add_value_string(dst_cgc, out_setting, NULL);
 	}
 
@@ -222,19 +205,15 @@ int cgroup_convert_cpu_max_to_quota(
 	return ret;
 }
 
-int cgroup_convert_cpu_max_to_period(
-	struct cgroup_controller * const dst_cgc,
-	const char * const in_value,
-	const char * const out_setting,
-	void *in_dflt, void *out_dflt)
+int cgroup_convert_cpu_max_to_period(struct cgroup_controller * const dst_cgc,
+				     const char * const in_value, const char * const out_setting,
+				     void *in_dflt, void *out_dflt)
 {
 	char *token, *copy = NULL, *saveptr = NULL;
 	int ret;
 
 	if (strlen(in_value) == 0) {
-		/* There's no value to convert.  Populate the setting and
-		 * return
-		 */
+		/* There's no value to convert.  Populate the setting and return */
 		return cgroup_add_value_string(dst_cgc, out_setting, NULL);
 	}
 
@@ -272,8 +251,7 @@ int cgroup_convert_cpu_nto1(struct cgroup_controller * const out_cgc,
 			snprintf(max_line, LL_MAX, "%s %s", MAX, cfs_period);
 			max_line[LL_MAX - 1] = '\0';
 		} else {
-			snprintf(max_line, LL_MAX, "%s %s", cfs_quota,
-				 cfs_period);
+			snprintf(max_line, LL_MAX, "%s %s", cfs_quota, cfs_period);
 			max_line[LL_MAX - 1] = '\0';
 		}
 
