@@ -38,22 +38,18 @@ static struct option longopts[] = {
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		err("Wrong input parameters,");
-		err(" try %s --help' for more information.\n", program_name);
+		err("Wrong input parameters, try %s --help for more information.\n", program_name);
 		return;
 	}
 
-	info("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] ",
-	     program_name);
+	info("Usage: %s [-h] [-g <controllers>:<path>] [--sticky] ", program_name);
 	info("command [arguments] ...\n");
 	info("Run the task in given control group(s)\n");
-	info("  -g <controllers>:<path>	Control group which ");
-	info("should be added\n");
+	info("  -g <controllers>:<path>	Control group which should be added\n");
 	info("  -h, --help			Display this help\n");
 	info("  --sticky			cgred daemon does not ");
 	info("change pidlist and children tasks\n");
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -71,11 +67,9 @@ int main(int argc, char *argv[])
 	while ((c = getopt_long(argc, argv, "+g:sh", longopts, NULL)) > 0) {
 		switch (c) {
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg,
-						CG_HIER_MAX);
+			ret = parse_cgroup_spec(cgroup_list, optarg, CG_HIER_MAX);
 			if (ret) {
-				err("cgroup controller and path parsing ");
-				err("failed\n");
+				err("cgroup controller and path parsing failed\n");
 				return -1;
 			}
 			cg_specified = 1;
@@ -101,8 +95,7 @@ int main(int argc, char *argv[])
 	/* Initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		err("libcgroup initialization failed: %s\n",
-		    cgroup_strerror(ret));
+		err("libcgroup initialization failed: %s\n", cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -122,10 +115,10 @@ int main(int argc, char *argv[])
 	}
 
 	/*
-	 * 'cgexec' command file needs the root privilege for executing
-	 * a cgroup_register_unchanged_process() by using unix domain
-	 * socket, and an euid/egid should be changed to the executing user
-	 * from a root user.
+	 * 'cgexec' command file needs the root privilege for executing a
+	 * cgroup_register_unchanged_process() by using unix domain socket,
+	 * and an euid/egid should be changed to the executing user from a
+	 * root user.
 	 */
 	if (setresuid(uid, uid, uid)) {
 		err("%s", strerror(errno));
@@ -139,15 +132,14 @@ int main(int argc, char *argv[])
 
 	if (cg_specified) {
 		/*
-		 * User has specified the list of control group and
-		 * controllers
+		 * User has specified the list of control group
+		 * and controllers
 		 */
 		for (i = 0; i < CG_HIER_MAX; i++) {
 			if (!cgroup_list[i])
 				break;
 
-			ret = cgroup_change_cgroup_path(cgroup_list[i]->path,
-				pid,
+			ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
 				(const char *const*) cgroup_list[i]->controllers);
 			if (ret) {
 				err("cgroup change of group failed\n");
@@ -157,8 +149,7 @@ int main(int argc, char *argv[])
 	} else {
 
 		/* Change the cgroup by determining the rules based on uid */
-		ret = cgroup_change_cgroup_flags(uid, gid,
-						 argv[optind], pid, 0);
+		ret = cgroup_change_cgroup_flags(uid, gid, argv[optind], pid, 0);
 		if (ret) {
 			err("cgroup change of group failed\n");
 			return ret;
