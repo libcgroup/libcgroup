@@ -17,7 +17,7 @@
 
 
 enum flag {
-	FL_MOUNT = 1,	/* show the mount points */
+	FL_MOUNT = 1,		/* show the mount points */
 	FL_LIST = 2,
 	FL_ALL = 4,		/* show all subsystems - not mounted too */
 	FL_HIERARCHY = 8,	/* show info about hierarchies */
@@ -29,8 +29,7 @@ typedef char cont_name_t[FILENAME_MAX];
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		err("Wrong input parameters, ");
-		err("try %s -h' for more information.\n", program_name);
+		err("Wrong input parameters, try %s -h' for more information.\n", program_name);
 		return;
 	}
 
@@ -41,37 +40,35 @@ static void usage(int status, const char *program_name)
 	info("  -a, --all			Display information ");
 	info("about all controllers (including not mounted ones)\n");
 	info("  -h, --help			Display this help\n");
-	info("  -i, --hierarchies		Display information about ");
-	info("hierarchies\n");
+	info("  -i, --hierarchies		Display information about hierarchies\n");
 	info("  -m, --mount-points		Display mount points\n");
 	info("  -M, --all-mount-points	Display all mount points\n");
 	info("(Note: currently supported on cgroups v1 only)\n");
 }
 
-static int print_controller_mount(const char *controller, int flags,
-				  cont_name_t cont_names, int hierarchy)
+static int print_controller_mount(const char *controller, int flags, cont_name_t cont_names,
+				  int hierarchy)
 {
 	char path[FILENAME_MAX];
 	void *handle;
 	int ret = 0;
 
-	if (!(flags & FL_MOUNT) && !(flags & FL_HIERARCHY)) {
-		/* print only hierarchy name */
+	/* print only hierarchy name */
+	if (!(flags & FL_MOUNT) && !(flags & FL_HIERARCHY))
 		info("%s\n", cont_names);
-	}
-	if (!(flags & FL_MOUNT) && (flags & FL_HIERARCHY)) {
-		/* print only hierarchy name and number*/
+
+	/* print only hierarchy name and number*/
+	if (!(flags & FL_MOUNT) && (flags & FL_HIERARCHY))
 		info("%s %d\n", cont_names, hierarchy);
-	}
+
 	if (flags & FL_MOUNT) {
 		/* print hierarchy name and mount point(s) */
-		ret = cgroup_get_subsys_mount_point_begin(controller, &handle,
-							  path);
+		ret = cgroup_get_subsys_mount_point_begin(controller, &handle, path);
 		/* intentionally ignore error from above call */
 		while (ret == 0) {
 			info("%s %s\n", cont_names, path);
+			/* first mount record is enough */
 			if (!(flags & FL_MOUNT_ALL))
-				/* first mount record is enough */
 				goto stop;
 			ret = cgroup_get_subsys_mount_point_next(&handle, path);
 		}
@@ -84,8 +81,7 @@ stop:
 }
 
 /* display all controllers attached to the given hierarchy */
-static int print_all_controllers_in_hierarchy(const char *tname,
-					      int hierarchy, int flags)
+static int print_all_controllers_in_hierarchy(const char *tname, int hierarchy, int flags)
 {
 	struct controller_data info;
 	enum cg_version_t version;
@@ -96,8 +92,8 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 	int ret = 0;
 
 	/*
-	 * Initialize libcgroup and intentionally ignore its result,
-	 * no mounted controller is valid use case.
+	 * Initialize libcgroup and intentionally ignore its result, no
+	 * mounted controller is valid use case.
 	 */
 	(void) cgroup_init();
 
@@ -113,8 +109,8 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 			goto end;
 
 		/*
-		 * v1 controllers should be in the hierachy.  v2 controllers
-		 * will have a hierarchy value of zero
+		 * v1 controllers should be in the hierachy.
+		 * v2 controllers will have a hierarchy value of zero
 		 */
 		if (version == CGROUP_V1 && info.hierarchy != hierarchy)
 			goto next;
@@ -133,15 +129,14 @@ static int print_all_controllers_in_hierarchy(const char *tname,
 			strncat(cont_names, info.name, FILENAME_MAX-1);
 			cont_names[sizeof(cont_names) - 1] = '\0';
 		}
+
 next:
 		ret = cgroup_get_all_controller_next(&handle, &info);
 		if (ret && ret != ECGEOF)
 			goto end;
 	}
 
-	ret = print_controller_mount(cont_name,
-		flags, cont_names, hierarchy);
-
+	ret = print_controller_mount(cont_name, flags, cont_names, hierarchy);
 end:
 	cgroup_get_all_controller_end(&handle);
 
@@ -153,11 +148,11 @@ end:
 
 
 /*
- * go through the list of all controllers gather them based on hierarchy number
- * and print them
+ * go through the list of all controllers gather them based on hierarchy
+ * number and print them
  */
-static int cgroup_list_all_controllers(const char *tname,
-	cont_name_t cont_name[CG_CONTROLLER_MAX], int c_number, int flags)
+static int cgroup_list_all_controllers(const char *tname, cont_name_t cont_name[CG_CONTROLLER_MAX],
+				       int c_number, int flags)
 {
 	struct controller_data info;
 	int h_list[CG_CONTROLLER_MAX];	/* list of hierarchies */
@@ -171,9 +166,10 @@ static int cgroup_list_all_controllers(const char *tname,
 	while (ret == 0) {
 		if (info.hierarchy == 0) {
 			/* the controller is not attached to any hierachy */
-			if (flags & FL_ALL)
+			if (flags & FL_ALL) {
 				/* display only if -a flag is set */
 				info("%s\n", info.name);
+			}
 		}
 		is_on_list = 0;
 		j = 0;
@@ -185,15 +181,13 @@ static int cgroup_list_all_controllers(const char *tname,
 			j++;
 		}
 
-		if ((info.hierarchy != 0) &&
-			((flags & FL_ALL) ||
-			(!(flags & FL_LIST) || (is_on_list == 1)))) {
+		if ((info.hierarchy != 0) && ((flags & FL_ALL) ||
+		    (!(flags & FL_LIST) || (is_on_list == 1)))) {
 			/*
-			 * the controller is attached to some hierarchy and
-			 * either should be output all controllers, or the
-			 * controller is on the output list
+			 * the controller is attached to some hierarchy
+			 * and either should be output all controllers,
+			 * or the controller is on the output list
 			 */
-
 			h_list[counter] = info.hierarchy;
 			counter++;
 			for (j = 0; j < counter-1; j++) {
@@ -214,15 +208,12 @@ static int cgroup_list_all_controllers(const char *tname,
 	if (ret == ECGEOF)
 		ret = 0;
 	if (ret) {
-		err("cgroup_get_controller_begin/next failed (%s)\n",
-		    cgroup_strerror(ret));
+		err("cgroup_get_controller_begin/next failed (%s)\n", cgroup_strerror(ret));
 		return ret;
 	}
 
-
 	for (j = 0; j < counter; j++)
-		ret = print_all_controllers_in_hierarchy(tname,
-			h_list[j], flags);
+		ret = print_all_controllers_in_hierarchy(tname,	h_list[j], flags);
 
 	return ret;
 }
