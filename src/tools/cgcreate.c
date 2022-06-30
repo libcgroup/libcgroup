@@ -27,17 +27,14 @@
 static void usage(int status, const char *program_name)
 {
 	if (status != 0) {
-		err("Wrong input parameters, ");
-		err(" try %s -h' for more information.\n", program_name);
+		err("Wrong input parameters, try %s -h for more information.\n", program_name);
 		return;
 	}
 
 	info("Usage: %s [-h] [-f mode] [-d mode] [-s mode] ", program_name);
-	info("[-t <tuid>:<tgid>] [-a <agid>:<auid>] ");
-	info("-g <controllers>:<path> [-g ...]\n");
+	info("[-t <tuid>:<tgid>] [-a <agid>:<auid>] -g <controllers>:<path> [-g ...]\n");
 	info("Create control group(s)\n");
-	info("  -a <tuid>:<tgid>		Owner of the group and all ");
-	info("its files\n");
+	info("  -a <tuid>:<tgid>		Owner of the group and all its files\n");
 	info("  -d, --dperm=mode		Group directory permissions\n");
 	info("  -f, --fperm=mode		Group file permissions\n");
 	info("  -g <controllers>:<path>	Control group which should be added\n");
@@ -94,8 +91,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts,
-				NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -114,8 +110,8 @@ int main(int argc, char *argv[])
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
 			if (ret) {
-				err("%s: cgroup controller and path", argv[0]);
-				err("parsing failed (%s)\n", argv[optind]);
+				err("%s: cgroup controller and path parsing failed (%s)\n",
+				    argv[0], argv[optind]);
 				ret = -1;
 				goto err;
 			}
@@ -155,8 +151,7 @@ int main(int argc, char *argv[])
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0],
-		    cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -169,8 +164,7 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			err("%s: can't add new cgroup: %s\n", argv[0],
-			    cgroup_strerror(ret));
+			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
 		}
 
@@ -187,8 +181,7 @@ int main(int argc, char *argv[])
 				ret = cgroup_add_all_controllers(cgroup);
 				if (ret != 0) {
 					ret = ECGINVAL;
-					err("%s: can't add all controllers\n",
-					    argv[0]);
+					err("%s: can't add all controllers\n", argv[0]);
 					cgroup_free(&cgroup);
 					goto err;
 				}
@@ -197,8 +190,7 @@ int main(int argc, char *argv[])
 					cgroup_list[i]->controllers[j]);
 				if (!cgc) {
 					ret = ECGINVAL;
-					err("%s: controller %s can't be add\n",
-					    argv[0],
+					err("%s: controller %s can't be add\n", argv[0],
 					    cgroup_list[i]->controllers[j]);
 					cgroup_free(&cgroup);
 					goto err;
@@ -209,13 +201,12 @@ int main(int argc, char *argv[])
 
 		/* all variables set so create cgroup */
 		if (dirm_change | filem_change)
-			cgroup_set_permissions(cgroup, dir_mode, file_mode,
-					       tasks_mode);
+			cgroup_set_permissions(cgroup, dir_mode, file_mode, tasks_mode);
 
 		ret = cgroup_create_cgroup(cgroup, 0);
 		if (ret) {
-			err("%s: can't create cgroup %s: %s\n",
-			    argv[0], cgroup->name, cgroup_strerror(ret));
+			err("%s: can't create cgroup %s: %s\n", argv[0], cgroup->name,
+			    cgroup_strerror(ret));
 			cgroup_free(&cgroup);
 			goto err;
 		}
