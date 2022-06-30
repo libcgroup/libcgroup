@@ -39,11 +39,9 @@ static void usage(int status, const char *program_name)
 		return;
 	}
 
-	info("Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n",
-	     program_name);
+	info("Usage: %s [-h] [-r] [[-g] <controllers>:<path>] ...\n", program_name);
 	info("Remove control group(s)\n");
-	info("  -g <controllers>:<path>	Control group to be removed ");
-	info("(-g is optional)\n");
+	info("  -g <controllers>:<path>	Control group to be removed (-g is optional)\n");
 	info("  -h, --help			Display this help\n");
 	info("  -r, --recursive		Recursively remove all subgroups\n");
 }
@@ -53,8 +51,7 @@ static void usage(int status, const char *program_name)
  * cgroup with specifying multi controllers. Just skip controller which
  * cgroup and hierarchy number is same
  */
-static int skip_add_controller(int counter, int *skip,
-			       struct ext_cgroup_record *ecg_list)
+static int skip_add_controller(int counter, int *skip, struct ext_cgroup_record *ecg_list)
 {
 	struct controller_data info;
 	void *handle;
@@ -79,8 +76,7 @@ static int skip_add_controller(int counter, int *skip,
 	if (ret == ECGEOF)
 		ret = 0;
 	if (ret) {
-		err("cgroup_get_controller_begin/next failed(%s)\n",
-		    cgroup_strerror(ret));
+		err("cgroup_get_controller_begin/next failed(%s)\n", cgroup_strerror(ret));
 		return ret;
 	}
 
@@ -90,18 +86,17 @@ static int skip_add_controller(int counter, int *skip,
 		if ((!strcmp(ecg_list[k].name, ecg_list[counter].name)) &&
 		    (ecg_list[k].h_number == ecg_list[counter].h_number)) {
 			/* we found a control group in the same hierarchy */
-			if (strcmp(ecg_list[k].controller,
-				   ecg_list[counter].controller)) {
+			if (strcmp(ecg_list[k].controller, ecg_list[counter].controller)) {
 				/*
-				 * it is a different controller ->
-				 * if there is not one cgroup for the same
-				 * controller, skip it
+				 * it is a different controller -> if there
+				 * is not one cgroup for the same controller,
+				 * skip it
 				 */
 				*skip = 1;
 			} else {
 				/*
-				 * there is the identical group,controller pair
-				 * don't skip it
+				 * there is the identical group,controller
+				 * pair don't skip it
 				 */
 				*skip = 0;
 				return ret;
@@ -131,8 +126,7 @@ int main(int argc, char *argv[])
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0],
-		    cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -160,8 +154,7 @@ int main(int argc, char *argv[])
 		case 'g':
 			ret = parse_cgroup_spec(cgroup_list, optarg, argc);
 			if (ret != 0) {
-				err("%s: error parsing cgroup '%s'", argv[0],
-				    optarg);
+				err("%s: error parsing cgroup '%s'", argv[0], optarg);
 				ret = -1;
 				goto err;
 			}
@@ -181,8 +174,7 @@ int main(int argc, char *argv[])
 	for (i = optind; i < argc; i++) {
 		ret = parse_cgroup_spec(cgroup_list, argv[i], argc);
 		if (ret != 0) {
-			err("%s: error parsing cgroup '%s'\n", argv[0],
-			    argv[i]);
+			err("%s: error parsing cgroup '%s'\n", argv[0], argv[i]);
 			ret = -1;
 			goto err;
 		}
@@ -197,8 +189,7 @@ int main(int argc, char *argv[])
 		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
 		if (!cgroup) {
 			ret = ECGFAIL;
-			err("%s: can't create new cgroup: %s\n", argv[0],
-			    cgroup_strerror(ret));
+			err("%s: can't create new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
 		}
 
@@ -207,18 +198,18 @@ int main(int argc, char *argv[])
 		while (cgroup_list[i]->controllers[j]) {
 			skip = 0;
 			/*
-			 * save controller name, cg name and hierarchy number
-			 * to determine whether we should skip adding controller
+			 * save controller name, cg name and hierarchy
+			 * number to determine whether we should skip
+			 * adding controller
 			 */
 			if (counter == max) {
 				/*
-				 * there is not enough space to store them,
-				 * create it
+				 * there is not enough space to store
+				 * them, create it
 				 */
 				max = max + argc;
 				ecg_list = (struct ext_cgroup_record *)
-					realloc(ecg_list,
-						max * sizeof(struct ext_cgroup_record));
+					realloc(ecg_list, max * sizeof(struct ext_cgroup_record));
 				if (!ecg_list) {
 					err("%s: not enough memory\n", argv[0]);
 					final_ret = -1;
@@ -228,12 +219,10 @@ int main(int argc, char *argv[])
 
 			strncpy(ecg_list[counter].controller,
 				cgroup_list[i]->controllers[j], FILENAME_MAX);
-
 			ecg_list[counter].controller[FILENAME_MAX - 1] = '\0';
 
 			strncpy(ecg_list[counter].name,
 				cgroup_list[i]->path, FILENAME_MAX);
-
 			ecg_list[counter].name[FILENAME_MAX - 1] = '\0';
 
 			ret = skip_add_controller(counter, &skip, ecg_list);
@@ -245,8 +234,7 @@ int main(int argc, char *argv[])
 				goto next;
 			}
 
-			cgc = cgroup_add_controller(cgroup,
-						cgroup_list[i]->controllers[j]);
+			cgc = cgroup_add_controller(cgroup, cgroup_list[i]->controllers[j]);
 			if (!cgc) {
 				ret = ECGFAIL;
 				err("%s: controller %s can't be added\n", argv[0],
@@ -262,8 +250,8 @@ next:
 		ret = cgroup_delete_cgroup_ext(cgroup, flags);
 		/* Remember the errors and continue, try to remove all groups. */
 		if (ret != 0) {
-			err("%s: cannot remove group '%s': %s\n", argv[0],
-			    cgroup->name, cgroup_strerror(ret));
+			err("%s: cannot remove group '%s': %s\n", argv[0], cgroup->name,
+			    cgroup_strerror(ret));
 			final_ret = ret;
 		}
 		cgroup_free(&cgroup);
