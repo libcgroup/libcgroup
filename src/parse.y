@@ -21,8 +21,7 @@ extern char *yytext;
 
 static void yyerror(const char *s)
 {
-	fprintf(stderr, "error at line number %d at %s:%s\n", line_no, yytext,
-		s);
+	fprintf(stderr, "error at line number %d at %s:%s\n", line_no, yytext, s);
 }
 
 int yywrap(void)
@@ -100,14 +99,12 @@ group   :       GROUP group_name '{' group_conf '}'
 		if ($$) {
 			$$ = cgroup_config_insert_cgroup($2);
 			if (!$$) {
-				fprintf(stderr, "failed to insert group"
-					" check size and memory");
+				fprintf(stderr, "failed to insert group check size and memory");
 				$$ = ECGOTHER;
 				return $$;
 			}
 		} else {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -130,8 +127,7 @@ group_conf
 		$$ = cgroup_config_parse_controller_options($1, $3);
 		cgroup_dictionary_free($3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -141,8 +137,7 @@ group_conf
 		$$ = cgroup_config_parse_controller_options($2, $4);
 		cgroup_dictionary_free($4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -151,8 +146,7 @@ group_conf
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -165,14 +159,12 @@ template  :     TEMPLATE ID '{' template_conf '}'
 		if ($$) {
 			$$ = template_config_insert_cgroup($2);
 			if (!$$) {
-				fprintf(stderr, "parsing failed at line number %d\n",
-					line_no);
+				fprintf(stderr, "parsing failed at line number %d\n", line_no);
 				$$ = ECGOTHER;
 				return $$;
 			}
 		} else {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -186,8 +178,7 @@ template_conf
 		$$ = template_config_parse_controller_options($1, $3);
 		cgroup_dictionary_free($3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -197,8 +188,7 @@ template_conf
 		$$ = template_config_parse_controller_options($2, $4);
 		cgroup_dictionary_free($4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -207,8 +197,7 @@ template_conf
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -220,8 +209,7 @@ template_task_or_admin
 	{
 	$$ = $3 && $5;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -230,8 +218,7 @@ template_task_or_admin
 	{
 		$$ = $3 && $5;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 		return $$;
 		}
@@ -248,8 +235,8 @@ namevalue_conf
 		if (ret == 0)
 			ret = cgroup_dictionary_add(dict, $1, $3);
 		if (ret) {
-			fprintf(stderr, "parsing failed at line number %d:%s\n",
-				line_no, cgroup_strerror(ret));
+			fprintf(stderr, "parsing failed at line number %d:%s\n", line_no,
+				cgroup_strerror(ret));
 			$$ = NULL;
 			cgroup_dictionary_free(dict);
 			return ECGCONFIGPARSEFAIL;
@@ -261,8 +248,8 @@ namevalue_conf
 		int ret = 0;
 		ret = cgroup_dictionary_add($1, $2, $4);
 		if (ret != 0) {
-			fprintf(stderr, "parsing failed at line number %d: %s\n",
-				line_no, cgroup_strerror(ret));
+			fprintf(stderr, "parsing failed at line number %d: %s\n", line_no,
+				cgroup_strerror(ret));
 			$$ = NULL;
 			return ECGCONFIGPARSEFAIL;
 		}
@@ -279,8 +266,7 @@ task_namevalue_conf
 	{
 		$$ = cgroup_config_group_task_perm($1, $3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -289,8 +275,7 @@ task_namevalue_conf
 	{
 		$$ = $1 && cgroup_config_group_task_perm($2, $4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -302,8 +287,7 @@ admin_namevalue_conf
 	{
 		$$ = cgroup_config_group_admin_perm($1, $3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -312,8 +296,7 @@ admin_namevalue_conf
 	{
 		$$ = $1 && cgroup_config_group_admin_perm($2, $4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -325,8 +308,7 @@ template_task_namevalue_conf
 	{
 		$$ = template_config_group_task_perm($1, $3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -335,8 +317,7 @@ template_task_namevalue_conf
 	{
 		$$ = $1 && template_config_group_task_perm($2, $4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -348,8 +329,7 @@ template_admin_namevalue_conf
 	{
 		$$ = template_config_group_admin_perm($1, $3);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -358,8 +338,7 @@ template_admin_namevalue_conf
 	{
 		$$ = $1 && template_config_group_admin_perm($2, $4);
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -372,8 +351,7 @@ task_or_admin
 	{
 		$$ = $3 && $5;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -382,8 +360,7 @@ task_or_admin
 	{
 		$$ = $3 && $5;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -394,8 +371,7 @@ admin_conf:	ADMIN '{' admin_namevalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -406,8 +382,7 @@ task_conf:	TASK '{' task_namevalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -418,8 +393,7 @@ template_admin_conf:	ADMIN '{' template_admin_namevalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -430,8 +404,7 @@ template_task_conf:	TASK '{' template_task_namevalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -463,8 +436,7 @@ mount   :       MOUNT '{' mountvalue_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
@@ -496,8 +468,7 @@ namespace   :       NAMESPACE '{' namespace_conf '}'
 	{
 		$$ = $3;
 		if (!$$) {
-			fprintf(stderr, "parsing failed at line number %d\n",
-				line_no);
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
 		}
