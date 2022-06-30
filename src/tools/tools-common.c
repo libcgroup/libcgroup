@@ -23,8 +23,7 @@
 
 #include <sys/types.h>
 
-int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
-		      int capacity)
+int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg, int capacity)
 {
 	char *cptr = NULL, *pathptr = NULL, *temp;
 	struct cgroup_group_spec *ptr;
@@ -40,8 +39,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg,
 
 	if (i == capacity) {
 		/* No free slot found */
-		fprintf(stderr, "Max allowed hierarchies %d reached\n",
-			capacity);
+		fprintf(stderr, "Max allowed hierarchies %d reached\n", capacity);
 		return -1;
 	}
 
@@ -125,8 +123,7 @@ void cgroup_free_group_spec(struct cgroup_group_spec *cl)
 }
 
 
-int cgroup_string_list_init(struct cgroup_string_list *list,
-			    int initial_size)
+int cgroup_string_list_init(struct cgroup_string_list *list, int initial_size)
 {
 	if (list == NULL)
 		return ECGINVAL;
@@ -157,15 +154,13 @@ void cgroup_string_list_free(struct cgroup_string_list *list)
 	free(list->items);
 }
 
-int cgroup_string_list_add_item(struct cgroup_string_list *list,
-				const char *item)
+int cgroup_string_list_add_item(struct cgroup_string_list *list, const char *item)
 {
 	if (list == NULL)
 		return ECGINVAL;
 
 	if (list->size <= list->count) {
-		char **tmp = realloc(list->items,
-				sizeof(char *) * list->size*2);
+		char **tmp = realloc(list->items, sizeof(char *) * list->size*2);
 		if (tmp == NULL)
 			return ECGFAIL;
 		list->items = tmp;
@@ -189,8 +184,8 @@ static int _compare_string(const void *a, const void *b)
 }
 
 
-int cgroup_string_list_add_directory(struct cgroup_string_list *list,
-				     char *dirname, char *program_name)
+int cgroup_string_list_add_directory(struct cgroup_string_list *list, char *dirname,
+				     char *program_name)
 {
 	int start, ret, count = 0;
 	struct dirent *item;
@@ -203,36 +198,33 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 
 	d = opendir(dirname);
 	if (!d) {
-		fprintf(stderr, "%s: cannot open %s: %s\n", program_name,
-			dirname, strerror(errno));
+		fprintf(stderr, "%s: cannot open %s: %s\n", program_name, dirname,
+			strerror(errno));
 		exit(1);
 	}
 
 	do {
 		errno = 0;
 		item = readdir(d);
-		if (item && (item->d_type == DT_REG ||
-			     item->d_type == DT_LNK)) {
+		if (item && (item->d_type == DT_REG || item->d_type == DT_LNK)) {
 			char *tmp;
 
 			ret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
 			if (ret < 0) {
-				fprintf(stderr, "%s: out of memory\n",
-					program_name);
+				fprintf(stderr, "%s: out of memory\n", program_name);
 				exit(1);
 			}
 			ret = cgroup_string_list_add_item(list, tmp);
 			free(tmp);
 			count++;
 			if (ret) {
-				fprintf(stderr, "%s: %s\n", program_name,
-					cgroup_strerror(ret));
+				fprintf(stderr, "%s: %s\n", program_name, cgroup_strerror(ret));
 				exit(1);
 			}
 		}
 		if (!item && errno) {
-			fprintf(stderr, "%s: cannot read %s: %s\n",
-				program_name, dirname, strerror(errno));
+			fprintf(stderr, "%s: cannot read %s: %s\n", program_name, dirname,
+				strerror(errno));
 			exit(1);
 		}
 	} while (item != NULL);
@@ -240,11 +232,10 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list,
 
 	/* sort the names found in the directory */
 	if (count > 0)
-		qsort(&list->items[start], count, sizeof(char *),
-		      _compare_string);
+		qsort(&list->items[start], count, sizeof(char *), _compare_string);
+
 	return 0;
 }
-
 
 /* allowed mode strings are octal version: "755" */
 int parse_mode(char *string, mode_t *pmode, const char *program_name)
@@ -271,8 +262,7 @@ err:
 	return -1;
 }
 
-int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
-		  const char *program_name)
+int parse_uid_gid(char *string, uid_t *uid, gid_t *gid, const char *program_name)
 {
 	char *grp_string = NULL;
 	char *pwd_string = NULL;
@@ -294,18 +284,18 @@ int parse_uid_gid(char *string, uid_t *uid, gid_t *gid,
 		if (pwd != NULL) {
 			*uid = pwd->pw_uid;
 		} else {
-			fprintf(stderr, "%s: can't find uid of user %s.\n",
-				program_name, pwd_string);
+			fprintf(stderr, "%s: can't find uid of user %s.\n", program_name,
+				pwd_string);
 			return -1;
 		}
 	}
 	if (grp_string != NULL) {
 		grp = getgrnam(grp_string);
-		if (grp != NULL)
+		if (grp != NULL) {
 			*gid = grp->gr_gid;
-		else {
-			fprintf(stderr, "%s: can't find gid of group %s.\n",
-				program_name, grp_string);
+		} else {
+			fprintf(stderr, "%s: can't find gid of group %s.\n", program_name,
+				grp_string);
 			return -1;
 		}
 	}
