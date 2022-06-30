@@ -26,10 +26,8 @@ const struct cgroup_abstraction_map cgroup_v1_to_v2_map[] = {
 	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
-	{cgroup_convert_name_only, "cpuset.effective_cpus", NULL,
-		"cpuset.cpus.effective", NULL},
-	{cgroup_convert_name_only, "cpuset.effective_mems", NULL,
-		"cpuset.mems.effective", NULL},
+	{cgroup_convert_name_only, "cpuset.effective_cpus", NULL, "cpuset.cpus.effective", NULL},
+	{cgroup_convert_name_only, "cpuset.effective_mems", NULL, "cpuset.mems.effective", NULL},
 	{cgroup_convert_passthrough, "cpuset.cpus", NULL, "cpuset.cpus", NULL},
 	{cgroup_convert_passthrough, "cpuset.mems", NULL, "cpuset.mems", NULL},
 	{cgroup_convert_cpuset_to_partition, "cpuset.cpu_exclusive", NULL,
@@ -44,8 +42,7 @@ const struct cgroup_abstraction_map cgroup_v1_to_v2_map[] = {
 	{cgroup_convert_unmappable, "cpuset.sched_load_balance", NULL, NULL, NULL},
 	{cgroup_convert_unmappable, "cpuset.sched_relax_domain_level", NULL, NULL, NULL},
 };
-const int cgroup_v1_to_v2_map_sz = sizeof(cgroup_v1_to_v2_map) /
-				   sizeof(cgroup_v1_to_v2_map[0]);
+const int cgroup_v1_to_v2_map_sz = sizeof(cgroup_v1_to_v2_map) / sizeof(cgroup_v1_to_v2_map[0]);
 
 const struct cgroup_abstraction_map cgroup_v2_to_v1_map[] = {
 	/* cpu controller */
@@ -55,14 +52,11 @@ const struct cgroup_abstraction_map cgroup_v2_to_v1_map[] = {
 	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
-	{cgroup_convert_name_only, "cpuset.cpus.effective", NULL,
-		"cpuset.effective_cpus", NULL},
-	{cgroup_convert_name_only, "cpuset.mems.effective", NULL,
-		"cpuset.effective_mems", NULL},
+	{cgroup_convert_name_only, "cpuset.cpus.effective", NULL, "cpuset.effective_cpus", NULL},
+	{cgroup_convert_name_only, "cpuset.mems.effective", NULL, "cpuset.effective_mems", NULL},
 	{cgroup_convert_passthrough, "cpuset.cpus", NULL, "cpuset.cpus", NULL},
 	{cgroup_convert_passthrough, "cpuset.mems", NULL, "cpuset.mems", NULL},
 	{cgroup_convert_cpuset_to_exclusive, "cpuset.cpus.partition", NULL,
 		"cpuset.cpu_exclusive", NULL},
 };
-const int cgroup_v2_to_v1_map_sz = sizeof(cgroup_v2_to_v1_map) /
-				   sizeof(cgroup_v2_to_v1_map[0]);
+const int cgroup_v2_to_v1_map_sz = sizeof(cgroup_v2_to_v1_map) / sizeof(cgroup_v2_to_v1_map[0]);
