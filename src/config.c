@@ -836,12 +836,6 @@ static int config_validate_namespaces(void)
 		 */
 		mount_path = cg_mount_table[i].mount.path;
 
-		if (!mount_path) {
-			last_errno = errno;
-			error = ECGOTHER;
-			goto out_error;
-		}
-
 		/*
 		 * Setup the namespace for the subsystems having the same
 		 * mount point.
