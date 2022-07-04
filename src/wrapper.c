@@ -137,6 +137,7 @@ int cgroup_add_all_controllers(struct cgroup *cgroup)
 			ret = ECGINVAL;
 			fprintf(stderr, "controller %s can't be add\n",
 				info.name);
+			goto end;
 		}
 
 next:
