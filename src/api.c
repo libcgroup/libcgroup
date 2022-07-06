@@ -1074,11 +1074,17 @@ STATIC int cgroup_process_v1_mnt(char *controllers[], struct mntent *ent,
 	char *strtok_buffer = NULL, *mntopt = NULL;
 	int duplicate = 0;
 	int i, j, ret = 0;
+	char c = 0;
 
 	for (i = 0; controllers[i] != NULL; i++) {
 		mntopt = hasmntopt(ent, controllers[i]);
 
 		if (!mntopt)
+			continue;
+
+		c = mntopt[strlen(controllers[i])];
+
+		if (c != '\0' && c != ',')
 			continue;
 
 		cgroup_dbg("found %s in %s\n", controllers[i], ent->mnt_opts);
