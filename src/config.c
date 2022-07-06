@@ -570,8 +570,8 @@ int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
 	}
 
 	strncpy(config_mount_table[config_table_index].name, name,
-		CONTROL_NAMELEN_MAX  - 1);
-	config_mount_table[config_table_index].name[CONTROL_NAMELEN_MAX - 1] =
+		FILENAME_MAX  - 1);
+	config_mount_table[config_table_index].name[FILENAME_MAX - 1] =
 									'\0';
 
 	strncpy(config_mount_table[config_table_index].mount.path, mount_point,
