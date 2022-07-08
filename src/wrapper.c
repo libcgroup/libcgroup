@@ -120,8 +120,9 @@ int cgroup_add_all_controllers(struct cgroup *cgroup)
 		cgc = cgroup_add_controller(cgroup, info.name);
 		if (!cgc) {
 			ret = ECGINVAL;
-			fprintf(stderr, "controller %s can't be add\n",
+			fprintf(stderr, "controller %s can't be added\n",
 				info.name);
+			goto end;
 		}
 
 next:
