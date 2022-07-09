@@ -509,7 +509,7 @@ static int get_cv_value(struct control_value * const cv,
 			tmp = realloc(cv->multiline_value, sizeof(char) *
 				(strlen(cv->multiline_value) + strlen(tmp_line) + 3));
 			if (tmp == NULL)
-				goto end;
+				goto read_end;
 
 			cv->multiline_value = tmp;
 			strcat(cv->multiline_value, "\n\t");
