@@ -83,10 +83,10 @@ $(function() {
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &lt;libcgroup.h&gt;</span></div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, &quot;Error: &quot;</span> x)</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, &quot;Warning: &quot;</span> x)</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, &quot;Info: &quot;</span> x)</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#define cgroup_err(x...)    cgroup_log(CGROUP_LOG_ERROR, &quot;Error: &quot;</span> x)</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="preprocessor">#define cgroup_warn(x...)   cgroup_log(CGROUP_LOG_WARNING, &quot;Warning: &quot;</span> x)</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#define cgroup_info(x...)   cgroup_log(CGROUP_LOG_INFO, &quot;Info: &quot;</span> x)</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#define cgroup_dbg(x...)    cgroup_log(CGROUP_LOG_DEBUG, x)</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#define err(x...)   fprintf(stderr, x)</span></div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#define info(x...)  fprintf(stdout, x)</span></div>
@@ -102,42 +102,35 @@ $(function() {
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordtype">int</span> count;</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>};</div>
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="keywordtype">int</span> parse_cgroup_spec(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__group__spec.html">cgroup_group_spec</a> **cdptr, <span class="keywordtype">char</span> *optarg,</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        <span class="keywordtype">int</span> capacity);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="keywordtype">int</span> parse_cgroup_spec(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__group__spec.html">cgroup_group_spec</a> **cdptr, <span class="keywordtype">char</span> *optarg, <span class="keywordtype">int</span> capacity);</div>
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="keywordtype">void</span> cgroup_free_group_spec(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__group__spec.html">cgroup_group_spec</a> *cl);</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keywordtype">int</span> cgroup_string_list_init(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list,</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>                <span class="keywordtype">int</span> initial_size);</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="keywordtype">void</span> cgroup_string_list_free(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list);</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span> </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="keywordtype">int</span> cgroup_string_list_add_item(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list,</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>                <span class="keyword">const</span> <span class="keywordtype">char</span> *item);</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="keywordtype">int</span> cgroup_string_list_add_directory(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list,</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>                     <span class="keywordtype">char</span> *dirname, <span class="keywordtype">char</span> *program_name);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span> </div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="keywordtype">int</span> parse_mode(<span class="keywordtype">char</span> *<span class="keywordtype">string</span>, mode_t *pmode, <span class="keyword">const</span> <span class="keywordtype">char</span> *program_name);</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="keywordtype">int</span> parse_uid_gid(<span class="keywordtype">char</span> *<span class="keywordtype">string</span>, uid_t *uid, gid_t *gid,</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>          <span class="keyword">const</span> <span class="keywordtype">char</span> *program_name);</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span> </div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span><span class="preprocessor">#ifdef UNIT_TEST</span></div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span> </div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="keywordtype">int</span> parse_r_flag(<span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> program_name,</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>         <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> name_value_str,</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>         <span class="keyword">struct</span> <a class="code hl_struct" href="structcontrol__value.html">control_value</a> * <span class="keyword">const</span> name_value);</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span> </div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span><span class="preprocessor">#endif </span><span class="comment">/* UNIT_TEST */</span><span class="preprocessor"></span></div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span> </div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span> </div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="preprocessor">#endif </span><span class="comment">/* TOOLS_COMMON */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordtype">int</span> cgroup_string_list_init(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list, <span class="keywordtype">int</span> initial_size);</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="keywordtype">void</span> cgroup_string_list_free(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list);</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="keywordtype">int</span> cgroup_string_list_add_item(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list, <span class="keyword">const</span> <span class="keywordtype">char</span> *item);</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="keywordtype">int</span> cgroup_string_list_add_directory(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__string__list.html">cgroup_string_list</a> *list, <span class="keywordtype">char</span> *dirname,</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>                     <span class="keywordtype">char</span> *program_name);</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="keywordtype">int</span> parse_mode(<span class="keywordtype">char</span> *<span class="keywordtype">string</span>, mode_t *pmode, <span class="keyword">const</span> <span class="keywordtype">char</span> *program_name);</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="keywordtype">int</span> parse_uid_gid(<span class="keywordtype">char</span> *<span class="keywordtype">string</span>, uid_t *uid, gid_t *gid, <span class="keyword">const</span> <span class="keywordtype">char</span> *program_name);</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span><span class="preprocessor">#ifdef UNIT_TEST</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span> </div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="keywordtype">int</span> parse_r_flag(<span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> program_name, <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> name_value_str,</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>         <span class="keyword">struct</span> <a class="code hl_struct" href="structcontrol__value.html">control_value</a> * <span class="keyword">const</span> name_value);</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="preprocessor">#endif </span><span class="comment">/* UNIT_TEST */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span> </div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="preprocessor">#endif </span><span class="comment">/* TOOLS_COMMON */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="astructcgroup__group__spec_html"><div class="ttname"><a href="structcgroup__group__spec.html">cgroup_group_spec</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:33</div></div>
 <div class="ttc" id="astructcgroup__string__list_html"><div class="ttname"><a href="structcgroup__string__list.html">cgroup_string_list</a></div><div class="ttdef"><b>Definition:</b> tools-common.h:41</div></div>
 <div class="ttc" id="astructcontrol__value_html"><div class="ttname"><a href="structcontrol__value.html">control_value</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:83</div></div>
