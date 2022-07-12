@@ -540,11 +540,11 @@ static int indent_multiline_value(struct control_value * const cv)
 	char *tok, *saveptr = NULL;
 
 	tok = strtok_r(cv->value, "\n", &saveptr);
-	strcat(tmp_val, tok);
+	strncat(tmp_val, tok, CG_CONTROL_VALUE_MAX - 1);
 	/* don't indent the first value */
 	while ((tok = strtok_r(NULL, "\n", &saveptr))) {
-		strcat(tmp_val, "\n\t");
-		strcat(tmp_val, tok);
+		strncat(tmp_val, "\n\t", (CG_CONTROL_VALUE_MAX - (strlen(tmp_val) + 1)));
+		strncat(tmp_val, tok, (CG_CONTROL_VALUE_MAX - (strlen(tmp_val) + 1)));
 	}
 
 	cv->multiline_value = strdup(tmp_val);
