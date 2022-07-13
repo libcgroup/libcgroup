@@ -4125,6 +4125,11 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
 
 			cgroup_dbg("control group %s is template\n", newdest);
 			ret = cgroup_create_template_group(newdest, tmp, flags);
+			if (ret) {
+				cgroup_warn("failed to create cgroup based on template %s\n",
+					    newdest);
+				goto finished;
+			}
 		}
 
 		/* Apply the rule */
