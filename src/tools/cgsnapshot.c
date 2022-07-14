@@ -541,6 +541,8 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX], const ch
 			    (max != 0)) {
 				(controllers[max])[0] = '\0';
 				ret = display_controller_data(controllers, program_name);
+				if (ret)
+					goto err;
 			}
 
 			strncpy(controllers[0], controller.name, FILENAME_MAX);
@@ -560,6 +562,7 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX], const ch
 		ret = display_controller_data(controllers, program_name);
 	}
 
+err:
 	cgroup_get_controller_end(&handle);
 	if (ret != ECGEOF)
 		return ret;
