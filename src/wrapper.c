@@ -48,7 +48,8 @@ struct cgroup *cgroup_new_cgroup(const char *name)
 		return NULL;
 
 	init_cgroup(cgroup);
-	strncpy(cgroup->name, name, sizeof(cgroup->name) - 1);
+	strncpy(cgroup->name, name, FILENAME_MAX - 1);
+	cgroup->name[FILENAME_MAX - 1] = '\0';
 
 	return cgroup;
 }
