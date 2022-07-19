@@ -54,7 +54,7 @@ def setup(config):
         config.container.run(['groupadd', GROUP])
     else:
         Run.run(['sudo', 'useradd', '-p', 'Test020#1', USER])
-        Run.run(['sudo', 'groupadd', GROUP])
+        Run.run(['sudo', 'groupadd', '-f', GROUP])
 
 
 def test(config):
@@ -106,7 +106,7 @@ def teardown(config):
             config.container.run(['userdel', USER])
             config.container.run(['groupdel', GROUP])
         else:
-            Run.run(['sudo', 'userdel', USER])
+            Run.run(['sudo', 'userdel', '-r', USER])
             Run.run(['sudo', 'groupdel', GROUP])
     except (ContainerError, RunError, ValueError):
         pass
