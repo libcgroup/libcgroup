@@ -5218,6 +5218,9 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid,
 	if (readlink(path, buf_cwd, sizeof(buf_cwd)) < 0)
 		return ECGROUPNOTEXIST;
 
+	/* readlink doesn't append a null */
+	buf_cwd[FILENAME_MAX - 1] = '\0';
+
 	sprintf(path, "/proc/%d/cmdline", pid);
 	f = fopen(path, "re");
 	if (!f)
