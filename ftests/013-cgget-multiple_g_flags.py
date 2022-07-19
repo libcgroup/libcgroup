@@ -30,19 +30,52 @@ CONTROLLER1 = 'freezer'
 CONTROLLER2 = 'cpu'
 CGNAME = '013cgget'
 
-EXPECTED_OUT = '''013cgget:
-freezer.self_freezing: 0
-freezer.parent_freezing: 0
-freezer.state: THAWED
-cpu.cfs_period_us: 100000
-cpu.stat: nr_periods 0
-        nr_throttled 0
-        throttled_time 0
-cpu.shares: 1024
-cpu.cfs_quota_us: -1
-cpu.uclamp.min: 0.00
-cpu.uclamp.max: max
-'''
+EXPECTED_OUT = [
+    '''013cgget:
+    freezer.self_freezing: 0
+    freezer.parent_freezing: 0
+    freezer.state: THAWED
+    cpu.cfs_period_us: 100000
+    cpu.stat: nr_periods 0
+            nr_throttled 0
+            throttled_time 0
+    cpu.shares: 1024
+    cpu.cfs_quota_us: -1
+    cpu.uclamp.min: 0.00
+    cpu.uclamp.max: max''',
+    # with cfs_bandwidth without cpu.stat nr_busts, burst_time
+    '''013cgget:
+    freezer.self_freezing: 0
+    freezer.parent_freezing: 0
+    freezer.state: THAWED
+    cpu.cfs_burst_us: 0
+    cpu.cfs_period_us: 100000
+    cpu.stat: nr_periods 0
+            nr_throttled 0
+            throttled_time 0
+    cpu.shares: 1024
+    cpu.idle: 0
+    cpu.cfs_quota_us: -1
+    cpu.uclamp.min: 0.00
+    cpu.uclamp.max: max''',
+    # with cfs_bandwidth with cpu.stat nr_busts, burst_time
+    '''013cgget:
+    freezer.self_freezing: 0
+    freezer.parent_freezing: 0
+    freezer.state: THAWED
+    cpu.cfs_burst_us: 0
+    cpu.cfs_period_us: 100000
+    cpu.stat: nr_periods 0
+            nr_throttled 0
+            throttled_time 0
+            nr_bursts 0
+            burst_time 0
+    cpu.shares: 1024
+    cpu.idle: 0
+    cpu.cfs_quota_us: -1
+    cpu.uclamp.min: 0.00
+    cpu.uclamp.max: max'''
+]
 
 def prereqs(config):
     result = consts.TEST_PASSED
@@ -61,11 +94,24 @@ def test(config):
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
 
+    for expected_out in EXPECTED_OUT:
+        if len(out.splitlines()) == len(expected_out.splitlines()):
+            break
+
+    if len(out.splitlines()) != len(expected_out.splitlines()):
+        result = consts.TEST_FAILED
+        cause = (
+                    'Expected {} lines but received {} lines'
+                    ''.format(len(expected_out.splitlines()),
+                              len(out.splitlines()))
+                )
+        return result, cause
+
     for line_num, line in enumerate(out.splitlines()):
-        if line.strip() != EXPECTED_OUT.splitlines()[line_num].strip():
+        if line.strip() != expected_out.splitlines()[line_num].strip():
             result = consts.TEST_FAILED
             cause = "Expected line:\n\t{}\nbut received line:\n\t{}".format(
-                    EXPECTED_OUT.splitlines()[line_num].strip(), line.strip())
+                    expected_out.splitlines()[line_num].strip(), line.strip())
             return result, cause
 
     return result, cause
