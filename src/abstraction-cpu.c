@@ -40,10 +40,8 @@ static int read_setting(const char * const cgroup_name, const char * const contr
 		goto end;
 
 	*value = strdup(tmp_line);
-	if ((*value) == NULL) {
+	if ((*value) == NULL)
 		ret = ECGOTHER;
-		goto end;
-	}
 
 read_end:
 	cgroup_read_value_end(&handle);
