@@ -5321,7 +5321,7 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
 	 * Get the full patch of process name from /proc/<pid>/exe.
 	 */
 	memset(buf, '\0', sizeof(buf));
-	sprintf(path, "/proc/%d/exe", pid);
+	snprintf(path, FILENAME_MAX, "/proc/%d/exe", pid);
 	if (readlink(path, buf, sizeof(buf)) < 0) {
 		/*
 		 * readlink() fails if a kernel thread, and a process
