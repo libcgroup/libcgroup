@@ -769,7 +769,7 @@ out:
 	if (ret != 0 && ret != ECGNOVERSIONCONVERT) {
 		/* The conversion failed */
 		for (j = 0; j < i; j++)
-			cgroup_free(&(cg_converted_list[i]));
+			cgroup_free(&(cg_converted_list[j]));
 	} else {
 		/*
 		 * The conversion succeeded or was unmappable.
