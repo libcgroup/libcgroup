@@ -566,7 +566,7 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 			/* we got new mount point, print it if needed */
 			if ((!(flags & FL_LIST) ||
 				(is_ctlr_on_list(controllers, cont_names)))
-				&& (max != 0)) {
+				&& (max != 0 && max < CG_CONTROLLER_MAX)) {
 				(controllers[max])[0] = '\0';
 				ret = display_controller_data(
 					controllers, program_name);
@@ -586,7 +586,7 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX],
 
 	if ((!(flags & FL_LIST) ||
 		(is_ctlr_on_list(controllers, cont_names)))
-		&& (max != 0)) {
+		&& (max != 0 && max < CG_CONTROLLER_MAX)) {
 		(controllers[max])[0] = '\0';
 		ret = display_controller_data(
 			controllers, program_name);
