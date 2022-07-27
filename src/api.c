@@ -5333,6 +5333,9 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname)
 		*procname = pname_status;
 		return 0;
 	}
+	/* readlink doesn't append a null */
+	buf[FILENAME_MAX - 1] = '\0';
+
 	if (!strncmp(pname_status, basename(buf), TASK_COMM_LEN - 1)) {
 		/*
 		 * The taken process name from /proc/<pid>/status is
