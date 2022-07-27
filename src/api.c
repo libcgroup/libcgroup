@@ -2734,6 +2734,9 @@ static int is_cgrp_ctrl_shared_mnt(char *controller)
 	int ret = 0;
 	int i;
 
+	if (!controller)
+		return ret;
+
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
