@@ -493,7 +493,7 @@ static int get_cv_value(struct control_value * const cv, const char * const cg_n
 	strncpy(cv->value, tmp_line, CG_CONTROL_VALUE_MAX - 1);
 	cv->multiline_value = strdup(cv->value);
 	if (cv->multiline_value == NULL)
-		goto end;
+		goto read_end;
 
 	while ((ret = cgroup_read_value_next(&handle, tmp_line, LL_MAX)) == 0) {
 		if (ret == 0) {
