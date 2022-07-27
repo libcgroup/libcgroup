@@ -4491,10 +4491,15 @@ cleanup_path:
 
 const char *cgroup_strerror(int code)
 {
+	int idx = code % ECGROUPNOTCOMPILED;
+
 	if (code == ECGOTHER)
 		return strerror_r(cgroup_get_last_errno(), errtext, MAXLEN);
 
-	return cgroup_strerror_codes[code % ECGROUPNOTCOMPILED];
+	if (idx >= sizeof(cgroup_strerror_codes)/sizeof(cgroup_strerror_codes[0]))
+		return "Invalid error code";
+
+	return cgroup_strerror_codes[idx];
 }
 
 /**
