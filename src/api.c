@@ -5360,6 +5360,7 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 	int ret = 1;
 	char buff[sizeof(CGRULE_SUCCESS_STORE_PID)];
 	struct sockaddr_un addr;
+	size_t ret_len;
 
 	sk = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (sk < 0)
@@ -5382,7 +5383,8 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 	if (write(sk, &flags, sizeof(flags)) < 0)
 		goto close;
 
-	if (read(sk, buff, sizeof(buff)) < 0)
+	ret_len = read(sk, buff, sizeof(buff));
+	if (ret_len != sizeof(buff))
 		goto close;
 
 	if (strncmp(buff, CGRULE_SUCCESS_STORE_PID, sizeof(buff)))
