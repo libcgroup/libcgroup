@@ -5440,6 +5440,7 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 {
 	char buff[sizeof(CGRULE_SUCCESS_STORE_PID)];
 	struct sockaddr_un addr;
+	size_t ret_len;
 	int ret = 1;
 	int sk;
 
@@ -5463,7 +5464,8 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 	if (write(sk, &flags, sizeof(flags)) < 0)
 		goto close;
 
-	if (read(sk, buff, sizeof(buff)) < 0)
+	ret_len = read(sk, buff, sizeof(buff));
+	if (ret_len != sizeof(buff))
 		goto close;
 
 	if (strncmp(buff, CGRULE_SUCCESS_STORE_PID, sizeof(buff)))
