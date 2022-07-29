@@ -609,6 +609,7 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 	socklen_t caddr_len;
 	struct stat buff_stat;
 	char path[FILENAME_MAX];
+	size_t ret_len;
 
 	caddr_len = sizeof(caddr);
 	fd_client = accept(sk_unix, (struct sockaddr *)&caddr, &caddr_len);
@@ -629,7 +630,8 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 				pid);
 		goto close;
 	}
-	if (read(fd_client, &flags, sizeof(flags)) < 0) {
+	ret_len = read(fd_client, &flags, sizeof(flags));
+	if (ret_len != sizeof(flags)) {
 		flog(LOG_WARNING, "Warning: error reading daemon socket: %s\n",
 				strerror(errno));
 		goto close;
