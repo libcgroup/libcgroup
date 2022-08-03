@@ -5862,6 +5862,9 @@ int cgroup_get_controller_version(const char * const controller, enum cg_version
 		return 0;
 	}
 
+	if (!controller)
+		return ECGINVAL;
+
 	*version = CGROUP_UNK;
 
 	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
