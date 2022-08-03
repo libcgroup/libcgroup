@@ -770,6 +770,7 @@ out:
 		/* The conversion failed */
 		for (j = 0; j < i; j++)
 			cgroup_free(&(cg_converted_list[j]));
+		free(cg_converted_list);
 	} else {
 		/*
 		 * The conversion succeeded or was unmappable.
