@@ -9,7 +9,7 @@
 AC_PREREQ([2.69])
 
 # In following section update all occurences of version, including soname
-AC_INIT([libcgroup],[0.0.0])
+AC_INIT([libcgroup],[3.0.0])
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIRS([m4])
@@ -19,7 +19,7 @@ AM_INIT_AUTOMAKE([foreign dist-bzip2 subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # set library version, soname is libcgroup.so.MAJOR
-AC_SUBST(LIBRARY_VERSION_MAJOR, 0)
+AC_SUBST(LIBRARY_VERSION_MAJOR, 3)
 AC_SUBST(LIBRARY_VERSION_MINOR, 0)
 AC_SUBST(LIBRARY_VERSION_RELEASE, 0)
 
