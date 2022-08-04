@@ -68,68 +68,75 @@ $(function() {
 <div class="textblock"><p ><a href="https://github.com/libcgroup/libcgroup">https://github.com/libcgroup/libcgroup</a></p>
 <p >This is the process that should be followed when creating a new libcgroup release.</p>
 <h3><a class="anchor" id="autotoc_md9"></a>
-1. Verify that all issues assigned to the release milestone have been resolved</h3>
+1. Update the libcgroup-tests submodule</h3>
+<pre class="fragment"># ./bootstrap.sh
+# git submodule update  --remote tests
+# git add tests
+# git commit -s
+# git push
+</pre> <h3><a class="anchor" id="autotoc_md10"></a>
+2. Verify that all issues assigned to the release milestone have been resolved</h3>
 <ul>
 <li><a href="https://github.com/libcgroup/libcgroup/milestones">https://github.com/libcgroup/libcgroup/milestones</a></li>
 </ul>
-<h3><a class="anchor" id="autotoc_md10"></a>
-2. Verify that the Github Actions are all passing</h3>
 <h3><a class="anchor" id="autotoc_md11"></a>
-3. Verify that the bundled test suite runs without error</h3>
+3. Verify that the Github Actions are all passing</h3>
+<h3><a class="anchor" id="autotoc_md12"></a>
+4. Verify that the bundled test suite runs without error</h3>
 <pre class="fragment"># ./bootstrap.sh
 # make check
-</pre> <h3><a class="anchor" id="autotoc_md12"></a>
-4. Verify that the packaging is correct</h3>
-<pre class="fragment"># make distcheck
 </pre> <h3><a class="anchor" id="autotoc_md13"></a>
-5. Perform any distribution test builds</h3>
+5. Verify that the packaging is correct</h3>
+<pre class="fragment"># make distcheck
+</pre> <h3><a class="anchor" id="autotoc_md14"></a>
+6. Perform any distribution test builds</h3>
 <ul>
 <li>Oracle Linux</li>
 <li>Fedora Rawhide</li>
 <li>Red Hat Enterprise Linux</li>
 <li>etc.</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md14"></a>
-6. If any problems were found up to this point that resulted in code changes, restart the process</h3>
 <h3><a class="anchor" id="autotoc_md15"></a>
-7. If this is a new major/minor release, create new 'release-X.Y' branch</h3>
+7. If any problems were found up to this point that resulted in code changes, restart the process</h3>
+<h3><a class="anchor" id="autotoc_md16"></a>
+8. If this is a new major/minor release, create new 'release-X.Y' branch</h3>
 <pre class="fragment"># git branch "release-X.Y"
-</pre> <h3><a class="anchor" id="autotoc_md16"></a>
-8. Update the version number in configure.ac AC_INIT(...) macro</h3>
-<h3><a class="anchor" id="autotoc_md17"></a>
-9. Tag the release in the local repository with a signed tag</h3>
+</pre> <h3><a class="anchor" id="autotoc_md17"></a>
+9. Update the version number in configure.ac AC_INIT(...) macro</h3>
+<h3><a class="anchor" id="autotoc_md18"></a>
+10. Tag the release in the local repository with a signed tag</h3>
 <pre class="fragment"># git tag -s -m "version X.Y.Z" vX.Y.Z
-</pre> <h3><a class="anchor" id="autotoc_md18"></a>
-10. Build final release tarball</h3>
+</pre> <h3><a class="anchor" id="autotoc_md19"></a>
+11. Build final release tarball</h3>
 <pre class="fragment"># make clean
 # ./bootstrap.sh
 # make dist-gzip
-</pre> <h3><a class="anchor" id="autotoc_md19"></a>
-11. Verify the release tarball in a separate directory</h3>
+</pre> <h3><a class="anchor" id="autotoc_md20"></a>
+12. Verify the release tarball in a separate directory</h3>
 <pre class="fragment">&lt;unpack the release tarball in a temporary directory&gt;
 # ./configure --sysconfdir=/etc --localstatedir=/var \
 --enable-opaque-hierarchy="name=systemd" --enable-python
 # make check
-</pre> <h3><a class="anchor" id="autotoc_md20"></a>
-12. Generate a checksum for the release tarball</h3>
-<pre class="fragment"># sha256sum &lt;tarball&gt; &gt; libcgroup-X.Y.Z.tar.gz.SHA256SUM
 </pre> <h3><a class="anchor" id="autotoc_md21"></a>
-13. GPG sign the release tarball and checksum using the maintainer's key</h3>
+13. Generate a checksum for the release tarball</h3>
+<pre class="fragment"># sha256sum &lt;tarball&gt; &gt; libcgroup-X.Y.Z.tar.gz.SHA256SUM
+</pre> <h3><a class="anchor" id="autotoc_md22"></a>
+14. GPG sign the release tarball and checksum using the maintainer's key</h3>
 <pre class="fragment"># gpg --armor --detach-sign libcgroup-X.Y.Z.tar.gz
 # gpg --clearsign libcgroup-X.Y.Z.tar.gz.SHA256SUM
-</pre> <h3><a class="anchor" id="autotoc_md22"></a>
-14. Push the release tag to the main GitHub repository</h3>
-<pre class="fragment"># git push &lt;repo&gt; vX.Y.Z
 </pre> <h3><a class="anchor" id="autotoc_md23"></a>
-15. Create a new GitHub release using the associated tag and upload the following files</h3>
+15. Push the release tag to the main GitHub repository</h3>
+<pre class="fragment"># git push &lt;repo&gt; vX.Y.Z
+</pre> <h3><a class="anchor" id="autotoc_md24"></a>
+16. Create a new GitHub release using the associated tag and upload the following files</h3>
 <ul>
 <li>libcgroup-X.Y.Z.tar.gz</li>
 <li>libcgroup-X.Y.Z.tar.gz.asc</li>
 <li>libcgroup-X.Y.Z.tar.gz.SHA256SUM</li>
 <li>libcgroup-X.Y.Z.tar.gz.SHA256SUM.asc</li>
 </ul>
-<h3><a class="anchor" id="autotoc_md24"></a>
-16. Update the GitHub release notes for older releases which are now unsupported</h3>
+<h3><a class="anchor" id="autotoc_md25"></a>
+17. Update the GitHub release notes for older releases which are now unsupported</h3>
 <p >The following Markdown text is suggested at the top of the release note, see old GitHub releases for examples.</p>
 <div class="fragment"><div class="line">***This release is no longer supported upstream, please use a more recent release***</div>
 </div><!-- fragment --> </div></div><!-- contents -->
