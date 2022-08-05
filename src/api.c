@@ -5454,7 +5454,11 @@ int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
 	if (!info)
 		return ECGINVAL;
 
-	err = fscanf(proc_cgroup, "%s %d %d %d\n", subsys_name,
+	/*
+	 * check Linux Kernel sources/kernel/cgroup/cgroup.c cgroup_init_early(),
+	 * MAX_CGROUP_TYPE_NAMELEN check for details on why 32 is used.
+	 */
+	err = fscanf(proc_cgroup, "%32s %d %d %d\n", subsys_name,
 			&hierarchy, &num_cgroups, &enabled);
 
 	if (err != 4)
