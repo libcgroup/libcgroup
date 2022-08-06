@@ -1362,7 +1362,11 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 
 	i = 0;
 	while (!feof(proc_cgroup)) {
-		err = fscanf(proc_cgroup, "%s %d %d %d", subsys_name, &hierarchy, &num_cgroups,
+		/*
+		 * check Linux Kernel sources/kernel/cgroup/cgroup.c cgroup_init_early(),
+		 * MAX_CGROUP_TYPE_NAMELEN check for details on why 32 is used.
+		 */
+		err = fscanf(proc_cgroup, "%32s %d %d %d", subsys_name, &hierarchy, &num_cgroups,
 			     &enabled);
 		if (err < 0)
 			break;
