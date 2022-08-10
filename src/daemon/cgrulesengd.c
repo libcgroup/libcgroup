@@ -618,7 +618,8 @@ static void cgre_receive_unix_domain_msg(int sk_unix)
 				strerror(errno));
 		return;
 	}
-	if (read(fd_client, &pid, sizeof(pid)) < 0) {
+	ret_len = read(fd_client, &pid, sizeof(pid));
+	if (ret_len != sizeof(pid)) {
 		flog(LOG_WARNING, "Warning: 'read' command error: %s\n",
 				strerror(errno));
 		goto close;
