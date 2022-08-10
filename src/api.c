@@ -4453,7 +4453,11 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller,
 		char *savedptr;
 		char *token;
 
-		ret = fscanf(pid_cgroup_fd, "%d:%[^:]:%s\n", &num, controllers,
+		/*
+		 * 4096 == FILENAME_MAX, keeping the coverity happy with precision
+		 * for the cgroup_path.
+		 */
+		ret = fscanf(pid_cgroup_fd, "%d:%[^:]:%4096s\n", &num, controllers,
 				cgroup_path);
 		/*
 		 * Magic numbers like "3" seem to be integrating into
