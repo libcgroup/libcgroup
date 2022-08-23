@@ -88,10 +88,14 @@ $(function() {
 <div class="ttc" id="agroup__group__log_html_ga76d7032206f9b9d1c0be1a71a68c43d0"><div class="ttname"><a href="group__group__log.html#ga76d7032206f9b9d1c0be1a71a68c43d0">cgroup_set_logger</a></div><div class="ttdeci">void cgroup_set_logger(cgroup_logger_callback logger, int loglevel, void *userdata)</div><div class="ttdef"><b>Definition:</b> log.c:42</div></div>
 </div><!-- fragment --> </dd></dl>
 </td></tr>
-<tr class="memitem:ga98b7aea5d23411e70c7e3da54d90233a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__log.html#ga98b7aea5d23411e70c7e3da54d90233a">cgroup_log_level</a> { <a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2">CGROUP_LOG_ERROR</a> = 1
+<tr class="memitem:ga98b7aea5d23411e70c7e3da54d90233a"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__log.html#ga98b7aea5d23411e70c7e3da54d90233a">cgroup_log_level</a> { <br />
+&#160;&#160;<a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aa915b87fe26cc45572e40508dc6d62e88">CGROUP_LOG_CONT</a> = 0
+, <a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2">CGROUP_LOG_ERROR</a>
 , <a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aaa99ec9e854a543901bddf854d1960057">CGROUP_LOG_WARNING</a>
 , <a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aad66ab51dba078ffc3b1c6d397053f9e2">CGROUP_LOG_INFO</a>
-, <a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aa86b4157fb38d9f8053c6b7429bd26c72">CGROUP_LOG_DEBUG</a>
+, <br />
+&#160;&#160;<a class="el" href="group__group__log.html#gga98b7aea5d23411e70c7e3da54d90233aa86b4157fb38d9f8053c6b7429bd26c72">CGROUP_LOG_DEBUG</a>
+<br />
  }</td></tr>
 <tr class="separator:ga98b7aea5d23411e70c7e3da54d90233a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa1da90e8ef64cc58c7ad523bdd6679e6"><td class="memItemLeft" align="right" valign="top"><a id="gaa1da90e8ef64cc58c7ad523bdd6679e6" name="gaa1da90e8ef64cc58c7ad523bdd6679e6"></a>
@@ -123,7 +127,9 @@ typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_logg
 </div><div class="memdoc">
 <p >Level of importance of a log message. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2" name="gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2"></a>CGROUP_LOG_ERROR&#160;</td><td class="fielddoc"><p >Something serious happened and libcgroup failed to perform requested operation. </p>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga98b7aea5d23411e70c7e3da54d90233aa915b87fe26cc45572e40508dc6d62e88" name="gga98b7aea5d23411e70c7e3da54d90233aa915b87fe26cc45572e40508dc6d62e88"></a>CGROUP_LOG_CONT&#160;</td><td class="fielddoc"><p >Continue printing the log message, with the previous log level. Used to print log messages without the line break. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2" name="gga98b7aea5d23411e70c7e3da54d90233aa4dd44215cd3553e79dbf91eb9ca418a2"></a>CGROUP_LOG_ERROR&#160;</td><td class="fielddoc"><p >Something serious happened and libcgroup failed to perform requested operation. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga98b7aea5d23411e70c7e3da54d90233aaa99ec9e854a543901bddf854d1960057" name="gga98b7aea5d23411e70c7e3da54d90233aaa99ec9e854a543901bddf854d1960057"></a>CGROUP_LOG_WARNING&#160;</td><td class="fielddoc"><p >Something bad happened but libcgroup recovered from the error. </p>
 </td></tr>
