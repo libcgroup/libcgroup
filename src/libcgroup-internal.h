@@ -70,10 +70,11 @@ extern "C" {
 
 #define CGROUP_FILE_PREFIX	"cgroup"
 
-#define cgroup_err(x...) cgroup_log(CGROUP_LOG_ERROR, "Error: " x)
-#define cgroup_warn(x...) cgroup_log(CGROUP_LOG_WARNING, "Warning: " x)
-#define cgroup_info(x...) cgroup_log(CGROUP_LOG_INFO, "Info: " x)
-#define cgroup_dbg(x...) cgroup_log(CGROUP_LOG_DEBUG, x)
+#define cgroup_err(x...)	cgroup_log(CGROUP_LOG_ERROR, "Error: " x)
+#define cgroup_warn(x...)	cgroup_log(CGROUP_LOG_WARNING, "Warning: " x)
+#define cgroup_info(x...)	cgroup_log(CGROUP_LOG_INFO, "Info: " x)
+#define cgroup_dbg(x...)	cgroup_log(CGROUP_LOG_DEBUG, x)
+#define cgroup_cont(x...)	cgroup_log(CGROUP_LOG_CONT, x)
 
 #define CGROUP_DEFAULT_LOGLEVEL CGROUP_LOG_ERROR
 
