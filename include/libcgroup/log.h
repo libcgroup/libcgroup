@@ -72,10 +72,15 @@ extern "C" {
  */
 enum cgroup_log_level {
 	/**
+	 * Continue printing the log message, with the previous log level.
+	 * Used to print log messages without the line break.
+	 */
+	CGROUP_LOG_CONT = 0,
+	/**
 	 * Something serious happened and libcgroup failed to perform requested
 	 * operation.
 	 */
-	CGROUP_LOG_ERROR = 1,
+	CGROUP_LOG_ERROR,
 	/**
 	 * Something bad happened but libcgroup recovered from the error.
 	 */
