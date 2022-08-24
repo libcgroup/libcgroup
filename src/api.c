@@ -4571,9 +4571,13 @@ const char *cgroup_strerror(int code)
 {
 	int idx = code % ECGROUPNOTCOMPILED;
 
-	if (code == ECGOTHER)
+	if (code == ECGOTHER) {
+#ifdef STRERROR_R_CHAR_P
 		return strerror_r(cgroup_get_last_errno(), errtext, MAXLEN);
-
+#else
+		return strerror_r(cgroup_get_last_errno(), errtext, sizeof (errtext)) ? "unknown error" : errtext;
+#endif
+	}
 	if (idx >= sizeof(cgroup_strerror_codes)/sizeof(cgroup_strerror_codes[0]))
 		return "Invalid error code";
 
