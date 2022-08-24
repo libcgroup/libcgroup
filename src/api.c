@@ -212,16 +212,20 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 {
 	mode_t mask = -1U;
 	struct stat buf;
+	int fd = -1;
 
 	if (owner_is_umask) {
 		mode_t umask, gmask, omask;
 
+		fd = open(path, O_RDONLY);
+		if (fd == -1)
+			goto fail;
 		/*
 		 * Use owner permissions as an umask for group and others
 		 * permissions because we trust kernel to initialize owner
 		 * permissions to something useful.  Keep SUID and SGID bits.
 		 */
-		if (stat(path, &buf) == -1)
+		if (fstat(fd, &buf) == -1)
 			goto fail;
 
 		/* 0700 == S_IRWXU */
@@ -232,14 +236,19 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 		mask = umask|gmask|omask|S_ISUID|S_ISGID|S_ISVTX;
 	}
 
-	if (chmod(path, mode & mask))
+	if (fchmod(fd, mode & mask))
 		goto fail;
+
+	close(fd);
 
 	return 0;
 
 fail:
 	cgroup_warn("cannot change permissions of file %s: %s\n", path, strerror(errno));
 	last_errno = errno;
+
+	if (fd > 0)
+		close(fd);
 
 	return ECGOTHER;
 }
