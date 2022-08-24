@@ -1407,7 +1407,7 @@ err:
 }
 
 /*
- * Reads /proc/mounts and populates the cgroup v1/v2 mount points into the
+ * Reads /proc/self/mounts and populates the cgroup v1/v2 mount points into the
  * global cg_mount_table.
  * This function should be called with cg_mount_table_lock taken.
  */
@@ -1419,9 +1419,9 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 	FILE *proc_mount;
 	int ret = 0;
 
-	proc_mount = fopen("/proc/mounts", "re");
+	proc_mount = fopen("/proc/self/mounts", "re");
 	if (proc_mount == NULL) {
-		cgroup_err("cannot open /proc/mounts: %s\n", strerror(errno));
+		cgroup_err("cannot open /proc/self/mounts: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto err;
@@ -1537,7 +1537,7 @@ static int cg_test_mounted_fs(void)
 	FILE *proc_mount = NULL;
 	int ret = 1;
 
-	proc_mount = fopen("/proc/mounts", "re");
+	proc_mount = fopen("/proc/self/mounts", "re");
 	if (proc_mount == NULL)
 		return 0;
 
