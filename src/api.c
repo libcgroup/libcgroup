@@ -1385,9 +1385,9 @@ int cgroup_init(void)
 	}
 	controllers[i] = NULL;
 
-	proc_mount = fopen("/proc/mounts", "re");
+	proc_mount = fopen("/proc/self/mounts", "re");
 	if (proc_mount == NULL) {
-		cgroup_err("Error: cannot open /proc/mounts: %s\n",
+		cgroup_err("Error: cannot open /proc/self/mounts: %s\n",
 				strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -1463,7 +1463,7 @@ static int cg_test_mounted_fs(void)
 	char mntent_buff[4 * FILENAME_MAX];
 	int ret = 1;
 
-	proc_mount = fopen("/proc/mounts", "re");
+	proc_mount = fopen("/proc/self/mounts", "re");
 	if (proc_mount == NULL)
 		return 0;
 
