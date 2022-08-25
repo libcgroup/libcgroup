@@ -25,9 +25,27 @@ on: ["push", "pull_request"]
 jobs:
   # Thanks to github user @martyrs
   # https://github.community/t/how-to-properly-clean-up-self-hosted-runners/128909/3
-  cleaner:
-    name: Delete Self-Hosted Runner Workspaces
-    runs-on: self-hosted
+  cleaner_legacy:
+    name: Delete Self-Hosted Runner Workspaces - legacy
+    runs-on: cgroup-legacy
+    steps:
+      - name: Delete workspace path
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+
+  cleaner_hybrid:
+    name: Delete Self-Hosted Runner Workspaces - hybrid
+    runs-on: cgroup-hybrid
+    steps:
+      - name: Delete workspace path
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+
+  cleaner_unified:
+    name: Delete Self-Hosted Runner Workspaces - unified
+    runs-on: cgroup-unified
     steps:
       - name: Delete workspace path
         run: |
@@ -235,10 +253,10 @@ jobs:
         name: Cgroup v1v2 Code Coverage
         path: lcov.*
 
-  functionaltestsv2:
-    name: Cgroup v2 Functional Tests
-    needs: [cleaner]
-    runs-on: self-hosted
+  functionaltestsv2_legacy:
+    name: Cgroup v2 Functional Tests - legacy
+    needs: [cleaner_legacy]
+    runs-on: cgroup-legacy
 
     steps:
     - uses: actions/checkout@v2
@@ -263,7 +281,7 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: Cgroup v2 test logs
+        name: Cgroup v2 test logs - legacy
         path: tests/ftests/*.log
     - name: Collate code coverage results
       uses: ./.github/actions/code-coverage
@@ -272,19 +290,112 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v2 Functional Tests"
+        flag-name: "Cgroup v2 Functional Tests - legacy"
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
       uses: actions/upload-artifact@v2
       with:
-        name: Cgroup v2 Code Coverage
+        name: Cgroup v2 Code Coverage - legacy
+        path: lcov.*
+
+  functionaltestsv2_hybrid:
+    name: Cgroup v2 Functional Tests - hybrid
+    needs: [cleaner_hybrid]
+    runs-on: cgroup-hybrid
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run functional tests
+      run: |
+        pushd src/python/build/lib.*
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        popd
+        pushd tests/ftests
+        make check
+        popd
+    - name: Display test logs
+      if: ${{ always() }}
+      run: |
+        cat tests/ftests/ftests.sh.log
+        cat tests/ftests/ftests-nocontainer.sh.log
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v2 test logs - hybrid
+        path: tests/ftests/*.log
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "Cgroup v2 Functional Tests - hybrid"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v2 Code Coverage - hybrid
+        path: lcov.*
+
+  functionaltestsv2_unified:
+    name: Cgroup v2 Functional Tests - unified
+    needs: [cleaner_unified]
+    runs-on: cgroup-unified
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run functional tests
+      run: |
+        pushd src/python/build/lib.*
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        popd
+        pushd tests/ftests
+        make check
+        popd
+    - name: Display test logs
+      if: ${{ always() }}
+      run: |
+        cat tests/ftests/ftests.sh.log
+        cat tests/ftests/ftests-nocontainer.sh.log
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v2 test logs - unified
+        path: tests/ftests/*.log
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "Cgroup v2 Functional Tests - unified"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: Cgroup v2 Code Coverage - unified
         path: lcov.*
 
   finalize:
     name: Finalize the test run
     if: ${{ always() }}
-    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2]
+    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2_legacy,
+            functionaltestsv2_hybrid, functionaltestsv2_unified]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results
