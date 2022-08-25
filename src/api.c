@@ -1331,6 +1331,73 @@ static void cgroup_free_cg_mount_table(void)
 }
 
 /*
+ * Parses the mount options of the given mount point and checks for the
+ * option in the list of mount options and sets is_set accordingly.
+ * @mnt: Mount point name to search for mount points.
+ * @mnt_opt: Mount option to be searched.
+ * @is_set: Set to 1, when mount option is found, 0 otherwise.
+ *
+ * Returns 0, in case of success and ECGOTHER on failure.
+ */
+static int check_mount_point_opt(const char *mnt, const char *mnt_opt, int * const is_set)
+{
+	struct mntent *ent, *temp_ent = NULL;
+	char mntent_buffer[4 * FILENAME_MAX];
+	char *mntopt = NULL;
+	char mnt_opt_delim;
+	FILE *proc_mount;
+	int ret = 0;
+
+	if (!mnt || !mnt_opt || !is_set)
+		return ECGINVAL;
+
+	proc_mount = setmntent(mnt, "r");
+	if (!proc_mount) {
+		cgroup_err("cannot open %s: %s\n", mnt, strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+	if (!temp_ent) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	ent = getmntent_r(proc_mount, temp_ent,	mntent_buffer, sizeof(mntent_buffer));
+	if (!ent) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	*is_set = 0;
+	while((mntopt = hasmntopt(ent, mnt_opt))) {
+		mnt_opt_delim = mntopt[strlen(mnt_opt)];
+		if (mnt_opt_delim == '\0' || mnt_opt_delim == ',') {
+			*is_set  = 1;
+			break;
+		}
+	}
+
+	if (*is_set == 0) {
+		cgroup_dbg("%s, not found in the list of ", mnt_opt);
+		cgroup_cont("mount options of %s\n", mnt);
+	}
+
+err:
+	if (proc_mount)
+		endmntent(proc_mount);
+
+	if (temp_ent)
+		free(temp_ent);
+
+	return ret;
+}
+
+/*
  * Reads /proc/cgroups and populates the controllers/subsys_name. This
  * function should be called with cg_mount_table_lock taken.
  */
@@ -1338,16 +1405,26 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 {
 	int hierarchy, num_cgroups, enabled;
 	char subsys_name[FILENAME_MAX];
+	char mnt_opt[] = "subset=pid";
 	FILE *proc_cgroup;
 	char *buf = NULL;
+	int mnt_opt_set;
 	int ret = 0;
-	int i, err;
+	int err, i = 0;
 
 	proc_cgroup = fopen("/proc/cgroups", "re");
 	if (!proc_cgroup) {
-		cgroup_err("cannot open /proc/cgroups: %s\n", strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
+		cgroup_warn("cannot open /proc/cgroups: %s\n", strerror(errno));
+		ret = check_mount_point_opt("/proc/self/mounts", mnt_opt, &mnt_opt_set);
+		if (ret)
+			goto err;
+
+		if (!mnt_opt_set)
+			ret = ECGINVAL;
+		/*
+		 * /proc, mounted with subset=pid is valid. cgroup v2 doesn't
+		 * depend on /proc/cgroups to parse the available controllers.
+		 */
 		goto err;
 	}
 
@@ -1369,7 +1446,6 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 		goto err;
 	}
 
-	i = 0;
 	while (!feof(proc_cgroup)) {
 		/*
 		 * check Linux Kernel sources/kernel/cgroup/cgroup.c cgroup_init_early(),
@@ -1438,6 +1514,13 @@ static int cgroup_populate_mount_points(char *controllers[CG_CONTROLLER_MAX])
 				  sizeof(mntent_buffer))) != NULL) {
 
 		if (strcmp(ent->mnt_type, "cgroup") == 0) {
+			if (controllers[0] == NULL) {
+				cgroup_err("cgroup v1 requires /proc/cgroups, check if /proc ");
+				cgroup_cont("is mounted with subset=pid option.\n");
+				ret = ECGINVAL;
+				goto err;
+			}
+
 			ret = cgroup_process_v1_mnt(controllers, ent, &found_mnt);
 			if (ret)
 				goto err;
