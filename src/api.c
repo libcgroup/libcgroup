@@ -1299,6 +1299,75 @@ out:
 	return ret;
 }
 
+/*
+ * Parses the mount options of the given mount point and checks for the
+ * option in the list of mount options.
+ * @mnt: Mount point name to search for mount points.
+ * @mnt_opt: Mount option to be searched.
+ * @is_set: Set to 1, when mount option is found, 0 otherwise.
+ *
+ * Returns 0, in case of success and ECGOTHER on failure.
+ */
+static int check_mount_point_opt(const char *mnt, const char *mnt_opt,
+				 int * const is_set)
+{
+	struct mntent *ent, *temp_ent = NULL;
+	char mntent_buffer[4 * FILENAME_MAX];
+	char *mntopt = NULL;
+	char mnt_opt_delim;
+	FILE *proc_mount;
+	int ret = 0;
+
+	if (!mnt || !mnt_opt || !is_set)
+		return ECGINVAL;
+
+	proc_mount = setmntent(mnt, "r");
+	if (!proc_mount) {
+		cgroup_err("Error: cannot open %s:%s ", mnt, strerror(errno));
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	temp_ent = (struct mntent *) malloc(sizeof(struct mntent));
+	if (!temp_ent) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	ent = getmntent_r(proc_mount, temp_ent, mntent_buffer,
+			  sizeof(mntent_buffer));
+	if (!ent) {
+		last_errno = errno;
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	*is_set = 0;
+	while ((mntopt = hasmntopt(ent, mnt_opt))) {
+		mnt_opt_delim = mntopt[strlen(mnt_opt)];
+		if (mnt_opt_delim == '\0' || mnt_opt_delim == ',') {
+			*is_set = 1;
+			break;
+		}
+	}
+
+	if (*is_set == 0) {
+		cgroup_dbg("Debug: %s, not found in the list of ", mnt_opt);
+		cgroup_dbg("mount options of %s\n", mnt);
+	}
+
+err:
+	if (proc_mount)
+		endmntent(proc_mount);
+
+	if (temp_ent)
+		free(temp_ent);
+
+	return ret;
+}
+
 /**
  * cgroup_init(), initializes the MOUNT_POINT.
  *
@@ -1322,6 +1391,8 @@ int cgroup_init(void)
 	int err;
 	char *buf = NULL;
 	char mntent_buffer[4 * FILENAME_MAX];
+	char mnt_opt[] = "subset=pid";
+	int mnt_opt_set;
 
 	cgroup_set_default_logger(-1);
 
@@ -1339,13 +1410,25 @@ int cgroup_init(void)
 	memset(&cg_mount_table, 0, sizeof(cg_mount_table));
 
 	proc_cgroup = fopen("/proc/cgroups", "re");
-
 	if (!proc_cgroup) {
-		cgroup_err("Error: cannot open /proc/cgroups: %s\n",
-				strerror(errno));
-		last_errno = errno;
-		ret = ECGOTHER;
-		goto unlock_exit;
+		cgroup_warn("Warning: cannot open /proc/cgroups: %s\n",
+			    strerror(errno));
+		ret = check_mount_point_opt("/proc/self/mounts", mnt_opt,
+					    &mnt_opt_set);
+		if (ret)
+			goto unlock_exit;
+
+		if (!mnt_opt_set) {
+			ret = ECGINVAL;
+			goto unlock_exit;
+		}
+
+		/*
+		 * /proc, mounted with subset=pid is valid. cgroup v2 doesn't
+		 * depend on /proc/cgroups to parse the available controllers.
+		 */
+		ret = 0;
+		goto cgroup_unified;
 	}
 
 	/*
@@ -1385,6 +1468,7 @@ int cgroup_init(void)
 	}
 	controllers[i] = NULL;
 
+cgroup_unified:
 	proc_mount = fopen("/proc/self/mounts", "re");
 	if (proc_mount == NULL) {
 		cgroup_err("Error: cannot open /proc/self/mounts: %s\n",
@@ -1406,6 +1490,14 @@ int cgroup_init(void)
 					mntent_buffer,
 					sizeof(mntent_buffer))) != NULL) {
 		if (strcmp(ent->mnt_type, "cgroup") == 0) {
+			if (controllers[0] == NULL) {
+				cgroup_err("Error: cgroup v1 requires ");
+				cgroup_err("/proc/cgroups, check if /proc is ");
+				cgroup_err("mounted with subset=pid option.\n");
+				ret = ECGINVAL;
+				goto unlock_exit;
+			}
+
 			ret = cgroup_process_v1_mnt(controllers, ent,
 						    &found_mnt);
 			if (ret)
