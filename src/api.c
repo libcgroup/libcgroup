@@ -207,12 +207,12 @@ int cg_chmod_path(const char *path, mode_t mode, int owner_is_umask)
 	mode_t mask = -1U;
 	int fd;
 
+	fd = open(path, O_RDONLY);
+	if (fd == -1)
+		goto fail;
+
 	if (owner_is_umask) {
 		mode_t umask, gmask, omask;
-
-		fd = open(path, O_RDONLY);
-		if (fd == -1)
-			goto fail;
 		/*
 		 * Use owner permissions as an umask for group and others
 		 * permissions because we trust kernel to initialize owner
