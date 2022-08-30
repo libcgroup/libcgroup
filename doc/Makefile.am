@@ -1,2 +1,3 @@
-SUBDIRS = man
+DIST_SUBDIRS = man
+SUBDIRS = $(DIST_SUBDIRS)
 

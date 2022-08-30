@@ -2,6 +2,7 @@
 
 BUILT_SOURCES = parse.c parse.h
 
+DIST_SUBDIRS = . daemon pam tools python
 SUBDIRS = . daemon pam tools
 if ENABLE_PYTHON
 SUBDIRS += python
