@@ -218,6 +218,9 @@ AC_CONFIG_FILES([Makefile
 	scripts/Makefile
 	scripts/init.d/cgconfig
 	scripts/init.d/cgred
+	tests/Makefile
+	tests/ftests/Makefile
+	tests/gunit/Makefile
 	samples/Makefile
 	samples/c/Makefile
 	samples/config/Makefile
@@ -227,10 +230,6 @@ AC_CONFIG_FILES([Makefile
 	doc/man/Makefile
 	dist/Makefile
 	libcgroup.pc])
-AM_COND_IF([WITH_TESTS],
-	[AC_CONFIG_FILES([tests/Makefile
-		tests/ftests/Makefile
-		tests/gunit/Makefile])])
 AC_CONFIG_FILES([dist/libcgroup.spec:dist/libcgroup.spec.in])
 CFLAGS="$CFLAGS -Wall"
 AC_OUTPUT
