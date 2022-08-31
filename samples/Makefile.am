@@ -1,1 +1,2 @@
-SUBDIRS = config c
+DIST_SUBDIRS = config c
+SUBDIRS = $(DIST_SUBDIRS)
