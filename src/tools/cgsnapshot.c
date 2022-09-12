@@ -516,7 +516,7 @@ err:
 }
 
 static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
-			cont_name_t wanted_conts[FILENAME_MAX])
+			cont_name_t wanted_conts[CG_CONTROLLER_MAX])
 {
 	int i = 0;
 	int j = 0;
