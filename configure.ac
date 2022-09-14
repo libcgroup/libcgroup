@@ -140,7 +140,7 @@ AC_ARG_ENABLE([opaque-hierarchy],
 AC_ARG_ENABLE([tests],
 	[AS_HELP_STRING([--enable-tests],[compile libcgroup tests [default=yes]])],
 	[
-		if test "x$enableval" == xno; then
+		if test "x$enableval" = xno; then
 			with_tests=false
 		else
 			with_tests=true
