@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['unchanged_5fpid_0',['unchanged_pid',['../structunchanged__pid.html',1,'']]]
+  ['log_0',['Log',['../classftests_1_1log_1_1Log.html',1,'ftests::log']]]
 ];
