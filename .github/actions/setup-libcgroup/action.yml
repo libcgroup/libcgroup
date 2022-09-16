@@ -1,7 +1,7 @@
 #
 # Action to setup the libcgroup directory
 #
-# Copyright (c) 2020 Oracle and/or its affiliates.
+# Copyright (c) 2020-2022 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -29,8 +29,6 @@ runs:
   - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev
     shell: bash
   - run: sudo pip install cython
-    shell: bash
-  - run: rm -fr tests/
     shell: bash
   - run: ./bootstrap.sh
     shell: bash
