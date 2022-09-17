@@ -1,1 +1,1 @@
-SUBDIRS = ftests gunit
+DIST_SUBDIRS = ftests gunit
