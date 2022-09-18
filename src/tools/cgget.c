@@ -458,8 +458,8 @@ static int get_cv_value(struct control_value * const cv, const char * const cg_n
 			const char * const controller_name)
 {
 	bool is_multiline = false;
+	void *tmp, *handle = NULL;
 	char tmp_line[LL_MAX];
-	void *handle, *tmp;
 	int ret;
 
 	ret = cgroup_read_value_begin(controller_name, cg_name, cv->name, &handle, tmp_line,
