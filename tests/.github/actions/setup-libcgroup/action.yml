@@ -1,7 +1,7 @@
 #
 # Action to setup the libcgroup directory
 #
-# Copyright (c) 2020-2022 Oracle and/or its affiliates.
+# Copyright (c) 2022 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -26,11 +26,41 @@ runs:
   steps:
   - run: sudo apt-get update
     shell: bash
-  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool -y
+  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev
     shell: bash
   - run: sudo pip install cython
     shell: bash
-  - run: ./bootstrap.sh
+  - run: rm -fr tests/
+    shell: bash
+  - run: |
+      mkdir -p tests
+      mv Makefile.am tests/
+      mv ftests/ tests/
+      mv gunit/ tests/
+      mv .gitmodules tests/
+      mv .git tests/
+    shell: bash
+  - run: git clone https://github.com/libcgroup/libcgroup libcg
+    shell: bash
+  - run: |
+      rm -rf libcg/.github
+      rm -fr libcg/tests
+      mv libcg/* ./
+      mv libcg/.gitmodules ./
+      mv libcg/.git ./
+    shell: bash
+  - run: |
+      git submodule update --init --recursive -- googletest
+      pushd googletest/googletest
+      git checkout release-1.8.0
+      cmake -DBUILD_SHARED_LIBS=ON .
+      make
+      popd
+    shell: bash
+  - run: |
+      test -d m4 || mkdir m4
+      autoreconf -fi
+      rm -fr autom4te.cache
     shell: bash
   - run: CFLAGS="$CFLAGS -g -O0 -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python
     shell: bash
