@@ -11,11 +11,6 @@ fi
 # update the git submodules - libcgroup-tests and googletest
 git submodule update --init --recursive
 
-# configure libcgroup-tests
-pushd tests
-git checkout release-2.0
-popd
-
 # configure googletest
 pushd googletest/googletest
 git checkout release-1.8.0

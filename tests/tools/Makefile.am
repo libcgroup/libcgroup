@@ -1,0 +1,2 @@
+SUBDIRS = cgconfigparser cgclassify multimount
+

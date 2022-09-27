@@ -1,0 +1,11 @@
+              mount {
+                     cpu = /TMP/cgroups/cpu;
+                     cpuacct = /TMP/cgroups/cpuacct;
+              }
+
+              group daemons {
+                     cpuacct{
+                     }
+                     cpu {
+                     }
+              }

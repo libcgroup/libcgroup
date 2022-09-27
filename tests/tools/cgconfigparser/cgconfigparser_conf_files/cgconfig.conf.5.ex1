@@ -1,0 +1,5 @@
+              mount {
+                     cpu = /TMP/cgroups/cpu;
+                     cpuacct = /TMP/cgroups/cpu;
+              }
+

@@ -1,0 +1,5 @@
+tmp.conf
+*.log
+*.pyc
+*.swp
+*.trs
