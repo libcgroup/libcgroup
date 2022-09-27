@@ -39,6 +39,27 @@ jobs:
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
 
+  # Doc: https://github.com/redhat-plumbers-in-action/differential-shellcheck#usage
+  differential-shellcheck:
+    name: Differential ShellCheck
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Differential ShellCheck
+        uses: redhat-plumbers-in-action/differential-shellcheck@v3
+        with:
+          severity: warning
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   doxygen:
     name: Doxygen
     # Only run Doxygen against the main branch
