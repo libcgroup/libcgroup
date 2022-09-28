@@ -146,6 +146,18 @@ AC_ARG_ENABLE([tests],
        [with_tests=true])
 AM_CONDITIONAL([WITH_TESTS], [test x$with_tests = xtrue])
 
+AC_ARG_ENABLE([samples],
+      [AS_HELP_STRING([--enable-samples],[compile libcgroup samples C programs [default=no]])],
+      [
+		if test "x$enableval" == xno; then
+			with_samples=false
+		else
+			with_samples=true
+		fi
+       ],
+       [with_samples=false])
+AM_CONDITIONAL([WITH_SAMPLES], [test x$with_samples = xtrue])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
