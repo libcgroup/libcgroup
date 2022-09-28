@@ -139,6 +139,11 @@ int main(int argc, char *argv[])
 	struct cgroup *cgroup;
 	struct cgroup_controller *cgc;
 
+	if (argc < 2) {
+		usage(1,  argv[0]);
+		exit (1);
+	}
+
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
