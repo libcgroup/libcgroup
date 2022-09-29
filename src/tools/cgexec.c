@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg, CG_HIER_MAX);
 			if (ret) {
 				err("cgroup controller and path parsing failed\n");
-				return -1;
+				exit(EXIT_BADARGS);
 			}
 			cg_specified = 1;
 			break;
@@ -82,14 +82,14 @@ int main(int argc, char *argv[])
 			exit(0);
 		default:
 			usage(1, argv[0]);
-			exit(1);
+			exit(EXIT_BADARGS);
 		}
 	}
 
 	/* Executable name */
 	if (!argv[optind]) {
 		usage(1, argv[0]);
-		exit(1);
+		exit(EXIT_BADARGS);
 	}
 
 	/* Initialize libcg */
