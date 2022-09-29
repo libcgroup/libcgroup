@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			return -1;
+			exit(EXIT_BADARGS);
 		}
 	}
 
