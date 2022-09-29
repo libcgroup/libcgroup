@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	/* no parametr on input */
 	if (argc < 2) {
 		usage(1, argv[0]);
-		return -1;
+		exit(EXIT_BADARGS);
 	}
 
 	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 			if (ret) {
 				err("%s: cgroup controller and path parsing failed (%s)\n",
 				    argv[0], argv[optind]);
-				ret = -1;
+				ret = EXIT_BADARGS;
 				goto err;
 			}
 			break;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			ret = -1;
+			ret = EXIT_BADARGS;
 			goto err;
 		}
 	}
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	/* no cgroup name */
 	if (argv[optind]) {
 		err("%s: wrong arguments (%s)\n", argv[0], argv[optind]);
-		ret = -1;
+		ret = EXIT_BADARGS;
 		goto err;
 	}
 
