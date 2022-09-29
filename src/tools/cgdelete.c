@@ -123,6 +123,11 @@ int main(int argc, char *argv[])
 	int i, j, c;
 	int skip;
 
+	if (argc < 2) {
+		usage(1, argv[0]);
+		exit (1);
+	}
+
 	/* initialize libcg */
 	ret = cgroup_init();
 	if (ret) {
