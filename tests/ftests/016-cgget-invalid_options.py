@@ -49,10 +49,10 @@ def test(config):
             cause = "#1 Expected 'Wrong input parameters' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#1 Expected return code of 255 but received {}'
+                        '#1 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -71,10 +71,10 @@ def test(config):
             cause = "#2 Expected 'Wrong input parameters' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#2 Expected return code of 255 but received {}'
+                        '#2 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -172,10 +172,10 @@ def test(config):
             cause = "#6 Expected 'Wrong input parameters' to be in stderr"
             return result, cause
 
-        if re.ret != 1:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#6 Expected return code of 1 but received {}'
+                        '#6 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
