@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 
 	if (argc < 2) {
 		usage(1, argv[0]);
-		exit(2);
+		exit(EXIT_BADARGS);
 	}
 
 	memset(cgroup_list, 0, sizeof(cgroup_list));
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg, CG_HIER_MAX);
 			if (ret) {
 				err("cgroup controller and path parsing failed\n");
-				return -1;
+				exit(EXIT_BADARGS);
 			}
 			cg_specified = 1;
 			break;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			exit(2);
+			exit(EXIT_BADARGS);
 			break;
 		}
 	}
