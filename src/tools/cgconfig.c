@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	cgroup_set_default_logger(-1);
 	if (argc < 2) {
 		usage(1, argv[0]);
-		return -1;
+		exit(EXIT_BADARGS);
 	}
 
 	ret = cgroup_init();
@@ -141,14 +141,14 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			error = -1;
+			error = EXIT_BADARGS;
 			goto err;
 		}
 	}
 
 	if (argv[optind]) {
 		usage(1, argv[0]);
-		error = -1;
+		error = EXIT_BADARGS;
 		goto err;
 	}
 
