@@ -28,6 +28,8 @@ extern "C" {
 #define err(x...)	fprintf(stderr, x)
 #define info(x...)	fprintf(stdout, x)
 
+#define EXIT_BADARGS	129
+
 /**
  * Auxiliary specifier of group, used to store parsed command line options.
  */
