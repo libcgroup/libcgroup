@@ -102,7 +102,7 @@ STATIC int parse_r_flag(const char * const program_name, const char * const name
 	buf = strtok(copy, "=");
 	if (buf == NULL) {
 		err("%s: wrong parameter of option -r: %s\n", program_name, optarg);
-		ret = -1;
+		ret = EXIT_BADARGS;
 		goto err;
 	}
 
@@ -118,7 +118,7 @@ STATIC int parse_r_flag(const char * const program_name, const char * const name
 
 	if (strlen(buf) == 0) {
 		err("%s: wrong parameter of option -r: %s\n", program_name, optarg);
-		ret = -1;
+		ret = EXIT_BADARGS;
 		goto err;
 	}
 
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 		case 'r':
 			if ((flags &  FL_COPY) != 0) {
 				usage(1, argv[0]);
-				ret = -1;
+				ret = EXIT_BADARGS;
 				goto err;
 			}
 			flags |= FL_RULES;
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 		case COPY_FROM_OPTION:
 			if (flags != 0) {
 				usage(1, argv[0]);
-				ret = -1;
+				ret = EXIT_BADARGS;
 				goto err;
 			}
 			flags |= FL_COPY;
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			ret = -1;
+			ret = EXIT_BADARGS;
 			goto err;
 		}
 	}
@@ -217,13 +217,13 @@ int main(int argc, char *argv[])
 	/* no cgroup name */
 	if (!argv[optind]) {
 		err("%s: no cgroup specified\n", argv[0]);
-		ret = -1;
+		ret = EXIT_BADARGS;
 		goto err;
 	}
 
 	if (flags == 0) {
 		err("%s: no name-value pair was set\n", argv[0]);
-		ret = -1;
+		ret = EXIT_BADARGS;
 		goto err;
 	}
 
