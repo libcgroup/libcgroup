@@ -45,10 +45,10 @@ def test(config):
             cause = "#1 Expected 'Wrong input parameters' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#1 Expected return code of 255 but received {}'
+                        '#1 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -66,10 +66,10 @@ def test(config):
             cause = "#2 Expected 'no cgroup specified' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#2 Expected return code of 255 but received {}'
+                        '#2 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -87,10 +87,10 @@ def test(config):
             cause = "#3 Expected 'no name-value pair' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#3 Expected return code of 255 but received {}'
+                        '#3 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -108,10 +108,10 @@ def test(config):
             cause = "#4 Expected 'Usage is' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#4 Expected return code of 255 but received {}'
+                        '#4 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
@@ -129,10 +129,10 @@ def test(config):
             cause = "#5 Expected 'Wrong parameter of option' to be in stderr"
             return result, cause
 
-        if re.ret != 255:
+        if re.ret != 129:
             result = consts.TEST_FAILED
             cause = (
-                        '#5 Expected return code of 255 but received {}'
+                        '#5 Expected return code of 129 but received {}'
                         ''.format(re.ret)
                     )
             return result, cause
