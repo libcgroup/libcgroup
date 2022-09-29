@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			usage(1, argv[0]);
-			ret = 1;
+			ret = EXIT_BADARGS;
 			goto err;
 		}
 	}
