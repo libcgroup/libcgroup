@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 
 	if (argc < 2) {
 		usage(1, argv[0]);
-		exit (1);
+		exit(EXIT_BADARGS);
 	}
 
 	/* initialize libcg */
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 			ret = parse_cgroup_spec(cgroup_list, optarg, argc);
 			if (ret != 0) {
 				err("%s: error parsing cgroup '%s'", argv[0], optarg);
-				ret = -1;
+				ret = EXIT_BADARGS;
 				goto err;
 			}
 			break;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 			goto err;
 		default:
 			usage(1, argv[0]);
-			ret = -1;
+			ret = EXIT_BADARGS;
 			goto err;
 		}
 	}
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 		ret = parse_cgroup_spec(cgroup_list, argv[i], argc);
 		if (ret != 0) {
 			err("%s: error parsing cgroup '%s'\n", argv[0], argv[i]);
-			ret = -1;
+			ret = EXIT_BADARGS;
 			goto err;
 		}
 	}
