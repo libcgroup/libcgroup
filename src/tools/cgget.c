@@ -321,7 +321,7 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	 */
 	if (argv[optind] == NULL && first_cg_is_dummy) {
 		usage(1, argv[0]);
-		exit(-1);
+		exit(EXIT_BADARGS);
 	}
 
 	/*
@@ -336,7 +336,7 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	if (argv[optind] != NULL && (*cg_list_len) > 0 &&
 	    strcmp((*cg_list)[0]->name, "") != 0) {
 		usage(1, argv[0]);
-		exit(-1);
+		exit(EXIT_BADARGS);
 	}
 
 	while (argv[optind] != NULL) {
@@ -436,14 +436,14 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 			break;
 		default:
 			usage(1, argv[0]);
-			exit(1);
+			exit(EXIT_BADARGS);
 		}
 	}
 
 	/* Don't allow '-r' and ('-g' or '-a') */
 	if (fill_controller && do_not_fill_controller) {
 		usage(1, argv[0]);
-		exit(1);
+		exit(EXIT_BADARGS);
 	}
 
 	ret = parse_opt_args(argc, argv, cg_list, cg_list_len, first_cgroup_is_dummy);
@@ -725,7 +725,7 @@ int main(int argc, char *argv[])
 	/* No parameter on input? */
 	if (argc < 2) {
 		usage(1, argv[0]);
-		return 1;
+		exit(EXIT_BADARGS);
 	}
 
 	ret = cgroup_init();
