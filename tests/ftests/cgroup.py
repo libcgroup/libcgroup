@@ -2,7 +2,7 @@
 #
 # Cgroup class for the libcgroup functional tests
 #
-# Copyright (c) 2019-2021 Oracle and/or its affiliates.
+# Copyright (c) 2019-2022 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
@@ -10,6 +10,7 @@ from container import ContainerError
 from controller import Controller
 from run import Run, RunError
 import multiprocessing as mp
+from libcgroup import Mode
 from enum import Enum
 import consts
 import utils
@@ -951,6 +952,48 @@ class Cgroup(object):
         Cgroup.set(config, cgname, setting, value)
         Cgroup.get_and_validate(config, cgname, setting, value)
 
+    @staticmethod
+    def get_cgroup_mode(config):
+        mount_list = Cgroup.get_cgroup_mounts(config, True)
+
+        legacy = False
+        unified = False
+
+        for mount in mount_list:
+            # As best I can tell, python doesn't have an easy way to access the statfs() f_type
+            # field.  Let's make our best guess at the cgroup version (legacy, hybrid, or
+            # unified) by the presence of certain files/folders
+
+            cpu_ctrl = os.path.join(os.path.dirname(mount.mount_point), 'cpu,cpuacct')
+            if os.path.exists(cpu_ctrl):
+                legacy = True
+
+            limit_file = os.path.join(mount.mount_point, 'memory.limit_in_bytes')
+            if os.path.exists(limit_file):
+                legacy = True
+
+            subtree_file = os.path.join(mount.mount_point, 'cgroup.subtree_control')
+            if os.path.exists(subtree_file):
+                unified = True
+
+            subtree_file = os.path.join(os.path.dirname(mount.mount_point),
+                                        'cgroup.subtree_control')
+            if os.path.exists(subtree_file):
+                unified = True
+
+            subtree_file = os.path.join(os.path.dirname(mount.mount_point), 'unified',
+                                        'cgroup.subtree_control')
+            if os.path.exists(subtree_file):
+                unified = True
+
+        if legacy and unified:
+            return Mode.CGROUP_MODE_HYBRID
+        elif legacy:
+            return Mode.CGROUP_MODE_LEGACY
+        elif unified:
+            return Mode.CGROUP_MODE_UNIFIED
+        else:
+            raise CgroupError('Unknown cgroup mode')
 
 class CgroupError(Exception):
     def __init__(self, message):
