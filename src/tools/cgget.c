@@ -17,6 +17,8 @@
 
 #define LL_MAX			100
 
+static int find_cgroup_mount_type(void);
+
 static const struct option long_options[] = {
 	{"variable",	required_argument, NULL, 'r'},
 	{"help",	      no_argument, NULL, 'h'},
@@ -41,6 +43,7 @@ static void usage(int status, const char *program_name)
 	info("  -r, --variable <name>		Define parameter to display\n");
 	info("  -v, --values-only		Print only values, not ");
 	info("parameter names\n");
+	info("  -m				Display the cgroup mode\n");
 }
 
 static int get_controller_from_name(const char * const name, char **controller)
@@ -395,7 +398,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	int c;
 
 	/* Parse arguments. */
-	while ((c = getopt_long(argc, argv, "r:hnvg:a", long_options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "r:hnvg:am", long_options, NULL)) > 0) {
 		switch (c) {
 		case 'h':
 			usage(0, argv[0]);
@@ -431,6 +434,11 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 		case 'a':
 			fill_controller = true;
 			ret = parse_a_flag(cg_list, cg_list_len);
+			if (ret)
+				goto err;
+			break;
+		case 'm':
+			ret = find_cgroup_mount_type();
 			if (ret)
 				goto err;
 			break;
@@ -747,6 +755,31 @@ int main(int argc, char *argv[])
 err:
 	for (i = 0; i < cg_list_len; i++)
 		cgroup_free(&(cg_list[i]));
+
+	return ret;
+}
+
+static int find_cgroup_mount_type(void)
+{
+	enum cg_setup_mode_t setup_mode;
+	int ret = 0;
+
+	setup_mode = cgroup_setup_mode();
+	switch(setup_mode) {
+	case CGROUP_MODE_LEGACY:
+		info("Legacy Mode (Cgroup v1 only).\n");
+		break;
+	case CGROUP_MODE_HYBRID:
+		info("Hybrid mode (Cgroup v1/v2).\n");
+		break;
+	case CGROUP_MODE_UNIFIED:
+		info("Unified Mode (Cgroup v2 only).\n");
+		break;
+	default:
+		err("Unable to determine the Cgroup setup mode.\n");
+		ret = 1;
+		break;
+	}
 
 	return ret;
 }
