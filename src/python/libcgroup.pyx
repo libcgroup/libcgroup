@@ -22,6 +22,12 @@ cdef class Version:
     CGROUP_V2 = cgroup.CGROUP_V2
     CGROUP_DISK = cgroup.CGROUP_DISK
 
+cdef class Mode:
+    CGROUP_MODE_UNK = cgroup.CGROUP_MODE_UNK
+    CGROUP_MODE_LEGACY = cgroup.CGROUP_MODE_LEGACY
+    CGROUP_MODE_HYBRID = cgroup.CGROUP_MODE_HYBRID
+    CGROUP_MODE_UNIFIED = cgroup.CGROUP_MODE_UNIFIED
+
 def c_str(string):
     return bytes(string, "ascii")
 
@@ -309,6 +315,16 @@ cdef class Cgroup:
             mount_points.append(<str>(a[i]).decode("utf-8"))
             i = i + 1
         return mount_points
+
+    @staticmethod
+    def cgroup_mode():
+        """Get the cgroup mode (legacy, hybrid, or unified)
+
+        Return:
+        The cgroup mode enumeration
+        """
+        Cgroup.cgroup_init()
+        return cgroup.cgroup_setup_mode()
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
