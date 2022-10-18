@@ -146,4 +146,7 @@ CGROUP_3.0 {
 	cgroup_cgxset;
 	cgroup_version;
 	cgroup_list_mount_points;
+
+	/* libcgroup 3.0.1 */
+	cgroup_setup_mode;
 } CGROUP_2.0;

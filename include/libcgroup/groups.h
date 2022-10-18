@@ -23,6 +23,13 @@ enum cg_version_t {
 	CGROUP_DISK = 0xFF,
 };
 
+enum cg_setup_mode_t {
+	CGROUP_MODE_UNKNOWN = 0,
+	CGROUP_MODE_LEGACY,
+	CGROUP_MODE_HYBRID,
+	CGROUP_MODE_UNIFIED,
+};
+
 /**
  * Flags for cgroup_delete_cgroup_ext().
  */
@@ -635,6 +642,12 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
  */
 int cgroup_get_controller_version(const char * const controller,
 				  enum cg_version_t * const version);
+
+/**
+ * Finds the current group setup mode (legacy/unified/hybrid).
+ * Returns unknown of failure and setup mode on success.
+ */
+enum cg_setup_mode_t cgroup_setup_mode(void);
 
 /**
  * @}

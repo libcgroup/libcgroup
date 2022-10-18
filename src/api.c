@@ -43,6 +43,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/vfs.h>
 
 #include <linux/un.h>
 
@@ -6117,4 +6118,54 @@ err:
 const struct cgroup_library_version *cgroup_version(void)
 {
 	return &library_version;
+}
+
+/**
+ * Finds the current cgroup setup mode (legacy/unified/hybrid).
+ * Returns unknown of failure and setup mode on success.
+ */
+enum cg_setup_mode_t cgroup_setup_mode(void)
+{
+#define CGROUP2_SUPER_MAGIC	0x63677270
+#define CGROUP_SUPER_MAGIC	0x27E0EB
+
+	unsigned int cg_setup_mode_bitmask = 0U;
+	enum cg_setup_mode_t setup_mode;
+	struct statfs cgrp_buf;
+	int i, ret = 0;
+
+	if (!cgroup_initialized) {
+		return ECGROUPNOTINITIALIZED;
+	}
+
+	setup_mode = CGROUP_MODE_UNKNOWN;
+
+	pthread_rwlock_wrlock(&cg_mount_table_lock);
+	for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+		ret = statfs(cg_mount_table[i].mount.path, &cgrp_buf);
+		if (ret) {
+			setup_mode = CGROUP_MODE_UNKNOWN;
+			cgroup_err("Failed to get stats of '%s'\n", cg_mount_table[i].mount.path);
+			goto out;
+		}
+
+		if (cgrp_buf.f_type == CGROUP2_SUPER_MAGIC)
+			cg_setup_mode_bitmask |= (1U << 0);
+		else if (cgrp_buf.f_type == CGROUP_SUPER_MAGIC)
+			cg_setup_mode_bitmask |= (1U << 1);
+	}
+
+	if (cg_cgroup_v2_empty_mount_paths)
+		cg_setup_mode_bitmask |= (1U << 0);
+
+	if (cg_setup_mode_bitmask & (1U << 0) && cg_setup_mode_bitmask & (1U << 1))
+		setup_mode = CGROUP_MODE_HYBRID;
+	else if (cg_setup_mode_bitmask & (1U << 0))
+		setup_mode = CGROUP_MODE_UNIFIED;
+	else if (cg_setup_mode_bitmask & (1U << 1))
+		setup_mode = CGROUP_MODE_LEGACY;
+
+out:
+	pthread_rwlock_unlock(&cg_mount_table_lock);
+	return setup_mode;
 }
