@@ -240,7 +240,7 @@ fail:
 			strerror(errno));
 	last_errno = errno;
 
-	if (fd > 0)
+	if (fd > -1)
 		close(fd);
 
 	return ECGOTHER;
