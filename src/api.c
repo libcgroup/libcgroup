@@ -248,7 +248,7 @@ fail:
 	cgroup_warn("cannot change permissions of file %s: %s\n", path, strerror(errno));
 	last_errno = errno;
 
-	if (fd > 0)
+	if (fd > -1)
 		close(fd);
 
 	return ECGOTHER;
