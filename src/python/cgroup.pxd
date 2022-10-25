@@ -21,6 +21,12 @@ cdef extern from "libcgroup.h":
         CGROUP_V2
         CGROUP_DISK
 
+    cdef enum cg_setup_mode_t:
+        CGROUP_MODE_UNK
+        CGROUP_MODE_LEGACY
+        CGROUP_MODE_HYBRID
+        CGROUP_MODE_UNIFIED
+
     cdef struct cgroup_library_version:
         unsigned int major
         unsigned int minor
@@ -53,5 +59,7 @@ cdef extern from "libcgroup.h":
 
     int cgroup_list_mount_points(const cg_version_t cgrp_version,
                                  char ***mount_paths)
+
+    cg_setup_mode_t cgroup_setup_mode()
 
 # vim: set et ts=4 sw=4:
