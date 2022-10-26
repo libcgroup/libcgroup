@@ -149,4 +149,6 @@ CGROUP_3.0 {
 
 	/* libcgroup 3.0.1 */
 	cgroup_setup_mode;
+	cgroup_create_scope;
+	cgroup_set_default_scope_opts;
 } CGROUP_2.0;

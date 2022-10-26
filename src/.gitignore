@@ -1,3 +1,4 @@
+libcgroup_systemd_idle_thread
 lex.c
 parse.c
 parse.h

@@ -26,7 +26,7 @@ runs:
   steps:
   - run: sudo apt-get update
     shell: bash
-  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool -y
+  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool libsystemd-dev -y
     shell: bash
   - run: sudo pip install cython
     shell: bash
