@@ -14,6 +14,7 @@
 __author__ =  'Tom Hromatka <tom.hromatka@oracle.com>'
 __date__ = "25 October 2021"
 
+from posix.types cimport pid_t
 cimport cgroup
 
 cdef class Version:
@@ -27,6 +28,13 @@ cdef class Mode:
     CGROUP_MODE_LEGACY = cgroup.CGROUP_MODE_LEGACY
     CGROUP_MODE_HYBRID = cgroup.CGROUP_MODE_HYBRID
     CGROUP_MODE_UNIFIED = cgroup.CGROUP_MODE_UNIFIED
+
+cdef class SystemdMode:
+    CGROUP_SYSTEMD_MODE_FAIL = cgroup.CGROUP_SYSTEMD_MODE_FAIL
+    CGROUP_SYSTEMD_MODE_REPLACE = cgroup.CGROUP_SYSTEMD_MODE_REPLACE
+    CGROUP_SYSTEMD_MODE_ISOLATE = cgroup.CGROUP_SYSTEMD_MODE_ISOLATE
+    CGROUP_SYSTEMD_MODE_IGNORE_DEPS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_DEPS
+    CGROUP_SYSTEMD_MODE_IGNORE_REQS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_REQS
 
 def c_str(string):
     return bytes(string, "ascii")
@@ -325,6 +333,44 @@ cdef class Cgroup:
         """
         Cgroup.cgroup_init()
         return cgroup.cgroup_setup_mode()
+
+    @staticmethod
+    def create_scope(scope_name='libcgroup.scope', slice_name='libcgroup.slice', delegated=True,
+                     systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
+        """Create a systemd scope
+
+        Arguments:
+        scope_name - name of the scope to be created
+        slice_name - name of the slice where the scope should reside
+        delegated - if true, then systemd will not manage the cgroup aspects of the scope.  It
+                    is up to the user to manage the cgroup settings
+        systemd_mode - setting to tell systemd how to handle creation of this scope and
+                       resolve conflicts if the scope and/or slice exist
+        pid - pid of the process to place in the scope.  If None is provided, libcgroup will
+              place a dummy process in the scope
+
+        Description:
+        Create a systemd scope under slice_name.  If delegated is true, then systemd will
+        not manage the cgroup aspects of the scope.
+        """
+        cdef cgroup.cgroup_systemd_scope_opts opts
+
+        Cgroup.cgroup_init()
+
+        if delegated:
+            opts.delegated = 1
+        else:
+            opts.delegated = 0
+
+        opts.mode = systemd_mode
+        if pid:
+            opts.pid = pid
+        else:
+            opts.pid = -1
+
+        ret = cgroup.cgroup_create_scope(c_str(scope_name), c_str(slice_name), &opts)
+        if ret is not 0:
+            raise RuntimeError("cgroup_create_scope failed: {}".format(ret))
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
