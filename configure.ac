@@ -84,6 +84,18 @@ AC_DEFINE_UNQUOTED([ENABLE_PYTHON],
 	[$(test "$enable_python" = yes && echo 1 || echo 0)],
 	[Python bindings build flag.])
 
+AC_ARG_ENABLE([systemd],
+	[AS_HELP_STRING([--enable-systemd],[enable systemd support [default=yes]])],
+	[
+		if test "x$enableval" = xno; then
+			with_systemd=false
+		else
+			with_systemd=true
+		fi
+	],
+	[with_systemd=true])
+AM_CONDITIONAL([WITH_SYSTEMD], [test x$with_systemd = xtrue])
+
 AC_ARG_ENABLE([initscript-install],
 	[AS_HELP_STRING([--enable-initscript-install],[install init scripts [default=no]])],
 	[
