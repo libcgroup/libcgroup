@@ -19,6 +19,7 @@ EXTRA_DIST_PYTHON_UTILS = \
 			  log.py \
 			  process.py \
 			  run.py \
+			  systemd.py \
 			  utils.py
 
 EXTRA_DIST_PYTHON_TESTS = \
@@ -63,7 +64,15 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  041-pybindings-library_version.py \
 			  042-cgxget-unmappable.py \
 			  043-cgcreate-empty_controller.py \
-			  044-pybindings-cgcreate_empty_controller.py
+			  044-pybindings-cgcreate_empty_controller.py \
+			  045-pybindings-list_mount_points.py \
+			  046-cgexec-empty_controller.py \
+			  047-cgcreate-delete_cgrp_shared_mnt.py \
+			  048-pybindings-get_cgroup_mode.py \
+			  049-sudo-systemd_create_scope.py \
+			  050-sudo-systemd_create_scope2.py
+# Intentionally omit the stress test from the extra dist
+# 999-stress-cgroup_init.py
 
 EXTRA_DIST = README.md ftests.sh ftests-nocontainer.sh \
 	     ${EXTRA_DIST_PYTHON_UTILS} ${EXTRA_DIST_PYTHON_TESTS}
