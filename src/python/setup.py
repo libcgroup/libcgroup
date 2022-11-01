@@ -26,7 +26,8 @@ setup(
             Extension(
                       'libcgroup', ['libcgroup.pyx'],
                       # unable to handle libtool libraries directly
-                      extra_objects=['../.libs/libcgroup.a']
+                      extra_objects=['../.libs/libcgroup.a'],
+                      libraries=['systemd']
                      ),
              ])
 )

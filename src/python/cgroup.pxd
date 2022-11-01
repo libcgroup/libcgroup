@@ -8,6 +8,8 @@
 
 # cython: language_level = 3str
 
+from posix.types cimport pid_t
+
 cdef extern from "libcgroup.h":
     cdef struct cgroup:
         pass
@@ -31,6 +33,18 @@ cdef extern from "libcgroup.h":
         unsigned int major
         unsigned int minor
         unsigned int release
+
+    cdef enum cgroup_systemd_mode_t:
+        CGROUP_SYSTEMD_MODE_FAIL
+        CGROUP_SYSTEMD_MODE_REPLACE
+        CGROUP_SYSTEMD_MODE_ISOLATE
+        CGROUP_SYSTEMD_MODE_IGNORE_DEPS
+        CGROUP_SYSTEMD_MODE_IGNORE_REQS
+
+    cdef struct cgroup_systemd_scope_opts:
+        int delegated
+        cgroup_systemd_mode_t mode
+        pid_t pid
 
     int cgroup_init()
     const cgroup_library_version * cgroup_version()
@@ -61,5 +75,8 @@ cdef extern from "libcgroup.h":
                                  char ***mount_paths)
 
     cg_setup_mode_t cgroup_setup_mode()
+
+    int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
+                            const cgroup_systemd_scope_opts * const opts)
 
 # vim: set et ts=4 sw=4:
