@@ -70,7 +70,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  047-cgcreate-delete_cgrp_shared_mnt.py \
 			  048-pybindings-get_cgroup_mode.py \
 			  049-sudo-systemd_create_scope.py \
-			  050-sudo-systemd_create_scope2.py
+			  050-sudo-systemd_create_scope_w_pid.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
 
