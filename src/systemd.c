@@ -10,6 +10,8 @@
 #include <libcgroup.h>
 #include <unistd.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <libgen.h>
 #include <errno.h>
 
 #define USEC_PER_SEC 1000000
@@ -278,6 +280,63 @@ out:
 	sd_bus_message_unref(msg);
 	sd_bus_message_unref(reply);
 	sd_bus_unref(bus);
+
+	return ret;
+}
+
+int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
+			 const struct cgroup_systemd_scope_opts * const opts)
+{
+	char *copy1 = NULL, *copy2 = NULL, *slash, *slice_name, *scope_name;
+	int ret = 0;
+
+	if (!cgroup)
+		return ECGROUPNOTALLOWED;
+
+	slash = strstr(cgroup->name, "/");
+	if (!slash) {
+		cgroup_err("cgroup name does not contain a slash: %s\n", cgroup->name);
+		return ECGINVAL;
+	}
+
+	slash = strstr(slash + 1, "/");
+	if (slash) {
+		cgroup_err("cgroup name contains more than one slash: %s\n", cgroup->name);
+		return ECGINVAL;
+	}
+
+	copy1 = strdup(cgroup->name);
+	if (!copy1) {
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	scope_name = basename(copy1);
+
+	copy2 = strdup(cgroup->name);
+	if (!copy2) {
+		ret = ECGOTHER;
+		goto err;
+	}
+
+	slice_name = dirname(copy2);
+
+	ret = cgroup_create_scope(scope_name, slice_name, opts);
+	if (ret)
+		goto err;
+
+	/*
+	 * Utilize cgroup_create_cgroup() to assign the requested owner/group and permissions.
+	 * cgroup_create_cgroup() can gracefully handle EEXIST if the cgroup already exists, so
+	 * we can reuse its ownership logic without penalty.
+	 */
+	ret = cgroup_create_cgroup(cgroup, ignore_ownership);
+
+err:
+	if (copy1)
+		free(copy1);
+	if (copy2)
+		free(copy2);
 
 	return ret;
 }

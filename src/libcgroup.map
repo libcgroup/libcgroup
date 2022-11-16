@@ -151,4 +151,5 @@ CGROUP_3.0 {
 	cgroup_setup_mode;
 	cgroup_create_scope;
 	cgroup_set_default_scope_opts;
+	cgroup_create_scope2;
 } CGROUP_2.0;

@@ -54,6 +54,21 @@ int cgroup_set_default_scope_opts(struct cgroup_systemd_scope_opts * const opts)
 int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
 			const struct cgroup_systemd_scope_opts * const opts);
 
+/**
+ * Create a systemd scope
+ *
+ * @param cgroup
+ * @param ignore_ownership When nozero, all errors are ignored when setting owner of the group
+ *	owner of the group and/or its tasks file
+ * @param opts Scope creation options structure instance
+ *
+ * @return 0 on success and > 0 on error
+ *
+ * @note The cgroup->name field should be of the form "foo.slice/bar.scope"
+ */
+int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
+			 const struct cgroup_systemd_scope_opts * const opts);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
