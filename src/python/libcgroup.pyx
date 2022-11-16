@@ -14,7 +14,7 @@
 __author__ =  'Tom Hromatka <tom.hromatka@oracle.com>'
 __date__ = "25 October 2021"
 
-from posix.types cimport pid_t
+from posix.types cimport pid_t, mode_t
 cimport cgroup
 
 cdef class Version:
@@ -371,6 +371,46 @@ cdef class Cgroup:
         ret = cgroup.cgroup_create_scope(c_str(scope_name), c_str(slice_name), &opts)
         if ret is not 0:
             raise RuntimeError("cgroup_create_scope failed: {}".format(ret))
+
+    def set_uid_gid(self, tasks_uid, tasks_gid, ctrl_uid, ctrl_gid):
+        """Set the desired owning uid/gid for the tasks file and the entire cgroup hierarchy
+
+        Arguments:
+        tasks_uid - uid that should own the tasks file
+        tasks_gid - gid that should own the tasks file
+        ctrl_uid - uid to recursively apply to the entire cgroup hierarchy
+        ctrl_gid - gid to recursively apply to the entire cgroup hierarchy
+
+        Note:
+        Does not modify the cgroup sysfs.  Does not read from the cgroup sysfs.  Applies the
+        provided uids and gids to the appropriate uid/gid fields in the cgroup struct.
+        """
+        ret = cgroup.cgroup_set_uid_gid(self._cgp, tasks_uid, tasks_gid, ctrl_uid, ctrl_gid)
+        if ret is not 0:
+            raise RuntimeError("cgroup_set_uid_gid failed: {}".format(ret))
+
+    def set_permissions(self, dir_mode, ctrl_mode, task_mode):
+        """Set the permission bits on the cgroup
+
+        Arguments:
+        dir_mode - permissions to set on the cgroup directory
+        ctrl_mode - permissions to set on the files in the directory, except tasks
+        task_mode - permissions to set on the tasks file
+
+        Note:
+        Does not modify the cgroup sysfs.  Does not read from the cgroup sysfs.  Only the
+        in-memory cgroup structure is updated.
+
+        The mode parameters are expected to be of a form defined in the Python stat module [1],
+        e.g. stat.S_IWUSR.
+
+        [1] https://docs.python.org/3/library/stat.html
+        """
+        cdef mode_t dmode = dir_mode
+        cdef mode_t cmode = ctrl_mode
+        cdef mode_t tmode = task_mode
+
+        cgroup.cgroup_set_permissions(self._cgp, dmode, cmode, tmode)
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
