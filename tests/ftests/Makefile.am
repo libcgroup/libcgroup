@@ -71,7 +71,8 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  048-pybindings-get_cgroup_mode.py \
 			  049-sudo-systemd_create_scope.py \
 			  050-sudo-systemd_create_scope_w_pid.py \
-			  051-sudo-set_uid_gid_v2.py
+			  051-sudo-set_uid_gid_v2.py \
+			  052-sudo-set_uid_gid_v1.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
 
