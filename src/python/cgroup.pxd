@@ -85,4 +85,7 @@ cdef extern from "libcgroup.h":
     void cgroup_set_permissions(cgroup *cgroup, mode_t control_dperm, mode_t control_fperm,
                            mode_t task_fperm)
 
+    int cgroup_create_scope2(cgroup *cgroup, int ignore_ownership,
+                             const cgroup_systemd_scope_opts * const opts)
+
 # vim: set et ts=4 sw=4:
