@@ -127,7 +127,7 @@ jobs:
     - name: Install container dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install lxc lxd
+        sudo apt-get install lxc lxd-installer
     - uses: actions/checkout@v2
       with:
         submodules: false
@@ -149,7 +149,7 @@ jobs:
     - name: Install container dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install lxc lxd
+        sudo apt-get install lxc lxd-installer
     - uses: actions/checkout@v2
       with:
         submodules: false
@@ -206,7 +206,7 @@ jobs:
     - name: Install container dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install lxc lxd
+        sudo apt-get install lxc lxd-installer
     - uses: actions/checkout@v2
       with:
         submodules: false
