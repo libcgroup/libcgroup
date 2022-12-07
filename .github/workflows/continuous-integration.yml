@@ -69,7 +69,7 @@ jobs:
 
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Install container dependencies
