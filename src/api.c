@@ -1957,16 +1957,13 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
+
+	/* if the cgroup is NULL, attach the task to the root cgroup. */
 	if (!cgroup) {
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
-			ret = cgroupv2_controller_enabled(cgroup->name,
-							  cgroup->controller[i]->name);
-			if (ret)
-				return ret;
-
-			ret = cgroup_build_tasks_procs_path(path, sizeof(path), cgroup->name,
-							    cgroup->controller[i]->name);
+			ret = cgroup_build_tasks_procs_path(path, sizeof(path), NULL,
+							    cg_mount_table[i].name);
 			if (ret)
 				return ret;
 
