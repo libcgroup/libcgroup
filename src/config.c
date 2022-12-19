@@ -918,7 +918,7 @@ static int config_order_namespace_table(void)
 
 		for (j = 0; cg_mount_table[j].name[0] != '\0'; j++) {
 			if (strncmp(config_namespace_table[i].name, cg_mount_table[j].name,
-				    FILENAME_MAX) == 0) {
+				    CONTROL_NAMELEN_MAX) == 0) {
 
 				flag = 1;
 
