@@ -372,6 +372,39 @@ cdef class Cgroup:
         if ret is not 0:
             raise RuntimeError("cgroup_create_scope failed: {}".format(ret))
 
+    def get(self):
+        """Get the cgroup information from the cgroup sysfs
+
+        Description:
+        Read the cgroup data from the cgroup sysfs filesystem
+        """
+        cdef cgroup.cgroup_controller *ctrl_ptr
+
+        ret = cgroup.cgroup_get_cgroup(self._cgp)
+        if ret is not 0:
+            raise RuntimeError("cgroup_get_cgroup failed: {}".format(ret))
+
+        ctrl_cnt = cgroup.cgroup_get_controller_count(self._cgp)
+        for i in range(0, ctrl_cnt):
+            ctrl_ptr = cgroup.cgroup_get_controller_by_index(self._cgp, i)
+            ctrl_name = cgroup.cgroup_get_controller_name(ctrl_ptr).decode('ascii')
+            self.controllers[ctrl_name] = Controller(ctrl_name)
+
+        self._pythonize_cgroup()
+
+    def delete(self, ignore_migration=True):
+        """Delete the cgroup from the cgroup sysfs
+
+        Arguments:
+        ignore_migration - ignore errors caused by migration of tasks to parent cgroup
+
+        Description:
+        Delete the cgroup from the cgroup sysfs filesystem
+        """
+        ret = cgroup.cgroup_delete_cgroup(self._cgp, ignore_migration)
+        if ret is not 0:
+            raise RuntimeError("cgroup_delete_cgroup failed: {}".format(ret))
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 
