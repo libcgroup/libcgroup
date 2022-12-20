@@ -2277,17 +2277,22 @@ STATIC int cgroupv2_get_subtree_control(const char *path, const char *ctrl_name,
 	*enabled = false;
 
 	path_copy = (char *)malloc(FILENAME_MAX);
-	if (!path_copy)
+	if (!path_copy) {
+		error = ECGOTHER;
 		goto out;
+	}
 
 	ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path, CGV2_SUBTREE_CTRL_FILE);
-	if (ret < 0)
+	if (ret < 0) {
+		error = ECGOTHER;
 		goto out;
+	}
 
 	fp = fopen(path_copy, "re");
 	if (!fp) {
 		cgroup_warn("fopen failed\n");
 		last_errno = errno;
+		error = ECGOTHER;
 		goto out;
 	}
 
@@ -3506,6 +3511,18 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			cgroup->tasks_gid = stat_buffer.st_gid;
 
 			free(control_path);
+		} else { /* cgroup v2 */
+			bool enabled;
+
+			error = cgroupv2_get_subtree_control(path, cg_mount_table[i].name,
+							     &enabled);
+			if (error == ECGROUPNOTMOUNTED)
+				continue;
+			if (error)
+				goto unlock_error;
+
+			if (!enabled)
+				continue;
 		}
 
 		cgc = cgroup_add_controller(cgroup, cg_mount_table[i].name);
