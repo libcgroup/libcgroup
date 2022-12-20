@@ -2706,6 +2706,12 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 		goto err;
 
 	if (controller) {
+		if (version == CGROUP_V2) {
+			error = cgroupv2_subtree_control(base, controller->name, true);
+			if (error)
+				goto err;
+		}
+
 		error = cgroup_set_values_recursive(base, controller, false);
 		if (error)
 			goto err;
