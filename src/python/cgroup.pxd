@@ -79,4 +79,14 @@ cdef extern from "libcgroup.h":
     int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
                             const cgroup_systemd_scope_opts * const opts)
 
+    int cgroup_get_cgroup(cgroup *cg)
+
+    int cgroup_delete_cgroup(cgroup *cg, int ignore_migration)
+
+    int cgroup_get_controller_count(cgroup *cgroup)
+
+    cgroup_controller *cgroup_get_controller_by_index(cgroup *cgroup, int index)
+
+    char *cgroup_get_controller_name(cgroup_controller *controller)
+
 # vim: set et ts=4 sw=4:
