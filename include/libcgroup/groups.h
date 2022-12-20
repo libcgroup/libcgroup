@@ -651,6 +651,31 @@ int cgroup_get_controller_version(const char * const controller,
 enum cg_setup_mode_t cgroup_setup_mode(void);
 
 /**
+ * Return the number of controllers for the specified cgroup in libcgroup
+ * internal structures.
+ *
+ * @param cgroup
+ * @return Count of the controllers or -1 on error.
+ */
+int cgroup_get_controller_count(struct cgroup *cgroup);
+
+/**
+ * Return requested controller from given group
+ *
+ * @param cgroup
+ * @param index The index into the cgroup controller list
+ */
+struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgroup, int index);
+
+/**
+ * Given a controller pointer, get the name of the controller
+ *
+ * @param controller
+ * @return controller name string, NULL if there's an error
+ */
+char *cgroup_get_controller_name(struct cgroup_controller *controller);
+
+/**
  * @}
  * @}
  */

@@ -6177,3 +6177,30 @@ out:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 	return setup_mode;
 }
+
+int cgroup_get_controller_count(struct cgroup *cgroup)
+{
+	if (!cgroup)
+		return -1;
+
+	return cgroup->index;
+}
+
+struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgroup, int index)
+{
+	if (!cgroup)
+		return NULL;
+
+	if (index >= cgroup->index)
+		return NULL;
+
+	return cgroup->controller[index];
+}
+
+char *cgroup_get_controller_name(struct cgroup_controller *controller)
+{
+	if (!controller)
+		return NULL;
+
+	return controller->name;
+}
