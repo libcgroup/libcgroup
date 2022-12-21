@@ -472,13 +472,22 @@ static int display_controller_data(char controller[CG_CONTROLLER_MAX][FILENAME_M
 
 			ret = cgroup_get_cgroup(group);
 			if (ret != 0) {
-				info("cannot read group '%s': %s\n", cgroup_name,
-				     cgroup_strerror(ret));
-				goto err;
+				/*
+				 * We know for sure that the cgroup exists
+				 * but just that the cgroup v2 controller
+				 * is not enabled in the cgroup.subtree_control
+				 * file.
+				 */
+				if (ret != ECGROUPNOTEXIST) {
+					info("cannot read group '%s': %s %d\n", cgroup_name,
+					     cgroup_strerror(ret), ret);
+					goto err;
+				}
 			}
 
-			display_cgroup_data(group, controller, info.full_path, prefix_len, first,
-					    program_name);
+			if (ret == 0)
+				display_cgroup_data(group, controller, info.full_path, prefix_len,
+						    first, program_name);
 			first = 0;
 			cgroup_free(&group);
 		}
@@ -495,20 +504,34 @@ err:
 static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
 			   cont_name_t wanted_conts[CG_CONTROLLER_MAX])
 {
-	int i = 0;
-	int j = 0;
+	char tmp_controllers[CG_CONTROLLER_MAX][FILENAME_MAX];
+	int i = 0, j = 0, k = 0;
+	int ret = 0;
 
 	while (controllers[i][0] != '\0') {
 		while (wanted_conts[j][0] != '\0') {
-			if (strcmp(controllers[i], wanted_conts[j]) == 0)
-				return 1;
+			if (strcmp(controllers[i], wanted_conts[j]) == 0) {
+				strncpy(tmp_controllers[k], wanted_conts[j], FILENAME_MAX - 1);
+				(tmp_controllers[k])[FILENAME_MAX - 1] = '\0';
+				k++;
+			}
 			j++;
 		}
 		j = 0;
 		i++;
 	}
 
-	return 0;
+	(tmp_controllers[k])[0] = '\0';
+
+	/* Lets reset the controllers to intersection of controller ∩ wanted_conts */
+	for (i = 0; tmp_controllers[i][0] != '\0'; i++) {
+		strncpy(controllers[i], tmp_controllers[i], FILENAME_MAX - 1);
+		(controllers[i])[FILENAME_MAX - 1] = '\0';
+		ret = 1;
+	}
+	(controllers[i])[0] = '\0';
+
+	return ret;
 }
 
 
