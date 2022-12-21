@@ -236,12 +236,14 @@ static int display_permissions(const char *path, const char * const cg_name,
 		pw = getpwuid(sba.st_uid);
 		if (pw == NULL) {
 			err("ERROR: can't get %d user name\n", sba.st_uid);
+			fprintf(output_f, "}\n}\n");
 			return -1;
 		}
 
 		gr = getgrgid(sba.st_gid);
 		if (gr == NULL) {
 			err("ERROR: can't get %d group name\n", sba.st_gid);
+			fprintf(output_f, "}\n}\n");
 			return -1;
 		}
 
@@ -255,12 +257,14 @@ static int display_permissions(const char *path, const char * const cg_name,
 		pw = getpwuid(sbt.st_uid);
 		if (pw == NULL) {
 			err("ERROR: can't get %d user name\n", sbt.st_uid);
+			fprintf(output_f, "}\n}\n");
 			return -1;
 		}
 
 		gr = getgrgid(sbt.st_gid);
 		if (gr == NULL) {
 			err("ERROR: can't get %d group name\n", sbt.st_gid);
+			fprintf(output_f, "}\n}\n");
 			return -1;
 		}
 
