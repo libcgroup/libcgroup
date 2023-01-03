@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-only
 /**
- * Libcgroup extended cgget.  Works with both cgroup v1 and v2
+ * Libcgroup extended cgxget.  Works with both cgroup v1 and v2
  *
  * Copyright (c) 2021-2022 Oracle and/or its affiliates.
  * Author: Tom Hromatka <tom.hromatka@oracle.com>
@@ -70,7 +70,7 @@ static int get_controller_from_name(const char * const name, char **controller)
 
 	dot = strchr(*controller, '.');
 	if (dot == NULL) {
-		err("cgget: error parsing parameter name\n '%s'", name);
+		err("cgxget: error parsing parameter name\n '%s'", name);
 		return ECGINVAL;
 	}
 	*dot = '\0';
@@ -175,7 +175,7 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	if (!cgc) {
 		cgc = cgroup_add_controller(cg, cntl_value_controller);
 		if (!cgc) {
-			err("cgget: cannot find controller '%s'\n", cntl_value_controller);
+			err("cgxget: cannot find controller '%s'\n", cntl_value_controller);
 			ret = ECGOTHER;
 			goto out;
 		}
@@ -347,7 +347,7 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	 * cgget implementation.  Continue that approach.
 	 *
 	 * Example of a command that will hit this code:
-	 *	$ cgget -g cpu:mycgroup mycgroup
+	 *	$ cgxget -g cpu:mycgroup mycgroup
 	 */
 	if (argv[optind] != NULL && (*cg_list_len) > 0 && strcmp((*cg_list)[0]->name, "") != 0) {
 		usage(1, argv[0]);
@@ -504,7 +504,7 @@ static int get_cv_value(struct control_value * const cv, const char * const cg_n
 			 */
 			tmp_ret = cgroup_test_subsys_mounted(controller_name);
 			if (tmp_ret == 0) {
-				err("cgget: cannot find controller '%s' in group '%s'\n",
+				err("cgxget: cannot find controller '%s' in group '%s'\n",
 				    controller_name, cg_name);
 			} else {
 				err("variable file read failed %s\n", cgroup_strerror(ret));
