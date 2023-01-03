@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-2.1-only
 /**
- * Libcgroup extended cgset.  Works with both cgroup v1 and v2
+ * Libcgroup extended cgxset.  Works with both cgroup v1 and v2
  *
  * Copyright (c) 2021-2022 Oracle and/or its affiliates.
  * Author: Tom Hromatka <tom.hromatka@oracle.com>
