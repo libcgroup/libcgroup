@@ -16,6 +16,7 @@ __date__ = "25 October 2021"
 
 from posix.types cimport pid_t
 cimport cgroup
+import os
 
 cdef class Version:
     CGROUP_UNK = cgroup.CGROUP_UNK
@@ -404,6 +405,30 @@ cdef class Cgroup:
         ret = cgroup.cgroup_delete_cgroup(self._cgp, ignore_migration)
         if ret is not 0:
             raise RuntimeError("cgroup_delete_cgroup failed: {}".format(ret))
+
+    def attach(self, pid=None, root_cgroup=False):
+        """Attach a process to a cgroup
+
+        Arguments:
+        pid - pid to be attached.  If none, then the current pid is attached
+        root_cgroup - if True, then the pid will be attached to the root cgroup
+
+        Description:
+        Attach a process to a cgroup
+        """
+        if pid is None:
+            if root_cgroup:
+                ret = cgroup.cgroup_attach_task(NULL)
+            else:
+                ret = cgroup.cgroup_attach_task(self._cgp)
+        else:
+            if root_cgroup:
+                ret = cgroup.cgroup_attach_task_pid(NULL, pid)
+            else:
+                ret = cgroup.cgroup_attach_task_pid(self._cgp, pid)
+
+        if ret is not 0:
+            raise RuntimeError("cgroup_attach_task failed: {}".format(ret))
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
