@@ -89,4 +89,7 @@ cdef extern from "libcgroup.h":
 
     char *cgroup_get_controller_name(cgroup_controller *controller)
 
+    int cgroup_attach_task(cgroup * cgroup)
+    int cgroup_attach_task_pid(cgroup * cgroup, pid_t pid)
+
 # vim: set et ts=4 sw=4:
