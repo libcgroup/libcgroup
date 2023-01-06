@@ -200,6 +200,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <tr class="separator:ga452d8c5e95c8d694e26e7efda045360f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaebf0c15818fa8201b8a458f3e3e044da"><td class="memItemLeft" align="right" valign="top">enum cg_setup_mode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaebf0c15818fa8201b8a458f3e3e044da">cgroup_setup_mode</a> (void)</td></tr>
 <tr class="separator:gaebf0c15818fa8201b8a458f3e3e044da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabc512c3f20d1f18a0f0f3ca9e2fb136f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gabc512c3f20d1f18a0f0f3ca9e2fb136f">cgroup_get_controller_count</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
+<tr class="separator:gabc512c3f20d1f18a0f0f3ca9e2fb136f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf5439bb5f149655f682a6438b17877db"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaf5439bb5f149655f682a6438b17877db">cgroup_get_controller_by_index</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int index)</td></tr>
+<tr class="separator:gaf5439bb5f149655f682a6438b17877db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gac13c5570894e6581bd1ebbdcbb73c74e">cgroup_get_controller_name</a> (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller)</td></tr>
+<tr class="separator:gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Macro Definition Documentation</h2>
@@ -721,7 +727,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><div class="memdoc">
 <p >Physically create new control group in kernel, with all parameters and values copied from its parent group. The group is created in all hierarchies, where the parent group exists. I.e. following code creates subgroup in all hierarchies, because all of them have root (=parent) group. </p><div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *foo = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;foo&quot;</span>);</div>
 <div class="line"><a class="code hl_function" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>(foo, 0);</div>
-<div class="ttc" id="agroup__group__groups_html_ga90e1ce96f3cb540f7e82d076dd938f62"><div class="ttname"><a href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a></div><div class="ttdeci">int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)</div><div class="ttdef"><b>Definition:</b> api.c:2927</div></div>
+<div class="ttc" id="agroup__group__groups_html_ga90e1ce96f3cb540f7e82d076dd938f62"><div class="ttname"><a href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a></div><div class="ttdeci">int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)</div><div class="ttdef"><b>Definition:</b> api.c:2926</div></div>
 </div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't crate subgroup of root group in just one hierarchy with this function!</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -883,7 +889,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><div class="memdoc">
 <p >Read all information regarding the group from kernel. Based on name of the group, list of controllers and all parameters and their values are read from all hierarchies, where a group with given name exists. All existing controllers are replaced. I.e. following code will fill <code>root</code> with controllers from all hierarchies, because the root group is available in all of them. </p><div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *root = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;/&quot;</span>);</div>
 <div class="line"><a class="code hl_function" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a>(root);</div>
-<div class="ttc" id="agroup__group__groups_html_gad4ba31fe5a8bba63b33b1ea339b849e6"><div class="ttname"><a href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a></div><div class="ttdeci">int cgroup_get_cgroup(struct cgroup *cgroup)</div><div class="ttdef"><b>Definition:</b> api.c:3453</div></div>
+<div class="ttc" id="agroup__group__groups_html_gad4ba31fe5a8bba63b33b1ea339b849e6"><div class="ttname"><a href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a></div><div class="ttdeci">int cgroup_get_cgroup(struct cgroup *cgroup)</div><div class="ttdef"><b>Definition:</b> api.c:3452</div></div>
 </div><!-- fragment --><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a>? What owners will return <a class="el" href="group__group__groups.html#ga007d21c304d9cc6e948dc0ae51ecfa86">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file?</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -950,6 +956,94 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="gaf5439bb5f149655f682a6438b17877db" name="gaf5439bb5f149655f682a6438b17877db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf5439bb5f149655f682a6438b17877db">&#9670;&#160;</a></span>cgroup_get_controller_by_index()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> * cgroup_get_controller_by_index </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
+          <td class="paramname"><em>cgroup</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>index</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Return requested controller from given group</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">index</td><td>The index into the cgroup controller list </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gabc512c3f20d1f18a0f0f3ca9e2fb136f" name="gabc512c3f20d1f18a0f0f3ca9e2fb136f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gabc512c3f20d1f18a0f0f3ca9e2fb136f">&#9670;&#160;</a></span>cgroup_get_controller_count()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cgroup_get_controller_count </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
+          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Return the number of controllers for the specified cgroup in libcgroup internal structures.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">cgroup</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Count of the controllers or -1 on error. </dd></dl>
+
+</div>
+</div>
+<a id="gac13c5570894e6581bd1ebbdcbb73c74e" name="gac13c5570894e6581bd1ebbdcbb73c74e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac13c5570894e6581bd1ebbdcbb73c74e">&#9670;&#160;</a></span>cgroup_get_controller_name()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char * cgroup_get_controller_name </td>
+          <td>(</td>
+          <td class="paramtype">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td>
+          <td class="paramname"><em>controller</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Given a controller pointer, get the name of the controller</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">controller</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>controller name string, NULL if there's an error </dd></dl>
 
 </div>
 </div>
