@@ -44,6 +44,9 @@ static void usage(int status, const char *program_name)
 	info("  -g <controllers>:<path>	Control group to be removed (-g is optional)\n");
 	info("  -h, --help			Display this help\n");
 	info("  -r, --recursive		Recursively remove all subgroups\n");
+#ifdef WITH_SYSTEMD
+	info("  -b				Ignore default systemd delegate hierarchy\n");
+#endif
 }
 
 /*
@@ -110,6 +113,7 @@ static int skip_add_controller(int counter, int *skip, struct ext_cgroup_record 
 
 int main(int argc, char *argv[])
 {
+	int ignore_default_systemd_delegate_slice = 0;
 	struct cgroup_group_spec **cgroup_list = NULL;
 	struct ext_cgroup_record *ecg_list = NULL;
 	struct cgroup_controller *cgc;
@@ -150,9 +154,16 @@ int main(int argc, char *argv[])
 	}
 
 	/* Parse arguments */
-	while ((c = getopt_long(argc, argv, "rhg:",
-		long_options, NULL)) > 0) {
+#ifdef WITH_SYSTEMD
+	while ((c = getopt_long(argc, argv, "rhg:b", long_options, NULL)) > 0) {
 		switch (c) {
+		case 'b':
+			ignore_default_systemd_delegate_slice = 1;
+			break;
+#else
+	while ((c = getopt_long(argc, argv, "rhg:", long_options, NULL)) > 0) {
+		switch (c) {
+#endif
 		case 'r':
 			flags |= CGFLAG_DELETE_RECURSIVE;
 			break;
@@ -174,6 +185,10 @@ int main(int argc, char *argv[])
 			goto err;
 		}
 	}
+
+	/* this is false always for disable-systemd */
+	if (!ignore_default_systemd_delegate_slice)
+		cgroup_set_default_systemd_cgroup();
 
 	/* parse groups on command line */
 	for (i = optind; i < argc; i++) {
