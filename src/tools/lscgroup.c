@@ -47,6 +47,9 @@ static void usage(int status, const char *program_name)
 	info("  -g <controllers>:<path>	Control group to be ");
 	info("displayed (-g is optional)\n");
 	info("  -h, --help			Display this help\n");
+#ifdef WITH_SYSTEMD
+	info("  -b				Ignore default systemd delegate hierarchy\n");
+#endif
 	info("(Note: currently supported on cgroups v1 only)\n");
 }
 
@@ -243,6 +246,7 @@ int main(int argc, char *argv[])
 	};
 
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+	int ignore_default_systemd_delegate_slice = 0;
 	int flags = 0;
 	int ret = 0;
 	int c;
@@ -251,8 +255,16 @@ int main(int argc, char *argv[])
 	memset(cgroup_list, 0, sizeof(cgroup_list));
 
 	/* parse arguments */
+#ifdef WITH_SYSTEMD
+	while ((c = getopt_long(argc, argv, "hg:b", options, NULL)) > 0) {
+		switch (c) {
+		case 'b':
+			ignore_default_systemd_delegate_slice = 1;
+			break;
+#else
 	while ((c = getopt_long(argc, argv, "hg:", options, NULL)) > 0) {
 		switch (c) {
+#endif
 		case 'h':
 			usage(0, argv[0]);
 			ret = 0;
@@ -271,6 +283,17 @@ int main(int argc, char *argv[])
 			goto err;
 		}
 	}
+
+	/* initialize libcg */
+	ret = cgroup_init();
+	if (ret) {
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
+		goto err;
+	}
+
+	/* this is false always for disable-systemd */
+	if (!ignore_default_systemd_delegate_slice)
+		cgroup_set_default_systemd_cgroup();
 
 	/* read the list of controllers */
 	while (optind < argc) {
