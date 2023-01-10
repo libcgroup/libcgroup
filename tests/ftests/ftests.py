@@ -274,7 +274,6 @@ def run_tests(config):
                 if config.args.num == consts.TESTS_RUN_ALL or \
                    config.args.num == filenum_int:
 
-
                     if config.args.suite == consts.TESTS_RUN_ALL_SUITES and \
                        filesuite == 'sudo':
                         # Don't run the 'sudo' tests if all tests have been specified.
