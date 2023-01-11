@@ -995,6 +995,7 @@ class Cgroup(object):
         else:
             raise CgroupError('Unknown cgroup mode')
 
+
 class CgroupError(Exception):
     def __init__(self, message):
         super(CgroupError, self).__init__(message)
