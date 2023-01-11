@@ -75,12 +75,12 @@ static void usage(int status, const char *program_name)
 	info("Usage: %s [-r <name=value>] <cgroup_path> ...\n", program_name);
 	info("   or: %s --copy-from <source_cgroup_path> <cgroup_path> ...\n", program_name);
 	info("Set the parameters of given cgroup(s)\n");
-	info("  -1, --v1                      Provided parameters are in v1 format\n");
-	info("  -2, --v2                      Provided parameters are in v2 format\n");
-	info("  -i, --ignore-unmappable       Do not return an error for ");
+	info("  -1, --v1                                Provided parameters are in v1 format\n");
+	info("  -2, --v2                                Provided parameters are in v2 format\n");
+	info("  -i, --ignore-unmappable                 Do not return an error for ");
 	info("settings that cannot be converted\n");
-	info("  -r, --variable <name>			Define parameter to set\n");
-	info("  --copy-from <source_cgroup_path>	Control group whose ");
+	info("  -r, --variable <name>                   Define parameter to set\n");
+	info("  --copy-from <source_cgroup_path>        Control group whose ");
 	info("parameters will be copied\n");
 }
 #endif /* !UNIT_TEST */
