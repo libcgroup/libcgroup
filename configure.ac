@@ -207,6 +207,11 @@ AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([getmntent hasmntopt memset mkdir rmdir strdup])
 
+orig_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -D_GNU_SOURCE"
+AC_FUNC_STRERROR_R
+CFLAGS="$orig_CFLAGS"
+
 AC_SEARCH_LIBS(
 	[fts_open],
 	[fts],
