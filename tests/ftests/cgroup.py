@@ -20,7 +20,7 @@ import os
 
 
 class CgroupMount(object):
-    def __init__(self, mount_line):
+    def __init__(self, mount_line, controller=None):
         entries = mount_line.split()
 
         if entries[2] == 'cgroup':
@@ -32,14 +32,17 @@ class CgroupMount(object):
 
         self.mount_point = entries[1]
 
-        self.controller = None
-        if self.version == CgroupVersion.CGROUP_V1:
-            self.controller = entries[3].split(',')[-1]
+        if controller:
+            self.controller = controller
+        else:
+            self.controller = None
+            if self.version == CgroupVersion.CGROUP_V1:
+                self.controller = entries[3].split(',')[-1]
 
-            if self.controller == 'clone_children':
-                # the cpuset controller may append this option to the end
-                # rather than the controller name like all other controllers
-                self.controller = 'cpuset'
+                if self.controller == 'clone_children':
+                    # the cpuset controller may append this option to the end
+                    # rather than the controller name like all other controllers
+                    self.controller = 'cpuset'
 
     def __str__(self):
         out_str = 'CgroupMount'
@@ -835,6 +838,13 @@ class Cgroup(object):
                 if mount.version == CgroupVersion.CGROUP_V1 or \
                    expand_v2_mounts is False:
                     mount_list.append(mount)
+
+                    if entry[1].find(',') > 0:
+                        # multiple controllers are mounted together.  Also add the
+                        # first controller to the mount_list
+                        controller = os.path.basename(entry[1].split(',')[0])
+                        mount = CgroupMount(line, controller=controller)
+                        mount_list.append(mount)
                     continue
 
                 with open(os.path.join(mount.mount_point,
