@@ -7,5 +7,8 @@ endif
 
 EXTRA_DIST = README_daemon libcgroup.doxyfile README_systemd
 
+AM_DISTCHECK_CONFIGURE_FLAGS = --sysconfdir=/etc --localstatedir=/var \
+			       --enable-opaque-hierarchy="name=systemd"
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libcgroup.pc
