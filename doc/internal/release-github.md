@@ -5,28 +5,29 @@ https://github.com/libcgroup/libcgroup
 This is the process that should be followed when creating a new libcgroup
 release.
 
-#### 1. Update the libcgroup-tests submodule
-
-	# ./bootstrap.sh
-	# git submodule update  --remote tests
-	# git add tests
-	# git commit -s
-	# git push
-
-#### 2. Verify that all issues assigned to the release milestone have been resolved
+#### 1. Verify that all issues assigned to the release milestone have been resolved
 
   * https://github.com/libcgroup/libcgroup/milestones
 
-#### 3. Verify that the Github Actions are all passing
+#### 2. Verify that the Github Actions are all passing
 
-#### 4. Verify that the bundled test suite runs without error
+#### 3. Verify that the bundled test suite runs without error
 
 	# ./bootstrap.sh
 	# make check
 
-#### 5. Verify that the packaging is correct
+#### 4. Verify that the packaging is correct
 
 	# make distcheck
+
+#### 5. Verify that there are no outstanding defects from Coverity
+
+    # ./bootstrap.sh
+    # export PATH=$PATH:/path/to/cov-build
+    # cov-build --dir cov-init make
+    # # verify the build succeeded.  Examine $? and cov-int/build-log.txt
+    # tar czvf libcgroup-main@ae6b2682f10e.tar.gz cov-int
+    # Upload the tar file to Coverity
 
 #### 6. Perform any distribution test builds
 
