@@ -75,26 +75,27 @@ $(function() {
 <div class="textblock"><p ><a href="https://github.com/libcgroup/libcgroup">https://github.com/libcgroup/libcgroup</a></p>
 <p >This is the process that should be followed when creating a new libcgroup release.</p>
 <h3><a class="anchor" id="autotoc_md9"></a>
-1. Update the libcgroup-tests submodule</h3>
-<pre class="fragment"># ./bootstrap.sh
-# git submodule update  --remote tests
-# git add tests
-# git commit -s
-# git push
-</pre> <h3><a class="anchor" id="autotoc_md10"></a>
-2. Verify that all issues assigned to the release milestone have been resolved</h3>
+1. Verify that all issues assigned to the release milestone have been resolved</h3>
 <ul>
 <li><a href="https://github.com/libcgroup/libcgroup/milestones">https://github.com/libcgroup/libcgroup/milestones</a></li>
 </ul>
+<h3><a class="anchor" id="autotoc_md10"></a>
+2. Verify that the Github Actions are all passing</h3>
 <h3><a class="anchor" id="autotoc_md11"></a>
-3. Verify that the Github Actions are all passing</h3>
-<h3><a class="anchor" id="autotoc_md12"></a>
-4. Verify that the bundled test suite runs without error</h3>
+3. Verify that the bundled test suite runs without error</h3>
 <pre class="fragment"># ./bootstrap.sh
 # make check
-</pre> <h3><a class="anchor" id="autotoc_md13"></a>
-5. Verify that the packaging is correct</h3>
+</pre> <h3><a class="anchor" id="autotoc_md12"></a>
+4. Verify that the packaging is correct</h3>
 <pre class="fragment"># make distcheck
+</pre> <h3><a class="anchor" id="autotoc_md13"></a>
+5. Verify that there are no outstanding defects from Coverity</h3>
+<pre class="fragment"># ./bootstrap.sh
+# export PATH=$PATH:/path/to/cov-build
+# cov-build --dir cov-init make
+# # verify the build succeeded.  Examine $? and cov-int/build-log.txt
+# tar czvf libcgroup-main@ae6b2682f10e.tar.gz cov-int
+# Upload the tar file to Coverity
 </pre> <h3><a class="anchor" id="autotoc_md14"></a>
 6. Perform any distribution test builds</h3>
 <ul>
