@@ -2886,6 +2886,7 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller, char **pa
 
 	if (stat(child_path, &stat_child) < 0) {
 		if (is_cgrp_ctrl_shared_mnt(controller)) {
+			last_errno = errno;
 			ret = ECGROUPNOTEXIST;
 			goto free_parent;
 		}
@@ -3168,6 +3169,7 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
 int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 {
 	int first_error = 0, first_errno = 0;
+	int cgrp_del_on_shared_mnt = 0;
 	char parent_path[FILENAME_MAX];
 	char *controller_name = NULL;
 	FILE *parent_tasks = NULL;
@@ -3212,12 +3214,29 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 		if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
 			ret = cgroup_find_parent(cgroup, controller_name, &parent_name);
 			if (ret) {
-				if (first_error == 0 && ret != ECGROUPNOTEXIST) {
-					first_errno = last_errno;
-					first_error = ret;
+				/*
+				 * ECGROPNOTEXIST is returned on cgroup v1, where
+				 * controllers share the mount points. When cgroup
+				 * is deleted on one of symbolic link (controller)
+				 * and they should pass on other controllers sharing
+				 * the mount point.
+				 *
+				 * cgrp_del_shared_mnt serves as an extra check
+				 * flag that gets set, when the cgroup exists and
+				 * is deleted or else sets an error.
+				 */
+				if (first_error == 0 &&
+				    (ret != ECGROUPNOTEXIST ||
+				    (ret == ECGROUPNOTEXIST && cgrp_del_on_shared_mnt == 0))) {
+						first_errno = last_errno;
+						first_error = ECGOTHER;
 				}
 				continue;
 			}
+
+			if (is_cgrp_ctrl_shared_mnt(controller_name))
+					cgrp_del_on_shared_mnt = 1;
+
 			if (parent_name == NULL) {
 				/* Root group is being deleted. */
 				if (!(flags & CGFLAG_DELETE_RECURSIVE))
