@@ -121,7 +121,7 @@ jobs:
 
   distcheckv1:
     name: Cgroup v1 Dist Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Install container dependencies
@@ -143,7 +143,7 @@ jobs:
 
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Install container dependencies
