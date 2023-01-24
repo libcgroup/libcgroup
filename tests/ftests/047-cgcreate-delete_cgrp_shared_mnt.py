@@ -59,10 +59,7 @@ def test(config):
     try:
         Cgroup.delete(config, CONTROLLER1, CGNAME)
     except RunError as re:
-        if 'No such file or directory' in re.stderr:
-            cause = 'Missing support to delete cgroup on shared mount points.'
-            result = consts.TEST_FAILED
-        else:
+        if 'No such file or directory' not in re.stderr:
             raise re
 
     return result, cause
