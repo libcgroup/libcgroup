@@ -42,7 +42,9 @@ gtest_SOURCES = gtest.cpp \
 		013-cgroup_build_tasks_procs_path.cpp \
 		014-cgroupv2_get_subtree_control.cpp \
 		015-cgroupv2_controller_enabled.cpp \
-		016-cgset_parse_r_flag.cpp
+		016-cgset_parse_r_flag.cpp \
+		017-API_fuzz_test.cpp
+
 gtest_LDFLAGS = -L$(top_srcdir)/googletest/googletest -l:libgtest.so \
 		-rpath $(abs_top_srcdir)/googletest/googletest
 
