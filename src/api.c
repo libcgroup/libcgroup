@@ -377,6 +377,12 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode, int dirm_change, 
 void cgroup_set_permissions(struct cgroup *cgroup, mode_t control_dperm, mode_t control_fperm,
 			    mode_t task_fperm)
 {
+	if (!cgroup) {
+		/* ECGROUPNOTALLOWED */
+		cgroup_err("Cgroup, operation not allowed\n");
+		return;
+	}
+
 	cgroup->control_dperm = control_dperm;
 	cgroup->control_fperm = control_fperm;
 	cgroup->task_fperm = task_fperm;
