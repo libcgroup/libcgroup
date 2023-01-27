@@ -110,15 +110,19 @@ $(function() {
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keywordtype">int</span> cgroup_create_scope(<span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> scope_name, <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> slice_name,</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>            <span class="keyword">const</span> <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__systemd__scope__opts.html">cgroup_systemd_scope_opts</a> * <span class="keyword">const</span> opts);</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_SYSTEMD_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="keywordtype">int</span> cgroup_create_scope2(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, <span class="keywordtype">int</span> ignore_ownership,</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>             <span class="keyword">const</span> <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__systemd__scope__opts.html">cgroup_systemd_scope_opts</a> * <span class="keyword">const</span> opts);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_SYSTEMD_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="astructcgroup__systemd__scope__opts_html"><div class="ttname"><a href="structcgroup__systemd__scope__opts.html">cgroup_systemd_scope_opts</a></div><div class="ttdef"><b>Definition:</b> systemd.h:27</div></div>
 <div class="ttc" id="astructcgroup__systemd__scope__opts_html_a73b472fe4247f194a78ffb9fd0f57008"><div class="ttname"><a href="structcgroup__systemd__scope__opts.html#a73b472fe4247f194a78ffb9fd0f57008">cgroup_systemd_scope_opts::pid</a></div><div class="ttdeci">pid_t pid</div><div class="ttdef"><b>Definition:</b> systemd.h:33</div></div>
 <div class="ttc" id="astructcgroup__systemd__scope__opts_html_aadb235f6712172bd4e7c6485ad7f30f9"><div class="ttname"><a href="structcgroup__systemd__scope__opts.html#aadb235f6712172bd4e7c6485ad7f30f9">cgroup_systemd_scope_opts::mode</a></div><div class="ttdeci">enum cgroup_systemd_mode_t mode</div><div class="ttdef"><b>Definition:</b> systemd.h:31</div></div>
 <div class="ttc" id="astructcgroup__systemd__scope__opts_html_afeebc7db4b83ce4a7d2aeefb8089df86"><div class="ttname"><a href="structcgroup__systemd__scope__opts.html#afeebc7db4b83ce4a7d2aeefb8089df86">cgroup_systemd_scope_opts::delegated</a></div><div class="ttdeci">int delegated</div><div class="ttdef"><b>Definition:</b> systemd.h:29</div></div>
+<div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition:</b> libcgroup-internal.h:108</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
