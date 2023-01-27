@@ -470,6 +470,41 @@ cdef class Cgroup:
 
         cgroup.cgroup_set_permissions(self._cgp, dmode, cmode, tmode)
 
+    def create_scope2(self, ignore_ownership=True, delegated=True,
+                      systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
+        """Create a systemd scope using the cgroup instance
+
+        Arguments:
+        ignore_ownership - if true, do not modify the owning user/group for the cgroup directory
+                           and control files
+        delegated - if true, then systemd will not manage the cgroup aspects of the scope.  It
+                    is up to the user to manage the cgroup settings
+        systemd_mode - setting to tell systemd how to handle creation of this scope and
+                       resolve conflicts if the scope and/or slice exist
+        pid - pid of the process to place in the scope.  If None is provided, libcgroup will
+              place a dummy process in the scope
+
+        Description:
+        Create a systemd scope using the cgroup instance in this class.  If delegated is true,
+        then systemd will not manage the cgroup aspects of the scope.
+        """
+        cdef cgroup.cgroup_systemd_scope_opts opts
+
+        if delegated:
+            opts.delegated = 1
+        else:
+            opts.delegated = 0
+
+        opts.mode = systemd_mode
+        if pid:
+            opts.pid = pid
+        else:
+            opts.pid = -1
+
+        ret = cgroup.cgroup_create_scope2(self._cgp, ignore_ownership, &opts)
+        if ret is not 0:
+            raise RuntimeError("cgroup_create_scope2 failed: {}".format(ret))
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 
