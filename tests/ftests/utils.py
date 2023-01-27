@@ -23,9 +23,9 @@ def get_file_owner_uid(config, filename):
     cmd.append(filename)
 
     if config.args.container:
-        return config.container.run(cmd, shell_bool=True)
+        return int(config.container.run(cmd, shell_bool=True))
     else:
-        return Run.run(cmd, shell_bool=True)
+        return int(Run.run(cmd, shell_bool=True))
 
 
 def get_file_owner_username(config, filename):
@@ -49,9 +49,9 @@ def get_file_owner_gid(config, filename):
     cmd.append(filename)
 
     if config.args.container:
-        return config.container.run(cmd, shell_bool=True)
+        return int(config.container.run(cmd, shell_bool=True))
     else:
-        return Run.run(cmd, shell_bool=True)
+        return int(Run.run(cmd, shell_bool=True))
 
 
 def get_file_owner_group_name(config, filename):
