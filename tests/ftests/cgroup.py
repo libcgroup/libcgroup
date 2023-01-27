@@ -1005,6 +1005,24 @@ class Cgroup(object):
         else:
             raise CgroupError('Unknown cgroup mode')
 
+    @staticmethod
+    def is_controller_enabled(config, cgroup_name, ctrl_name):
+        ctrl_path = Cgroup.__get_controller_mount_point_v2(ctrl_name)
+        parent_cgname = os.path.dirname(cgroup_name)
+
+        subtree_path = os.path.join(ctrl_path, parent_cgname, 'cgroup.subtree_control')
+        cmd = ['cat', subtree_path]
+
+        if config.args.container:
+            controllers = config.container.run(cmd, shell_bool=True)
+        else:
+            controllers = Run.run(cmd, shell_bool=True)
+
+        for controller in controllers.split():
+            if controller == ctrl_name:
+                return True
+
+        return False
 
 class CgroupError(Exception):
     def __init__(self, message):
