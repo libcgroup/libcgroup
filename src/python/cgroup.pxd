@@ -8,7 +8,7 @@
 
 # cython: language_level = 3str
 
-from posix.types cimport pid_t
+from posix.types cimport pid_t, uid_t, gid_t, mode_t
 
 cdef extern from "libcgroup.h":
     cdef struct cgroup:
@@ -91,5 +91,11 @@ cdef extern from "libcgroup.h":
 
     int cgroup_attach_task(cgroup * cgroup)
     int cgroup_attach_task_pid(cgroup * cgroup, pid_t pid)
+
+    int cgroup_set_uid_gid(cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid, uid_t control_uid,
+                           gid_t control_gid)
+
+    void cgroup_set_permissions(cgroup *cgroup, mode_t control_dperm, mode_t control_fperm,
+                           mode_t task_fperm)
 
 # vim: set et ts=4 sw=4:
