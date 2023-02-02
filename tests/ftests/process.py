@@ -51,14 +51,14 @@ class Process(object):
             pass
 
     @staticmethod
-    def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1):
+    def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1, ignore_systemd=False):
         cmd = ["/usr/bin/perl",
                "-e",
                "'while(1){{sleep({})}};'".format(sleep_time)
                ]
 
         try:
-            Cgroup.cgexec(config, controller, cgname, cmd)
+            Cgroup.cgexec(config, controller, cgname, cmd, ignore_systemd=ignore_systemd)
         except RunError:
             # When this process is killed, it will throw a run error.
             # Ignore it.
@@ -113,10 +113,10 @@ class Process(object):
 
     # Create a simple process in the requested cgroup
     def create_process_in_cgroup(self, config, controller, cgname,
-                                 cgclassify=True):
+                                 cgclassify=True, ignore_systemd=False):
         if cgclassify:
             child_pid = self.create_process(config)
-            Cgroup.classify(config, controller, cgname, child_pid)
+            Cgroup.classify(config, controller, cgname, child_pid, ignore_systemd=ignore_systemd)
         else:
             # use cgexec
 
@@ -126,7 +126,7 @@ class Process(object):
             sleep_time = len(self.children) + 1
 
             p = mp.Process(target=Process.__cgexec_infinite_loop,
-                           args=(config, controller, cgname, sleep_time, ))
+                           args=(config, controller, cgname, sleep_time, ignore_systemd, ))
             p.start()
 
             self.children.append(p)
@@ -144,14 +144,14 @@ class Process(object):
             thread.start()
 
     def create_threaded_process_in_cgroup(self, config, controller, cgname,
-                                          threads=2, cgclassify=True):
+                                          threads=2, cgclassify=True, ignore_systemd=False):
 
         p = mp.Process(target=self.create_threaded_process,
                        args=(config, threads, ))
         p.start()
 
         if cgclassify:
-            Cgroup.classify(config, controller, cgname, p.pid)
+            Cgroup.classify(config, controller, cgname, p.pid, ignore_systemd=ignore_systemd)
 
         self.children.append(p)
         self.children_pids.append(p.pid)
