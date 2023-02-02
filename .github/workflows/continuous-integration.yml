@@ -54,7 +54,7 @@ jobs:
       - name: Check out source repository
         uses: actions/checkout@v3
       - name: Set up Python environment
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.8"
       - name: flake8 Lint
@@ -114,7 +114,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Unit Test Code Coverage
         path: lcov.*
@@ -168,7 +168,7 @@ jobs:
         popd
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v1 test logs
         path: ./*.log
@@ -183,7 +183,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v1 Code Coverage
         path: lcov.*
@@ -227,7 +227,7 @@ jobs:
         cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v1v2 test logs
         path: tests/ftests/*.log
@@ -242,7 +242,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v1v2 Code Coverage
         path: lcov.*
@@ -272,7 +272,7 @@ jobs:
         cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 test logs - legacy
         path: tests/ftests/*.log
@@ -287,7 +287,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 Code Coverage - legacy
         path: lcov.*
@@ -317,7 +317,7 @@ jobs:
         cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 test logs - hybrid
         path: tests/ftests/*.log
@@ -332,7 +332,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 Code Coverage - hybrid
         path: lcov.*
@@ -362,7 +362,7 @@ jobs:
         cat tests/ftests/ftests-nocontainer.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 test logs - unified
         path: tests/ftests/*.log
@@ -377,7 +377,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Cgroup v2 Code Coverage - unified
         path: lcov.*
