@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+# Continuous Integration Workflow for libcgroup
+#
+# Copyright (c) 2020-2023 Oracle and/or its affiliates.
+# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
+#
+
+name: "CodeQL"
+on: ["push", "pull_request"]
+
+jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: false
+    - uses: github/codeql-action/init@v2
+      with:
+        languages: cpp, python
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2

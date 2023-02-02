@@ -10,22 +10,6 @@ name: Continuous Integration
 on: ["push", "pull_request"]
 
 jobs:
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: false
-    - uses: github/codeql-action/init@v2
-      with:
-        languages: cpp, python
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
-
   # Doc: https://github.com/redhat-plumbers-in-action/differential-shellcheck#usage
   differential-shellcheck:
     name: Differential ShellCheck
