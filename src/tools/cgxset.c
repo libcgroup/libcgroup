@@ -82,6 +82,10 @@ static void usage(int status, const char *program_name)
 	info("  -r, --variable <name>                   Define parameter to set\n");
 	info("  --copy-from <source_cgroup_path>        Control group whose ");
 	info("parameters will be copied\n");
+#ifdef WITH_SYSTEMD
+	info("  -b                                      Ignore default systemd ");
+	info("delegate hierarchy\n");
+#endif
 }
 #endif /* !UNIT_TEST */
 
@@ -135,6 +139,7 @@ err:
 #ifndef UNIT_TEST
 int main(int argc, char *argv[])
 {
+	int ignore_default_systemd_delegate_slice = 0;
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
 	int nv_max = 0;
@@ -155,9 +160,17 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+#ifdef WITH_SYSTEMD
 	/* parse arguments */
+	while ((c = getopt_long (argc, argv, "r:h12ib", long_options, NULL)) != -1) {
+		switch (c) {
+		case 'b':
+			ignore_default_systemd_delegate_slice = 1;
+			break;
+#else
 	while ((c = getopt_long (argc, argv, "r:h12i", long_options, NULL)) != -1) {
 		switch (c) {
+#endif
 		case 'h':
 			usage(0, argv[0]);
 			ret = 0;
@@ -234,6 +247,10 @@ int main(int argc, char *argv[])
 		    cgroup_strerror(ret));
 		goto err;
 	}
+
+	/* this is false always for disable-systemd */
+	if (!ignore_default_systemd_delegate_slice)
+		cgroup_set_default_systemd_cgroup();
 
 	/* copy the name-value pairs from -r options */
 	if ((flags & FL_RULES) != 0) {
