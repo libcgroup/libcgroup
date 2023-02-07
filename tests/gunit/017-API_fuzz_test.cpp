@@ -44,3 +44,20 @@ TEST_F(APIArgsTest, API_cgroup_set_permissions)
 	std::string result = testing::internal::GetCapturedStdout();
 	ASSERT_EQ(result, "Error: Cgroup, operation not allowed\n");
 }
+
+/**
+ * Pass NULL cgroup name for creating a cgroup
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_new_cgroup test name
+ *
+ * This test will pass NULL cgroup name to the cgroup_new_cgroup()
+ * and check it handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_new_cgroup)
+{
+	struct cgroup *cgroup = NULL;
+	char *name = NULL;
+
+	cgroup = cgroup_new_cgroup(name);
+	ASSERT_EQ(cgroup, nullptr);
+}
