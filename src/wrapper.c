@@ -42,8 +42,12 @@ void init_cgroup_table(struct cgroup *cgroups, size_t count)
 
 struct cgroup *cgroup_new_cgroup(const char *name)
 {
-	struct cgroup *cgroup = calloc(1, sizeof(struct cgroup));
+	struct cgroup *cgroup;
 
+	if (!name)
+		return NULL;
+
+	cgroup = calloc(1, sizeof(struct cgroup));
 	if (!cgroup)
 		return NULL;
 
