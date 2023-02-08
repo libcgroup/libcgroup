@@ -155,4 +155,5 @@ CGROUP_3.0 {
 	cgroup_get_controller_by_index;
 	cgroup_get_controller_name;
 	cgroup_create_scope2;
+	cgroup_set_default_systemd_cgroup;
 } CGROUP_2.0;
