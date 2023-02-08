@@ -17,11 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <stdio.h>
 
 
 #define MODE_SHOW_HEADERS	1
 #define MODE_SHOW_NAMES		2
+#define MODE_SYSTEMD_DELEGATE	4
 
 #define LL_MAX			100
 
@@ -58,6 +60,9 @@ static void usage(int status, const char *program_name)
 	info("  -n				Do not print headers\n");
 	info("  -r, --variable  <name>	Define parameter to display\n");
 	info("  -v, --values-only		Print only values, not parameter names\n");
+#ifdef WITH_SYSTEMD
+	info("  -b				Ignore default systemd delegate hierarchy\n");
+#endif
 }
 
 static int get_controller_from_name(const char * const name, char **controller)
@@ -412,8 +417,16 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	int c;
 
 	/* Parse arguments. */
+#ifdef WITH_SYSTEMD
+	while ((c = getopt_long(argc, argv, "r:hnvg:a12ib", long_options, NULL)) > 0) {
+		switch (c) {
+		case 'b':
+			*mode = (*mode) & (INT_MAX ^ MODE_SYSTEMD_DELEGATE);
+			break;
+#else
 	while ((c = getopt_long(argc, argv, "r:hnvg:a12i", long_options, NULL)) > 0) {
 		switch (c) {
+#endif
 		case 'h':
 			usage(0, argv[0]);
 			exit(0);
@@ -577,7 +590,10 @@ static int indent_multiline_value(struct control_value * const cv)
 static int fill_empty_controller(struct cgroup * const cg, struct cgroup_controller * const cgc)
 {
 	struct dirent *ctrl_dir = NULL;
-	char path[FILENAME_MAX];
+	char path[FILENAME_MAX] = { '\0' };
+#ifdef WITH_SYSTEMD
+	char tmp[FILENAME_MAX] = { '\0' };
+#endif
 	bool found_mount = false;
 	int i, path_len, ret = 0;
 	DIR *dir = NULL;
@@ -601,6 +617,36 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 		goto out;
 
 	path_len = strlen(path);
+#ifdef WITH_SYSTEMD
+		/*
+		 * If the user has set a slice/scope as delegate in the
+		 * cgconfig.conf file, every path constructed will have the
+		 * systemd_default_cgroup slice/scope suffixed to it.
+		 *
+		 * We need to trim the slice/scope from the path, incase of
+		 * user providing /<cgroup-name> as the cgroup name in the command
+		 * line:
+		 * cgxget -1  -r cpu.shares /a
+		 */
+
+	if (cg->name[0] == '/' && cg->name[1] != '\0' &&
+	    strncmp(path + (path_len - 7), ".scope/", 7) == 0) {
+		snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
+		strncpy(path, tmp, FILENAME_MAX - 1);
+		path[FILENAME_MAX - 1] = '\0';
+
+		path_len = strlen(path);
+		if (strncmp(path + (path_len - 6), ".slice", 6) == 0) {
+			snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
+			strncpy(path, tmp, FILENAME_MAX - 1);
+			path[FILENAME_MAX - 1] = '\0';
+		} else {
+			cgroup_dbg("Malformed path %s (expected slice name)\n", path);
+			ret  = ECGOTHER;
+			goto out;
+		}
+	}
+#endif
 	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
 	path[sizeof(path) - 1] = '\0';
 
@@ -787,7 +833,7 @@ out:
 
 int main(int argc, char *argv[])
 {
-	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
+	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS | MODE_SYSTEMD_DELEGATE;
 	enum cg_version_t version = CGROUP_UNK;
 	struct cgroup **cg_list = NULL;
 	bool ignore_unmappable = false;
@@ -809,6 +855,10 @@ int main(int argc, char *argv[])
 	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version, &ignore_unmappable);
 	if (ret)
 		goto err;
+
+	/* this is false always for disable-systemd */
+	if (mode & MODE_SYSTEMD_DELEGATE)
+		cgroup_set_default_systemd_cgroup();
 
 	ret = convert_cgroups(&cg_list, cg_list_len, version, CGROUP_DISK);
 	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
