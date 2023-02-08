@@ -1690,8 +1690,34 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	 * cg_mount_table[i].mount.path + '/' + cg_namespace_table[i] + '/'
 	 */
 	int i, ret, len = (FILENAME_MAX * 2) + 2;
-	char *_path;
+	char *tmp_systemd_default_cgroup, *_path = NULL;
 
+	/*
+	 * systemd_default_cgroup can't be clobbered.   The user may pass
+	 * multiple cgroups, hence use temporary variable for manipulations
+	 * for example:
+	 * cgget -g cpu:/ -g cpu:cgrp1 -g cpu:/cgrp2
+	 */
+	tmp_systemd_default_cgroup = calloc(1, (sizeof(char) * len));
+	if (!tmp_systemd_default_cgroup) {
+		cgroup_err("Failed to allocate memory for tmp_systemd_default_cgroup\n");
+		goto out;
+	}
+
+#ifdef WITH_SYSTEMD
+	/*
+	 * If the user specifies the name as /<cgroup-name>, they are
+	 * effectively overriding the systemd_default_cgroup but if the name
+	 * is "/", the cgroup root path is systemd_default_cgroup
+	 */
+	if (strlen(systemd_default_cgroup) && name && name[0] == '/' && name[1] != '\0')
+		tmp_systemd_default_cgroup[0] = '\0';
+	else
+		snprintf(tmp_systemd_default_cgroup, len, "%s/", systemd_default_cgroup);
+
+	/* allocate more space for systemd_default_cgroup + '/' */
+	len += (FILENAME_MAX + 1);
+#endif
 	/*
 	 * Recent gcc are unhappy when sizeof(dest) <= sizeof(src) with
 	 * snprintf()'s.  Alternative is to use multiple strncpy()/strcat(),
@@ -1701,7 +1727,7 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	_path = malloc(len);
 	if (!_path) {
 		cgroup_err("Failed to allocate memory for _path\n");
-		return NULL;
+		goto out;
 	}
 
 	/*
@@ -1711,7 +1737,8 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	 * any controller.
 	 */
 	if (!type && strlen(cg_cgroup_v2_mount_path) > 0) {
-		ret = snprintf(_path, len, "%s/", cg_cgroup_v2_mount_path);
+		ret = snprintf(_path, len, "%s/%s", cg_cgroup_v2_mount_path,
+			       tmp_systemd_default_cgroup);
 		if (ret >= FILENAME_MAX)
 			cgroup_dbg("filename too long: %s", _path);
 
@@ -1745,10 +1772,11 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 		     cg_mount_table[i].version == CGROUP_V2)) {
 
 			if (cg_namespace_table[i])
-				ret = snprintf(_path, len, "%s/%s/", cg_mount_table[i].mount.path,
-					       cg_namespace_table[i]);
+				ret = snprintf(_path, len, "%s/%s%s/", cg_mount_table[i].mount.path,
+					       tmp_systemd_default_cgroup, cg_namespace_table[i]);
 			else
-				ret = snprintf(_path, len, "%s/", cg_mount_table[i].mount.path);
+				ret = snprintf(_path, len, "%s/%s", cg_mount_table[i].mount.path,
+					       tmp_systemd_default_cgroup);
 
 			if (ret >= FILENAME_MAX)
 				cgroup_dbg("filename too long: %s", _path);
@@ -1774,6 +1802,9 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 out:
 	if (_path)
 		free(_path);
+
+	if (tmp_systemd_default_cgroup)
+		free(tmp_systemd_default_cgroup);
 
 	return path;
 }
