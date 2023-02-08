@@ -19,6 +19,7 @@
 
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
+#include <libcgroup/systemd.h>
 
 #include <pthread.h>
 #include <assert.h>
@@ -90,6 +91,26 @@ static struct cgroup_string_list *template_files;
 
 /* Needed for the type while mounting cgroupfs. */
 #define CGROUP_FILESYSTEM "cgroup"
+
+#ifdef WITH_SYSTEMD
+/* Directory that holds dynamically created internal libcgroup files */
+static const char * const systemd_def_cgrp_file_dir = "/var/run/libcgroup/";
+
+/* File that stores the relative delegated systemd cgroup path */
+static const char * const systemd_default_cgroup_file = "/var/run/libcgroup/systemd";
+
+/* Lock that protects systemd_default_cgroup_file */
+static pthread_rwlock_t systemd_default_cgroup_lock = PTHREAD_RWLOCK_INITIALIZER;
+
+/*
+ * cgroup_systemd_opts is dynamically allocated, hence having head
+ * and tail helps in traversing.
+ */
+static struct cgroup_systemd_opts *cgroup_systemd_opts_head = NULL;
+static struct cgroup_systemd_opts *cgroup_systemd_opts_tail = NULL;
+
+static int config_create_slice_scope(char * const tmp_systemd_default_cgroup);
+#endif
 
 /*
  * NOTE: All these functions return 1 on success and not 0 as is the
@@ -971,6 +992,8 @@ static void cgroup_free_config(void)
 		config_template_table = NULL;
 	}
 	config_template_table_index = 0;
+
+	cgroup_cleanup_systemd_opts();
 }
 
 /**
@@ -1081,6 +1104,10 @@ static void cgroup_config_sort_groups(void)
  */
 int cgroup_config_load_config(const char *pathname)
 {
+#ifdef WITH_SYSTEMD
+	/* slice[FILENAME_MAX] + '/' + scope[FILENAME_MAX] */
+	char tmp_systemd_default_cgroup[FILENAME_MAX * 2 + 1] = "\0";
+#endif
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
 	int error;
@@ -1126,11 +1153,34 @@ int cgroup_config_load_config(const char *pathname)
 	if (error)
 		goto err_mnt;
 
+#ifdef WITH_SYSTEMD
+	error = config_create_slice_scope(tmp_systemd_default_cgroup);
+	if (!error) {
+		error = ECGROUPPARSEFAIL;
+		goto err_mnt;
+	}
+#endif
+
 	cgroup_config_apply_default();
 	error = cgroup_config_create_groups();
 	cgroup_dbg("creating all cgroups now, error=%d\n", error);
 	if (error)
 		goto err_grp;
+
+#ifdef WITH_SYSTEMD
+	/*
+	 * Setting up systemd_default_cgroup, during creation
+	 * of slice/scopes, clobbers the path returned by cg_build_path(),
+	 * by appending the systemd_default_cgroup to it and
+	 * its required only after all of the slices/scopes are created.
+	 * The user might also set setdefault in more than one systemd
+	 * delegate settings, in that case the last parsed one overwrites
+	 * the systemd_default_cgroup.
+	 */
+	if (strlen(tmp_systemd_default_cgroup))
+		snprintf(systemd_default_cgroup, sizeof(systemd_default_cgroup),
+			 "%s", tmp_systemd_default_cgroup);
+#endif
 
 	cgroup_free_config();
 
@@ -1807,3 +1857,236 @@ end:
 	cgroup_free(&aux_cgroup);
 	return ret;
 }
+
+#ifdef WITH_SYSTEMD
+int cgroup_add_systemd_opts(const char * const config, const char * const value)
+{
+	struct cgroup_systemd_opts *curr = cgroup_systemd_opts_tail;
+	int len;
+
+	if (strcmp(config, "slice") == 0) {
+		snprintf(curr->slice_name, FILENAME_MAX, "%s", value);
+
+		len = strlen(curr->slice_name) - 6;
+		if (strcmp(curr->slice_name + len, ".slice"))
+			goto err;
+
+	} else if (strcmp(config, "scope") == 0) {
+		snprintf(curr->scope_name, FILENAME_MAX, "%s", value);
+
+		len = strlen(curr->scope_name) - 6;
+		if (strcmp(curr->scope_name + len, ".scope"))
+			goto err;
+
+	} else if (strcmp(config, "setdefault") == 0 && strcasecmp(value, "yes") == 0) {
+		curr->setdefault = 1;
+	} else if (strcmp(config, "pid") == 0) {
+		/*
+		 * If the atoi() fails, the pid value is zero and also
+		 * avoid allowing init task (systemd).
+		 */
+		curr->pid = atoi(value);
+		if (curr->pid <= 1)
+			goto err;
+	} else
+		goto err;
+
+	return 1;
+err:
+	cgroup_err("Invalid systemd configuration %s value %s\n", config, value);
+	cgroup_cleanup_systemd_opts();
+	return 0;
+}
+
+int cgroup_alloc_systemd_opts(const char * const config, const char * const value)
+{
+	struct cgroup_systemd_opts *new_cgrp_systemd_opts;
+
+	/*
+	 * check for the allowed systemd configurations. We don't
+	 * check for values, they will be checked by systemd anyway.
+	 */
+	if (strcmp(config, "slice") != 0 &&
+	    strcmp(config, "scope") != 0 &&
+	    strcmp(config, "setdefault") != 0 &&
+	    strcmp(config, "pid") != 0) {
+		cgroup_err("Invalid systemd configuration %s\n", config);
+		goto err;
+	}
+
+	new_cgrp_systemd_opts = calloc(1, sizeof(struct cgroup_systemd_opts));
+	if (!new_cgrp_systemd_opts) {
+		cgroup_err("Failed to allocate memory for cgroup_systemd_opts\n");
+		goto err;
+	}
+
+	if (!cgroup_systemd_opts_head)
+		cgroup_systemd_opts_tail = cgroup_systemd_opts_head = new_cgrp_systemd_opts;
+	else {
+		cgroup_systemd_opts_tail->next = new_cgrp_systemd_opts;
+		cgroup_systemd_opts_tail = new_cgrp_systemd_opts;
+	}
+
+	return cgroup_add_systemd_opts(config, value);
+err:
+	cgroup_cleanup_systemd_opts();
+	return 0;
+}
+
+void cgroup_cleanup_systemd_opts(void)
+{
+	struct cgroup_systemd_opts *curr, *next;
+
+	for (curr = cgroup_systemd_opts_head; curr; curr = next) {
+		next = curr->next;
+		free(curr);
+	}
+
+	cgroup_systemd_opts_head = cgroup_systemd_opts_tail = NULL;
+}
+
+/*
+ * Helper function to remove the systemd_default_cgroup_file.
+ * systemd_default_cgroup_lock is expected to be held by the
+ * caller.
+ */
+static int remove_systemd_default_cgroup_file(void)
+{
+	int ret;
+
+	ret = unlink(systemd_default_cgroup_file);
+	if (ret < 0 && errno != ENOENT) {
+		cgroup_err("Failed to remove %s\n", systemd_default_cgroup_file);
+		return 0;
+	}
+
+	return 1;
+}
+/*
+ * Helper function to create systemd_default_cgroup_file and write systemd
+ * default cgroup slice/scope into it.  This file will be read by
+ * cgroup_set_default_systemd_cgroup() for setting
+ * systemd_default_cgroup used to form the cgroup path.
+ */
+static int cgroup_write_systemd_default_cgroup(const char * const slice,
+					       const char * const scope)
+{
+	FILE *systemd_def_cgrp_f;
+	int ret, len;
+
+	pthread_rwlock_wrlock(&systemd_default_cgroup_lock);
+
+	ret = mkdir(systemd_def_cgrp_file_dir, 0755);
+	if (ret != 0 && errno != EEXIST) {
+		cgroup_err("Failed to create directory %s\n", systemd_def_cgrp_file_dir);
+		ret = 0;
+		goto out;
+	}
+
+	systemd_def_cgrp_f = fopen(systemd_default_cgroup_file, "w");
+	if (!systemd_def_cgrp_f) {
+		cgroup_err("Failed to create file %s\n", systemd_default_cgroup_file);
+		ret = 0;
+		goto out;
+	}
+
+	len = strlen(slice) + strlen(scope) + 1;
+
+	ret = fprintf(systemd_def_cgrp_f, "%s/%s", slice, scope);
+	fclose(systemd_def_cgrp_f);
+	if  (ret != len) {
+		cgroup_err("Incomplete systemd default cgroup written to %s\n",
+			   systemd_default_cgroup_file);
+		ret = remove_systemd_default_cgroup_file();
+		/* Ignore the return value, we are already in error path */
+		ret = 0;
+		goto out;
+	}
+
+	ret = 1;
+out:
+	pthread_rwlock_unlock(&systemd_default_cgroup_lock);
+	return ret;
+}
+
+/**
+ * Create the systemd slice and scope. The slice/scope are parsed and available in
+ * the cgroup_systemd_opts_head list. This function skips the slice and scope creation
+ * if previously created.
+ *
+ * Returns 1 on success and 0 on failure.
+ */
+static int config_create_slice_scope(char * const tmp_systemd_default_cgroup)
+{
+	struct cgroup_systemd_opts *curr, *def = NULL;
+	struct cgroup_systemd_scope_opts scope_opts;
+	int ret = 0;
+
+	if (!tmp_systemd_default_cgroup)
+		return 0;
+
+	if (cgroup_set_default_scope_opts(&scope_opts))
+		return 0;
+
+	pthread_rwlock_wrlock(&systemd_default_cgroup_lock);
+	ret = remove_systemd_default_cgroup_file();
+	pthread_rwlock_unlock(&systemd_default_cgroup_lock);
+	if (!ret)
+		return 0;
+
+	for (curr = cgroup_systemd_opts_head; curr; curr = curr->next) {
+
+		if (!strlen(curr->slice_name)) {
+			cgroup_err("Invalid systemd setting, missing slice name.\n");
+			goto err;
+		}
+
+		if (!strlen(curr->scope_name)) {
+			cgroup_err("Invalid systemd setting, missing scope name.\n");
+			goto err;
+		}
+
+		/* incase of multiple setdefault configurations, set it to latest scope */
+		if (curr->setdefault)
+			def = curr;
+
+		if (curr->pid)
+			scope_opts.pid = curr->pid;
+
+		ret = cgroup_create_scope(curr->scope_name, curr->slice_name, &scope_opts);
+		if (ret)
+			goto err;
+
+		cgroup_dbg("Created systemd slice %s scope %s default %d pid %d\n",
+			   curr->slice_name, curr->scope_name, curr->setdefault, curr->pid);
+	}
+
+	if (def) {
+		if (!cgroup_write_systemd_default_cgroup(def->slice_name, def->scope_name))
+			goto err;
+
+		snprintf(tmp_systemd_default_cgroup, sizeof(systemd_default_cgroup),
+			 "%s/%s", def->slice_name, def->scope_name);
+
+		cgroup_dbg("Setting/Writing systemd default cgroup %s to file %s\n",
+			   tmp_systemd_default_cgroup, systemd_default_cgroup_file);
+
+	}
+
+	return 1;
+err:
+	return 0;
+}
+#else
+int cgroup_add_systemd_opts(const char * const config, const char * const value)
+{
+	return 1;
+}
+
+int cgroup_alloc_systemd_opts(const char * const config, const char * const value)
+{
+	return 1;
+}
+
+void cgroup_cleanup_systemd_opts(void) { }
+#endif

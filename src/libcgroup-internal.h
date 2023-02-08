@@ -240,6 +240,12 @@ extern pthread_rwlock_t cg_mount_table_lock;
 extern __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
 
 /*
+ * Default systemd cgroup used by the cg_build_path_locked() and tools
+ * setting the default cgroup path.
+ */
+extern char systemd_default_cgroup[FILENAME_MAX * 2 + 1];
+
+/*
  * config related API
  */
 int cgroup_config_insert_cgroup(char *cg_name);

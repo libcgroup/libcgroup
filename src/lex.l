@@ -36,6 +36,7 @@ jmp_buf parser_error_env;
 "group"		{return GROUP;}
 "namespace"	{return NAMESPACE;}
 "template"	{return TEMPLATE;}
+"systemd"     	{return SYSTEMD;}
 "default"	{yylval.name = strdup(yytext); return DEFAULT;}
 [a-zA-Z0-9_\-\/\.\,\%\@\\]+ {yylval.name = strdup(yytext); return ID;}
 \"[^"]*\" {yylval.name = strdup(yytext+1); yylval.name[strlen(yylval.name)-1] = '\0'; return ID; }
