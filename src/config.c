@@ -2077,6 +2077,87 @@ static int config_create_slice_scope(char * const tmp_systemd_default_cgroup)
 err:
 	return 0;
 }
+
+/*
+ * This function builds the canonical path for the systemd default cgroup
+ * based on the cgroup setup mode and if the cgroup doesn't exist removes
+ * the systemd default cgroup file. This function expects the caller to be
+ * holding the systemd_default_cgroup_lock.
+ */
+static bool systemd_default_cgroup_exists(void)
+{
+	char path[FILENAME_MAX] = "\0";
+	char cgrp_procs_path[FILENAME_MAX + 13]; /* 13 = strlen(/cgroup.procs) */
+	bool exists = false;
+
+	switch (cgroup_setup_mode()) {
+	case CGROUP_MODE_HYBRID:
+		/*
+		 * check for empty cgroup v2, the most common usage in
+		 * the hybrid case.
+		 */
+		if (cg_build_path("", path, NULL))
+			break;
+	case CGROUP_MODE_UNIFIED:
+		/* fallthrough */
+	case CGROUP_MODE_LEGACY:
+		cg_build_path("", path, "cpu");
+		/* fallthrough */
+	case CGROUP_MODE_UNK:
+		break;
+	}
+
+	if (!strlen(path)) {
+		cgroup_dbg("Unable to form canonical path for %s", systemd_default_cgroup);
+		goto err;
+	}
+
+	snprintf(cgrp_procs_path, sizeof(cgrp_procs_path), "%s/cgroup.procs", path);
+	if (access(cgrp_procs_path, F_OK)) {
+		/*
+		 * systemd has already removed the scope cgroup, hence delete
+		 * the file too.
+		 */
+		cgroup_dbg("%s doesn't exists, deleting %s", path, systemd_default_cgroup_file);
+		unlink(systemd_default_cgroup_file);
+		goto err;
+	}
+
+	exists = true;
+err:
+	return exists;
+}
+
+void cgroup_set_default_systemd_cgroup(void)
+{
+	FILE *systemd_def_cgrp_f;
+	size_t len;
+
+	pthread_rwlock_wrlock(&systemd_default_cgroup_lock);
+
+	systemd_def_cgrp_f = fopen(systemd_default_cgroup_file, "r");
+	if (!systemd_def_cgrp_f) {
+		cgroup_dbg("Unable to read %s ", systemd_default_cgroup_file);
+		goto err;
+	}
+
+	len = fread(systemd_default_cgroup, sizeof(char), FILENAME_MAX, systemd_def_cgrp_f);
+	fclose(systemd_def_cgrp_f);
+	/* at the minimum it should be <n>.slice/<n>.scope == 15 */
+	if (len < 15) {
+		cgroup_dbg("Malformed systemd default cgroup %s", systemd_default_cgroup);
+		goto err;
+	}
+
+	if (systemd_default_cgroup_exists()) {
+		pthread_rwlock_unlock(&systemd_default_cgroup_lock);
+		return;
+	}
+err:
+	pthread_rwlock_unlock(&systemd_default_cgroup_lock);
+	cgroup_dbg(", continuing without systemd default cgroup.\n", systemd_default_cgroup);
+	systemd_default_cgroup[0] = '\0';
+}
 #else
 int cgroup_add_systemd_opts(const char * const config, const char * const value)
 {
@@ -2089,4 +2170,6 @@ int cgroup_alloc_systemd_opts(const char * const config, const char * const valu
 }
 
 void cgroup_cleanup_systemd_opts(void) { }
+
+void cgroup_set_default_systemd_cgroup(void) { }
 #endif
