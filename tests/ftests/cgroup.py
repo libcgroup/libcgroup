@@ -177,6 +177,14 @@ class Cgroup(object):
         else:
             Run.run(cmd)
 
+    # This is a simple wrapper, that calls Cgroup.create() to create the
+    # cgroup and cgroup_exists(), which builds the cgroup path and returns
+    # True if the cgroup exists, False otherwise
+    @staticmethod
+    def create_and_validate(config, ctrl_name, cgroup_name, ignore_systemd=False):
+        Cgroup.create(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd)
+        return Cgroup.exists(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd)
+
     @staticmethod
     def delete(config, controller_list, cgname, recursive=False, ignore_systemd=False):
         if isinstance(controller_list, str):
@@ -1061,6 +1069,42 @@ class Cgroup(object):
                 return True
 
         return False
+
+    # This function builds absolute path of the cgroup, using the default
+    # systemd path and checks if the cgroup exists. The function can build
+    # path for all three cgroup setup modes, including empty cgroup v2.
+    @staticmethod
+    def exists(config, ctrl_name, cgroup_name, ignore_systemd=False):
+        ctrl_mnt = Cgroup.get_controller_mount_point(ctrl_name)
+
+        if (ignore_systemd):
+            cgrp_path = os.path.join(ctrl_mnt, cgroup_name)
+        else:
+            try:
+                cmd = ['cat', '/run/libcgroup/systemd']
+                if config.args.container:
+                    slice_scope_path = config.container.run(cmd, shell_bool=True)
+                else:
+                    slice_scope_path = Run.run(cmd, shell_bool=True)
+            except RunError:
+                return False
+
+            cgrp_path = os.path.join(ctrl_mnt, slice_scope_path, cgroup_name)
+
+        # Every cgroup is populated with cgroup.procs (setup mode agnostic)
+        # It easier to check of the directory exist by tring to read it
+        proc_file = os.path.join(cgrp_path, 'cgroup.procs')
+        cmd = ['cat', proc_file]
+        try:
+            if config.args.container:
+                config.container.run(cmd, shell_bool=True)
+            else:
+                Run.run(cmd, shell_bool=True)
+        except RunError:
+            return False
+
+        return True
+
 
 class CgroupError(Exception):
     def __init__(self, message):
