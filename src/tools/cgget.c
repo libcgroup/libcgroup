@@ -10,10 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 #include <stdio.h>
 
 #define MODE_SHOW_HEADERS	1
 #define MODE_SHOW_NAMES		2
+#define MODE_SYSTEMD_DELEGATE	4
 
 #define LL_MAX			100
 
@@ -44,6 +46,9 @@ static void usage(int status, const char *program_name)
 	info("  -v, --values-only		Print only values, not ");
 	info("parameter names\n");
 	info("  -m				Display the cgroup mode\n");
+#ifdef WITH_SYSTEMD
+	info("  -b				Ignore default systemd delegate hierarchy\n");
+#endif
 }
 
 static int get_controller_from_name(const char * const name, char **controller)
@@ -398,8 +403,16 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	int c;
 
 	/* Parse arguments. */
+#ifdef WITH_SYSTEMD
+	while ((c = getopt_long(argc, argv, "r:hnvg:amb", long_options, NULL)) > 0) {
+		switch (c) {
+		case 'b':
+			*mode = (*mode) & (INT_MAX ^ MODE_SYSTEMD_DELEGATE);
+			break;
+#else
 	while ((c = getopt_long(argc, argv, "r:hnvg:am", long_options, NULL)) > 0) {
 		switch (c) {
+#endif
 		case 'h':
 			usage(0, argv[0]);
 			exit(0);
@@ -563,7 +576,10 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 	struct dirent *ctrl_dir = NULL;
 	bool found_mount = false;
 	int i, path_len, ret = 0;
-	char path[FILENAME_MAX];
+	char path[FILENAME_MAX] = { '\0' };
+#ifdef WITH_SYSTEMD
+	char tmp[FILENAME_MAX] = { '\0' };
+#endif
 	DIR *dir = NULL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
@@ -583,6 +599,35 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 		goto out;
 
 	path_len = strlen(path);
+#ifdef WITH_SYSTEMD
+	/*
+	 * If the user has set a slice/scope as setdefault in the
+	 * cgconfig.conf file, every path constructed will have the
+	 * systemd_default_cgroup slice/scope suffixed to it.
+	 *
+	 * We need to trim the slice/scope from the path, incase of
+	 * user providing /<cgroup-name> as the cgroup name in the command
+	 * line:
+	 * cgget -g cpu:/foo
+	 */
+	if (cg->name[0] == '/' && cg->name[1] != '\0' &&
+	    strncmp(path + (path_len - 7), ".scope/", 7) == 0) {
+		snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
+		strncpy(path, tmp, FILENAME_MAX - 1);
+		path[FILENAME_MAX - 1] = '\0';
+
+		path_len = strlen(path);
+		if (strncmp(path + (path_len - 6), ".slice", 6) == 0) {
+			snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
+			strncpy(path, tmp, FILENAME_MAX - 1);
+			path[FILENAME_MAX - 1] = '\0';
+		} else {
+			cgroup_dbg("Malformed path %s (expected slice name)\n", path);
+			ret = ECGOTHER;
+			goto out;
+		}
+	}
+#endif
 	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
 	path[sizeof(path) - 1] = '\0';
 
@@ -725,7 +770,7 @@ static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
 
 int main(int argc, char *argv[])
 {
-	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
+	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS | MODE_SYSTEMD_DELEGATE;
 	struct cgroup **cg_list = NULL;
 	int cg_list_len = 0;
 	int ret = 0, i;
@@ -745,6 +790,10 @@ int main(int argc, char *argv[])
 	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode);
 	if (ret)
 		goto err;
+
+	/* this is false always for disable-systemd */
+	if (mode & MODE_SYSTEMD_DELEGATE)
+		cgroup_set_default_systemd_cgroup();
 
 	ret = get_values(cg_list, cg_list_len);
 	if (ret)
