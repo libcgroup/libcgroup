@@ -723,6 +723,10 @@ class Cgroup(object):
             for line in mntf.readlines():
                 mnt_path = line.split()[1]
 
+                if ctrl_name is None:
+                    if line.split()[0] == 'cgroup2':
+                        return mnt_path
+
                 if line.split()[0] == 'cgroup':
                     for option in line.split()[3].split(','):
                         if option == ctrl_name:
@@ -740,6 +744,9 @@ class Cgroup(object):
                 mnt_path = line.split()[1]
 
                 if line.split()[0] == 'cgroup2':
+                    if ctrl_name is None:
+                        return mnt_path
+
                     ctrl_file = os.path.join(line.split()[1],
                                              'cgroup.controllers')
 
@@ -756,7 +763,16 @@ class Cgroup(object):
 
     @staticmethod
     def get_controller_mount_point(ctrl_name):
-        vers = CgroupVersion.get_version(ctrl_name)
+        if ctrl_name is None:
+            mode = int(Cgroup.get_cgroup_mode(None))
+            # map return modes:
+            # CGROUP_MODE_LEGACY/CGROUP_MODE_HYBRID ->  CgroupVersion.CGROUP_V1
+            # CGROUP_MODE_UNIFIED -> CgroupVersion.CGROUP_V2
+            if mode >= 2:
+                mode = mode - 1
+            vers = CgroupVersion(mode)
+        else:
+            vers = CgroupVersion.get_version(ctrl_name)
 
         if vers == CgroupVersion.CGROUP_V1:
             return Cgroup.__get_controller_mount_point_v1(ctrl_name)
