@@ -80,6 +80,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  057-sudo-set_permissions_v1.py \
 			  058-sudo-systemd_create_scope2.py \
 			  059-sudo-invalid_systemd_create_scope2.py \
+			  060-sudo-cgconfigparser-systemd.py \
 			  098-cgdelete-non-existing-shared-mnt-cgroup-v1.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
