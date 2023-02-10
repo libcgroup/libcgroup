@@ -31,7 +31,7 @@ int yywrap(void)
 
 %}
 
-%token <name> ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT TEMPLATE
+%token <name> ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT TEMPLATE SYSTEMD
 
 %union {
 	char *name;
@@ -48,6 +48,7 @@ int yywrap(void)
 %type <val> template_task_or_admin template_task_namevalue_conf
 %type <val> template_admin_namevalue_conf template_task_conf
 %type <val> template_admin_conf
+%type <val> systemdvalue_conf systemd
 %start start
 %%
 
@@ -68,6 +69,10 @@ start   : start group
 		$$ = $1;
 	}
 	| start template
+	{
+		$$ = $1;
+	}
+	| start systemd
 	{
 		$$ = $1;
 	}
@@ -475,4 +480,35 @@ namespace   :       NAMESPACE '{' namespace_conf '}'
 	}
         ;
 
+systemdvalue_conf
+	:	ID '=' ID ';'
+	{
+		if (!cgroup_alloc_systemd_opts($1, $3)) {
+			cgroup_cleanup_systemd_opts();
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+		$$ = 1;
+	}
+	|	systemdvalue_conf ID '=' ID ';'
+	{
+		if (!cgroup_add_systemd_opts($2, $4)) {
+			cgroup_cleanup_systemd_opts();
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+		$$ = 1;
+	}
+	;
+
+systemd   :	  SYSTEMD '{' systemdvalue_conf '}'
+	{
+		$$ = $3;
+		if (!$$) {
+			fprintf(stderr, "parsing failed at line number %d\n", line_no);
+			$$ = ECGCONFIGPARSEFAIL;
+			return $$;
+		}
+	}
+	;
 %%

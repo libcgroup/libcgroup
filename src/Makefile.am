@@ -39,6 +39,7 @@ libcgroup_la_LDFLAGS = -Wl,--version-script,$(srcdir)/libcgroup.map \
 		       -version-number $(VERSION_NUMBER)
 if WITH_SYSTEMD
 libcgroup_la_LDFLAGS += -lsystemd
+libcgroup_la_CFLAGS += -DWITH_SYSTEMD
 endif
 
 noinst_LTLIBRARIES = libcgroupfortesting.la

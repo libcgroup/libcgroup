@@ -97,6 +97,11 @@ struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 /* Cgroup v2 mount paths, with empty controllers */
 struct cg_mount_point *cg_cgroup_v2_empty_mount_paths;
 
+#ifdef WITH_SYSTEMD
+/* Default systemd path name. Length: <name>.slice/<name>.scope */
+char systemd_default_cgroup[FILENAME_MAX * 2 + 1];
+#endif
+
 const char * const cgroup_strerror_codes[] = {
 	"Cgroup is not compiled in",
 	"Cgroup is not mounted",

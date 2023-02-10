@@ -33,6 +33,17 @@ struct cgroup_systemd_scope_opts {
 	pid_t pid;
 };
 
+/*
+ * cgroup systemd settings
+ */
+struct cgroup_systemd_opts {
+	char	slice_name[FILENAME_MAX];
+	char	scope_name[FILENAME_MAX];
+	int	setdefault;
+	pid_t	pid;
+	struct cgroup_systemd_opts *next;
+};
+
 /**
  * Populate the scope options structure with default values
  *
@@ -68,6 +79,45 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
  */
 int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 			 const struct cgroup_systemd_scope_opts * const opts);
+
+/**
+ * Parse the systemd default cgroup's relative path from
+ * /var/run/libcgroup/systemd and set it as default delegation cgroup
+ * path, if available.
+ *
+ * The path is relative to cgroup root (default: /sys/fs/cgroup)
+ */
+void cgroup_set_default_systemd_cgroup(void);
+
+/**
+ * Parse the systemd delegation settings from the configuration file
+ * and allocate a new cgroup_systemd_opts object.
+ * This function internally calls cgroup_add_systemd_opts() to add the conf and
+ * value to the newly allocated cgroup_systemd_opts object.
+ *
+ * @param conf Name of the systemd delegate setting read from configuration file.
+ * @param value The value of the conf systemd delegate setting.
+ *
+ * @return 1 on success and 0 on error
+ */
+int cgroup_alloc_systemd_opts(const char * const conf, const char * const value);
+
+/**
+ * Parse the systemd delegation settings from the configuration file
+ * and add the conf and value to the last allocated cgroup_systemd_opts object
+ * (tail) allocated by cgroup_alloc_systemd_opts()
+ *
+ * @param conf Name of the systemd delegate setting read from configuration file.
+ * @param value The value of the conf systemd delegate setting.
+ *
+ * @return 1 on success and 0 on error
+ */
+int cgroup_add_systemd_opts(const char * const conf, const char * const value);
+
+/**
+ * Free the cgroup_systemd_opts objects allocated by cgroup_alloc_systemd_opts()
+ */
+void cgroup_cleanup_systemd_opts(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
