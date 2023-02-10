@@ -41,6 +41,10 @@ static void usage(int status, const char *program_name)
 	info("  -h, --help			Display this help\n");
 	info("  -s, --tperm=mode		Tasks file permissions\n");
 	info("  -t <tuid>:<tgid>		Owner of the tasks file\n");
+#ifdef WITH_SYSTEMD
+	info("  -b				Ignore default systemd ");
+	info("delegate hierarchy\n");
+#endif
 }
 
 int main(int argc, char *argv[])
@@ -58,6 +62,8 @@ int main(int argc, char *argv[])
 
 	uid_t tuid = CGRULE_INVALID, auid = CGRULE_INVALID;
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
+
+	int ignore_default_systemd_delegate_slice = 0;
 
 	struct cgroup_group_spec **cgroup_list;
 	struct cgroup_controller *cgc;
@@ -90,9 +96,17 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
+#ifdef WITH_SYSTEMD
 	/* parse arguments */
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:b", long_opts, NULL)) > 0) {
+		switch (c) {
+		case 'b':
+			ignore_default_systemd_delegate_slice = 1;
+			break;
+#else
 	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts, NULL)) > 0) {
 		switch (c) {
+#endif
 		case 'h':
 			usage(0, argv[0]);
 			ret = 0;
@@ -154,6 +168,10 @@ int main(int argc, char *argv[])
 		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
+
+	/* this is false always for disable-systemd */
+	if (!ignore_default_systemd_delegate_slice)
+		cgroup_set_default_systemd_cgroup();
 
 	/* for each new cgroup */
 	for (i = 0; i < capacity; i++) {
