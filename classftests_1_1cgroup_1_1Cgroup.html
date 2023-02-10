@@ -113,23 +113,26 @@ def&#160;</td><td class="memItemRight" valign="bottom"><b>build_cmd_path</b> (cm
 <tr class="memitem:af42b328c7de60bb7a179585d211b6ab8"><td class="memItemLeft" align="right" valign="top"><a id="af42b328c7de60bb7a179585d211b6ab8" name="af42b328c7de60bb7a179585d211b6ab8"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>build_daemon_path</b> (cmd)</td></tr>
 <tr class="separator:af42b328c7de60bb7a179585d211b6ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17d78833ae2b73ea53e42214cb197cec"><td class="memItemLeft" align="right" valign="top"><a id="a17d78833ae2b73ea53e42214cb197cec" name="a17d78833ae2b73ea53e42214cb197cec"></a>
-def&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (config, controller_list, cgname, user_name=None, group_name=None, dperm=None, fperm=None, tperm=None, tasks_user_name=None, tasks_group_name=None, cghelp=False)</td></tr>
-<tr class="separator:a17d78833ae2b73ea53e42214cb197cec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada1684b7b53d4b8437e77c025463ff24"><td class="memItemLeft" align="right" valign="top"><a id="ada1684b7b53d4b8437e77c025463ff24" name="ada1684b7b53d4b8437e77c025463ff24"></a>
-def&#160;</td><td class="memItemRight" valign="bottom"><b>delete</b> (config, controller_list, cgname, recursive=False)</td></tr>
-<tr class="separator:ada1684b7b53d4b8437e77c025463ff24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7770a4dd34eb31941afce97a7d38704d"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a7770a4dd34eb31941afce97a7d38704d">set</a> (config, cgname=None, setting=None, value=None, copy_from=None, cghelp=False)</td></tr>
-<tr class="separator:a7770a4dd34eb31941afce97a7d38704d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24e889fd595aa674a8a4fac28707ab29"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a24e889fd595aa674a8a4fac28707ab29">xset</a> (config, cgname=None, setting=None, value=None, copy_from=None, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False)</td></tr>
-<tr class="separator:a24e889fd595aa674a8a4fac28707ab29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07f57cf60a06d97fb83da0bdcaa47f77"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a07f57cf60a06d97fb83da0bdcaa47f77">get</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, cghelp=False)</td></tr>
-<tr class="separator:a07f57cf60a06d97fb83da0bdcaa47f77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a03b42b72e8d2515de62be9a8723e21"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a0a03b42b72e8d2515de62be9a8723e21">xget</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False)</td></tr>
-<tr class="separator:a0a03b42b72e8d2515de62be9a8723e21"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a899482a567bb8a827611c67e1305dbc2"><td class="memItemLeft" align="right" valign="top"><a id="a899482a567bb8a827611c67e1305dbc2" name="a899482a567bb8a827611c67e1305dbc2"></a>
-def&#160;</td><td class="memItemRight" valign="bottom"><b>classify</b> (config, controller, cgname, pid_list, sticky=False, cancel_sticky=False)</td></tr>
-<tr class="separator:a899482a567bb8a827611c67e1305dbc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab787735a8814239dcd0ca3e57e8e3116"><td class="memItemLeft" align="right" valign="top"><a id="ab787735a8814239dcd0ca3e57e8e3116" name="ab787735a8814239dcd0ca3e57e8e3116"></a>
+def&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (config, controller_list, cgname, user_name=None, group_name=None, dperm=None, fperm=None, tperm=None, tasks_user_name=None, tasks_group_name=None, cghelp=False, ignore_systemd=False)</td></tr>
+<tr class="separator:ab787735a8814239dcd0ca3e57e8e3116"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a209369c1448266bbcb37bf4846e316a4"><td class="memItemLeft" align="right" valign="top"><a id="a209369c1448266bbcb37bf4846e316a4" name="a209369c1448266bbcb37bf4846e316a4"></a>
+def&#160;</td><td class="memItemRight" valign="bottom"><b>create_and_validate</b> (config, ctrl_name, cgroup_name, ignore_systemd=False)</td></tr>
+<tr class="separator:a209369c1448266bbcb37bf4846e316a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2c3fccccc60e5f41c9c26141a756651"><td class="memItemLeft" align="right" valign="top"><a id="ab2c3fccccc60e5f41c9c26141a756651" name="ab2c3fccccc60e5f41c9c26141a756651"></a>
+def&#160;</td><td class="memItemRight" valign="bottom"><b>delete</b> (config, controller_list, cgname, recursive=False, ignore_systemd=False)</td></tr>
+<tr class="separator:ab2c3fccccc60e5f41c9c26141a756651"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a193cf023fcfd8b3683fddb2ecf8966de"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a193cf023fcfd8b3683fddb2ecf8966de">set</a> (config, cgname=None, setting=None, value=None, copy_from=None, cghelp=False, ignore_systemd=False)</td></tr>
+<tr class="separator:a193cf023fcfd8b3683fddb2ecf8966de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff9bfe8f3eed239664c7dbb51c49ccb2"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#aff9bfe8f3eed239664c7dbb51c49ccb2">xset</a> (config, cgname=None, setting=None, value=None, copy_from=None, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False, ignore_systemd=False)</td></tr>
+<tr class="separator:aff9bfe8f3eed239664c7dbb51c49ccb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab63264471e48ae19535b3bdb1dd6fdab"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#ab63264471e48ae19535b3bdb1dd6fdab">get</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, cghelp=False, ignore_systemd=False)</td></tr>
+<tr class="separator:ab63264471e48ae19535b3bdb1dd6fdab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4dc9746e35f54b22811ff1180b72e61"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#aa4dc9746e35f54b22811ff1180b72e61">xget</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False, ignore_systemd=False)</td></tr>
+<tr class="separator:aa4dc9746e35f54b22811ff1180b72e61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48e5b1a1df669cfdd16bd88f2da50b04"><td class="memItemLeft" align="right" valign="top"><a id="a48e5b1a1df669cfdd16bd88f2da50b04" name="a48e5b1a1df669cfdd16bd88f2da50b04"></a>
+def&#160;</td><td class="memItemRight" valign="bottom"><b>classify</b> (config, controller, cgname, pid_list, sticky=False, cancel_sticky=False, ignore_systemd=False)</td></tr>
+<tr class="separator:a48e5b1a1df669cfdd16bd88f2da50b04"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae13cd0f11fe4c9b98b540869866afa47"><td class="memItemLeft" align="right" valign="top"><a id="ae13cd0f11fe4c9b98b540869866afa47" name="ae13cd0f11fe4c9b98b540869866afa47"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>snapshot_to_dict</b> (cgsnapshot_stdout)</td></tr>
 <tr class="separator:ae13cd0f11fe4c9b98b540869866afa47"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,21 +162,24 @@ def&#160;</td><td class="memItemRight" valign="bottom"><b>get_cgroup_mounts</b> 
 <tr class="memitem:aac4abad748a0d921af8a8c5f4411656f"><td class="memItemLeft" align="right" valign="top"><a id="aac4abad748a0d921af8a8c5f4411656f" name="aac4abad748a0d921af8a8c5f4411656f"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>lscgroup</b> (config, cghelp=False, controller=None, path=None)</td></tr>
 <tr class="separator:aac4abad748a0d921af8a8c5f4411656f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a013e64fe4339710cdd39564b9dc51f"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a5a013e64fe4339710cdd39564b9dc51f">cgexec</a> (config, controller, cgname, cmdline, sticky=False, cghelp=False)</td></tr>
-<tr class="separator:a5a013e64fe4339710cdd39564b9dc51f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad76723bcd8bf2a1ec1c61910132c73ea"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#ad76723bcd8bf2a1ec1c61910132c73ea">cgexec</a> (config, controller, cgname, cmdline, sticky=False, cghelp=False, ignore_systemd=False)</td></tr>
+<tr class="separator:ad76723bcd8bf2a1ec1c61910132c73ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73fa3246ac5e2cc89745e3ec58e82f3d"><td class="memItemLeft" align="right" valign="top"><a id="a73fa3246ac5e2cc89745e3ec58e82f3d" name="a73fa3246ac5e2cc89745e3ec58e82f3d"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>get_pids_in_cgroup</b> (config, <a class="el" href="structcgroup.html">cgroup</a>, controller)</td></tr>
 <tr class="separator:a73fa3246ac5e2cc89745e3ec58e82f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acaab57b0641b959b5e4f11b1936200cf"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#acaab57b0641b959b5e4f11b1936200cf">get_and_validate</a> (config, cgname, setting, expected_value)</td></tr>
-<tr class="separator:acaab57b0641b959b5e4f11b1936200cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ed40f139980ff4bc68ff7e6581cf3e9"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a4ed40f139980ff4bc68ff7e6581cf3e9">set_and_validate</a> (config, cgname, setting, value)</td></tr>
-<tr class="separator:a4ed40f139980ff4bc68ff7e6581cf3e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a482f16c7da777b3b445a3d7bea504672"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a482f16c7da777b3b445a3d7bea504672">get_and_validate</a> (config, cgname, setting, expected_value, ignore_systemd=False)</td></tr>
+<tr class="separator:a482f16c7da777b3b445a3d7bea504672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adccff4b1cadb924f62b67ce9381428b9"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#adccff4b1cadb924f62b67ce9381428b9">set_and_validate</a> (config, cgname, setting, value, ignore_systemd=False)</td></tr>
+<tr class="separator:adccff4b1cadb924f62b67ce9381428b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3eefaf095804c3b698e87e91a3ae78aa"><td class="memItemLeft" align="right" valign="top"><a id="a3eefaf095804c3b698e87e91a3ae78aa" name="a3eefaf095804c3b698e87e91a3ae78aa"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>get_cgroup_mode</b> (config)</td></tr>
 <tr class="separator:a3eefaf095804c3b698e87e91a3ae78aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a698d31673fcb745612f5be7b75cae6f4"><td class="memItemLeft" align="right" valign="top"><a id="a698d31673fcb745612f5be7b75cae6f4" name="a698d31673fcb745612f5be7b75cae6f4"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>is_controller_enabled</b> (config, cgroup_name, ctrl_name)</td></tr>
 <tr class="separator:a698d31673fcb745612f5be7b75cae6f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2e4f82348120edcb80cbabf414b5177"><td class="memItemLeft" align="right" valign="top"><a id="af2e4f82348120edcb80cbabf414b5177" name="af2e4f82348120edcb80cbabf414b5177"></a>
+def&#160;</td><td class="memItemRight" valign="bottom"><b>exists</b> (config, ctrl_name, cgroup_name, ignore_systemd=False)</td></tr>
+<tr class="separator:af2e4f82348120edcb80cbabf414b5177"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Data Fields</h2></td></tr>
@@ -188,8 +194,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a3a411a7fa6ac4da9c0d7f38b31d73728"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a5a013e64fe4339710cdd39564b9dc51f" name="a5a013e64fe4339710cdd39564b9dc51f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5a013e64fe4339710cdd39564b9dc51f">&#9670;&#160;</a></span>cgexec()</h2>
+<a id="ad76723bcd8bf2a1ec1c61910132c73ea" name="ad76723bcd8bf2a1ec1c61910132c73ea"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad76723bcd8bf2a1ec1c61910132c73ea">&#9670;&#160;</a></span>cgexec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -231,7 +237,13 @@ Data Fields</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>cghelp</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>cghelp</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -354,8 +366,8 @@ cgconfigparser -l improper_conf_file                     021
 </pre> 
 </div>
 </div>
-<a id="a07f57cf60a06d97fb83da0bdcaa47f77" name="a07f57cf60a06d97fb83da0bdcaa47f77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a07f57cf60a06d97fb83da0bdcaa47f77">&#9670;&#160;</a></span>get()</h2>
+<a id="ab63264471e48ae19535b3bdb1dd6fdab" name="ab63264471e48ae19535b3bdb1dd6fdab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab63264471e48ae19535b3bdb1dd6fdab">&#9670;&#160;</a></span>get()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -409,7 +421,13 @@ cgconfigparser -l improper_conf_file                     021
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>cghelp</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>cghelp</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -445,8 +463,8 @@ various invalid flag combinations                        016
 </pre> 
 </div>
 </div>
-<a id="acaab57b0641b959b5e4f11b1936200cf" name="acaab57b0641b959b5e4f11b1936200cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acaab57b0641b959b5e4f11b1936200cf">&#9670;&#160;</a></span>get_and_validate()</h2>
+<a id="a482f16c7da777b3b445a3d7bea504672" name="a482f16c7da777b3b445a3d7bea504672"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a482f16c7da777b3b445a3d7bea504672">&#9670;&#160;</a></span>get_and_validate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -476,7 +494,13 @@ various invalid flag combinations                        016
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>expected_value</em>&#160;</td>
+          <td class="paramname"><em>expected_value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -498,8 +522,8 @@ raise a CgroupError if the comparison fails
 </pre> 
 </div>
 </div>
-<a id="a7770a4dd34eb31941afce97a7d38704d" name="a7770a4dd34eb31941afce97a7d38704d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7770a4dd34eb31941afce97a7d38704d">&#9670;&#160;</a></span>set()</h2>
+<a id="a193cf023fcfd8b3683fddb2ecf8966de" name="a193cf023fcfd8b3683fddb2ecf8966de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a193cf023fcfd8b3683fddb2ecf8966de">&#9670;&#160;</a></span>set()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -541,7 +565,13 @@ raise a CgroupError if the comparison fails
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>cghelp</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>cghelp</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -572,8 +602,8 @@ various invalid flag combinations                        027
 </pre> 
 </div>
 </div>
-<a id="a4ed40f139980ff4bc68ff7e6581cf3e9" name="a4ed40f139980ff4bc68ff7e6581cf3e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ed40f139980ff4bc68ff7e6581cf3e9">&#9670;&#160;</a></span>set_and_validate()</h2>
+<a id="adccff4b1cadb924f62b67ce9381428b9" name="adccff4b1cadb924f62b67ce9381428b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adccff4b1cadb924f62b67ce9381428b9">&#9670;&#160;</a></span>set_and_validate()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -603,7 +633,13 @@ various invalid flag combinations                        027
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>value</em>&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -625,8 +661,8 @@ raise a CgroupError if the comparison fails
 </pre> 
 </div>
 </div>
-<a id="a0a03b42b72e8d2515de62be9a8723e21" name="a0a03b42b72e8d2515de62be9a8723e21"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a03b42b72e8d2515de62be9a8723e21">&#9670;&#160;</a></span>xget()</h2>
+<a id="aa4dc9746e35f54b22811ff1180b72e61" name="aa4dc9746e35f54b22811ff1180b72e61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4dc9746e35f54b22811ff1180b72e61">&#9670;&#160;</a></span>xget()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -692,7 +728,13 @@ raise a CgroupError if the comparison fails
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>ignore_unmappable</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>ignore_unmappable</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -713,8 +755,8 @@ str: The stdout result of cgxget
 </pre> 
 </div>
 </div>
-<a id="a24e889fd595aa674a8a4fac28707ab29" name="a24e889fd595aa674a8a4fac28707ab29"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24e889fd595aa674a8a4fac28707ab29">&#9670;&#160;</a></span>xset()</h2>
+<a id="aff9bfe8f3eed239664c7dbb51c49ccb2" name="aff9bfe8f3eed239664c7dbb51c49ccb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff9bfe8f3eed239664c7dbb51c49ccb2">&#9670;&#160;</a></span>xset()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -768,7 +810,13 @@ str: The stdout result of cgxget
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>ignore_unmappable</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>ignore_unmappable</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
