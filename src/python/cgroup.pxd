@@ -101,4 +101,5 @@ cdef extern from "libcgroup.h":
     int cgroup_create_scope2(cgroup *cgroup, int ignore_ownership,
                              const cgroup_systemd_scope_opts * const opts)
 
+    void cgroup_set_default_systemd_cgroup()
 # vim: set et ts=4 sw=4:
