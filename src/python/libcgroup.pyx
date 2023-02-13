@@ -505,6 +505,23 @@ cdef class Cgroup:
         if ret is not 0:
             raise RuntimeError("cgroup_create_scope2 failed: {}".format(ret))
 
+    @staticmethod
+    def cgroup_set_default_systemd_cgroup():
+        """Set systemd_default_cgroup
+
+        Arguments:
+        None
+
+        Description:
+        Reads /run/libcgroup/systemd and if the file exists, sets the
+        systemd_default_cgroup. Then on all the paths constructed, has
+        the systemd_default_cgroup appended to it.  This is used when
+        cgroup sub-tree is constructed for systemd delegation.
+        """
+        Cgroup.cgroup_init()
+        cgroup.cgroup_set_default_systemd_cgroup()
+
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 
