@@ -3535,6 +3535,7 @@ fill_error:
 int cgroup_get_cgroup(struct cgroup *cgroup)
 {
 	struct dirent *ctrl_dir = NULL;
+	int initial_controller_cnt;
 	char *control_path = NULL;
 	char path[FILENAME_MAX];
 	DIR *dir = NULL;
@@ -3552,11 +3553,30 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		return ECGROUPNOTALLOWED;
 	}
 
+	initial_controller_cnt = cgroup->index;
+
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
 		struct cgroup_controller *cgc;
 		struct stat stat_buffer;
 		int path_len;
+
+		if (initial_controller_cnt > 0) {
+			bool skip_this_controller = true;
+
+			/*
+			 * The user has specified a list of controllers they are interested
+			 * in.  Only operate on the specified controllers
+			 */
+			for (j = 0; j < cgroup->index; j++) {
+				if (strncmp(cg_mount_table[i].name, cgroup->controller[j]->name,
+					    CONTROL_NAMELEN_MAX) == 0)
+					skip_this_controller = false;
+			}
+
+			if (skip_this_controller)
+				continue;
+		}
 
 		if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
 			continue;
@@ -3599,16 +3619,26 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 
 			error = cgroupv2_get_subtree_control(path, cg_mount_table[i].name,
 							     &enabled);
-			if (error == ECGROUPNOTMOUNTED)
-				continue;
-			if (error)
+			if (error == ECGROUPNOTMOUNTED) {
+				/*
+				 * This controller isn't enabled.  Only hide it from the
+				 * user if they've chosen to view all enabled controllers.
+				 *
+				 * If they've specified the controllers they're interested in
+				 * and we've made it this far, then they are explicitly
+				 * interested in this controller and we should not remove it.
+				 */
+				if (initial_controller_cnt == 0)
+					continue;
+			} else if (error) {
 				goto unlock_error;
-
-			if (!enabled)
-				continue;
+			}
 		}
 
-		cgc = cgroup_add_controller(cgroup, cg_mount_table[i].name);
+		if (initial_controller_cnt)
+			cgc = cgroup_get_controller(cgroup, cg_mount_table[i].name);
+		else
+			cgc = cgroup_add_controller(cgroup, cg_mount_table[i].name);
 		if (!cgc) {
 			error = ECGINVAL;
 			goto unlock_error;
