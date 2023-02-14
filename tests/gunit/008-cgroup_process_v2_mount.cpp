@@ -106,13 +106,14 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount)
 	ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
 
 	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(mnt_tbl_idx, 6);
+	ASSERT_EQ(mnt_tbl_idx, 7);
 	ASSERT_STREQ(cg_mount_table[0].name, "cpuset");
 	ASSERT_STREQ(cg_mount_table[1].name, "cpu");
 	ASSERT_STREQ(cg_mount_table[2].name, "io");
 	ASSERT_STREQ(cg_mount_table[3].name, "memory");
 	ASSERT_STREQ(cg_mount_table[4].name, "pids");
 	ASSERT_STREQ(cg_mount_table[5].name, "rdma");
+	ASSERT_STREQ(cg_mount_table[6].name, "cgroup");
 
 	ASSERT_STREQ(cg_mount_table[0].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[1].mount.path, ent.mnt_dir);
@@ -120,6 +121,7 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount)
 	ASSERT_STREQ(cg_mount_table[3].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[4].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[5].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[6].mount.path, ent.mnt_dir);
 }
 
 TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
@@ -136,13 +138,14 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 	ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
 
 	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(mnt_tbl_idx, 6);
+	ASSERT_EQ(mnt_tbl_idx, 7);
 	ASSERT_STREQ(cg_mount_table[0].name, "cpuset");
 	ASSERT_STREQ(cg_mount_table[1].name, "cpu");
 	ASSERT_STREQ(cg_mount_table[2].name, "io");
 	ASSERT_STREQ(cg_mount_table[3].name, "memory");
 	ASSERT_STREQ(cg_mount_table[4].name, "pids");
 	ASSERT_STREQ(cg_mount_table[5].name, "rdma");
+	ASSERT_STREQ(cg_mount_table[6].name, "cgroup");
 
 	ASSERT_STREQ(cg_mount_table[0].mount.next->path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[1].mount.next->path, ent.mnt_dir);
@@ -150,6 +153,7 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 	ASSERT_STREQ(cg_mount_table[3].mount.next->path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[4].mount.next->path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[5].mount.next->path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[6].mount.next->path, ent.mnt_dir);
 }
 
 /*
