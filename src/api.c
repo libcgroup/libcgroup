@@ -1218,8 +1218,8 @@ out:
  */
 STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 {
+	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller, *controllers = NULL;
 	char cgroup_controllers_path[FILENAME_MAX];
-	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller;
 	int ret = 0, i, duplicate, shared_mnt;
 	FILE *fp = NULL;
 
@@ -1274,11 +1274,24 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	ret_c[strlen(ret_c) - 1] = '\0';
 
 	/*
+	 * The "cgroup" controller is a pseudo-controller that has settings that a user may
+	 * wish to read/modify.  Add it to our cg_mount_table so that it can be manipulated
+	 * like other "normal" controllers
+	 */
+	controllers = malloc(strlen(ret_c) + strlen(CGROUP_FILE_PREFIX) + 1);
+	if (!controllers) {
+		ret = ECGOTHER;
+		goto out;
+	}
+
+	sprintf(controllers, "%s %s", ret_c, CGROUP_FILE_PREFIX);
+
+	/*
 	 * cgroup.controllers returns a list of available controllers in
 	 * the following format:
 	 *	cpuset cpu io memory pids rdma
 	 */
-	controller = strtok_r(ret_c, " ", &stok_buff);
+	controller = strtok_r(controllers, " ", &stok_buff);
 	do {
 		/* Check if controllers share mount points */
 		shared_mnt = cgroup_set_cg_mnt_tbl_shared_mnt(ent->mnt_dir, mnt_tbl_idx);
@@ -1314,6 +1327,9 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 out:
 	if (fp)
 		fclose(fp);
+
+	if (controllers)
+		free(controllers);
 
 	return ret;
 }
@@ -5261,6 +5277,18 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 		return ECGINVAL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
+
+	if (cg_mount_table[*pos].name[0] == '\0') {
+		ret = ECGEOF;
+		goto out_unlock;
+	}
+
+	if (strncmp(cg_mount_table[*pos].name, CGROUP_FILE_PREFIX, CONTROL_NAMELEN_MAX) == 0)
+		/*
+		 * For now, hide the "cgroup" pseudo-controller from the user.  This may be
+		 * worth revisiting in the future.
+		 */
+		(*pos)++;
 
 	if (cg_mount_table[*pos].name[0] == '\0') {
 		ret = ECGEOF;
