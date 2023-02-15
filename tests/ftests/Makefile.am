@@ -92,6 +92,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  069-sudo-systemd_cgxget-cpu-settings-v1.py \
 			  070-sudo-systemd_cgxget-cpu-settings-v2.py \
 			  071-sudo-set_default_systemd_cgroup.py \
+			  072-pybindings-cgroup_get_cgroup.py \
 			  098-cgdelete-non-existing-shared-mnt-cgroup-v1.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
