@@ -9,7 +9,7 @@
 
 PY_DISTUTILS = \
 	VERSION_RELEASE="@PACKAGE_VERSION@" \
-	CPPFLAGS="-I\${top_srcdir}/include ${AM_CPPFLAGS} ${CPPFLAGS}" \
+	CPPFLAGS="-I\${top_srcdir}/include ${AM_CPPFLAGS} ${CPPLAGS} -O2" \
 	CFLAGS="$(CODE_COVERAGE_CFLAGS) ${AM_CFLAGS} ${CFLAGS}" \
 	LDFLAGS="$(CODE_COVERAGE_LIBS) ${AM_LDFLAGS} ${LDFLAGS}" \
 	${PYTHON} ${srcdir}/setup.py
