@@ -7,12 +7,18 @@
 cgdelete \- remove control group(s)
 
 .SH SYNOPSIS
-\fBcgdelete\fR [\fB-h\fR] [\fB-r\fR] [[\fB-g\fR]
+\fBcgdelete\fR [\fB-h\fR] [\fB-r\fR] [\fB-b\fR] [[\fB-g\fR]
 <\fIcontrollers\fR>:\fI<path\fR>] ...
 
 .SH DESCRIPTION
 The \fBcgdelete\fR
 program removes all specified control groups.
+
+.TP
+.B -b
+ignores the default systemd delegated hierarchy path and
+constructs the path of the control groups relative to the
+cgroup root hierarchy.
 
 .TP
 .B [-g] <controllers>:<path>
