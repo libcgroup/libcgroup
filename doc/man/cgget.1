@@ -7,10 +7,10 @@
 cgget \- print parameter(s) of given group(s)
 
 .SH SYNOPSIS
-\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-m\fR] [\fB-r\fR <\fIname\fR>]
+\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-m\fR] [\fB-b\fR] [\fB-r\fR <\fIname\fR>]
 [\fB-g\fR <\fIcontroller\fR>] [\fB-a\fR] <\fBpath\fR> ...
 .br
-\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-m\fR] [\fB-r\fR <\fIname\fR>]
+\fBcgget\fR [\fB-n\fR] [\fB-v\fR] [\fB-m\fR] [\fB-b\fR] [\fB-r\fR <\fIname\fR>]
 \fB-g\fR <\fIcontroller\fR>:<\fBpath\fR> ...
 
 .SH DESCRIPTION
@@ -26,6 +26,12 @@ This parameter can be used multiple times.
 .TP
 .B -a, --all
 print the variables for all controllers which consist in the  given cgroup
+
+.TP
+.B -b
+ignores the default systemd delegated hierarchy path and
+constructs the path of the control groups relative to the
+cgroup root hierarchy.
 
 .TP
 .B -g <controller>
