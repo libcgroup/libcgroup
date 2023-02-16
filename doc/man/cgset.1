@@ -7,9 +7,9 @@
 cgset \- set the parameters of given cgroup(s)
 
 .SH SYNOPSIS
-\fBcgset\fR [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
+\fBcgset\fR [\fB-b\fR] [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
 .br
-\fBcgset\fR \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
+\fBcgset\fR [\fB-b\fR] \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 Set the parameters of input cgroups.
@@ -18,6 +18,12 @@ Set the parameters of input cgroups.
 .B <path>
 is the name of the cgroup which should be changed.
 This parameter can be used multiple times.
+
+.TP
+.B -b
+ignores the default systemd delegated hierarchy path and
+constructs the path of the control groups relative to the
+cgroup root hierarchy.
 
 .TP
 .B -r <name=value>
