@@ -4,10 +4,10 @@
 cgxget \- print parameter(s) of given group(s)
 
 .SH SYNOPSIS
-\fBcgxget\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
+\fBcgxget\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-n\fR] [\fB-v\fR] [\fB-b\fR] [\fB-r\fR <\fIname\fR>]
 [\fB-g\fR <\fIcontroller\fR>] [\fB-a\fR] <\fBpath\fR> ...
 .br
-\fBcgxget\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-n\fR] [\fB-v\fR] [\fB-r\fR <\fIname\fR>]
+\fBcgxget\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-n\fR] [\fB-v\fR] [\fB-b\fR] [\fB-r\fR <\fIname\fR>]
 \fB-g\fR <\fIcontroller\fR>:<\fBpath\fR> ...
 
 .SH DESCRIPTION
@@ -42,6 +42,11 @@ If the system is running in cgroup v1 mode, libcgroup will convert the data as n
 .TP
 .B -a, --all
 print the variables for all controllers which consist in the  given cgroup
+
+.TP
+.B -b
+ignores the default systemd delegated hierarchy path and constructs the path of the control groups
+relative to the cgroup root hierarchy.
 
 .TP
 .B -g <controller>
