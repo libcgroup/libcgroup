@@ -4,9 +4,9 @@
 cgxset \- set the parameters of given cgroup(s)
 
 .SH SYNOPSIS
-\fBcgxset\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
+\fBcgxset\fR [\fB-1\fR] [\fB-2\fR] [\fB-i\fR] [\fB-b\fR] [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
 .br
-\fBcgxset\fR \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
+\fBcgxset\fR [\fB-b\fR] \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 Set the parameters of input cgroups.
@@ -35,6 +35,11 @@ If the system is running in cgroup v2 mode, libcgroup will convert the data as n
 data in/out of \fBcgxset\fR is in cgroup v2 format.
 In this mode, the user will provide values in cgroup v2 format and receive values in v2 format.
 If the system is running in cgroup v1 mode, libcgroup will convert the data as necessary
+
+.TP
+.B -b
+ignores the default systemd delegated hierarchy path and constructs the path of the control groups
+relative to the cgroup root hierarchy.
 
 .TP
 .B -i, --ignore-unmappable
