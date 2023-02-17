@@ -9,7 +9,8 @@
 
 from cgroup import Cgroup, CgroupVersion
 from systemd import Systemd
-from run import Run, RunError
+from process import Process
+from run import RunError
 import consts
 import ftests
 import time
@@ -94,12 +95,6 @@ def create_process_get_pid(config, CGNAME, SLICENAME='', ignore_systemd=False):
     return pids, result, cause
 
 
-def terminate_process(config, pids):
-    if pids:
-        for p in pids.splitlines():
-            Run.run(['sudo', 'kill', '-9', p])
-
-
 def test(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
@@ -125,8 +120,8 @@ def test(config):
 def teardown(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
-    terminate_process(config, SYSTEMD_PIDS)
-    terminate_process(config, OTHER_PIDS)
+    Process.kill(config, SYSTEMD_PIDS)
+    Process.kill(config, OTHER_PIDS)
 
     # We need a pause, so that cgroup.procs gets updated.
     time.sleep(1)

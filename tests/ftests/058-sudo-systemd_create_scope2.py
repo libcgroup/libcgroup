@@ -10,8 +10,9 @@
 from cgroup import CgroupVersion as CgroupCliVersion
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
-from run import Run, RunError
 from systemd import Systemd
+from process import Process
+from run import RunError
 import ftests
 import consts
 import utils
@@ -66,7 +67,7 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    pid = int(config.process.create_process(config))
+    pid = config.process.create_process(config)
 
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
 
@@ -122,8 +123,7 @@ def test(config):
 def teardown(config, result):
     global pid
 
-    if pid is not None:
-        Run.run(['kill', '-9', str(pid)], shell_bool=True)
+    Process.kill(config, pid)
 
     if result != consts.TEST_PASSED:
         # Something went wrong.  Let's force the removal of the cgroups just to be safe.
