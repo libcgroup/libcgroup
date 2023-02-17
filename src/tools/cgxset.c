@@ -144,10 +144,10 @@ int main(int argc, char *argv[])
 	int nv_number = 0;
 	int nv_max = 0;
 
-	struct cgroup *converted_src_cgroup;
+	struct cgroup *converted_src_cgroup = NULL;
 	char src_cg_path[FILENAME_MAX] = "\0";
-	struct cgroup *src_cgroup;
-	struct cgroup *cgroup;
+	struct cgroup *src_cgroup = NULL;
+	struct cgroup *cgroup = NULL;
 
 	enum cg_version_t src_version = CGROUP_UNK;
 	bool ignore_unmappable = false;
@@ -318,7 +318,8 @@ int main(int argc, char *argv[])
 cgroup_free_err:
 	if (cgroup)
 		cgroup_free(&cgroup);
-	cgroup_free(&src_cgroup);
+	if (src_cgroup)
+		cgroup_free(&src_cgroup);
 err:
 	free(name_value);
 
