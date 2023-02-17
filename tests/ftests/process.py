@@ -77,7 +77,7 @@ class Process(object):
             pid = Run.run(cmd, shell_bool=True)
 
             for _pid in pid.splitlines():
-                self.children_pids.append(_pid)
+                self.children_pids.append(int(_pid))
 
             if pid.find('\n') >= 0:
                 # The second pid in the list contains the actual perl process
@@ -90,7 +90,7 @@ class Process(object):
                                 ''.format(pid)
                             )
 
-        return pid
+        return int(pid)
 
     def create_process(self, config):
         # To allow for multiple processes to be created, each new process
@@ -253,5 +253,21 @@ class Process(object):
             return Process.__get_cgroup_v2(config, pid, controller)
 
         raise ValueError("get_cgroup() shouldn't reach this point")
+
+    @staticmethod
+    def kill(config, pids):
+        if not pids:
+            return
+
+        if type(pids) == str:
+            pids = [int(pid) for pid in pids.splitlines()]
+        elif type(pids) == int:
+            pids = [pids]
+
+        for pid in pids:
+            if config.args.container:
+                config.container.run(['kill', '-9', str(pid)])
+            else:
+                Run.run(['kill', '-9', str(pid)])
 
 # vim: set et ts=4 sw=4:

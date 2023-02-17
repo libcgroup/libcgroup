@@ -7,8 +7,8 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from process import Process
 from cgroup import Cgroup
-from run import Run
 import consts
 import ftests
 import sys
@@ -55,12 +55,7 @@ def test(config):
 
 def teardown(config):
     pids = Cgroup.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
-    if pids:
-        for p in pids.splitlines():
-            if config.args.container:
-                config.container.run(['kill', '-9', p])
-            else:
-                Run.run(['sudo', 'kill', '-9', p])
+    Process.kill(config, pids)
 
     Cgroup.delete(config, CONTROLLER, CGNAME)
 

@@ -8,7 +8,7 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
-from run import Run
+from process import Process
 import consts
 import ftests
 import sys
@@ -69,9 +69,7 @@ def test(config):
 def teardown(config):
     # destroy the child processes
     pids = Cgroup.get_pids_in_cgroup(config, PARENT_CGNAME, CONTROLLER)
-    if pids:
-        for p in pids.splitlines():
-            Run.run(['sudo', 'kill', '-9', p])
+    Process.kill(config, pids)
 
     Cgroup.delete(config, CONTROLLER, PARENT_CGNAME, recursive=True)
 
