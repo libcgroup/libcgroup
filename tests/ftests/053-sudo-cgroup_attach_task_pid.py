@@ -53,11 +53,11 @@ def test(config):
 
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
     cg.get()
-    cg.attach(int(child_pid))
+    cg.attach(child_pid)
 
     found = False
     pids = CgroupCli.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
-    for pid in pids.splitlines():
+    for pid in pids:
         if pid == child_pid:
             # our process was successfully added to the cgroup
             found = True
@@ -69,11 +69,11 @@ def test(config):
 
     # now let's attach the child process to the root cgroup and ensure we no longer
     # are in CGNAME
-    cg.attach(pid=int(child_pid), root_cgroup=True)
+    cg.attach(pid=child_pid, root_cgroup=True)
 
     found = False
     pids = CgroupCli.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
-    for pid in pids.splitlines():
+    for pid in pids:
         if pid == child_pid:
             # our process was successfully added to the cgroup
             found = True

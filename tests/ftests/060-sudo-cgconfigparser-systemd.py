@@ -6,9 +6,10 @@
 # Copyright (c) 2023 Oracle and/or its affiliates.
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 
-from run import Run, RunError
 from systemd import Systemd
+from process import Process
 from cgroup import Cgroup
+from run import RunError
 import consts
 import ftests
 import time
@@ -147,8 +148,8 @@ def test(config):
         result = consts.TEST_FAILED
         cause = 'Creation of systemd default slice/scope erroneously succeeded'
 
-    # killing the pid, should remove the scope cgroup too.
-    Run.run(['sudo', 'kill', '-9', pid])
+    # killing the pid should remove the scope cgroup too.
+    Process.kill(config, pid)
 
     # Let's pause and wait for the systemd to remove the scope.
     time.sleep(1)

@@ -220,9 +220,9 @@ class Cgroup(object):
     def __set(config, cmd, cgname=None, setting=None, value=None,
               copy_from=None, cghelp=False, ignore_systemd=False):
         if setting is not None or value is not None:
-            if isinstance(setting, str) and isinstance(value, str):
+            if isinstance(setting, str) and (isinstance(value, str) or isinstance(value, int)):
                 cmd.append('-r')
-                cmd.append('{}={}'.format(setting, value))
+                cmd.append('{}={}'.format(setting, str(value)))
             elif isinstance(setting, list) and isinstance(value, list):
                 if len(setting) != len(value):
                     raise ValueError(
@@ -232,7 +232,7 @@ class Cgroup(object):
 
                 for idx, stg in enumerate(setting):
                     cmd.append('-r')
-                    cmd.append('{}={}'.format(stg, value[idx]))
+                    cmd.append('{}={}'.format(stg, str(value[idx])))
             else:
                 raise ValueError(
                                     'Invalid inputs to cgget:\nsetting: {}\n'
@@ -450,7 +450,7 @@ class Cgroup(object):
             cmd.append(str(pid_list))
         elif isinstance(pid_list, list):
             for pid in pid_list:
-                cmd.append(pid)
+                cmd.append(str(pid))
 
         if config.args.container:
             config.container.run(cmd)
@@ -579,6 +579,8 @@ class Cgroup(object):
         except RunError as re:
             if re.ret == 0 and \
                'neither blacklisted nor whitelisted' in re.stderr:
+                res = re.stdout
+            elif re.ret == 0 and 'ERROR: can\'t get' in re.stderr:
                 res = re.stdout
             else:
                 raise(re)
@@ -951,7 +953,7 @@ class Cgroup(object):
             cmd.append(cmdline)
         elif isinstance(cmdline, list):
             for entry in cmdline:
-                cmd.append(entry)
+                cmd.append(str(entry))
 
         if cghelp:
             cmd.append('-h')
@@ -975,9 +977,15 @@ class Cgroup(object):
                 cmd = ['cat', proc_file]
 
                 if config.args.container:
-                    return config.container.run(cmd, shell_bool=True)
+                    pids = config.container.run(cmd, shell_bool=True)
                 else:
-                    return Run.run(cmd, shell_bool=True)
+                    pids = Run.run(cmd, shell_bool=True)
+
+                pid_list = list()
+                for pid in pids.splitlines():
+                    pid_list.append(int(pid))
+
+                return pid_list
 
         return None
 

@@ -8,8 +8,9 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
-from run import Run, RunError
 from systemd import Systemd
+from process import Process
+from run import RunError
 import consts
 import ftests
 import time
@@ -26,8 +27,8 @@ SCOPE = 'test068.scope'
 
 CONFIG_FILE_NAME = os.path.join(os.getcwd(), '068cgconfig.conf')
 
-SYSTEMD_PIDS = ''
-OTHER_PIDS = ''
+SYSTEMD_PIDS = None
+OTHER_PIDS = None
 
 
 def prereqs(config):
@@ -106,12 +107,6 @@ def create_process_get_pid(config, CGNAME, SLICENAME='', ignore_systemd=False):
     return pids, result, cause
 
 
-def terminate_process(config, pids):
-    if pids:
-        for p in pids.splitlines():
-            Run.run(['kill', '-9', p])
-
-
 def test(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
@@ -134,7 +129,7 @@ def test(config):
     # SYSTEMD_CGNAME already has the pid of the task, that scope was created
     # with and killing it will remove the scope, be careful and pick the newly
     # spawned task
-    SYSTEMD_PIDS = SYSTEMD_PIDS.split('\n')[1]
+    SYSTEMD_PIDS = SYSTEMD_PIDS[1]
 
     return result, cause
 
@@ -142,8 +137,8 @@ def test(config):
 def teardown(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
-    terminate_process(config, SYSTEMD_PIDS)
-    terminate_process(config, OTHER_PIDS)
+    Process.kill(config, SYSTEMD_PIDS)
+    Process.kill(config, OTHER_PIDS)
 
     # We need a pause, so that cgroup.procs gets updated.
     time.sleep(1)

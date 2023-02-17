@@ -9,9 +9,10 @@
 
 from cgroup import Cgroup as CgroupCli
 from cgroup import CgroupVersion
-from run import Run, RunError
 from libcgroup import Cgroup
 from systemd import Systemd
+from process import Process
+from run import RunError
 import ftests
 import consts
 import sys
@@ -62,8 +63,7 @@ def test(config):
 def teardown(config, result):
     pid = CgroupCli.get(config, cgname=os.path.join(SLICE, SCOPE), setting='cgroup.procs',
                         print_headers=False, values_only=True)
-    if pid is not None:
-        Run.run(['kill', '-9', str(pid)], shell_bool=True)
+    Process.kill(config, pid)
 
     if result != consts.TEST_PASSED:
         # Something went wrong.  Let's force the removal of the cgroups just to be safe.

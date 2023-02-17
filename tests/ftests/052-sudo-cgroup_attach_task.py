@@ -55,8 +55,8 @@ def test(config):
 
     found = False
     pids = CgroupCli.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
-    for pid in pids.splitlines():
-        if int(pid) == os.getpid():
+    for pid in pids:
+        if pid == os.getpid():
             # our process was successfully added to the cgroup
             found = True
 
@@ -71,8 +71,8 @@ def test(config):
 
     found = False
     pids = CgroupCli.get_pids_in_cgroup(config, CGNAME, CONTROLLER)
-    for pid in pids.splitlines():
-        if int(pid) == os.getpid():
+    for pid in pids:
+        if pid == os.getpid():
             # our process was successfully added to the cgroup
             found = True
 

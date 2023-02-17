@@ -9,7 +9,8 @@
 
 from cgroup import Cgroup, CgroupVersion
 from systemd import Systemd
-from run import Run, RunError
+from process import Process
+from run import RunError
 import consts
 import ftests
 import time
@@ -103,12 +104,6 @@ def create_process_get_pid(config, CGNAME, SLICENAME='', ignore_systemd=False):
     return pids, result, cause
 
 
-def terminate_process(config, pids):
-    if pids:
-        for p in pids.splitlines():
-            Run.run(['sudo', 'kill', '-9', p])
-
-
 def test(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
@@ -131,11 +126,6 @@ def test(config):
     if result == consts.TEST_FAILED:
         return result, cause
 
-    # SYSTEMD_CGNAME already has the pid of the task, that scope was created
-    # with and killing it will remove the scope, be careful and pick the newly
-    # spawned task
-    SYSTEMD_PIDS = SYSTEMD_PIDS.split('\n')[1]
-
     # classify a task from the non-systemd scope cgroup (OTHER_CGNAME) to
     # systemd scope cgroup (SYSTEMD_CGNAME).  Migration should fail due to
     # the incorrect destination cgroup path that gets constructed, without
@@ -143,26 +133,27 @@ def test(config):
     try:
         Cgroup.classify(config, CONTROLLER, SYSTEMD_CGNAME, OTHER_PIDS, ignore_systemd=True)
     except RunError as re:
-        err_str = 'Error changing group of pid {}: No such file or directory'.format(OTHER_PIDS)
+        err_str = 'Error changing group of pid {}: No such file or directory'.format(OTHER_PIDS[0])
         if re.stderr != err_str:
             raise re
     else:
         result = consts.TEST_FAILED
-        cause = 'Changing group of pid {} erroneously succeeded'.format(OTHER_PIDS)
+        cause = 'Changing group of pid {} erroneously succeeded'.format(OTHER_PIDS[0])
 
     # classify a task from the systemd scope cgroup (SYSTEMD_CGNAME) to
     # non-systemd scope cgroup (OTHER_CGNAME).  Migration should fail due
     # to the incorrect destination cgroup path that gets constructed, with
     # the systemd slice/scope when ignore_systemd=False)
     try:
-        Cgroup.classify(config, CONTROLLER, OTHER_CGNAME, SYSTEMD_PIDS)
+        Cgroup.classify(config, CONTROLLER, OTHER_CGNAME, SYSTEMD_PIDS[1])
     except RunError as re:
-        err_str = 'Error changing group of pid {}: No such file or directory'.format(SYSTEMD_PIDS)
+        err_str = 'Error changing group of pid {}: No such file or directory'.format(
+                  SYSTEMD_PIDS[1])
         if re.stderr != err_str:
             raise re
     else:
         result = consts.TEST_FAILED
-        tmp_cause = 'Changing group of pid {} erroneously succeeded'.format(SYSTEMD_PIDS)
+        tmp_cause = 'Changing group of pid {} erroneously succeeded'.format(SYSTEMD_PIDS[1])
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     # classify the task from the non-systemd scope cgroup to systemd scope cgroup.
@@ -174,13 +165,17 @@ def test(config):
 def teardown(config):
     global SYSTEMD_PIDS, OTHER_PIDS
 
-    terminate_process(config, SYSTEMD_PIDS)
-    terminate_process(config, OTHER_PIDS)
+    Process.kill(config, SYSTEMD_PIDS)
+    Process.kill(config, OTHER_PIDS)
 
     # We need a pause, so that cgroup.procs gets updated.
     time.sleep(1)
 
-    Systemd.remove_scope_slice_conf(config, SLICE, SCOPE, CONTROLLER, CONFIG_FILE_NAME)
+    try:
+        Cgroup.delete(config, CONTROLLER, cgname=SLICE, ignore_systemd=True)
+    except RunError as re:
+        if 'No such file or directory' not in re.stderr:
+            raise re
 
     # Incase the error occurs before the creation of OTHER_CGNAME,
     # let's ignore the exception
