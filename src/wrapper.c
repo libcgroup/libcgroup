@@ -462,7 +462,7 @@ int cgroup_set_value_string(struct cgroup_controller *controller, const char *na
 {
 	int i;
 
-	if (!controller)
+	if (!controller || !name || !value)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
