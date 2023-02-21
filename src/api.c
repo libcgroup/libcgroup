@@ -3552,6 +3552,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 {
 	struct dirent *ctrl_dir = NULL;
 	int initial_controller_cnt;
+	int controller_cnt = 0;
 	char *control_path = NULL;
 	char path[FILENAME_MAX];
 	DIR *dir = NULL;
@@ -3644,8 +3645,10 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 				 * and we've made it this far, then they are explicitly
 				 * interested in this controller and we should not remove it.
 				 */
-				if (initial_controller_cnt == 0)
+				if (initial_controller_cnt == 0) {
+					controller_cnt++;
 					continue;
+				}
 			} else if (error) {
 				goto unlock_error;
 			}
@@ -3666,6 +3669,8 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			error = ECGOTHER;
 			goto unlock_error;
 		}
+
+		controller_cnt++;
 
 		while ((ctrl_dir = readdir(dir)) != NULL) {
 			/* Skip over non regular files */
@@ -3707,8 +3712,14 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		}
 	}
 
-	/* Check if the group really exists or not */
-	if (!cgroup->index) {
+	/*
+	 * Check if the group really exists or not.  The cgroup->index controller count can't
+	 * be used in this case because cgroup v2 allows controllers to be enabled/disabled in
+	 * the subtree_control file.  Rather, cgroup_get_cgroup() tracks the number of possible
+	 * controllers in the controller_cnt variable and uses that to determine if the cgroup
+	 * exists or not.
+	 */
+	if (!controller_cnt) {
 		error = ECGROUPNOTEXIST;
 		goto unlock_error;
 	}
