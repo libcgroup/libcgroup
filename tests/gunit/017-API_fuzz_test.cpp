@@ -117,3 +117,56 @@ TEST_F(APIArgsTest, API_cgroup_set_value_string)
 
 	free(value);
 }
+
+/**
+ * Test arguments passed to get a controller's setting
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_get_value_string test name
+ *
+ * This test will pass a combination of valid and NULL as
+ * arguments to cgroup_get_value_string() and check if it
+ * handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_get_value_string)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	struct cgroup_controller * cgc = NULL;
+	const char * const cg_ctrl = "cpu";
+	char *name = NULL, *value = NULL;
+	struct cgroup *cgroup = NULL;
+	int ret;
+
+	// case 1
+	// cgc = NULL, name = NULL, value = NULL
+	ret = cgroup_get_value_string(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_NE(cgroup, nullptr);
+
+	// case 2
+	// cgc = valid, name = NULL, value = NULL
+	ret = cgroup_get_value_string(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	name = strdup("cgroup.shares");
+	ASSERT_NE(name, nullptr);
+
+	// case 3
+	// cgc = valid, name = valid, value = NULL
+	ret = cgroup_get_value_string(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	free(name);
+	name = NULL;
+
+	// case 4
+	// cgc = valid, name = valid, value = NULL
+	ret = cgroup_get_value_string(cgc, name, &value);
+	ASSERT_EQ(ret, 50011);
+
+	free(value);
+}
