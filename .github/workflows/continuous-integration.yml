@@ -122,8 +122,7 @@ jobs:
     - name: Display test logs
       if: ${{ failure() }}
       run: |
-        cat libcgroup-*/_build/sub/tests/ftests/ftests.sh.log
-        cat libcgroup-*/_build/sub/tests/ftests/ftests-nocontainer.sh.log
+        cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
 
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
@@ -207,8 +206,7 @@ jobs:
     - name: Display test logs
       if: ${{ always() }}
       run: |
-        cat tests/ftests/ftests.sh.log
-        cat tests/ftests/ftests-nocontainer.sh.log
+        cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
@@ -252,8 +250,7 @@ jobs:
     - name: Display test logs
       if: ${{ always() }}
       run: |
-        cat tests/ftests/ftests.sh.log
-        cat tests/ftests/ftests-nocontainer.sh.log
+        cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
@@ -297,8 +294,7 @@ jobs:
     - name: Display test logs
       if: ${{ always() }}
       run: |
-        cat tests/ftests/ftests.sh.log
-        cat tests/ftests/ftests-nocontainer.sh.log
+        cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
@@ -342,8 +338,7 @@ jobs:
     - name: Display test logs
       if: ${{ always() }}
       run: |
-        cat tests/ftests/ftests.sh.log
-        cat tests/ftests/ftests-nocontainer.sh.log
+        cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v3
