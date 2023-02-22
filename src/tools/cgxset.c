@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 		if (!cgroup) {
 			ret = ECGFAIL;
 			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
-			goto cgroup_free_err;
+			goto err;
 		}
 
 		/* copy the values from the source cgroup to new one */
@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 		if (ret != 0) {
 			err("%s: cgroup %s error: %s\n", argv[0], src_cg_path,
 			    cgroup_strerror(ret));
-			goto cgroup_free_err;
+			goto err;
 		}
 
 		converted_src_cgroup = cgroup_new_cgroup(cgroup->name);
@@ -288,6 +288,11 @@ int main(int argc, char *argv[])
 			ret = ECGCONTROLLERCREATEFAILED;
 			goto err;
 		}
+
+		/*
+		 * If a failure occurs between this comment and the "End of above comment"
+		 * below, then we need to manually free converted_src_cgroup.
+		 */
 
 		ret = cgroup_convert_cgroup(converted_src_cgroup, CGROUP_DISK, src_cgroup,
 					    src_version);
@@ -298,8 +303,14 @@ int main(int argc, char *argv[])
 			 * v1 to v2 or vice versa
 			 */
 			ret = 0;
-		else if (ret)
+		else if (ret) {
+			free(converted_src_cgroup);
 			goto err;
+		}
+
+		/*
+		 * End of above comment about converted_src_cgroup needing to be manually freed.
+		 */
 
 		cgroup_free(&cgroup);
 		cgroup = converted_src_cgroup;
@@ -308,19 +319,18 @@ int main(int argc, char *argv[])
 		ret = cgroup_modify_cgroup(cgroup);
 		if (ret) {
 			err("%s: cgroup modify error: %s\n", argv[0], cgroup_strerror(ret));
-			goto cgroup_free_err;
+			goto err;
 		}
 
 		optind++;
 		cgroup_free(&cgroup);
 	}
 
-cgroup_free_err:
+err:
 	if (cgroup)
 		cgroup_free(&cgroup);
 	if (src_cgroup)
 		cgroup_free(&src_cgroup);
-err:
 	free(name_value);
 
 	return ret;
