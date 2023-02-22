@@ -11,9 +11,13 @@ description: "Install dependencies, git clone, bootstrap, configure, and make li
 runs:
   using: "composite"
   steps:
-  - run: sudo apt-get update
+  - run: |
+      while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do sleep 3; done
+      sudo apt-get update
     shell: bash
-  - run: sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool libsystemd-dev -y
+  - run: |
+      while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do sleep 3; done
+      sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool libsystemd-dev -y
     shell: bash
   - run: sudo pip install cython
     shell: bash
