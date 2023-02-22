@@ -6,7 +6,7 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-TESTS = ftests.sh ftests-nocontainer.sh
+TESTS = ftests-wrapper.sh
 
 EXTRA_DIST_PYTHON_UTILS = \
 			  cgroup.py \
@@ -97,7 +97,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
 
-EXTRA_DIST = README.md ftests.sh ftests-nocontainer.sh \
+EXTRA_DIST = README.md ftests-wrapper.sh \
 	     ${EXTRA_DIST_PYTHON_UTILS} ${EXTRA_DIST_PYTHON_TESTS}
 
 clean-local: clean-local-check
