@@ -469,7 +469,7 @@ int cgroup_set_value_string(struct cgroup_controller *controller, const char *na
 		struct control_value *val = controller->values[i];
 
 		if (!strcmp(val->name, name)) {
-			strncpy(val->value, value, CG_VALUE_MAX);
+			strncpy(val->value, value, CG_CONTROL_VALUE_MAX);
 			val->value[sizeof(val->value)-1] = '\0';
 			val->dirty = true;
 			return 0;

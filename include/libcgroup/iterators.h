@@ -230,7 +230,7 @@ int cgroup_read_value_end(void **handle);
 /**
  * Maximum length of a value in stats file.
  */
-#define CG_VALUE_MAX 512
+#define CG_VALUE_MAX 100
 /**
  * One item in stats file.
  */
