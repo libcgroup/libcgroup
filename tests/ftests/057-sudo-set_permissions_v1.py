@@ -66,10 +66,7 @@ def test(config):
         result = consts.TEST_FAILED
         tmp_cause = 'Expected cgroup.procs mode to be {} but it\'s {}'.format(
                     format(CTRL_MODE, '03o'), ctrl_mode)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     task_path = os.path.join(CgroupCli.get_controller_mount_point(CONTROLLER), CGNAME,
                              'tasks')
@@ -79,10 +76,7 @@ def test(config):
         result = consts.TEST_FAILED
         tmp_cause = 'Expected tasks mode to be {} but it\'s {}'.format(
                     format(TASK_MODE, '03o'), task_mode)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     return result, cause
 
