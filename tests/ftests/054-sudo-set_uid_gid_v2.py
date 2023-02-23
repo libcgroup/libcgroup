@@ -59,10 +59,7 @@ def test(config):
     if gid != CTRL_GID:
         result = consts.TEST_FAILED
         tmp_cause = 'Expected cgroup.procs group to be {} but it\'s {}'.format(CTRL_GID, gid)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     return result, cause
 

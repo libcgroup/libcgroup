@@ -83,10 +83,7 @@ def test(config):
     if not CgroupCli.is_controller_enabled(config, CGNAME, CONTROLLER):
         result = consts.TEST_FAILED
         tmp_cause = 'Controller {} is not enabled in the parent cgroup'.format(CONTROLLER)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     dir_path = os.path.join(CgroupCli.get_controller_mount_point(CONTROLLER), CGNAME)
 
@@ -95,10 +92,7 @@ def test(config):
         result = consts.TEST_FAILED
         tmp_cause = 'Expected directory mode to be {} but it\'s {}'.format(
                     format(DIR_MODE, '03o'), dir_mode)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     ctrl_path = os.path.join(CgroupCli.get_controller_mount_point(CONTROLLER), CGNAME,
                              'cgroup.procs')
@@ -108,28 +102,19 @@ def test(config):
         result = consts.TEST_FAILED
         tmp_cause = 'Expected cgroup.procs mode to be {} but it\'s {}'.format(
                     format(CTRL_MODE, '03o'), ctrl_mode)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     uid = utils.get_file_owner_uid(config, ctrl_path)
     if uid != CTRL_UID:
         result = consts.TEST_FAILED
         tmp_cause = 'Expected cgroup.procs owner to be {} but it\'s {}'.format(CTRL_UID, uid)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     gid = utils.get_file_owner_gid(config, ctrl_path)
     if gid != CTRL_GID:
         result = consts.TEST_FAILED
         tmp_cause = 'Expected cgroup.procs group to be {} but it\'s {}'.format(CTRL_GID, gid)
-        if not cause:
-            cause = tmp_cause
-        else:
-            cause = '{}\n{}'.format(cause, tmp_cause)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     return result, cause
 
