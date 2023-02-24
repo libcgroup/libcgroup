@@ -170,3 +170,43 @@ TEST_F(APIArgsTest, API_cgroup_get_value_string)
 
 	free(value);
 }
+
+/**
+ * Test arguments passed to add controller to a cgroup
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_set_value_string test name
+ *
+ * This test will pass a combination of valid and NULL as
+ * arguments to cgroup_add_controller() and check if it
+ * handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_add_controller)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	const char * const cg_ctrl = "cpu";
+	const char * const new_cg_ctrl = NULL;
+	struct cgroup_controller *cgc = NULL;
+	struct cgroup *cgroup = NULL;
+	int ret;
+
+	// case 1
+	// cgrp = NULL, name = NULL
+	cgc = cgroup_add_controller(cgroup, new_cg_ctrl);
+	ASSERT_EQ(cgroup, nullptr);
+
+	// case 2
+	// cgrp = NULL, name = valid
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_EQ(cgroup, nullptr);
+
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_NE(cgroup, nullptr);
+
+	// case 3
+	// cgrp = valid, name = NULL
+	cgc = cgroup_add_controller(cgroup, new_cg_ctrl);
+	ASSERT_EQ(cgc, nullptr);
+}
