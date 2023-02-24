@@ -63,7 +63,7 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup, const cha
 	struct cgroup_controller *controller;
 	int i, ret;
 
-	if (!cgroup)
+	if (!cgroup || !name)
 		return NULL;
 
 	/* Still not sure how to handle the failure here. */
