@@ -209,7 +209,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller, const char *na
 	int i;
 	struct control_value *cntl_value;
 
-	if (!controller)
+	if (!controller || !name)
 		return ECGINVAL;
 
 	if (controller->index >= CG_NV_MAX)
