@@ -210,3 +210,60 @@ TEST_F(APIArgsTest, API_cgroup_add_controller)
 	cgc = cgroup_add_controller(cgroup, new_cg_ctrl);
 	ASSERT_EQ(cgc, nullptr);
 }
+
+/**
+ * Test arguments passed to add a controller's setting
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_set_value_string test name
+ *
+ * This test will pass a combination of valid and NULL as
+ * arguments to cgroup_add_value_string() and check if it
+ * handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_add_value_string)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	struct cgroup_controller *cgc = NULL;
+	const char * const cg_ctrl = "cpu";
+	struct cgroup *cgroup = NULL;
+	char * ctrl_value = NULL;
+	char * ctrl_name = NULL;
+	int ret;
+
+	// case 1
+	// cgc = NULL, name = NULL, value = NULL
+	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
+	ASSERT_EQ(ret, 50011);
+
+	// case 2
+	// cgc = valid, name = NULL, value = NULL
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_NE(cgroup, nullptr);
+
+	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
+	ASSERT_EQ(ret, 50011);
+
+	// case 3
+	// cgc = valid, name = valid, value = NULL
+	ctrl_name = strdup("cpu.shares");
+	ASSERT_NE(ctrl_name, nullptr);
+
+	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
+	ASSERT_EQ(ret, 0);
+
+	// case 4
+	// cgc = valid, name = NULL, value = valid
+	free(ctrl_name);
+	ctrl_name = NULL;
+
+	ctrl_value = strdup("1024");
+	ASSERT_NE(ctrl_value, nullptr);
+
+	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
+	ASSERT_EQ(ret, 50011);
+
+	free(ctrl_value);
+}
