@@ -404,7 +404,7 @@ int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid, 
 int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid, gid_t *tasks_gid,
 		       uid_t *control_uid, gid_t *control_gid)
 {
-	if (!cgroup)
+	if (!cgroup || !tasks_uid || !tasks_gid || !control_uid || !control_gid)
 		return ECGINVAL;
 
 	*tasks_uid = cgroup->tasks_uid;
