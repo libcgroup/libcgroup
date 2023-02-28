@@ -267,3 +267,51 @@ TEST_F(APIArgsTest, API_cgroup_add_value_string)
 
 	free(ctrl_value);
 }
+
+TEST_F(APIArgsTest, API_cgroup_get_uid_gid)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	uid_t tasks_uid, control_uid;
+	gid_t tasks_gid, control_gid;
+
+	struct cgroup *cgroup = NULL;
+	int ret;
+	// case 1
+	// cgroup = NULL, tasks_uid = NULL, tasks_gid = NULL, control_uid = NULL,
+	// control_uid = NULL
+	ret = cgroup_get_uid_gid(cgroup, NULL, NULL, NULL, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 2
+	// cgroup = valid, tasks_uid = NULL, tasks_gid = NULL, control_uid = NULL,
+	// control_uid = NULL
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	ret = cgroup_get_uid_gid(cgroup, NULL, NULL, NULL, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 3
+	// cgroup = valid, tasks_uid = valid, tasks_gid = NULL, control_uid = NULL,
+	// control_uid = NULL
+	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, NULL, NULL, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 4
+	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = NULL,
+	// control_uid = NULL
+	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, NULL, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 5
+	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = valid,
+	// control_uid = NULL
+	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, &control_uid, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 6
+	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = valid,
+	// control_uid = valid
+	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, &control_uid, &control_gid);
+	ASSERT_EQ(ret, 0);
+}
