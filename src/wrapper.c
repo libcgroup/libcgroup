@@ -505,7 +505,7 @@ int cgroup_set_value_int64(struct cgroup_controller *controller, const char *nam
 	int ret;
 	int i;
 
-	if (!controller)
+	if (!controller || !name)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
