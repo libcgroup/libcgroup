@@ -66,13 +66,6 @@ static __thread char errtext[MAXLEN];
 /* Task command name length */
 #define TASK_COMM_LEN 16
 
-/* cgroup v2 files */
-#define CGV2_CONTROLLERS_FILE	"cgroup.controllers"
-#define CGV2_SUBTREE_CTRL_FILE	"cgroup.subtree_control"
-
-/* maximum line length when reading the cgroup.controllers file */
-#define LL_MAX			100
-
 /* Check if cgroup_init has been called or not. */
 static int cgroup_initialized;
 
@@ -86,7 +79,7 @@ static struct cgroup_rule_list trl;
 static pthread_rwlock_t rl_lock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* Cgroup v2 mount path.  Null if v2 isn't mounted */
-static char cg_cgroup_v2_mount_path[FILENAME_MAX];
+char cg_cgroup_v2_mount_path[FILENAME_MAX];
 
 /* Namespace */
 __thread char *cg_namespace_table[CG_CONTROLLER_MAX];
@@ -1218,7 +1211,8 @@ out:
  */
 STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 {
-	char *ret_c = NULL, line[LL_MAX], *stok_buff = NULL, *controller, *controllers = NULL;
+	char *ret_c = NULL, line[CGV2_CONTROLLERS_LL_MAX], *stok_buff = NULL;
+	char *controller = NULL, *controllers = NULL;
 	char cgroup_controllers_path[FILENAME_MAX];
 	int ret = 0, i, duplicate, shared_mnt;
 	FILE *fp = NULL;
@@ -1240,7 +1234,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 		goto out;
 	}
 
-	ret_c = fgets(line, LL_MAX, fp);
+	ret_c = fgets(line, CGV2_CONTROLLERS_LL_MAX, fp);
 	if (ret_c == NULL) {
 		struct cg_mount_point *tmp, *t;
 
@@ -1460,14 +1454,14 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 	 * The first line of the file has stuff we are not interested in.
 	 * So just read it and discard the information.
 	 */
-	buf = malloc(LL_MAX);
+	buf = malloc(CGV2_CONTROLLERS_LL_MAX);
 	if (!buf) {
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto err;
 	}
 
-	if (!fgets(buf, LL_MAX, proc_cgroup)) {
+	if (!fgets(buf, CGV2_CONTROLLERS_LL_MAX, proc_cgroup)) {
 		cgroup_err("cannot read /proc/cgroups: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -1838,7 +1832,7 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 			      size_t type_sz)
 {
 	char cg_type_path[FILENAME_MAX];
-	char cg_type[LL_MAX];
+	char cg_type[CGV2_CONTROLLERS_LL_MAX];
 	int len, err = 0;
 	FILE *fp = NULL;
 
@@ -1856,7 +1850,7 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 		}
 	}
 
-	if (fgets(cg_type, LL_MAX, fp) == NULL) {
+	if (fgets(cg_type, CGV2_CONTROLLERS_LL_MAX, fp) == NULL) {
 		cgroup_warn("failed to read file %s: %s\n", cg_type_path, strerror(errno));
 		err = ECGOTHER;
 		goto out;
@@ -1891,7 +1885,7 @@ int cgroup_build_tasks_procs_path(char * const path, size_t path_sz, const char 
 				  const char * const ctrl_name)
 {
 	enum cg_version_t version;
-	char cg_type[LL_MAX];
+	char cg_type[CGV2_CONTROLLERS_LL_MAX];
 	int err = ECGOTHER;
 
 	if (!cg_build_path(cg_name, path, ctrl_name))
