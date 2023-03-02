@@ -112,47 +112,109 @@ int cgroup_add_all_controllers(struct cgroup *cgroup)
 {
 	struct cgroup_controller *cgc;
 	struct controller_data info;
+	enum cg_setup_mode_t mode;
 	void *handle;
-	int ret;
+	int ret = 0;
 
-	/* go through the controller list */
-	ret = cgroup_get_all_controller_begin(&handle, &info);
-	if ((ret != 0) && (ret != ECGEOF)) {
-		fprintf(stderr, "cannot read controller data: %s\n", cgroup_strerror(ret));
-		return ret;
-	}
+	if (!cgroup)
+		return ECGINVAL;
 
-	while (ret == 0) {
-		if (info.hierarchy == 0) {
-			/*
-			 * the controller is not attached to any
-			 * hierarchy skip it.
-			 */
-			goto next;
+	mode = cgroup_setup_mode();
+
+	/*
+	 * Per kernel documentation, cgroup-v2.rst, /proc/cgroups is "meaningless" for cgroup v2.
+	 * Use the cgroup's cgroup.controllers file instead
+	 */
+	if (mode == CGROUP_MODE_UNIFIED) {
+		char *ret_c, *controller, *stok_buff = NULL, line[CGV2_CONTROLLERS_LL_MAX];
+		/*
+		 * cg_cgroup_v2_mount_path (FILENAME_MAX) + cgroup->name (FILENAME_MAX) +
+		 * strlen("cgroup.controllers") (18) + 2 forward slashes + 1 NULL terminator
+		 */
+		char cgroup_controllers_path[FILENAME_MAX * 2 + 18 + 2 + 1];
+		FILE *fp;
+
+		pthread_rwlock_rdlock(&cg_mount_table_lock);
+		if (strlen(cg_cgroup_v2_mount_path) == 0) {
+			ret = ECGOTHER;
+			goto out;
 		}
 
-		/* add mounted controller to cgroup structure */
-		cgc = cgroup_add_controller(cgroup, info.name);
-		if (!cgc) {
-			ret = ECGINVAL;
-			fprintf(stderr, "controller %s can't be added\n", info.name);
-			goto end;
+		snprintf(cgroup_controllers_path, sizeof(cgroup_controllers_path), "%s/%s/%s",
+			 cg_cgroup_v2_mount_path, cgroup->name, CGV2_CONTROLLERS_FILE);
+		pthread_rwlock_unlock(&cg_mount_table_lock);
+
+		fp = fopen(cgroup_controllers_path, "re");
+		if (!fp) {
+			ret = ECGOTHER;
+			goto out;
 		}
+
+		ret_c = fgets(line, CGV2_CONTROLLERS_LL_MAX, fp);
+		fclose(fp);
+		if (ret_c == NULL) {
+			/* no controllers are enabled */
+			goto out;
+		}
+
+		/* Remove the trailing newline */
+		ret_c[strlen(ret_c) - 1] = '\0';
+
+		/*
+		 * cgroup.controllers returns a list of available controllers in
+		 * the following format:
+		 *	cpuset cpu io memory pids rdma
+		 */
+		controller = strtok_r(ret_c, " ", &stok_buff);
+		do {
+			cgc = cgroup_add_controller(cgroup, controller);
+			if (!cgc) {
+				ret = ECGINVAL;
+				fprintf(stderr, "controller %s can't be added\n", info.name);
+				goto end;
+			}
+		} while ((controller = strtok_r(NULL, " ", &stok_buff)));
+	} else {
+		/* go through the controller list */
+		ret = cgroup_get_all_controller_begin(&handle, &info);
+		if ((ret != 0) && (ret != ECGEOF)) {
+			fprintf(stderr, "cannot read controller data: %s\n", cgroup_strerror(ret));
+			return ret;
+		}
+
+		while (ret == 0) {
+			if (info.hierarchy == 0) {
+				/*
+				 * the controller is not attached to any
+				 * hierarchy skip it.
+				 */
+				goto next;
+			}
+
+			/* add mounted controller to cgroup structure */
+			cgc = cgroup_add_controller(cgroup, info.name);
+			if (!cgc) {
+				ret = ECGINVAL;
+				fprintf(stderr, "controller %s can't be added\n", info.name);
+				goto end;
+			}
 
 next:
-		ret = cgroup_get_all_controller_next(&handle, &info);
-		if (ret && ret != ECGEOF)
-			goto end;
-	}
+			ret = cgroup_get_all_controller_next(&handle, &info);
+			if (ret && ret != ECGEOF)
+				goto end;
+		}
 
 end:
-	cgroup_get_all_controller_end(&handle);
-	if (ret == ECGEOF)
-		ret = 0;
-	if (ret)
-		fprintf(stderr,	"cgroup_get_controller_begin/next failed (%s)\n",
-			cgroup_strerror(ret));
+		cgroup_get_all_controller_end(&handle);
+		if (ret == ECGEOF)
+			ret = 0;
+		if (ret)
+			fprintf(stderr,	"cgroup_get_controller_begin/next failed (%s)\n",
+				cgroup_strerror(ret));
+	}
 
+out:
 	return ret;
 }
 

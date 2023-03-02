@@ -70,6 +70,13 @@ extern "C" {
 
 #define CGROUP_FILE_PREFIX	"cgroup"
 
+/* cgroup v2 files */
+#define CGV2_CONTROLLERS_FILE   "cgroup.controllers"
+#define CGV2_SUBTREE_CTRL_FILE  "cgroup.subtree_control"
+
+/* maximum line length when reading the cgroup.controllers file */
+#define CGV2_CONTROLLERS_LL_MAX	100
+
 #define cgroup_err(x...)	cgroup_log(CGROUP_LOG_ERROR, "Error: " x)
 #define cgroup_warn(x...)	cgroup_log(CGROUP_LOG_WARNING, "Warning: " x)
 #define cgroup_info(x...)	cgroup_log(CGROUP_LOG_INFO, "Info: " x)
@@ -230,8 +237,13 @@ void init_cgroup_table(struct cgroup *cgroups, size_t count);
 
 /*
  * Main mounting structures
+ *
+ * cg_mount_table_lock must be held to access:
+ * 	cg_mount_table
+ * 	cg_cgroup_v2_mount_path
  */
 extern struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
+extern char cg_cgroup_v2_mount_path[FILENAME_MAX];
 extern pthread_rwlock_t cg_mount_table_lock;
 
 /*
