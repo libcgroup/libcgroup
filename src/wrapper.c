@@ -483,7 +483,7 @@ int cgroup_get_value_int64(struct cgroup_controller *controller, const char *nam
 {
 	int i;
 
-	if (!controller)
+	if (!controller || !name || !value)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
