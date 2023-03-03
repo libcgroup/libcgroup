@@ -56,6 +56,7 @@ cdef extern from "libcgroup.h":
     void cgroup_free(cgroup **cg)
 
     cgroup_controller *cgroup_add_controller(cgroup *cg, const char *name)
+    int cgroup_add_all_controllers(cgroup *cg)
     cgroup_controller *cgroup_get_controller(cgroup *cg, const char *name)
 
     int cgroup_add_value_string(cgroup_controller *cgc, const char *name,
