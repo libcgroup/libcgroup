@@ -130,6 +130,28 @@ cdef class Cgroup:
 
         self.controllers[ctrl_name] = Controller(ctrl_name)
 
+    def add_all_controllers(self):
+        """Add all enabled controllers to the Cgroup instance
+
+        Description:
+        Adds all enabled controllers (i.e. all controllers in the cgroup's cgroup.controllers
+        file) to the Cgroup instance
+
+        Note:
+        Reads from the cgroup sysfs
+        """
+        ret = cgroup.cgroup_add_all_controllers(self._cgp)
+        if ret != 0:
+            raise RuntimeError("Failed to add all controllers to cgroup")
+
+        ctrl_cnt = cgroup.cgroup_get_controller_count(self._cgp)
+        for i in range(0, ctrl_cnt):
+            ctrl_ptr = cgroup.cgroup_get_controller_by_index(self._cgp, i)
+            ctrl_name = cgroup.cgroup_get_controller_name(ctrl_ptr).decode('ascii')
+            self.controllers[ctrl_name] = Controller(ctrl_name)
+
+        self._pythonize_cgroup()
+
     def add_setting(self, setting_name, setting_value=None):
         """Add a setting to the Cgroup/Controller instance
 
