@@ -1064,7 +1064,7 @@ class Cgroup(object):
         ctrl_path = Cgroup.__get_controller_mount_point_v2(ctrl_name)
         parent_cgname = os.path.dirname(cgroup_name)
 
-        subtree_path = os.path.join(ctrl_path, parent_cgname, 'cgroup.subtree_control')
+        subtree_path = os.path.join(ctrl_path, parent_cgname, 'cgroup.controllers')
         cmd = ['cat', subtree_path]
 
         if config.args.container:
