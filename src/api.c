@@ -2331,16 +2331,19 @@ err:
 }
 
 /**
- * Check if the requested cgroup controller is enabled on this subtree
+ * Check if the requested cgroup controller is enabled in the specified file
  *
  * @param path Cgroup directory
  * @param ctrl_name Name of the controller to check
  * @param output parameter that indicates whether the controller is enabled
+ * @param file to open and parse
+ * 	0 = cgroup.subtree_control
+ * 	1 = cgroup.controllers
  */
-STATIC int cgroupv2_get_subtree_control(const char *path, const char *ctrl_name,
-					bool * const enabled)
+STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
+				  bool * const enabled, int file_enum)
 {
-	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c;
+	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c, *filename;
 	int ret, error = ECGROUPNOTMOUNTED;
 	char buffer[FILENAME_MAX];
 	FILE *fp = NULL;
@@ -2350,13 +2353,24 @@ STATIC int cgroupv2_get_subtree_control(const char *path, const char *ctrl_name,
 
 	*enabled = false;
 
+	switch (file_enum) {
+	case 0: /* cgroup.subtree_control */
+		filename = CGV2_SUBTREE_CTRL_FILE;
+		break;
+	case 1: /* cgroup.controllers */
+		filename = CGV2_CONTROLLERS_FILE;
+		break;
+	default:
+		return ECGINVAL;
+	}
+
 	path_copy = (char *)malloc(FILENAME_MAX);
 	if (!path_copy) {
 		error = ECGOTHER;
 		goto out;
 	}
 
-	ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path, CGV2_SUBTREE_CTRL_FILE);
+	ret = snprintf(path_copy, FILENAME_MAX, "%s/%s", path, filename);
 	if (ret < 0) {
 		error = ECGOTHER;
 		goto out;
@@ -2398,6 +2412,31 @@ out:
 		fclose(fp);
 
 	return error;
+}
+
+/**
+ * Check if the requested cgroup controller is enabled on this subtree
+ *
+ * @param path Cgroup directory
+ * @param ctrl_name Name of the controller to check
+ * @param output parameter that indicates whether the controller is enabled
+ */
+STATIC int cgroupv2_get_subtree_control(const char *path, const char *ctrl_name,
+					bool * const enabled)
+{
+	return __cgroupv2_get_enabled(path, ctrl_name, enabled, 0);
+}
+/**
+ * Check if the requested cgroup controller is enabled in this cgroup's cgroup.controllers file
+ *
+ * @param path Cgroup directory
+ * @param ctrl_name Name of the controller to check
+ * @param output parameter that indicates whether the controller is enabled
+ */
+static int cgroupv2_get_controllers(const char *path, const char *ctrl_name,
+				    bool * const enabled)
+{
+	return __cgroupv2_get_enabled(path, ctrl_name, enabled, 1);
 }
 
 /**
@@ -3628,8 +3667,8 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		} else { /* cgroup v2 */
 			bool enabled;
 
-			error = cgroupv2_get_subtree_control(path, cg_mount_table[i].name,
-							     &enabled);
+			error = cgroupv2_get_controllers(path, cg_mount_table[i].name,
+							 &enabled);
 			if (error == ECGROUPNOTMOUNTED) {
 				/*
 				 * This controller isn't enabled.  Only hide it from the

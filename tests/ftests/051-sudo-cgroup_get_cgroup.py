@@ -14,7 +14,7 @@ import consts
 import sys
 import os
 
-CGNAME = '051cgnewcg'
+CGNAME = '051cgnewcg/childcg'
 
 # Which controller isn't all that important, but it is important that we
 # have a cgroup v2 controller

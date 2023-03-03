@@ -50,7 +50,7 @@ def test(config):
     cause = None
 
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
-    cg.get()
+    cg.add_controller(CONTROLLER)
     cg.attach()
 
     found = False

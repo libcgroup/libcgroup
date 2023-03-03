@@ -15,7 +15,7 @@ import consts
 import sys
 import os
 
-CGNAME = '052cgattachcg'
+CGNAME = '053cgattachcg'
 
 # Which controller isn't all that important, but it is important that we
 # have a cgroup v2 controller
@@ -52,7 +52,7 @@ def test(config):
     child_pid = config.process.create_process(config)
 
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
-    cg.get()
+    cg.add_controller(CONTROLLER)
     cg.attach(child_pid)
 
     found = False
