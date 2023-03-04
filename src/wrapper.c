@@ -552,7 +552,7 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller, const char *na
 	int ret;
 	int i;
 
-	if (!controller)
+	if (!controller || !name)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
