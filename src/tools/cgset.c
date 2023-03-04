@@ -78,8 +78,15 @@ static void usage(int status, const char *program_name)
 STATIC int parse_r_flag(const char * const program_name, const char * const name_value_str,
 			struct control_value * const name_value)
 {
-	char *copy, *buf;
+	char *copy = NULL, *buf = NULL;
 	int ret = 0;
+
+	buf = strchr(name_value_str, '=');
+	if (buf == NULL) {
+		err("%s: wrong parameter of option -r: %s\n", program_name, optarg);
+		ret = EXIT_BADARGS;
+		goto err;
+	}
 
 	copy = strdup(name_value_str);
 	if (copy == NULL) {
