@@ -370,3 +370,58 @@ TEST_F(APIArgsTest, API_cgroup_set_value_int64)
 
 	free(name);
 }
+
+/**
+ * Test arguments passed to set a controller's setting
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_set_value_uint64 test name
+ *
+ * This test will pass a combination of valid and NULL as
+ * arguments to cgroup_set_value_uint64() and check if it
+ * handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	struct cgroup_controller * cgc = NULL;
+	const char * const cg_ctrl = "cpu";
+	struct cgroup *cgroup = NULL;
+	u_int64_t value = 1024;
+	char * name = NULL;
+	int ret;
+
+	// case 1
+	// cgc = NULL, name = NULL, value = valid
+	ret = cgroup_set_value_uint64(cgc, name, value);
+	ASSERT_EQ(ret, 50011);
+
+	// case 2
+	// cgc = valid, name = NULL, value = valid
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_NE(cgroup, nullptr);
+
+	// set cpu.shares, so that cgc->index > 0
+	ret = cgroup_set_value_uint64(cgc, "cpu.shares", 1024);
+	ASSERT_EQ(ret, 0);
+
+	ret = cgroup_set_value_uint64(cgc, name, value);
+	ASSERT_EQ(ret, 50011);
+
+	// case 3
+	// cgc = valid, name = valid, value = valid
+	name = strdup("cpu.shares");
+	ASSERT_NE(name, nullptr);
+
+	ret = cgroup_set_value_uint64(cgc, name, value);
+	ASSERT_EQ(ret, 0);
+
+	// check if the value was set right
+	ret = cgroup_get_value_uint64(cgc, name, &value);
+	ASSERT_EQ(ret, 0);
+	ASSERT_EQ(value, 1024);
+
+	free(name);
+}
