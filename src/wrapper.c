@@ -415,7 +415,7 @@ int cgroup_compare_controllers(struct cgroup_controller *cgca, struct cgroup_con
 
 int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b)
 {
-	int i;
+	int i, j;
 
 	if (!cgroup_a || !cgroup_b)
 		return ECGINVAL;
@@ -440,9 +440,22 @@ int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b)
 
 	for (i = 0; i < cgroup_a->index; i++) {
 		struct cgroup_controller *cgca = cgroup_a->controller[i];
-		struct cgroup_controller *cgcb = cgroup_b->controller[i];
+		bool found_match = false;
 
-		if (cgroup_compare_controllers(cgca, cgcb))
+		/*
+		 * Don't penalize the user if the controllers are in different order
+		 * from cgroup_a to cgroup_b
+		 */
+		for (j = 0; j < cgroup_b->index; j++) {
+			struct cgroup_controller *cgcb = cgroup_b->controller[j];
+
+			if (cgroup_compare_controllers(cgca, cgcb) == 0) {
+				found_match = true;
+				break;
+			}
+		}
+
+		if (!found_match)
 			return ECGCONTROLLERNOTEQUAL;
 	}
 
