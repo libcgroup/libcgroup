@@ -604,7 +604,7 @@ int cgroup_set_value_bool(struct cgroup_controller *controller, const char *name
 	int ret;
 	int i;
 
-	if (!controller)
+	if (!controller || !name)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
