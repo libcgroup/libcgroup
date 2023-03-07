@@ -60,6 +60,18 @@ class Controller:
 
         return out_str
 
+    def __eq__(self, other):
+        if not isinstance(other, Controller):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if self.settings != other.settings:
+            return False
+
+        return True
+
 cdef class Cgroup:
     """ Python object representing a libcgroup cgroup """
     cdef cgroup.cgroup * _cgp
@@ -99,6 +111,24 @@ cdef class Cgroup:
             out_str += indent(str(self.controllers[ctrl_key]), 4)
 
         return out_str
+
+    def __eq__(self, other):
+        if not isinstance(other, Cgroup):
+            return False
+
+        if self.name != other.name:
+            return False
+
+        if self.version != other.version:
+            return False
+
+        if self.controllers != other.controllers:
+            return False
+
+        if not self.compare(other):
+            return False
+
+        return True
 
     @staticmethod
     def library_version():
@@ -543,6 +573,26 @@ cdef class Cgroup:
         Cgroup.cgroup_init()
         cgroup.cgroup_set_default_systemd_cgroup()
 
+    cdef compare(self, Cgroup other):
+        """Compare this cgroup instance with another cgroup instance
+
+        Arguments:
+        other - other cgroup instance to be compared
+
+        Return:
+        Returns true if the cgroups are equal.  False otherwise
+
+        Description:
+        Invokes the libcgroup C function, cgroup_compare_cgroup().
+        cgroup_compare_cgroup() walks through the cgroup and compares the
+        cgroup, its controllers, and the values/settings within the
+        controller.
+        """
+        ret = cgroup.cgroup_compare_cgroup(self._cgp, other._cgp)
+        if ret == 0:
+            return True
+        else:
+            return False
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);

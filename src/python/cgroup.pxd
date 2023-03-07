@@ -103,4 +103,6 @@ cdef extern from "libcgroup.h":
                              const cgroup_systemd_scope_opts * const opts)
 
     void cgroup_set_default_systemd_cgroup()
+
+    int cgroup_compare_cgroup(cgroup *cgroup_a, cgroup *cgroup_b)
 # vim: set et ts=4 sw=4:
