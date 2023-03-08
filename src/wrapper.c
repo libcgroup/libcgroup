@@ -575,7 +575,7 @@ int cgroup_get_value_bool(struct cgroup_controller *controller, const char *name
 {
 	int i;
 
-	if (!controller)
+	if (!controller || !name || !value)
 		return ECGINVAL;
 
 	for (i = 0; i < controller->index; i++) {
