@@ -592,3 +592,59 @@ TEST_F(APIArgsTest, API_cgroup_set_value_bool)
 
 	free(name);
 }
+
+/**
+ * Test arguments passed to get a controller's setting
+ * @param APIArgsTest googletest test case name
+ * @param API_cgroup_get_value_bool test name
+ *
+ * This test will pass a combination of valid and NULL as
+ * arguments to cgroup_get_value_bool() and check if it
+ * handles it gracefully.
+ */
+TEST_F(APIArgsTest, API_cgroup_get_value_bool)
+{
+	const char * const cg_name = "FuzzerCgroup";
+	struct cgroup_controller * cgc = NULL;
+	const char * const cg_ctrl = "cpuset";
+	struct cgroup *cgroup = NULL;
+	char * name = NULL;
+	bool value;
+	int ret;
+
+	// case 1
+	// cgc = NULL, name = NULL, value = NULL
+	ret = cgroup_get_value_bool(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 2
+	// cgc = valid, name = NULL, value = NULL
+	cgroup = cgroup_new_cgroup(cg_name);
+	ASSERT_NE(cgroup, nullptr);
+
+	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	ASSERT_NE(cgroup, nullptr);
+
+	// set cpuset.cpu_exclusive, so that cgc->index > 0
+	ret = cgroup_set_value_bool(cgc, "cpuset.cpu_exclusive", 0);
+	ASSERT_EQ(ret, 0);
+
+	ret = cgroup_get_value_bool(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 3
+	// cgc = valid, name = valid, value = NULL
+	name = strdup("cpuset.cpu_exclusive");
+	ASSERT_NE(name, nullptr);
+
+	ret = cgroup_get_value_bool(cgc, name, NULL);
+	ASSERT_EQ(ret, 50011);
+
+	// case 4
+	// cgc = valid, name = valid, value = NULL
+	free(name);
+	name = NULL;
+
+	ret = cgroup_get_value_bool(cgc, name, &value);
+	ASSERT_EQ(ret, 50011);
+}
