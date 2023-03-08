@@ -1113,6 +1113,25 @@ class Cgroup(object):
 
         return True
 
+    # Method to enable or disable controllers in the subtree control file
+    @staticmethod
+    def subtree_control(config, cgname, controllers, enable=True, ignore_systemd=False):
+        if isinstance(controllers, str):
+            controllers = [controllers]
+        elif isinstance(controllers, list):
+            pass
+        else:
+            raise ValueError('Unsupported controller value')
+
+        if enable:
+            enable_char = '+'
+        else:
+            enable_char = '-'
+
+        for ctrl in controllers:
+            Cgroup.set(config, cgname, 'cgroup.subtree_control',
+                       '{}{}'.format(enable_char, ctrl), ignore_systemd=ignore_systemd)
+
 
 class CgroupError(Exception):
     def __init__(self, message):
