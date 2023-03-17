@@ -594,6 +594,39 @@ cdef class Cgroup:
         else:
             return False
 
+    def get_procs(self):
+        """Get the processes in this cgroup
+
+        Return:
+        Returns an integer list of PIDs
+
+        Description:
+        Invokes the libcgroup C function, cgroup_get_procs().
+        cgroup_get_procs() reads each controller's cgroup.procs file
+        in the cgroup sysfs.  The results are then combined together
+        into a standard Python list of integers.
+
+        Note:
+        Reads from the cgroup sysfs
+        """
+        pid_list = list()
+        cdef pid_t *pids
+        cdef int size
+
+        for ctrl_key in self.controllers:
+            ret = cgroup.cgroup_get_procs(c_str(self.name),
+                        c_str(self.controllers[ctrl_key].name), &pids, &size)
+            if ret is not 0:
+                raise RuntimeError("cgroup_get_procs failed: {}".format(ret))
+
+            for i in range(0, size):
+                pid_list.append(int(pids[i]))
+
+        # Remove duplicates
+        pid_list = [*set(pid_list)]
+
+        return pid_list
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 

@@ -105,4 +105,6 @@ cdef extern from "libcgroup.h":
     void cgroup_set_default_systemd_cgroup()
 
     int cgroup_compare_cgroup(cgroup *cgroup_a, cgroup *cgroup_b)
+
+    int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 # vim: set et ts=4 sw=4:
