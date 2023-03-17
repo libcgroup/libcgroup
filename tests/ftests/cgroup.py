@@ -441,8 +441,15 @@ class Cgroup(object):
         if ignore_systemd:
             cmd.append('-b')
 
-        cmd.append('-g')
-        cmd.append('{}:{}'.format(controller, cgname))
+        if isinstance(controller, str):
+            cmd.append('-g')
+            cmd.append('{}:{}'.format(controller, cgname))
+        elif isinstance(controller, list):
+            controller = ','.join(controller)
+            cmd.append('-g')
+            cmd.append('{}:{}'.format(controller, cgname))
+        else:
+            raise ValueError('Unsupported controller format: {}'.format(type(controller)))
 
         if isinstance(pid_list, str):
             cmd.append(pid_list)
