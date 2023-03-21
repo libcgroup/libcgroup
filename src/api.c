@@ -2287,41 +2287,73 @@ static int cg_set_control_value(char *path, const char *val)
  *
  * @param base The full path to the base of this cgroup
  * @param controller The controller whose values are being updated
+ * @param ignore_non_dirty_values If set skips writing non-dirty controller settings
  */
 STATIC int cgroup_set_values_recursive(const char * const base,
 				       const struct cgroup_controller * const controller,
-				       bool ignore_non_dirty_failures)
+				       bool ignore_non_dirty_values)
 {
+	struct control_value *cv;
+	struct stat path_stat;
 	int ret, j, error = 0;
 	char *path = NULL;
 
 	for (j = 0; j < controller->index; j++) {
-		ret = asprintf(&path, "%s%s", base, controller->values[j]->name);
+		cv = controller->values[j];
+
+		/*
+		 * ignore_non_dirty_values is set while writing into
+		 * existing cgroup to modify controller settings and
+		 * unset during cgroup creation.  The subtle difference
+		 * is that dirty flag is unset for all the controller
+		 * settings during cgroup creation, whereas some or all
+		 * controller settings have the dirty flag set during
+		 * modification.
+		 *
+		 * Be careful with ignore_non_dirty_values flag, setting
+		 * it writing only the controller settings that has it
+		 * dirty value set.
+		 */
+		if (ignore_non_dirty_values && cv->dirty == false)
+			continue;
+
+		/* We don't support, writing multiline settings */
+		if (strcspn(cv->value, "\n")  < (strlen(cv->value) - 1))
+			continue;
+
+		ret = asprintf(&path, "%s%s", base, cv->name);
 		if (ret < 0) {
 			last_errno = errno;
 			error = ECGOTHER;
 			goto err;
 		}
-		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path,
-			   controller->values[j]->value, ret);
 
-		error = cg_set_control_value(path, controller->values[j]->value);
+		/* skip read-only settings */
+		ret = (stat(path, &path_stat));
+		if (ret < 0) {
+			last_errno = errno;
+			error = ECGROUPVALUENOTEXIST;;
+			goto err;
+		}
+
+		if (!(path_stat.st_mode & S_IWUSR))
+			continue;
+
+		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path, cv->value, ret);
+
+		error = cg_set_control_value(path, cv->value);
 		free(path);
 		path = NULL;
 
-		if (error && ignore_non_dirty_failures && !controller->values[j]->dirty) {
-			/*
-			 * We failed to set this value, but it wasn't marked
-			 * as dirty, so ignore the failure.
-			 */
-			error = 0;
-			continue;
-		}
-
-		if (error)
+		if (error) {
+			/* Ignore the errors on depreciated settings */
+			if (last_errno == EOPNOTSUPP) {
+				error = 0;
+				continue;
+			}
 			goto err;
-
-		controller->values[j]->dirty = false;
+		}
+		cv->dirty = false;
 	}
 
 err:
