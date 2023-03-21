@@ -2630,8 +2630,11 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
 		} else {
 			dst_val->prev_name = NULL;
 		}
-
-		dst_val->dirty = src_val->dirty;
+		/*
+		 * set dirty flag unconditionally, as we overwrite
+		 * destination controller values.
+		 */
+		dst_val->dirty = true;
 	}
 
 	return ret;
