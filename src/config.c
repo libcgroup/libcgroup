@@ -2079,8 +2079,8 @@ static int remove_systemd_default_cgroup_file(void)
  * cgroup_set_default_systemd_cgroup() for setting
  * systemd_default_cgroup used to form the cgroup path.
  */
-static int cgroup_write_systemd_default_cgroup(const char * const slice,
-					       const char * const scope)
+int cgroup_write_systemd_default_cgroup(const char * const slice,
+					const char * const scope)
 {
 	FILE *systemd_def_cgrp_f;
 	int ret, len;

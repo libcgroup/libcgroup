@@ -119,6 +119,18 @@ int cgroup_add_systemd_opts(const char * const conf, const char * const value);
  */
 void cgroup_cleanup_systemd_opts(void);
 
+/*
+ * Write the specified slice and scope to the libcgroup systemd run file. This
+ * slice and scope will then be used as the default cgroup root. Subsequent
+ * libcgroup commands, cgget, etc., will utilize this slice and scope when
+ * constructing the libcgroup path
+ *
+ * @param slice Slice name, e.g. libcgroup.slice
+ * @param scope Scope name, e.g. database.scope
+ */
+int cgroup_write_systemd_default_cgroup(const char * const slice,
+				        const char * const scope);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
