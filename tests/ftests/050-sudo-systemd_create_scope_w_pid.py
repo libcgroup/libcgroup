@@ -9,10 +9,10 @@
 
 from cgroup import Cgroup as CgroupCli
 from cgroup import CgroupVersion
-from run import Run, RunError
 from libcgroup import Cgroup
 from systemd import Systemd
 from process import Process
+from run import RunError
 import ftests
 import consts
 import sys
