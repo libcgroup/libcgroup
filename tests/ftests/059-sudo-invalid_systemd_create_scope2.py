@@ -11,7 +11,6 @@ from cgroup import CgroupVersion as CgroupCliVersion
 from libcgroup import Cgroup, Version
 import ftests
 import consts
-import utils
 import sys
 import os
 
@@ -56,7 +55,6 @@ def test(config):
     else:
         result = consts.TEST_FAILED
         cause = 'An invalid cgroup name unexpectedly passed: {}'.format(cg1.name)
-
 
     cg2 = Cgroup("Invalid/TooMany/Slashes", Version.CGROUP_V2)
     cg2.add_controller(CONTROLLER)
