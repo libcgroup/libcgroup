@@ -42,10 +42,65 @@ static void usage(int status, const char *program_name)
 	info("  -s, --tperm=mode		Tasks file permissions\n");
 	info("  -t <tuid>:<tgid>		Owner of the tasks file\n");
 #ifdef WITH_SYSTEMD
-	info("  -b				Ignore default systemd ");
+	info("  -b				Ignore default systemd");
+	info("delegate hierarchy\n");
+	info("  -c, --scope			Create a delegated systemd scope\n");
+	info("  -S, --setdefault		Set this scope as the default scope ");
 	info("delegate hierarchy\n");
 #endif
 }
+
+#ifdef WITH_SYSTEMD
+static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
+				int set_default)
+{
+	struct cgroup_systemd_scope_opts opts;
+	char slice[FILENAME_MAX];
+	char *scope;
+	int ret;
+	int len;
+
+	ret = cgroup_set_default_scope_opts(&opts);
+	if (ret)
+		return ret;
+
+	ret = cgroup_create_scope2(cg, 0, &opts);
+	if (!ret && set_default) {
+		scope = strstr(cg->name, "/");
+		len = strlen(cg->name) - strlen(scope);
+		strncpy(slice, cg->name, len);
+		slice[len] = '\0';
+		scope++;
+
+		ret = cgroup_write_systemd_default_cgroup(slice, scope);
+		/*
+		 * cgroup_write_systemd_default_cgroup() returns 0 on failure
+		 */
+		if (ret == 0) {
+			err("%s: failed to write default %s/%s to ",
+			    prog_name, slice, scope);
+			err("/var/run/libcgroup/systemd\n");
+			ret = ECGINVAL;
+			goto err;
+		}
+
+		/*
+		 * the default was successfully set.  override the return of "1" back to
+		 * the usual "0" on success.
+		 */
+		ret = 0;
+        }
+
+err:
+	return ret;
+}
+#else
+static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
+				int set_default)
+{
+	return ECGINVAL;
+}
+#endif /* WITH_SYSTEMD */
 
 int main(int argc, char *argv[])
 {
@@ -57,6 +112,10 @@ int main(int argc, char *argv[])
 		{"dperm",	required_argument, NULL, 'd'},
 		{"fperm",	required_argument, NULL, 'f'},
 		{"tperm",	required_argument, NULL, 's'},
+#ifdef WITH_SYSTEMD
+		{"scope",	      no_argument, NULL, 'c'},
+		{"setdefault",	      no_argument, NULL, 'S'},
+#endif /* WITH_SYSTEMD */
 		{0, 0, 0, 0},
 	};
 
@@ -64,6 +123,8 @@ int main(int argc, char *argv[])
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
 
 	int ignore_default_systemd_delegate_slice = 0;
+	int create_scope = 0;
+	int set_default_scope = 0;
 
 	struct cgroup_group_spec **cgroup_list;
 	struct cgroup_controller *cgc;
@@ -98,10 +159,16 @@ int main(int argc, char *argv[])
 
 #ifdef WITH_SYSTEMD
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:b", long_opts, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:bcS", long_opts, NULL)) > 0) {
 		switch (c) {
 		case 'b':
 			ignore_default_systemd_delegate_slice = 1;
+			break;
+		case 'c':
+			create_scope = 1;
+			break;
+		case 'S':
+			set_default_scope = 1;
 			break;
 #else
 	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:", long_opts, NULL)) > 0) {
@@ -155,6 +222,20 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#ifdef WITH_SYSTEMD
+	if (ignore_default_systemd_delegate_slice && create_scope) {
+		err("%s: \"-b\" and \"-c\" are mutually exclusive\n", argv[0]);
+		ret = EXIT_BADARGS;
+		goto err;
+	}
+
+	if (set_default_scope && !create_scope) {
+		err("%s: \"-S\" requires \"-c\" to be provided\n", argv[0]);
+		ret = EXIT_BADARGS;
+		goto err;
+	}
+#endif
+
 	/* no cgroup name */
 	if (argv[optind]) {
 		err("%s: wrong arguments (%s)\n", argv[0], argv[optind]);
@@ -169,8 +250,8 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	/* this is false always for disable-systemd */
-	if (!ignore_default_systemd_delegate_slice)
+	/* this will always be false if WITH_SYSTEMD is not defined */
+	if (!create_scope && !ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
 
 	/* for each new cgroup */
@@ -221,7 +302,11 @@ int main(int argc, char *argv[])
 		if (dirm_change | filem_change)
 			cgroup_set_permissions(cgroup, dir_mode, file_mode, tasks_mode);
 
-		ret = cgroup_create_cgroup(cgroup, 0);
+		if (create_scope) {
+			ret = create_systemd_scope(cgroup, argv[0], set_default_scope);
+		} else {
+			ret = cgroup_create_cgroup(cgroup, 0);
+		}
 		if (ret) {
 			err("%s: can't create cgroup %s: %s\n", argv[0], cgroup->name,
 			    cgroup_strerror(ret));
