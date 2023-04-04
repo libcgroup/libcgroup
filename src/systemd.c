@@ -88,12 +88,12 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 			const struct cgroup_systemd_scope_opts * const opts)
 {
 	sd_bus_message *msg = NULL, *reply = NULL;
+	int ret = 0, sdret = 0, cgret = ECGFAIL;
 	sd_bus_error error = SD_BUS_ERROR_NULL;
 	const char *job_path = NULL;
 	struct timespec start, now;
 	sd_bus *bus = NULL;
 	pid_t child_pid;
-	int ret = 0;
 
 	if (!scope_name || !slice_name || !opts)
 		return ECGINVAL;
@@ -141,79 +141,79 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	}
 	cgroup_dbg("pid %d will be placed in scope %s\n", child_pid, scope_name);
 
-	ret = sd_bus_default_system(&bus);
-	if (ret < 0) {
+	sdret = sd_bus_default_system(&bus);
+	if (sdret < 0) {
 		cgroup_err("failed to open the system bus: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_match_signal(bus, NULL, sender, path, interface,
-				  "JobRemoved", job_removed_callback, &job_path);
-	if (ret < 0) {
+	sdret = sd_bus_match_signal(bus, NULL, sender, path, interface,
+				    "JobRemoved", job_removed_callback, &job_path);
+	if (sdret < 0) {
 		cgroup_err("failed to install match callback: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_new_method_call(bus, &msg, sender, path, interface,
-					     "StartTransientUnit");
-	if (ret < 0) {
+	sdret = sd_bus_message_new_method_call(bus, &msg, sender, path, interface,
+					       "StartTransientUnit");
+	if (sdret < 0) {
 		cgroup_err("failed to create the systemd msg: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_append(msg, "ss", scope_name, modes[opts->mode]);
-	if (ret < 0) {
+	sdret = sd_bus_message_append(msg, "ss", scope_name, modes[opts->mode]);
+	if (sdret < 0) {
 		cgroup_err("failed to append the scope name: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_open_container(msg, 'a', "(sv)");
-	if (ret < 0) {
+	sdret = sd_bus_message_open_container(msg, 'a', "(sv)");
+	if (sdret < 0) {
 		cgroup_err("failed to open container: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_append(msg, "(sv)", "Description", "s",
-				    "scope created by libcgroup");
-	if (ret < 0) {
+	sdret = sd_bus_message_append(msg, "(sv)", "Description", "s",
+				      "scope created by libcgroup");
+	if (sdret < 0) {
 		cgroup_err("failed to append the description: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_append(msg, "(sv)", "PIDs", "au", 1, child_pid);
-	if (ret < 0) {
+	sdret = sd_bus_message_append(msg, "(sv)", "PIDs", "au", 1, child_pid);
+	if (sdret < 0) {
 		cgroup_err("failed to append the PID: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_append(msg, "(sv)", "Slice", "s", slice_name);
-	if (ret < 0) {
+	sdret = sd_bus_message_append(msg, "(sv)", "Slice", "s", slice_name);
+	if (sdret < 0) {
 		cgroup_err("failed to append the slice: %d\n", errno);
 		goto out;
 	}
 
 	if (opts->delegated == 1) {
-		ret = sd_bus_message_append(msg, "(sv)", "Delegate", "b", 1);
-		if (ret < 0) {
+		sdret = sd_bus_message_append(msg, "(sv)", "Delegate", "b", 1);
+		if (sdret < 0) {
 			cgroup_err("failed to append delegate: %d\n", errno);
 			goto out;
 		}
 	}
 
-	ret = sd_bus_message_close_container(msg);
-	if (ret < 0) {
+	sdret = sd_bus_message_close_container(msg);
+	if (sdret < 0) {
 		cgroup_err("failed to close the container: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_message_append(msg, "a(sa(sv))", 0);
-	if (ret < 0) {
+	sdret = sd_bus_message_append(msg, "a(sa(sv))", 0);
+	if (sdret < 0) {
 		cgroup_err("failed to append aux structure: %d\n", errno);
 		goto out;
 	}
 
-	ret = sd_bus_call(bus, msg, 0, &error, &reply);
-	if (ret < 0) {
+	sdret = sd_bus_call(bus, msg, 0, &error, &reply);
+	if (sdret < 0) {
 		cgroup_err("sd_bus_call() failed: %d\n",
 			   sd_bus_message_get_errno(msg));
 		cgroup_err("error message: %s\n", error.message);
@@ -221,8 +221,8 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	}
 
 	/* Receive the job_path from systemd */
-	ret = sd_bus_message_read(reply, "o", &job_path);
-	if (ret < 0) {
+	sdret = sd_bus_message_read(reply, "o", &job_path);
+	if (sdret < 0) {
 		cgroup_err("failed to read reply: %d\n", errno);
 		goto out;
 	}
@@ -232,25 +232,25 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	ret = clock_gettime(CLOCK_MONOTONIC, &start);
 	if (ret < 0) {
 		cgroup_err("Failed to get time: %d\n", errno);
-		ret = ECGFAIL;
+		cgret = ECGOTHER;
 		goto out;
 	}
 
 	/* The callback will null out the job_path pointer on completion */
 	while(job_path) {
-		ret = sd_bus_process(bus, NULL);
-		if (ret < 0) {
+		sdret = sd_bus_process(bus, NULL);
+		if (sdret < 0) {
 			cgroup_err("failed to process the sd bus: %d\n", errno);
 			goto out;
 		}
 
-		if (ret == 0) {
+		if (sdret == 0) {
 			/*
 			 * Per the sd_bus_wait() man page, call this function after sd_bus_process
 			 * returns zero. The wait time (usec) was somewhat arbitrarily chosen
 			 */
-			ret = sd_bus_wait(bus, 10);
-			if (ret < 0) {
+			sdret = sd_bus_wait(bus, 10);
+			if (sdret < 0) {
 				cgroup_err("failed to wait for sd bus: %d\n", errno);
 				goto out;
 			}
@@ -259,21 +259,20 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 		ret = clock_gettime(CLOCK_MONOTONIC, &now);
 		if (ret < 0) {
 			cgroup_err("Failed to get time: %d\n", errno);
-			ret = ECGFAIL;
+			cgret = ECGOTHER;
 			goto out;
 		}
 
 		if (elapsed_time(&start, &now) > USEC_PER_SEC) {
 			cgroup_err("The create scope command timed out\n");
-			ret = ECGFAIL;
 			goto out;
 		}
 	}
 
-	ret = 0;
+	cgret = 0;
 
 out:
-	if (ret && opts->pid < 0)
+	if (cgret && opts->pid < 0)
 		kill(child_pid, SIGTERM);
 
 	sd_bus_error_free(&error);
@@ -281,7 +280,7 @@ out:
 	sd_bus_message_unref(reply);
 	sd_bus_unref(bus);
 
-	return ret;
+	return cgret;
 }
 
 int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
