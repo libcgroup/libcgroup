@@ -127,7 +127,7 @@ class Cgroup(object):
     def create(config, controller_list, cgname, user_name=None,
                group_name=None, dperm=None, fperm=None, tperm=None,
                tasks_user_name=None, tasks_group_name=None, cghelp=False,
-               ignore_systemd=False):
+               ignore_systemd=False, create_scope=False, set_default_scope=False):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
@@ -160,8 +160,19 @@ class Cgroup(object):
         if cghelp:
             cmd.append('-h')
 
+        # -b and -c are mutually exclusive but the safety check is done in libcgroup
+        # itself and thus doesn't need to be done here
+
         if ignore_systemd:
             cmd.append('-b')
+
+        if create_scope:
+            cmd.append('-c')
+
+        # -S requires -c to be provided, but this is checked in libcgroup itself
+
+        if set_default_scope:
+            cmd.append('-S')
 
         if controller_list:
             controllers_and_path = '{}:{}'.format(
@@ -175,14 +186,23 @@ class Cgroup(object):
         if config.args.container:
             config.container.run(cmd)
         else:
-            Run.run(cmd)
+            if create_scope:
+                # creating a scope causes libcgroup to create a child process.
+                # subprocess.Popen.communicate() will not return until the created
+                # process and all of its children complete.  Get around this by
+                # timing out the operation
+                Run.run(cmd, timeout=5)
+            else:
+                Run.run(cmd)
 
     # This is a simple wrapper, that calls Cgroup.create() to create the
     # cgroup and cgroup_exists(), which builds the cgroup path and returns
     # True if the cgroup exists, False otherwise
     @staticmethod
-    def create_and_validate(config, ctrl_name, cgroup_name, ignore_systemd=False):
-        Cgroup.create(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd)
+    def create_and_validate(config, ctrl_name, cgroup_name, ignore_systemd=False,
+                            create_scope=False, set_default_scope=False):
+        Cgroup.create(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd,
+                      create_scope=create_scope, set_default_scope=set_default_scope)
         return Cgroup.exists(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd)
 
     @staticmethod
