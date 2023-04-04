@@ -6,13 +6,14 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from subprocess import TimeoutExpired
 from log import Log
 import subprocess
 
 
 class Run(object):
     @staticmethod
-    def run(command, shell_bool=False, ignore_profiling_errors=True):
+    def run(command, shell_bool=False, ignore_profiling_errors=True, timeout=None):
         if shell_bool:
             if isinstance(command, str):
                 # nothing to do.  command is already formatted as a string
@@ -25,11 +26,34 @@ class Run(object):
         subproc = subprocess.Popen(command, shell=shell_bool,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        out, err = subproc.communicate()
-        ret = subproc.returncode
 
-        out = out.strip().decode('UTF-8')
-        err = err.strip().decode('UTF-8')
+        if timeout:
+            try:
+                out, err = subproc.communicate(timeout=timeout)
+                ret = subproc.returncode
+
+                out = out.strip().decode('UTF-8')
+                err = err.strip().decode('UTF-8')
+            except TimeoutExpired as te:
+                if te.stdout:
+                    out = te.stdout.strip().decode('UTF-8')
+                else:
+                    out = ''
+                if te.stderr:
+                    err = te.stderr.strip().decode('UTF-8')
+                else:
+                    err = ''
+
+                if len(err):
+                    ret = -1
+                else:
+                    ret = 0
+        else:
+            out, err = subproc.communicate()
+            ret = subproc.returncode
+
+            out = out.strip().decode('UTF-8')
+            err = err.strip().decode('UTF-8')
 
         if shell_bool:
             Log.log_debug(
