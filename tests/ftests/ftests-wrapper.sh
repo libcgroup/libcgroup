@@ -63,14 +63,19 @@ RET1=$?
 	-n Libcg"$RANDOM"
 RET2=$?
 
-pushd ../../src || cleanup $AUTOMAKE_HARD_ERROR
-PATH="$PATH:$(pwd)"
-export PATH
-popd || cleanup $AUTOMAKE_HARD_ERROR
+if [ -z "$srcdir" ]; then
+	# $srcdir is set by automake but will likely be empty when run by hand and
+	# that's fine
+	srcdir=""
+else
+	srcdir=$srcdir"/"
+fi
 
-sudo PATH="$PATH" PYTHONPATH="$PYTHONPATH" ./ftests.py -l 10 -s "sudo" \
+sudo cp $srcdir../../src/libcgroup_systemd_idle_thread /bin
+sudo PYTHONPATH="$PYTHONPATH" ./ftests.py -l 10 -s "sudo" \
 	-L "$START_DIR/ftests-nocontainer.py.sudo.log" --no-container -n Libcg"$RANDOM"
 RET3=$?
+sudo rm /bin/libcgroup_systemd_idle_thread
 
 if [ "$START_DIR" != "$SCRIPT_DIR" ]; then
 	rm -f "$START_DIR"/*.py

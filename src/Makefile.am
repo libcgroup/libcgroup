@@ -7,6 +7,7 @@ SUBDIRS = . daemon pam tools
 if ENABLE_PYTHON
 SUBDIRS += python
 endif
+EXTRA_DIST = libcgroup_systemd_idle_thread
 
 # generate parse.h  from parse.y
 AM_YFLAGS = -d
