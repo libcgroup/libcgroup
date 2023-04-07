@@ -1105,11 +1105,8 @@ class Cgroup(object):
 
         return False
 
-    # This function builds absolute path of the cgroup, using the default
-    # systemd path and checks if the cgroup exists. The function can build
-    # path for all three cgroup setup modes, including empty cgroup v2.
     @staticmethod
-    def exists(config, ctrl_name, cgroup_name, ignore_systemd=False):
+    def __exists(config, ctrl_name, cgroup_name, ignore_systemd):
         ctrl_mnt = Cgroup.get_controller_mount_point(ctrl_name)
 
         if (ignore_systemd):
@@ -1139,6 +1136,24 @@ class Cgroup(object):
             return False
 
         return True
+
+    # This function builds absolute path of the cgroup, using the default
+    # systemd path and checks if the cgroup exists. The function can build
+    # path for all three cgroup setup modes, including empty cgroup v2.
+    @staticmethod
+    def exists(config, ctrl_name, cgroup_name, ignore_systemd=False):
+        if ctrl_name is None or type(ctrl_name) == str:
+            return Cgroup.__exists(config, ctrl_name, cgroup_name, ignore_systemd)
+        elif type(ctrl_name) == list:
+            for ctrl in ctrl_name:
+                if not Cgroup.__exists(config, ctrl, cgroup_name, ignore_systemd):
+                    # if any of the controllers don't exist, fail the check
+                    return False
+
+            # all of the controllers exist,  Yippee
+            return True
+        else:
+            raise ValueError("Unsupported type: {}".format(type(ctrl_name)))
 
     # Method to enable or disable controllers in the subtree control file
     @staticmethod
