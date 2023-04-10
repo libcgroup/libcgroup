@@ -35,7 +35,6 @@ def prereqs(config):
     if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the cgroup v2'
-        return result, cause
 
     return result, cause
 
@@ -45,8 +44,6 @@ def setup(config):
     Cgroup.create(config, CONTROLLER, CHILD_CGPATH)
 
     Cgroup.set_and_validate(config, CHILD_CGPATH, SETTING, AFTER)
-
-    return consts.TEST_PASSED, None
 
 
 def test(config):

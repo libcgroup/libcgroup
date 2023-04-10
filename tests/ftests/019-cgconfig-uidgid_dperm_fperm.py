@@ -34,10 +34,7 @@ CONFIG_FILE_NAME = os.path.join(os.getcwd(), '019cgconfig.conf')
 
 
 def prereqs(config):
-    result = consts.TEST_PASSED
-    cause = None
-
-    return result, cause
+    pass
 
 
 def setup(config):
@@ -98,7 +95,6 @@ def test(config):
                     'Directory permissions failed.  Expected {}, received {}\n'
                     ''.format(DPERM, dperm)
                 )
-        return result, cause
 
     return result, cause
 
@@ -120,9 +116,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
+    prereqs(config)
 
     try:
         setup(config)

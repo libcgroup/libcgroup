@@ -26,13 +26,12 @@ VALUE2 = '400'
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
-        return result, cause
-
-    result = consts.TEST_PASSED
-    cause = None
 
     return result, cause
 
@@ -113,7 +112,6 @@ def test(config):
                     ''.format(SETTING2, VALUE2,
                               cg2.controllers[CONTROLLER].settings[SETTING2])
                 )
-        return result, cause
 
     return result, cause
 

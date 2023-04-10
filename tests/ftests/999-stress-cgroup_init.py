@@ -83,9 +83,6 @@ def teardown(config):
 
 def main(config):
     [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
     setup(config)
     [result, cause] = test(config)
     teardown(config)

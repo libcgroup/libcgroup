@@ -15,11 +15,11 @@ import os
 
 
 def prereqs(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def setup(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def test(config):
@@ -41,7 +41,6 @@ def test(config):
     if not isinstance(release, int):
         result = consts.TEST_FAILED
         cause = 'Release version failed. Received {}'.format(release)
-        return result, cause
 
     return result, cause
 
@@ -51,10 +50,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
+    prereqs(config)
     setup(config)
     [result, cause] = test(config)
     teardown(config)

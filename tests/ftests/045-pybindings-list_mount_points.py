@@ -17,19 +17,18 @@ CGNAME = '045bindings'
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
-        return result, cause
-
-    result = consts.TEST_PASSED
-    cause = None
 
     return result, cause
 
 
 def setup(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def test(config):
@@ -46,7 +45,7 @@ def test(config):
 
 
 def teardown(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def main(config):

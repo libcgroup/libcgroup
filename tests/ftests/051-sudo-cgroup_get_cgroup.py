@@ -22,6 +22,9 @@ CONTROLLER = 'cpu'
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
@@ -30,10 +33,6 @@ def prereqs(config):
     if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
         cause = 'This test requires cgroup v2'
-        return result, cause
-
-    result = consts.TEST_PASSED
-    cause = None
 
     return result, cause
 
@@ -66,8 +65,6 @@ def teardown(config, result):
         cg.delete()
     except RuntimeError:
         pass
-
-    return consts.TEST_PASSED, None
 
 
 def main(config):

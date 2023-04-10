@@ -21,7 +21,7 @@ GRANDCHILD = 'grandchildcg'
 
 def prereqs(config):
     # This test should run on both cgroup v1 and v2
-    return consts.TEST_PASSED, None
+    pass
 
 
 def setup(config):
@@ -53,10 +53,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
+    prereqs(config)
     setup(config)
     [result, cause] = test(config)
     teardown(config)

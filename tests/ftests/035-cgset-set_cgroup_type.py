@@ -43,8 +43,6 @@ def setup(config):
     Cgroup.create(config, CONTROLLER, CGNAME)
     Cgroup.get_and_validate(config, CGNAME, SETTING, BEFORE)
 
-    return consts.TEST_PASSED, None
-
 
 def test(config):
     Cgroup.set_and_validate(config, CGNAME, SETTING, AFTER)
@@ -62,9 +60,6 @@ def main(config):
         return [result, cause]
 
     setup(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
     [result, cause] = test(config)
     teardown(config)
 

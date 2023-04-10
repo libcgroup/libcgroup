@@ -20,12 +20,13 @@ CGNAME = '034cgexec'
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
     if not config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test must be run within a container'
-        return result, cause
 
-    return consts.TEST_PASSED, None
+    return result, cause
 
 
 def setup(config):
@@ -33,6 +34,9 @@ def setup(config):
 
 
 def test(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     config.process.create_process_in_cgroup(config, CONTROLLER, CGNAME,
                                             cgclassify=False)
 
@@ -48,9 +52,8 @@ def test(config):
     if 'Run the task in given control group(s)' not in ret:
         result = consts.TEST_FAILED
         cause = 'Failed to print cgexec help text: {}'.format(ret)
-        return result, cause
 
-    return consts.TEST_PASSED, None
+    return result, cause
 
 
 def teardown(config):

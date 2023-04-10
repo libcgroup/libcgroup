@@ -39,7 +39,6 @@ def prereqs(config):
     if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the cgroup v1 cpuset controller'
-        return result, cause
 
     return result, cause
 
@@ -93,7 +92,6 @@ def test(config):
                     'File permissions failed.  Expected {}, received {}\n'
                     ''.format(TPERM, tperm)
                 )
-        return result, cause
 
     return result, cause
 

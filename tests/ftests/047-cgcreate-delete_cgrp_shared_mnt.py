@@ -66,7 +66,7 @@ def test(config):
 
 
 def teardown(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def main(config):
