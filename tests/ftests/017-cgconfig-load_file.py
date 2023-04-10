@@ -38,7 +38,6 @@ def prereqs(config):
     if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the cgroup v1 cpu controller'
-        return result, cause
 
     return result, cause
 

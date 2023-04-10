@@ -52,7 +52,6 @@ def prereqs(config):
         # Skip this test because of this
         result = consts.TEST_SKIPPED
         cause = 'See Github Issue #50 - lscgroup lists controllers...'
-        return result, cause
 
     return result, cause
 
@@ -81,7 +80,6 @@ def test(config):
                     "".format(utils.indent(EXPECTED_OUT1, 4),
                               utils.indent(out, 4))
                 )
-        return result, cause
 
     return result, cause
 

@@ -60,7 +60,6 @@ def prereqs(config):
     if not config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test must be run within a container'
-        return result, cause
 
     return result, cause
 

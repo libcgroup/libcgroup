@@ -57,7 +57,6 @@ def prereqs(config):
         # Skip this test because of this
         result = consts.TEST_SKIPPED
         cause = 'See Github Issue #50 - lscgroup lists controllers...'
-        return result, cause
 
     return result, cause
 
@@ -95,7 +94,6 @@ def test(config):
     if 'Usage:' not in ret:
         result = consts.TEST_FAILED
         cause = 'Failed to print help text'
-        return result, cause
 
     return result, cause
 

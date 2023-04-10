@@ -27,13 +27,12 @@ VALUE2 = '50'
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
-        return result, cause
-
-    result = consts.TEST_PASSED
-    cause = None
 
     return result, cause
 
@@ -89,7 +88,6 @@ def test(config):
     if value_v2 != VALUE2:
         result = consts.TEST_FAILED
         cause = 'Expected {}, but received {}'.format(VALUE2, value_v2)
-        return result, cause
 
     return result, cause
 

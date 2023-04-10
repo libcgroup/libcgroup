@@ -31,7 +31,7 @@ def prereqs(config):
 
 
 def setup(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def test(config):
@@ -60,9 +60,6 @@ def main(config):
         return [result, cause]
 
     setup(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
     [result, cause] = test(config)
     teardown(config)
 

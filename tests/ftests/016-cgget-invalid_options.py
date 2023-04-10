@@ -27,7 +27,6 @@ def prereqs(config):
     if not config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test must be run within a container'
-        return result, cause
 
     return result, cause
 
@@ -189,7 +188,6 @@ def test(config):
     if 'Print parameter(s)' not in ret:
         result = consts.TEST_FAILED
         cause = '#7 Failed to print help text'
-        return result, cause
 
     return result, cause
 

@@ -28,7 +28,6 @@ def prereqs(config):
     if CgroupVersion.get_version('memory') != CgroupVersion.CGROUP_V1:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the cgroup v1 memory controller'
-        return result, cause
 
     return result, cause
 
