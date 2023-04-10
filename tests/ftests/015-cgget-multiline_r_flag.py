@@ -21,10 +21,7 @@ VALUE = '512'
 
 
 def prereqs(config):
-    result = consts.TEST_PASSED
-    cause = None
-
-    return result, cause
+    pass
 
 
 def setup(config):
@@ -53,7 +50,6 @@ def test(config):
     if '\tunevictable' not in out:
         result = consts.TEST_FAILED
         cause = 'Unexpected output\n{}'.format(out)
-        return result, cause
 
     return result, cause
 
@@ -63,10 +59,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
+    prereqs(config)
     setup(config)
     [result, cause] = test(config)
     teardown(config)

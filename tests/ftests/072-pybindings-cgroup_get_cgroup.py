@@ -33,7 +33,6 @@ def prereqs(config):
     if Cgroup.cgroup_mode() != Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the unified cgroup v2 hierarchy'
-        return result, cause
 
     return result, cause
 

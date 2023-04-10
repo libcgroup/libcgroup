@@ -38,7 +38,7 @@ def prereqs(config):
 
 
 def setup(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def test(config):
@@ -73,8 +73,6 @@ def test(config):
 
 def teardown(config):
     CgroupCli.delete(config, None, CGNAME)
-
-    return consts.TEST_PASSED, None
 
 
 def main(config):

@@ -30,10 +30,7 @@ CONFIG_FILE_NAME = os.path.join(os.getcwd(), '021cgconfig.conf')
 
 
 def prereqs(config):
-    result = consts.TEST_PASSED
-    cause = None
-
-    return result, cause
+    pass
 
 
 def setup(config):
@@ -67,7 +64,6 @@ def test(config):
     else:
         result = consts.TEST_FAILED
         cause = 'Test case erroneously passed'
-        return result, cause
 
     return result, cause
 
@@ -77,9 +73,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
+    prereqs(config)
 
     try:
         setup(config)

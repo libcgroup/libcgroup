@@ -41,6 +41,9 @@ CTRL_GID = 5791
 
 
 def prereqs(config):
+    result = consts.TEST_PASSED
+    cause = None
+
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
@@ -49,10 +52,6 @@ def prereqs(config):
     if CgroupCliVersion.get_version(CONTROLLER) != CgroupCliVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
         cause = 'This test requires cgroup v2'
-        return result, cause
-
-    result = consts.TEST_PASSED
-    cause = None
 
     return result, cause
 

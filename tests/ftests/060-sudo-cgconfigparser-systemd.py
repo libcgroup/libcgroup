@@ -78,7 +78,7 @@ def prereqs(config):
 
 
 def setup(config):
-    return consts.TEST_PASSED, None
+    pass
 
 
 def write_conf_file(config, configurations):

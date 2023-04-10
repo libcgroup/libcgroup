@@ -54,10 +54,7 @@ TABLE = [
 
 
 def prereqs(config):
-    result = consts.TEST_PASSED
-    cause = None
-
-    return result, cause
+    pass
 
 
 def setup(config):
@@ -92,10 +89,7 @@ def teardown(config):
 
 
 def main(config):
-    [result, cause] = prereqs(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
-
+    prereqs(config)
     setup(config)
     [result, cause] = test(config)
     teardown(config)

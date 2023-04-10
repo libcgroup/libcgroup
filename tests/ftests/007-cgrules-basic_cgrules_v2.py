@@ -36,7 +36,6 @@ def prereqs(config):
     if CgroupVersion.get_version('cpuset') != CgroupVersion.CGROUP_V2:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the cgroup v2 cpuset controller'
-        return result, cause
 
     return result, cause
 
