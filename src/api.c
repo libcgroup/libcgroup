@@ -1865,7 +1865,8 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 	 * an invalid state, under the threaded subtree.
 	 */
 	if (strncmp(cg_type, "domain", len) == 0 ||
-	    strncmp(cg_type, "domain threaded", len) == 0) {
+	    strncmp(cg_type, "domain threaded", len) == 0 ||
+	    strncmp(cg_type, "domain invalid", len) == 0) {
 		snprintf(type, type_sz, "cgroup.procs");
 	} else if (strncmp(cg_type, "threaded", len) == 0) {
 		snprintf(type, type_sz, "cgroup.threads");
