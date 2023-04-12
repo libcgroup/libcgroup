@@ -54,7 +54,6 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 	void InitChildDir(const char dirname[])
 	{
 		char tmp_path[FILENAME_MAX] = {0};
-		FILE *f;
 		int ret;
 
 		/* create the directory */
@@ -62,14 +61,6 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 			 PARENT_DIR, dirname);
 		ret = mkdir(tmp_path, MODE);
 		ASSERT_EQ(ret, 0);
-
-		snprintf(tmp_path, FILENAME_MAX - 1,
-			 "%s/%s/cgroup.subtree_control", PARENT_DIR, dirname);
-
-		f = fopen(tmp_path, "w");
-		ASSERT_NE(f, nullptr);
-		fprintf(f, "cpu io memory pids\n");
-		fclose(f);
 	}
 
 	void InitMountTable(void)
