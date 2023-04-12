@@ -66,15 +66,14 @@ def setup(config):
 
     # With cgroup v2, we can't enable controller for the child cgroup, while
     # a task is attached to test066.scope. Attach the task from test066.scope
-    # to child cgroup SYSTEMD_CGNAME and then enable cpu controller in the parent
-    # and then in the SYSTEMD_CGNAME cgroup, so that the cgroup.get() works
+    # to child cgroup SYSTEMD_CGNAME and then enable cpu controller in the parent,
+    # so that the cgroup.get() works
     Cgroup.set(config, cgname=SYSTEMD_CGNAME, setting='cgroup.procs', value=pid)
 
     Cgroup.set(
                 config, cgname=(os.path.join(SLICE, SCOPE)), setting='cgroup.subtree_control',
                 value='+cpu', ignore_systemd=True
               )
-    Cgroup.set(config, cgname=SYSTEMD_CGNAME, setting='cgroup.subtree_control', value='+cpu')
 
     # create and check if the cgroup was created under the controller root
     if not Cgroup.create_and_validate(config, CONTROLLER, OTHER_CGNAME, ignore_systemd=True):
@@ -133,7 +132,7 @@ def test(config):
     try:
         Cgroup.classify(config, CONTROLLER, SYSTEMD_CGNAME, OTHER_PIDS, ignore_systemd=True)
     except RunError as re:
-        err_str = 'Error changing group of pid {}: No such file or directory'.format(OTHER_PIDS[0])
+        err_str = 'Error changing group of pid {}: Cgroup does not exist'.format(OTHER_PIDS[0])
         if re.stderr != err_str:
             raise re
     else:
@@ -147,7 +146,7 @@ def test(config):
     try:
         Cgroup.classify(config, CONTROLLER, OTHER_CGNAME, SYSTEMD_PIDS[1])
     except RunError as re:
-        err_str = 'Error changing group of pid {}: No such file or directory'.format(
+        err_str = 'Error changing group of pid {}: Cgroup does not exist'.format(
                   SYSTEMD_PIDS[1])
         if re.stderr != err_str:
             raise re
