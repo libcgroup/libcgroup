@@ -754,6 +754,110 @@ out_err:
 	return error;
 }
 
+static int convert_controller_versions(struct cgroup *cgroup)
+{
+	enum cg_version_t current_version, convert_version;
+	struct cgroup *cgrp_cpy, *convert_cgrp = NULL;
+	struct cgroup_controller *cgc;
+	int i, j, ret;
+
+	if (!cgroup)
+		return ECGINVAL;
+
+	/* no controllers added */
+	if (cgroup->index == 0)
+		return ECGINVAL;
+
+	cgrp_cpy = cgroup_new_cgroup(cgroup->name);
+	if (!cgrp_cpy) {
+		cgroup_err("Failed to create cgroup %s\n", cgroup->name);
+		return ECGROUPNOTCREATED;
+	}
+
+	/* copy the non-controllers details */
+	cgrp_cpy->index = 0;
+
+	ret = cgroup_set_uid_gid(cgrp_cpy,
+				 cgroup->tasks_uid, cgroup->tasks_gid,
+				 cgroup->control_uid, cgroup->control_gid);
+	/* cgroup existence is checked, so ignore ret value. */
+
+	cgroup_set_permissions(cgrp_cpy, cgroup->control_dperm,
+			       cgroup->control_fperm, cgroup->task_fperm);
+
+	for (i = 0; i < cgroup->index; i++) {
+		/*
+		 * the controller version settings read from cgconfig.conf,
+		 * may mismatch with the system's controller version. Hence
+		 * assign the convert version (expected version) to the
+		 * system's version of the controller and current version
+		 * to the opposite of convert version.
+		 */
+		convert_version = cgroup->controller[i]->version;
+		current_version = convert_version == CGROUP_V1 ? CGROUP_V2 : CGROUP_V1;
+
+		cgc = cgroup_add_controller(cgrp_cpy, cgroup->controller[i]->name);
+		if (!cgc) {
+			cgroup_err("Failed to allocated controller.\n");
+			ret = ECGFAIL;
+			goto err;
+		}
+
+		for (j = 0; j < cgroup->controller[i]->index; j++) {
+			ret = cgroup_add_value_string(cgc,
+						      cgroup->controller[i]->values[j]->name,
+						      cgroup->controller[i]->values[j]->value);
+			if (ret) {
+				cgroup_err("Failed to add setting to %s\n", cgc->name);
+				goto err;
+			}
+		}
+
+		/*
+		 * There might be more than one controller parsed from the
+		 * cgconfig.conf file, let's create cgroup with one controller
+		 * and see if it fails and if it does, let's try converting
+		 * it and retry the cgroup creation, otherwise move on to
+		 * the next controller.
+		 */
+		ret = cgroup_create_cgroup(cgrp_cpy, 0);
+		if (!ret)
+			goto next_controller;
+
+		/*
+		 * The controller version != cgroup->controller[i] version,
+		 * let try to convert the controller to the current version
+		 * and retry.
+		 */
+		convert_cgrp = cgroup_new_cgroup(cgroup->name);
+		if (!convert_cgrp) {
+			cgroup_err("Failed to created cgroup %s\n", cgroup->name);
+			ret = ECGROUPNOTCREATED;
+			goto err;
+		}
+		ret = cgroup_convert_cgroup(convert_cgrp, convert_version, cgrp_cpy,
+					    current_version);
+		if (ret) {
+			cgroup_err("Conversion of controller failed.\n");
+			goto err;
+		}
+
+		ret = cgroup_create_cgroup(convert_cgrp, 0);
+		if (ret) {
+			cgroup_err("Failed to create cgroup %s\n", cgroup->name);
+			goto err;
+		}
+		cgroup_free(&convert_cgrp);
+next_controller:
+		cgroup_free_controller(cgc);
+		cgrp_cpy->index = 0;
+	}
+	return 0;
+err:
+	cgroup_free(&convert_cgrp);
+	cgroup_free(&cgrp_cpy);
+	return ret;
+}
 /*
  * Actually create the groups once the parsing has been finished
  */
@@ -767,8 +871,15 @@ static int cgroup_config_create_groups(void)
 
 		error = cgroup_create_cgroup(cgroup, 0);
 		cgroup_dbg("creating group %s, error %d\n", cgroup->name, error);
-		if (error)
-			return error;
+		if (error) {
+			/*
+			 * Attempt to convert the controller version
+			 * and retry.
+			 */
+			error = convert_controller_versions(cgroup);
+			if (error)
+				return error;
+		}
 	}
 
 	return error;
