@@ -97,15 +97,14 @@ def setup(config):
 
     # With cgroup v2, we can't enable controller for the child cgroup, while
     # a task is attached to test070.scope. Attach the task from test070.scope
-    # to child cgroup SYSTEMD_CGNAME and then enable cpu controller in the parent
-    # and then in the SYSTEMD_CGNAME cgroup, so that the cgroup.get() works
+    # to child cgroup SYSTEMD_CGNAME and then enable cpu controller in the parent,
+    # so that the cgroup.get() works
     Cgroup.set(config, cgname=SYSTEMD_CGNAME, setting='cgroup.procs', value=pid)
 
     Cgroup.set(
                 config, cgname=(os.path.join(SLICE, SCOPE)), setting='cgroup.subtree_control',
                 value='+cpu', ignore_systemd=True
               )
-    Cgroup.set(config, cgname=SYSTEMD_CGNAME, setting='cgroup.subtree_control', value='+cpu')
 
     # create and check if the cgroup was created under the controller root
     if not Cgroup.create_and_validate(config, CONTROLLER, OTHER_CGNAME, ignore_systemd=True):
