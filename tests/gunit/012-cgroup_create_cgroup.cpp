@@ -40,22 +40,6 @@ static const int VERSIONS_CNT =
 class CgroupCreateCgroupTest : public ::testing::Test {
 	protected:
 
-	void MountCgroupV2()
-	{
-		char *mnt_dir = strdup(PARENT_DIR);
-		struct mntent ent = (struct mntent) {
-			.mnt_fsname = "cgroup2",
-			.mnt_dir = mnt_dir,
-			.mnt_type = "cgroup2",
-			.mnt_opts = "rw,relatime,seclabel",
-		};
-		int mnt_tbl_idx = 0;
-		int ret;
-
-		ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
-		ASSERT_EQ(mnt_tbl_idx, 0);
-	}
-
 	void SetUp() override
 	{
 		char tmp_path[FILENAME_MAX];
@@ -106,7 +90,6 @@ class CgroupCreateCgroupTest : public ::testing::Test {
 				ASSERT_TRUE(false);
 			}
 		}
-		MountCgroupV2();
 	}
 
 	/*
@@ -132,32 +115,6 @@ class CgroupCreateCgroupTest : public ::testing::Test {
 	}
 };
 
-static void create_subtree_contents(const char * const cg_name,
-				    const char * const ctrl)
-{
-	char tmp_path[FILENAME_MAX];
-	FILE *f;
-	int ret;
-
-	memset(tmp_path, 0, sizeof(tmp_path));
-	ret = snprintf(tmp_path, FILENAME_MAX - 1,
-		       "%s/%s/cgroup.subtree_control",
-		       PARENT_DIR, cg_name);
-	ASSERT_GT(ret, 0);
-
-	f = fopen(tmp_path, "w");
-	ASSERT_NE(f, nullptr);
-	fclose(f);
-
-	memset(tmp_path, 0, sizeof(tmp_path));
-	ret = snprintf(tmp_path, FILENAME_MAX - 1, "%s/%s",
-		       PARENT_DIR, cg_name);
-	ASSERT_GT(ret, 0);
-
-	ret = cgroupv2_subtree_control(tmp_path, ctrl, true);
-	ASSERT_EQ(ret, 0);
-}
-
 static void verify_cgroup_created(const char * const cg_name,
 				  const char * const ctrl)
 {
@@ -178,15 +135,14 @@ static void verify_cgroup_created(const char * const cg_name,
 	closedir(dir);
 }
 
-static void verify_subtree_contents(const char * const cg_name,
-				    const char * const expected)
+static void verify_subtree_contents(const char * const expected)
 {
 	char tmp_path[FILENAME_MAX], buf[4092];
 	FILE *f;
 
 	memset(tmp_path, 0, sizeof(tmp_path));
-	snprintf(tmp_path, FILENAME_MAX - 1, "%s/%s/cgroup.subtree_control",
-		 PARENT_DIR, cg_name);
+	snprintf(tmp_path, FILENAME_MAX - 1, "%s/cgroup.subtree_control",
+		 PARENT_DIR);
 	f = fopen(tmp_path, "r");
 	ASSERT_NE(f, nullptr);
 
@@ -226,13 +182,14 @@ TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV2)
 	cg = cgroup_new_cgroup(cg_name);
 	ASSERT_NE(cg, nullptr);
 
+	ctrl = cgroup_add_controller(cg, ctrl_name);
+	ASSERT_NE(ctrl, nullptr);
+
 	ret = cgroup_create_cgroup(cg, 0);
 	ASSERT_EQ(ret, 0);
 
-	create_subtree_contents(cg_name, ctrl_name);
-
 	verify_cgroup_created(cg_name, NULL);
-	verify_subtree_contents(cg_name, "+freezer");
+	verify_subtree_contents("+freezer");
 }
 
 TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV1AndV2)
@@ -247,22 +204,16 @@ TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV1AndV2)
 	cg = cgroup_new_cgroup(cg_name);
 	ASSERT_NE(cg, nullptr);
 
+	ctrl = cgroup_add_controller(cg, ctrl1_name);
+	ASSERT_NE(ctrl, nullptr);
+	ctrl = NULL;
 	ctrl = cgroup_add_controller(cg, ctrl2_name);
 	ASSERT_NE(ctrl, nullptr);
 
 	ret = cgroup_create_cgroup(cg, 1);
 	ASSERT_EQ(ret, 0);
 
-	cg = NULL;
-	cg = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cg, nullptr);
-
-	ret = cgroup_create_cgroup(cg, 1);
-	ASSERT_EQ(ret, 0);
-
-	create_subtree_contents(cg_name, ctrl1_name);
-
 	verify_cgroup_created(cg_name, NULL);
 	verify_cgroup_created(cg_name, ctrl2_name);
-	verify_subtree_contents(cg_name, "+memory");
+	verify_subtree_contents("+memory");
 }
