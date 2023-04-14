@@ -823,7 +823,7 @@ out:
 		 * Free the old list.
 		 */
 		for (i = 0; i < cg_list_len; i++)
-			cgroup_free(cg_list[i]);
+			cgroup_free(&(*cg_list)[i]);
 
 		*cg_list = cg_converted_list;
 	}
