@@ -398,6 +398,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 {
 	bool do_not_fill_controller = false;
 	bool first_cgroup_is_dummy = false;
+	bool cgroup_mount_type = false;
 	bool fill_controller = false;
 	int ret = 0;
 	int c;
@@ -451,9 +452,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 				goto err;
 			break;
 		case 'm':
-			ret = find_cgroup_mount_type();
-			if (ret)
-				goto err;
+			cgroup_mount_type = true;
 			break;
 		default:
 			usage(1, argv[0]);
@@ -465,6 +464,18 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	if (fill_controller && do_not_fill_controller) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
+	}
+
+	/* '-m' should not used with other options */
+	if (cgroup_mount_type && (fill_controller || do_not_fill_controller)) {
+		usage(1, argv[0]);
+		exit(EXIT_BADARGS);
+	}
+
+	if (cgroup_mount_type) {
+		ret = find_cgroup_mount_type();
+		if (ret)
+			goto err;
 	}
 
 	ret = parse_opt_args(argc, argv, cg_list, cg_list_len, first_cgroup_is_dummy);
