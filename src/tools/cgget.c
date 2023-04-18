@@ -20,6 +20,7 @@
 #define LL_MAX			100
 
 static int find_cgroup_mount_type(void);
+static int print_controller_version(void);
 
 static const struct option long_options[] = {
 	{"variable",	required_argument, NULL, 'r'},
@@ -49,6 +50,7 @@ static void usage(int status, const char *program_name)
 #ifdef WITH_SYSTEMD
 	info("  -b				Ignore default systemd delegate hierarchy\n");
 #endif
+	info("  -c                              Display controller version\n");
 }
 
 static int get_controller_from_name(const char * const name, char **controller)
@@ -400,18 +402,19 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	bool first_cgroup_is_dummy = false;
 	bool cgroup_mount_type = false;
 	bool fill_controller = false;
+	bool print_ctrl_ver = false;
 	int ret = 0;
 	int c;
 
 	/* Parse arguments. */
 #ifdef WITH_SYSTEMD
-	while ((c = getopt_long(argc, argv, "r:hnvg:amb", long_options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "r:hnvg:ambc", long_options, NULL)) > 0) {
 		switch (c) {
 		case 'b':
 			*mode = (*mode) & (INT_MAX ^ MODE_SYSTEMD_DELEGATE);
 			break;
 #else
-	while ((c = getopt_long(argc, argv, "r:hnvg:am", long_options, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "r:hnvg:amc", long_options, NULL)) > 0) {
 		switch (c) {
 #endif
 		case 'h':
@@ -454,6 +457,9 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 		case 'm':
 			cgroup_mount_type = true;
 			break;
+		case 'c':
+			print_ctrl_ver = true;
+			break;
 		default:
 			usage(1, argv[0]);
 			exit(EXIT_BADARGS);
@@ -466,14 +472,21 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 		exit(EXIT_BADARGS);
 	}
 
-	/* '-m' should not used with other options */
-	if (cgroup_mount_type && (fill_controller || do_not_fill_controller)) {
+	/* '-m' and '-c' should not used with other options */
+	if ((cgroup_mount_type || print_ctrl_ver) &&
+	    (fill_controller || do_not_fill_controller)) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
 	}
 
 	if (cgroup_mount_type) {
 		ret = find_cgroup_mount_type();
+		if (ret)
+			goto err;
+	}
+
+	if (print_ctrl_ver) {
+		ret = print_controller_version();
 		if (ret)
 			goto err;
 	}
@@ -840,6 +853,30 @@ static int find_cgroup_mount_type(void)
 		ret = 1;
 		break;
 	}
+
+	return ret;
+}
+
+static int print_controller_version(void)
+{
+	struct cgroup_mount_point controller;
+	enum cg_version_t version;
+	void *handle;
+	int ret = 0;
+
+	// perf_event controller is the one with the lengthiest name
+	info("%-11s\t%-7s\n", "#Controller","Version");
+	ret = cgroup_get_controller_begin(&handle, &controller);
+	while (ret == 0) {
+		ret = cgroup_get_controller_version(controller.name, &version);
+		if (!ret)
+			info("%-11s\t%d\n", controller.name, version);
+		else
+			info("%-11s\t%-7s\n", controller.name, "unknown");
+
+		ret = cgroup_get_controller_next(&handle, &controller);
+	}
+	cgroup_get_controller_end(&handle);
 
 	return ret;
 }
