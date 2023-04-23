@@ -4805,15 +4805,35 @@ int cgroup_init_rules_cache(void)
 int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path)
 {
 	FILE *pid_cgroup_fd = NULL;
+	enum cg_version_t version;
+	enum cg_setup_mode_t mode;
+	bool unified = false;
 	char *path = NULL;
 	int ret;
-
-	if (!controller)
-		return ECGOTHER;
 
 	if (!cgroup_initialized) {
 		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
+	}
+
+	mode = cgroup_setup_mode();
+	if (mode == CGROUP_MODE_LEGACY && !controller)
+		return ECGOTHER;
+
+	/*
+	 * both unified/hybrid can have the controller mounted as
+	 * cgroup v2 version.
+	 */
+	if  (!controller) {
+		unified = true;
+	} else {
+		ret = cgroup_get_controller_version(controller, &version);
+		if (ret) {
+			cgroup_warn("Failed to get version of the controller: %s\n", controller);
+			ret = ECGINVAL;
+			goto cleanup_path;
+		}
+		unified = (version == CGROUP_V2);
 	}
 
 	ret = asprintf(&path, "/proc/%d/cgroup", pid);
@@ -4841,6 +4861,49 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		char *savedptr;
 		char *token;
 		int num;
+
+		/*
+		 * with unified mode, the /proc/pid/cgroup the output is
+		 * similar to that of cgroup legacy and hybrid modes:
+		 * hierarchy-ID:controller-list:cgroup-path
+		 *
+		 * the difference is that in cgroup v2:
+		 * - hierarchy-ID is always 0 (one hierarchy allowed)
+		 * - controller-list is empty
+		 */
+		if (mode == CGROUP_MODE_UNIFIED || unified) {
+			ret = fscanf(pid_cgroup_fd, "%d::%4096s\n", &num, cgroup_path);
+			if (ret != 2) {
+				/*
+				 * we are interested only in unified format
+				 * line, skip this line.
+				 */
+				if (unified) {
+					fscanf(pid_cgroup_fd, "%*[^\n]\n");
+					continue;
+				}
+
+				cgroup_warn("read failed for pid_cgroup_fd ret %d\n", ret);
+				last_errno = errno;
+				ret = ECGOTHER;
+				goto done;
+			}
+
+			/* check if the controller is enabled in cgroup v2 */
+			if (controller) {
+				ret = cgroupv2_controller_enabled(cgroup_path, controller);
+				if (ret)
+					goto done;
+			}
+
+			*current_path = strdup(cgroup_path);
+			if (!*current_path) {
+				last_errno = errno;
+				ret = ECGOTHER;
+			}
+			ret = 0;
+			goto done;
+		}
 
 		/*
 		 * 4096 == FILENAME_MAX, keeping the coverity happy with precision
