@@ -170,7 +170,7 @@ int cgroup_add_all_controllers(struct cgroup *cgroup)
 			cgc = cgroup_add_controller(cgroup, controller);
 			if (!cgc) {
 				ret = ECGINVAL;
-				fprintf(stderr, "controller %s can't be added\n", info.name);
+				fprintf(stderr, "controller %s can't be added\n", controller);
 				goto end;
 			}
 		} while ((controller = strtok_r(NULL, " ", &stok_buff)));
