@@ -157,4 +157,5 @@ CGROUP_3.0 {
 	cgroup_create_scope2;
 	cgroup_set_default_systemd_cgroup;
 	cgroup_write_systemd_default_cgroup;
+	cgroup_setup_mode;
 } CGROUP_2.0;
