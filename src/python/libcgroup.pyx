@@ -627,6 +627,33 @@ cdef class Cgroup:
 
         return pid_list
 
+    @staticmethod
+    def is_cgroup_mode_legacy():
+        """Check if the current setup mode is legacy (v1)
+
+        Return:
+        True if the mode is legacy, else false
+        """
+        return cgroup.is_cgroup_mode_legacy()
+
+    @staticmethod
+    def is_cgroup_mode_hybrid():
+        """Check if the current setup mode is hybrid (v1/v2)
+
+        Return:
+        True if the mode is hybrid, else false
+        """
+        return cgroup.is_cgroup_mode_hybrid()
+
+    @staticmethod
+    def is_cgroup_mode_unified():
+        """Check if the current setup mode is unified (v2)
+
+        Return:
+        True if the mode is unified, else false
+        """
+        return cgroup.is_cgroup_mode_unified()
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 

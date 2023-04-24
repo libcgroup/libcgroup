@@ -9,6 +9,7 @@
 # cython: language_level = 3str
 
 from posix.types cimport pid_t, uid_t, gid_t, mode_t
+from libcpp cimport bool
 
 cdef extern from "libcgroup.h":
     cdef struct cgroup:
@@ -107,4 +108,11 @@ cdef extern from "libcgroup.h":
     int cgroup_compare_cgroup(cgroup *cgroup_a, cgroup *cgroup_b)
 
     int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
+
+    bool is_cgroup_mode_legacy()
+
+    bool is_cgroup_mode_hybrid()
+
+    bool is_cgroup_mode_unified()
+
 # vim: set et ts=4 sw=4:
