@@ -676,6 +676,24 @@ struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgroup, 
 char *cgroup_get_controller_name(struct cgroup_controller *controller);
 
 /**
+ * Return true if cgroup setup mode is cgroup v1 (legacy), else
+ * returns false.
+ */
+bool is_cgroup_mode_legacy(void);
+
+/**
+ * Return true if cgroup setup mode is cgroup v1/v2 (hybrid), else
+ * returns false.
+ */
+bool is_cgroup_mode_hybrid(void);
+
+/**
+ * Return true if cgroup setup mode is cgroup v2 (unified), else
+ * returns false.
+ */
+bool is_cgroup_mode_unified(void);
+
+/**
  * @}
  * @}
  */

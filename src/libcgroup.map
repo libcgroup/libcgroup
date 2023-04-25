@@ -158,4 +158,7 @@ CGROUP_3.0 {
 	cgroup_set_default_systemd_cgroup;
 	cgroup_write_systemd_default_cgroup;
 	cgroup_setup_mode;
+	is_cgroup_mode_legacy;
+	is_cgroup_mode_hybrid;
+	is_cgroup_mode_unified;
 } CGROUP_2.0;
