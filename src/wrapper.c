@@ -793,3 +793,40 @@ char *cgroup_get_cgroup_name(struct cgroup *cgroup)
 
 	return cgroup->name;
 }
+
+
+/*
+ * Return true if cgroup setup mode is cgroup v1 (legacy), else
+ * returns false.
+ */
+bool is_cgroup_mode_legacy(void)
+{
+       enum cg_setup_mode_t setup_mode;
+
+       setup_mode = cgroup_setup_mode();
+       return (setup_mode == CGROUP_MODE_LEGACY);
+}
+
+/*
+ * Return true if cgroup setup mode is cgroup v1/v2 (hybrid), else
+ * returns false.
+ */
+bool is_cgroup_mode_hybrid(void)
+{
+       enum cg_setup_mode_t setup_mode;
+
+       setup_mode = cgroup_setup_mode();
+       return (setup_mode == CGROUP_MODE_HYBRID);
+}
+
+/*
+ * Return true if cgroup setup mode is cgroup v2 (unified), else
+ * returns false.
+ */
+bool is_cgroup_mode_unified(void)
+{
+       enum cg_setup_mode_t setup_mode;
+
+       setup_mode = cgroup_setup_mode();
+       return (setup_mode == CGROUP_MODE_UNIFIED);
+}
