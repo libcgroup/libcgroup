@@ -127,7 +127,8 @@ class Cgroup(object):
     def create(config, controller_list, cgname, user_name=None,
                group_name=None, dperm=None, fperm=None, tperm=None,
                tasks_user_name=None, tasks_group_name=None, cghelp=False,
-               ignore_systemd=False, create_scope=False, set_default_scope=False):
+               ignore_systemd=False, create_scope=False, set_default_scope=False,
+               scope_pid=-1):
         if isinstance(controller_list, str):
             controller_list = [controller_list]
 
@@ -174,6 +175,12 @@ class Cgroup(object):
         if set_default_scope:
             cmd.append('-S')
 
+        # -p requires -c to be provided, but this is too checked in libcgroup itself
+
+        if scope_pid > 1:
+            cmd.append('-p')
+            cmd.append('{}'.format(scope_pid))
+
         if controller_list:
             controllers_and_path = '{}:{}'.format(
                 ','.join(controller_list), cgname)
@@ -200,9 +207,10 @@ class Cgroup(object):
     # True if the cgroup exists, False otherwise
     @staticmethod
     def create_and_validate(config, ctrl_name, cgroup_name, ignore_systemd=False,
-                            create_scope=False, set_default_scope=False):
+                            create_scope=False, set_default_scope=False, scope_pid=-1):
         Cgroup.create(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd,
-                      create_scope=create_scope, set_default_scope=set_default_scope)
+                      create_scope=create_scope, set_default_scope=set_default_scope,
+                      scope_pid=scope_pid)
         return Cgroup.exists(config, ctrl_name, cgroup_name, ignore_systemd=ignore_systemd)
 
     @staticmethod
