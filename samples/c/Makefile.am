@@ -6,7 +6,8 @@ if WITH_SAMPLES
 noinst_PROGRAMS = setuid walk_test read_stats walk_task get_controller	\
 		  get_mount_point proctest get_all_controller		\
 		  get_variable_names test_named_hierarchy		\
-		  get_procs wrapper_test logger empty_cgroup_v2
+		  get_procs wrapper_test logger empty_cgroup_v2		\
+		  get_setup_mode
 
 setuid_SOURCES=setuid.c
 walk_test_SOURCES=walk_test.c
@@ -22,5 +23,6 @@ get_procs_SOURCES=get_procs.c
 wrapper_test_SOURCES=wrapper_test.c
 logger_SOURCES=logger.c
 empty_cgroup_v2_SOURCES=empty_cgroup_v2.c
+get_setup_mode=get_setup_mode.c
 
 endif
