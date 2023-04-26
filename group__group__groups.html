@@ -206,6 +206,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <tr class="separator:gaf5439bb5f149655f682a6438b17877db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gac13c5570894e6581bd1ebbdcbb73c74e">cgroup_get_controller_name</a> (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller)</td></tr>
 <tr class="separator:gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5103da236354f658697c730cc6834f07"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga5103da236354f658697c730cc6834f07">is_cgroup_mode_legacy</a> (void)</td></tr>
+<tr class="separator:ga5103da236354f658697c730cc6834f07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga11a48a466c0d4b03d3480cd4d8c830f8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga11a48a466c0d4b03d3480cd4d8c830f8">is_cgroup_mode_hybrid</a> (void)</td></tr>
+<tr class="separator:ga11a48a466c0d4b03d3480cd4d8c830f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7d360d903d69dfffd6d7a2904882f707"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga7d360d903d69dfffd6d7a2904882f707">is_cgroup_mode_unified</a> (void)</td></tr>
+<tr class="separator:ga7d360d903d69dfffd6d7a2904882f707"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Macro Definition Documentation</h2>
@@ -1804,6 +1810,63 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p >Get the current group setup mode (legacy/unified/hybrid)</p>
 <dl class="section return"><dt>Returns</dt><dd>CGROUP_MODE_UNK on failure and setup mode on success</dd></dl>
 <p>Finds the current cgroup setup mode (legacy/unified/hybrid). Returns unknown of failure and setup mode on success. </p>
+
+</div>
+</div>
+<a id="ga11a48a466c0d4b03d3480cd4d8c830f8" name="ga11a48a466c0d4b03d3480cd4d8c830f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga11a48a466c0d4b03d3480cd4d8c830f8">&#9670;&#160;</a></span>is_cgroup_mode_hybrid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool is_cgroup_mode_hybrid </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Return true if cgroup setup mode is cgroup v1/v2 (hybrid), else returns false. </p>
+
+</div>
+</div>
+<a id="ga5103da236354f658697c730cc6834f07" name="ga5103da236354f658697c730cc6834f07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5103da236354f658697c730cc6834f07">&#9670;&#160;</a></span>is_cgroup_mode_legacy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool is_cgroup_mode_legacy </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Return true if cgroup setup mode is cgroup v1 (legacy), else returns false. </p>
+
+</div>
+</div>
+<a id="ga7d360d903d69dfffd6d7a2904882f707" name="ga7d360d903d69dfffd6d7a2904882f707"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7d360d903d69dfffd6d7a2904882f707">&#9670;&#160;</a></span>is_cgroup_mode_unified()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool is_cgroup_mode_unified </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Return true if cgroup setup mode is cgroup v2 (unified), else returns false. </p>
 
 </div>
 </div>
