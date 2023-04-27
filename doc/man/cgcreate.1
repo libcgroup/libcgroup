@@ -33,7 +33,8 @@ creates a new systemd scope. The cgroup name provided after the
 \fB-g\fR flag must be of the form
 \fB<slice-name>.slice/<scope-name>.scope\fR. If the slice
 does not exist, systemd will create it. Libcgroup will place an
-idle process in the scope's cgroup.procs file.
+idle process in the scope's cgroup.procs file unless the \fB-p\fR
+flag is provided.
 
 .TP
 .B -d, --dperm=mode
@@ -62,6 +63,12 @@ multiple times.
 .TP
 .B -h, --help
 display this help and exit
+
+.TP
+.B -p, --pid=pid
+moves the provided \fBpid\fR into the
+\fB<slice-name>.slice/<scope-name>.scope\fR.  Must be used in
+conjunction with \fB-c\fR.
 
 .TP
 .B -s, --tperm=mode
