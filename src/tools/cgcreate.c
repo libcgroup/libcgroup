@@ -45,6 +45,8 @@ static void usage(int status, const char *program_name)
 	info("  -b				Ignore default systemd");
 	info("delegate hierarchy\n");
 	info("  -c, --scope			Create a delegated systemd scope\n");
+	info("  -p, --pid=pid                   Task pid to use to create systemd ");
+	info("scope\n");
 	info("  -S, --setdefault		Set this scope as the default scope ");
 	info("delegate hierarchy\n");
 #endif
@@ -52,7 +54,7 @@ static void usage(int status, const char *program_name)
 
 #ifdef WITH_SYSTEMD
 static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
-				int set_default)
+				int set_default, pid_t pid)
 {
 	struct cgroup_systemd_scope_opts opts;
 	char slice[FILENAME_MAX];
@@ -63,6 +65,8 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 	ret = cgroup_set_default_scope_opts(&opts);
 	if (ret)
 		return ret;
+
+	opts.pid = pid;
 
 	ret = cgroup_create_scope2(cg, 0, &opts);
 	if (!ret && set_default) {
@@ -115,6 +119,7 @@ int main(int argc, char *argv[])
 #ifdef WITH_SYSTEMD
 		{"scope",	      no_argument, NULL, 'c'},
 		{"setdefault",	      no_argument, NULL, 'S'},
+		{"pid",		required_argument, NULL, 'p'},
 #endif /* WITH_SYSTEMD */
 		{0, 0, 0, 0},
 	};
@@ -123,8 +128,9 @@ int main(int argc, char *argv[])
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
 
 	int ignore_default_systemd_delegate_slice = 0;
-	int create_scope = 0;
 	int set_default_scope = 0;
+	int create_scope = 0;
+	pid_t scope_pid = -1;
 
 	struct cgroup_group_spec **cgroup_list;
 	struct cgroup_controller *cgc;
@@ -159,13 +165,21 @@ int main(int argc, char *argv[])
 
 #ifdef WITH_SYSTEMD
 	/* parse arguments */
-	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:bcS", long_opts, NULL)) > 0) {
+	while ((c = getopt_long(argc, argv, "a:t:g:hd:f:s:bcp:S", long_opts, NULL)) > 0) {
 		switch (c) {
 		case 'b':
 			ignore_default_systemd_delegate_slice = 1;
 			break;
 		case 'c':
 			create_scope = 1;
+			break;
+		case 'p':
+			scope_pid = atoi(optarg);
+			if (scope_pid <= 1) {
+				err("%s: Invalid pid %s\n", argv[0], optarg);
+				ret = EXIT_BADARGS;
+				goto err;
+			}
 			break;
 		case 'S':
 			set_default_scope = 1;
@@ -231,6 +245,12 @@ int main(int argc, char *argv[])
 
 	if (set_default_scope && !create_scope) {
 		err("%s: \"-S\" requires \"-c\" to be provided\n", argv[0]);
+		ret = EXIT_BADARGS;
+		goto err;
+	}
+
+	if (!create_scope && scope_pid != -1) {
+		err("%s: \"-p\" requires \"-c\" to be provided\n", argv[0]);
 		ret = EXIT_BADARGS;
 		goto err;
 	}
@@ -303,7 +323,7 @@ int main(int argc, char *argv[])
 			cgroup_set_permissions(cgroup, dir_mode, file_mode, tasks_mode);
 
 		if (create_scope) {
-			ret = create_systemd_scope(cgroup, argv[0], set_default_scope);
+			ret = create_systemd_scope(cgroup, argv[0], set_default_scope, scope_pid);
 		} else {
 			ret = cgroup_create_cgroup(cgroup, 0);
 		}
