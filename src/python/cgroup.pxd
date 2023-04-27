@@ -115,4 +115,6 @@ cdef extern from "libcgroup.h":
 
     bool is_cgroup_mode_unified()
 
+    int cgroup_get_current_controller_path(pid_t pid, const char *controller,
+                                           char **current_path)
 # vim: set et ts=4 sw=4:
