@@ -654,6 +654,41 @@ cdef class Cgroup:
         """
         return cgroup.is_cgroup_mode_unified()
 
+    @staticmethod
+    def get_current_controller_path(pid, controller=None):
+        """Get the cgroup path of pid, under controller hierarchy
+
+        Return:
+        Return cgroup path relative to mount point
+
+        Description:
+        Invokes the libcgroup C function, cgroup_get_current_controller_path().
+        It parses the /proc/<pid>/cgroup file and returns the cgroup path, if
+        the controller matches in the output for cgroup v1 controllers and for
+        the cgroup v2 controllers, checks if the cgroup.controllers file has
+        the controller enabled.
+        """
+        cdef char *current_path
+
+        Cgroup.cgroup_init()
+
+        if controller is None:
+            ret = cgroup.cgroup_get_current_controller_path(pid, NULL,
+                        &current_path)
+        elif isinstance(controller, str):
+            ret = cgroup.cgroup_get_current_controller_path(pid,
+                        c_str(controller), &current_path)
+        else:
+            raise TypeError("cgroup_get_current_controller_path failed: "
+                            "expected controller type string, but passed "
+                            "{}".format(type(controller)))
+
+        if ret is not 0:
+            raise RuntimeError("cgroup_get_current_controller_path failed :"
+                               "{}".format(ret))
+
+        return current_path.decode('ascii')
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 
