@@ -102,6 +102,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  079-sudo-cgcreate_default_systemd_scope.py \
 			  080-kernel-domain_invalid.py \
 			  081-pybindings-cgrp_get_curr_ctrl_path-v1.py \
+			  082-pybindings-cgrp_get_curr_ctrl_path-v2.py \
 			  083-pybindings-helpers_cgroup_mode.py \
 			  998-cgdelete-non-existing-shared-mnt-cgroup-v1.py
 # Intentionally omit the stress test from the extra dist
