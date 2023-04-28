@@ -104,6 +104,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  081-pybindings-cgrp_get_curr_ctrl_path-v1.py \
 			  082-pybindings-cgrp_get_curr_ctrl_path-v2.py \
 			  083-pybindings-helpers_cgroup_mode.py \
+			  084-sudo-cgcreate_systemd_scope_pid.py \
 			  998-cgdelete-non-existing-shared-mnt-cgroup-v1.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
