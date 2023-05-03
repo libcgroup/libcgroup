@@ -4816,6 +4816,9 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		return ECGROUPNOTINITIALIZED;
 	}
 
+	if (!current_path)
+		return ECGOTHER;
+
 	mode = cgroup_setup_mode();
 	if (mode == CGROUP_MODE_LEGACY && !controller)
 		return ECGOTHER;
