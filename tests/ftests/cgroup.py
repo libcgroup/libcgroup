@@ -598,13 +598,13 @@ class Cgroup(object):
                 config.container.run(
                                         ['sudo',
                                          'touch',
-                                         '/etc/cgsnapshot_blacklist.conf']
+                                         '/etc/cgsnapshot_denylist.conf']
                                     )
             except RunError as re:
                 if re.ret == 0 and 'unable to resolve host' in re.stderr:
                     pass
         else:
-            Run.run(['sudo', 'touch', '/etc/cgsnapshot_blacklist.conf'])
+            Run.run(['sudo', 'touch', '/etc/cgsnapshot_denylist.conf'])
 
         try:
             if config.args.container:
@@ -613,7 +613,7 @@ class Cgroup(object):
                 res = Run.run(cmd)
         except RunError as re:
             if re.ret == 0 and \
-               'neither blacklisted nor whitelisted' in re.stderr:
+               'neither deny nor allow list' in re.stderr:
                 res = re.stdout
             elif re.ret == 0 and 'ERROR: can\'t get' in re.stderr:
                 res = re.stdout
