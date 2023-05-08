@@ -24,22 +24,22 @@
 enum flag {
 	FL_LIST =	1,
 	FL_SILENT =	2,  /* do-not show any warning/error output */
-	FL_STRICT =	4,  /* don show the variables which are not on whitelist */
+	FL_STRICT =	4,  /* don show the variables which are not on allowlist */
 	FL_OUTPUT =	8,  /* output should be redirect to the given file */
-	FL_BLACK =	16, /* blacklist set */
-	FL_WHITE =	32, /* whitelist set */
+	FL_DENY =	16, /* denylist set */
+	FL_ALLOW =	32, /* allowlist set */
 };
 
-#define BLACKLIST_CONF	"/etc/cgsnapshot_blacklist.conf"
-#define WHITELIST_CONF	"/etc/cgsnapshot_whitelist.conf"
+#define DENYLIST_CONF	"/etc/cgsnapshot_denylist.conf"
+#define ALLOWLIST_CONF	"/etc/cgsnapshot_allowlist.conf"
 
-struct black_list_type {
+struct deny_list_type {
 	char *name;			/* variable name */
-	struct black_list_type *next;	/* pointer to the next record */
+	struct deny_list_type *next;	/* pointer to the next record */
 };
 
-struct black_list_type *black_list;
-struct black_list_type *white_list;
+struct deny_list_type *deny_list;
+struct deny_list_type *allow_list;
 
 typedef char cont_name_t[FILENAME_MAX];
 
@@ -59,23 +59,23 @@ static void usage(int status, const char *program_name)
 	info("Usage: %s [-h] [-s] [-b FILE] [-w FILE] [-f FILE] [controller] [...]\n",
 	     program_name);
 	info("Generate the configuration file for given controllers\n");
-	info("  -b, --blacklist=FILE		Set the blacklist");
-	info(" configuration file (default %s)\n", BLACKLIST_CONF);
+	info("  -b, --denylist=FILE		Set the denylist");
+	info(" configuration file (default %s)\n", DENYLIST_CONF);
 	info("  -f, --file=FILE		Redirect the output to output_file\n");
 	info("  -h, --help			Display this help\n");
 	info("  -s, --silent			Ignore all warnings\n");
 	info("  -t, --strict			Don't show variables ");
-	info("which are not on the whitelist\n");
-	info("  -w, --whitelist=FILE		Set the whitelist ");
+	info("which are not on the allowlist\n");
+	info("  -w, --allowlist=FILE		Set the allowlist ");
 	info("configuration file (don't used by default)\n");
 }
 
-/* cache values from blacklist file to the list structure */
-int load_list(char *filename, struct black_list_type **p_list)
+/* cache values from denylist file to the list structure */
+int load_list(char *filename, struct deny_list_type **p_list)
 {
-	struct black_list_type *start = NULL;
-	struct black_list_type *end = NULL;
-	struct black_list_type *new;
+	struct deny_list_type *start = NULL;
+	struct deny_list_type *end = NULL;
+	struct deny_list_type *new;
 
 	char buf[FILENAME_MAX];
 	char name[FILENAME_MAX];
@@ -106,7 +106,7 @@ int load_list(char *filename, struct black_list_type **p_list)
 		if (ret == 0)
 			continue;
 
-		new = (struct black_list_type *) malloc(sizeof(struct black_list_type));
+		new = (struct deny_list_type *) malloc(sizeof(struct deny_list_type));
 		if (new == NULL) {
 			err("ERROR: Memory allocation problem (%s)\n", strerror(errno));
 			ret = 1;
@@ -152,10 +152,10 @@ err:
 }
 
 /* free list structure */
-void free_list(struct black_list_type *list)
+void free_list(struct deny_list_type *list)
 {
-	struct black_list_type *now;
-	struct black_list_type *next;
+	struct deny_list_type *now;
+	struct deny_list_type *next;
 
 	now = list;
 	while (now != NULL) {
@@ -171,9 +171,9 @@ void free_list(struct black_list_type *list)
  * 1 ... was found
  * 0 ... no record was found
  */
-int is_on_list(char *name, struct black_list_type *list)
+int is_on_list(char *name, struct deny_list_type *list)
 {
-	struct black_list_type *record;
+	struct deny_list_type *record;
 
 	record = list;
 	/* go through the list of all values */
@@ -297,7 +297,7 @@ static int display_cgroup_data(struct cgroup *group,
 	char *value = NULL;
 	char *output_name;
 	struct stat sb;
-	int bl, wl = 0; /* is on the blacklist/whitelist flag */
+	int bl, wl = 0; /* is on the denylist/allowlist flag */
 	int nr_var = 0;
 	int i = 0, j;
 	int ret = 0;
@@ -367,30 +367,30 @@ static int display_cgroup_data(struct cgroup *group,
 			}
 
 			/*
-			 * find whether the variable is blacklisted
-			 * or whitelisted
+			 * find whether the variable is denylisted
+			 * or allowlisted
 			 */
-			bl = is_on_list(name, black_list);
-			wl = is_on_list(name, white_list);
+			bl = is_on_list(name, deny_list);
+			wl = is_on_list(name, allow_list);
 
-			/* if it is blacklisted skip it and continue */
+			/* if it is denylisted skip it and continue */
 			if (bl)
 				continue;
 
 			/*
-			 * if it is not whitelisted and strict tag is used
+			 * if it is not allowlisted and strict tag is used
 			 * skip it and continue too
 			 */
 			if ((!wl) && (flags &  FL_STRICT))
 				continue;
 
 			/*
-			 * if it is not whitelisted and silent tag is not
+			 * if it is not allowlisted and silent tag is not
 			 * used write an warning
 			 */
 			if ((!wl) && !(flags &  FL_SILENT) && (first)) {
 				err("WARNING: variable %s is neither ", name);
-				err("blacklisted nor whitelisted\n");
+				err("deny nor allow list\n");
 			}
 
 			output_name = name;
@@ -433,7 +433,7 @@ err:
 }
 
 /*
- * creates the record about the hierarchie which contains
+ * creates the record about the hierarchies which contains
  * "controller" subsystem
  */
 static int display_controller_data(char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
@@ -722,16 +722,16 @@ int main(int argc, char *argv[])
 	static struct option long_opts[] = {
 		{"help",	      no_argument, NULL, 'h'},
 		{"silent",	      no_argument, NULL, 's'},
-		{"blacklist",	required_argument, NULL, 'b'},
-		{"whitelist",	required_argument, NULL, 'w'},
+		{"denylist",	required_argument, NULL, 'b'},
+		{"allowlist",	required_argument, NULL, 'w'},
 		{"strict",	      no_argument, NULL, 't'},
 		{"file",	required_argument, NULL, 'f'},
 		{0, 0, 0, 0}
 	};
 
 	cont_name_t wanted_cont[CG_CONTROLLER_MAX];
-	char bl_file[FILENAME_MAX];  /* blacklist file name */
-	char wl_file[FILENAME_MAX];  /* whitelist file name */
+	char bl_file[FILENAME_MAX];  /* denylist file name */
+	char wl_file[FILENAME_MAX];  /* allowlist file name */
 	int ret = 0, err;
 	int c_number = 0;
 	int c, i;
@@ -751,12 +751,12 @@ int main(int argc, char *argv[])
 			flags |= FL_SILENT;
 			break;
 		case 'b':
-			flags |= FL_BLACK;
+			flags |= FL_DENY;
 			strncpy(bl_file, optarg, FILENAME_MAX);
 			bl_file[FILENAME_MAX-1] = '\0';
 			break;
 		case 'w':
-			flags |= FL_WHITE;
+			flags |= FL_ALLOW;
 			strncpy(wl_file, optarg, FILENAME_MAX);
 			wl_file[FILENAME_MAX-1] = '\0';
 			break;
@@ -793,21 +793,21 @@ int main(int argc, char *argv[])
 	if ((flags & FL_OUTPUT) == 0)
 		output_f = stdout;
 
-	/* blacklkist */
-	if (flags & FL_BLACK) {
-		ret  = load_list(bl_file, &black_list);
+	/* denylist */
+	if (flags & FL_DENY) {
+		ret  = load_list(bl_file, &deny_list);
 	} else {
-		/* load the blacklist from the default location */
-		ret  = load_list(BLACKLIST_CONF, &black_list);
+		/* load the denylist from the default location */
+		ret  = load_list(DENYLIST_CONF, &deny_list);
 	}
 	if (ret != 0) {
 		ret = EXIT_BADARGS;
 		goto finish;
 	}
 
-	/* whitelist */
-	if (flags & FL_WHITE)
-		ret = load_list(wl_file, &white_list);
+	/* allowlist */
+	if (flags & FL_ALLOW)
+		ret = load_list(wl_file, &allow_list);
 	if (ret != 0) {
 		ret = EXIT_BADARGS;
 		goto finish;
@@ -834,8 +834,8 @@ int main(int argc, char *argv[])
 		ret = err;
 
 finish:
-	free_list(black_list);
-	free_list(white_list);
+	free_list(deny_list);
+	free_list(allow_list);
 
 	if (output_f != stdout)
 		fclose(output_f);
