@@ -22,14 +22,14 @@ configuration file.
 
 .TP
 .B -b file
-Display only variables from the blacklist.
-The default location of the blacklist is
-.B /etc/cgsnapshot_blacklist.conf.
+Display only variables from the denylist.
+The default location of the denylist is
+.B /etc/cgsnapshot_denylist.conf.
 This list contains all variables which should be ignored by the
 .B cgsnapshot
 .
-If the variable is blacklisted, it will not be displayed.
-If it is not present on the blacklist, the whitelist
+If the variable is denylisted, it will not be displayed.
+If it is not present on the denylist, the allowlist
 is checked.
 
 .TP
@@ -47,29 +47,29 @@ Ignore all warnings
 
 .TP
 .B -t, --strict
-Do not display the variables which are not on the whitelist
+Do not display the variables which are not on the allowlist
 
 
 .TP
 .B -w file
-Set the blacklist configuration file.
+Set the denylist configuration file.
 This list contains all variables which should be displayed by
 .B cgsnapshot
 .
-If the variable is not blacklisted, the whitelist is checked.
-If the variable is on the whitelist, it is displayed by
+If the variable is not denylisted, the allowlist is checked.
+If the variable is on the allowlist, it is displayed by
 .B cgsnapshot
 .
-If the variable is not on the whitelist,
+If the variable is not on the allowlist,
 the variable is displayed and a warning message is produced.
-By default the whitelist is not used.
+By default the allowlist is not used.
 
 The warning message can be omitted using the
 .B -s, --silent
 flag.
 If the
 .B -t, --strict
-flag is used, the variable which is not on the whitelist is
+flag is used, the variable which is not on the allowlist is
 not displayed.
 
 .TP
@@ -85,12 +85,12 @@ controls verbosity of the tool. Allowed values are \fBDEBUG\fR,
 
 .SH FILES
 .TP
-.B /etc/cgsnapshot_blacklist.conf
-default blacklist
+.B /etc/cgsnapshot_denylist.conf
+default denylist
 
 .TP
-.B /etc/cgsnapshot_whitelist.conf
-default whitelist
+.B /etc/cgsnapshot_allowlist.conf
+default allowlist
 
 .TP
 .B /etc/cgconfig.conf
