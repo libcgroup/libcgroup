@@ -124,6 +124,24 @@ jobs:
       run: |
         cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
 
+  withoutsystemd:
+    name: Systemd Support Disabled
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+    - uses: actions/checkout@v3
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Reconfigure libcgroup with systemd disabled
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-systemd=no
+    - name: Build the library
+      run: make
+
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
     runs-on: ubuntu-20.04
