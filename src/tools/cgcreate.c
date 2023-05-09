@@ -100,7 +100,7 @@ err:
 }
 #else
 static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
-				int set_default)
+				int set_default, pid_t pid)
 {
 	return ECGINVAL;
 }
