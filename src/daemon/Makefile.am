@@ -1,6 +1,6 @@
 @CODE_COVERAGE_RULES@
 
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include -I$(top_builddir)/include
 
 if WITH_DAEMON
 
