@@ -14,7 +14,7 @@ AM_YFLAGS = -d
 
 CLEANFILES = lex.c parse.c parse.h
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
 VERSION_NUMBER = $(LIBRARY_VERSION_MAJOR):$(LIBRARY_VERSION_MINOR):$(LIBRARY_VERSION_RELEASE)
 TESTING_MAP_FILE = $(top_srcdir)/tests/gunit/libcgroup_unittest.map
