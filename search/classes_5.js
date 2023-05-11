@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['log_0',['Log',['../classftests_1_1log_1_1Log.html',1,'ftests::log']]]
+  ['getcgroupsfromproccgroupstest_0',['GetCgroupsFromProcCgroupsTest',['../classGetCgroupsFromProcCgroupsTest.html',1,'']]],
+  ['getsubtreecontroltest_1',['GetSubtreeControlTest',['../classGetSubtreeControlTest.html',1,'']]]
 ];
