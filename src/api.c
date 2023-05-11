@@ -2909,6 +2909,11 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 		/* Create an empty cgroup v2 cgroup */
 		error = _cgroup_create_cgroup(cgroup, NULL, ignore_ownership);
 		if (error)
+			/*
+			 * Since we only attempted to create a single cgroup,
+			 * _cgroup_create_cgroup() can capably undo the failure and no
+			 * interventions are required here.
+			 */
 			return error;
 	}
 
@@ -2919,8 +2924,21 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	 */
 	for (i = 0; i < cgroup->index; i++) {
 		error = _cgroup_create_cgroup(cgroup, cgroup->controller[i], ignore_ownership);
-		if (error)
+		if (error) {
+			int del_error;
+
+			/*
+			 * This will remove any cgroup directories that were made, but it won't
+			 * undo changes that have been written to the parent cgroup's
+			 * subtree_control file.  To safely undo changes there, we would need to
+			 * save the subtree_control file's previous value and restore it.
+			 */
+			del_error = cgroup_delete_cgroup(cgroup, 1);
+			if (del_error)
+				cgroup_err("Failed to delete %s: %s\n", cgroup->name,
+					   cgroup_strerror(del_error));
 			return error;
+		}
 	}
 
 	return 0;

@@ -1221,6 +1221,7 @@ int cgroup_config_load_config(const char *pathname)
 #endif
 	int namespace_enabled = 0;
 	int mount_enabled = 0;
+	int tmp_errno;
 	int error;
 	int ret;
 
@@ -1297,7 +1298,14 @@ int cgroup_config_load_config(const char *pathname)
 
 	return 0;
 err_grp:
+	/*
+	 * Save off the error that has already occurred.  The errno from
+	 * cgroup_config_destroy_groups() is secondary to the original error that was reported,
+	 * and thus can be discarded;
+	 */
+	tmp_errno = last_errno;
 	cgroup_config_destroy_groups();
+	last_errno = tmp_errno;
 err_mnt:
 	cgroup_config_unmount_controllers();
 	cgroup_free_config();
