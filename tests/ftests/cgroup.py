@@ -476,6 +476,9 @@ class Cgroup(object):
             controller = ','.join(controller)
             cmd.append('-g')
             cmd.append('{}:{}'.format(controller, cgname))
+        elif controller is None:
+            cmd.append('-g')
+            cmd.append(':{}'.format(cgname))
         else:
             raise ValueError('Unsupported controller format: {}'.format(type(controller)))
 
