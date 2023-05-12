@@ -6,7 +6,7 @@
 # Copyright (c) 2023 Oracle and/or its affiliates.
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup, Mode
 from systemd import Systemd
 from run import RunError
 import consts
@@ -29,14 +29,14 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V2:
-        result = consts.TEST_SKIPPED
-        cause = 'This test requires the cgroup v2 cpu controller'
-        return result, cause
-
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
+        return result, cause
+
+    if Cgroup.get_cgroup_mode(config) != Mode.CGROUP_MODE_UNIFIED:
+        result = consts.TEST_SKIPPED
+        cause = 'This test requires the unified cgroup hierarchy'
 
     return result, cause
 

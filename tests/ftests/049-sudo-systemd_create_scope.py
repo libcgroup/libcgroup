@@ -7,8 +7,7 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from cgroup import Cgroup as CgroupCli
-from cgroup import CgroupVersion
+from cgroup import Cgroup as CgroupCli, Mode
 from libcgroup import Cgroup
 from systemd import Systemd
 from process import Process
@@ -35,9 +34,9 @@ def prereqs(config):
         cause = 'This test cannot be run within a container'
         return result, cause
 
-    if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
+    if CgroupCli.get_cgroup_mode(config) != Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
-        cause = 'This test requires cgroup v2'
+        cause = 'This test requires the unified cgroup hierarchy'
 
     return result, cause
 
