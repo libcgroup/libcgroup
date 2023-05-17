@@ -4619,9 +4619,23 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 	}
 	memset(&cgroup, 0, sizeof(struct cgroup));
 
-	ret = cg_prepare_cgroup(&cgroup, pid, dest, controllers);
-	if (ret)
-		return ret;
+
+	if (is_cgroup_mode_unified() && !controllers) {
+		/*
+		 * Do not require the user to pass in an array of controller strings on
+		 * cgroup v2 systems.  The hierarchy will be the same regardless of
+		 * whether controllers are provided or not.
+		 */
+		strncpy(cgroup.name, dest, FILENAME_MAX);
+		cgroup.name[FILENAME_MAX-1] = '\0';
+	} else {
+		if (!controllers)
+			return ECGINVAL;
+
+		ret = cg_prepare_cgroup(&cgroup, pid, dest, controllers);
+		if (ret)
+			return ret;
+	}
 
 	/* Add process to cgroup */
 	ret = cgroup_attach_task_pid(&cgroup, pid);
