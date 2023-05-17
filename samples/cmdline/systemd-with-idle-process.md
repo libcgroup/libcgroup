@@ -12,6 +12,9 @@ a systemd scope and a child cgroup hierarchy using the libcgroup
 command line tools.
 
 The following steps are encapsulated in a
+[C example](../c/create_systemd_scope.c) using the libcgroup C APIs.
+
+The following steps are encapsulated in a
 [libcgroup automated test](../../tests/ftests/086-sudo-systemd_cmdline_example.py).
 
 ## Requirements:
