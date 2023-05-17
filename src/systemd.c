@@ -118,6 +118,7 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	if (opts->pid < 0) {
 		child_pid = fork();
 		if (child_pid < 0) {
+			last_errno = errno;
 			cgroup_err("fork failed: %d\n", errno);
 			return ECGOTHER;
 		}
@@ -130,7 +131,9 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 			 * there isn't a running process in it.
 			 */
 			execvp("libcgroup_systemd_idle_thread", args);
+
 			/* The child process should never get here */
+			last_errno = errno;
 			cgroup_err("failed to create system idle thread.\n");
 			return ECGOTHER;
 		}
@@ -231,6 +234,7 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 
 	ret = clock_gettime(CLOCK_MONOTONIC, &start);
 	if (ret < 0) {
+		last_errno = errno;
 		cgroup_err("Failed to get time: %d\n", errno);
 		cgret = ECGOTHER;
 		goto out;
@@ -258,6 +262,7 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 
 		ret = clock_gettime(CLOCK_MONOTONIC, &now);
 		if (ret < 0) {
+			last_errno = errno;
 			cgroup_err("Failed to get time: %d\n", errno);
 			cgret = ECGOTHER;
 			goto out;
@@ -306,6 +311,7 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 
 	copy1 = strdup(cgroup->name);
 	if (!copy1) {
+		last_errno = errno;
 		ret = ECGOTHER;
 		goto err;
 	}
@@ -314,6 +320,7 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 
 	copy2 = strdup(cgroup->name);
 	if (!copy2) {
+		last_errno = errno;
 		ret = ECGOTHER;
 		goto err;
 	}
