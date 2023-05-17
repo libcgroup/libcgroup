@@ -117,4 +117,6 @@ cdef extern from "libcgroup.h":
 
     int cgroup_get_current_controller_path(pid_t pid, const char *controller,
                                            char **current_path)
+
+    int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char * const controllers[])
 # vim: set et ts=4 sw=4:
