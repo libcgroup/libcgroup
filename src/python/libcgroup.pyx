@@ -689,6 +689,27 @@ cdef class Cgroup:
 
         return current_path.decode('ascii')
 
+    @staticmethod
+    def move_proc(pid, dest_cgname):
+        """Move a process to the specified cgroup
+
+        Return:
+        None
+
+        Description:
+        Invokes the libcgroup C function, cgroup_change_cgroup_path().
+        It moves a process to the specified cgroup dest_cgname.
+
+        Note:
+        * Writes to the cgroup sysfs
+        * Only works on cgroup v2 (unified) hierarchies
+        """
+        ret = cgroup.cgroup_change_cgroup_path(c_str(dest_cgname), pid, NULL)
+
+        if ret is not 0:
+            raise RuntimeError("cgroup_change_cgroup_path failed :"
+                               "{}".format(ret))
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
 
