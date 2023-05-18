@@ -86,8 +86,10 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
  * path, if available.
  *
  * The path is relative to cgroup root (default: /sys/fs/cgroup)
+ *
+ * @return 1 if a valid default slice/scope is set, 0 in all other cases
  */
-void cgroup_set_default_systemd_cgroup(void);
+int cgroup_set_default_systemd_cgroup(void);
 
 /**
  * Parse the systemd delegation settings from the configuration file
