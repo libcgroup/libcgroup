@@ -124,8 +124,8 @@ jobs:
       run: |
         cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
 
-  withoutsystemd:
-    name: Systemd Support Disabled
+  buildtest:
+    name: Build with Uncommon Flags
     runs-on: ubuntu-20.04
 
     steps:
@@ -138,7 +138,7 @@ jobs:
     - name: Initialize the directory
       uses: ./.github/actions/setup-libcgroup
     - name: Reconfigure libcgroup with systemd disabled
-      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-systemd=no
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-systemd=no --enable-samples
     - name: Build the library
       run: make
 
