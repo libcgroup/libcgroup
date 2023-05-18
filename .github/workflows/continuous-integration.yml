@@ -142,6 +142,24 @@ jobs:
     - name: Build the library
       run: make
 
+  buildsamples:
+    name: Build Samples
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+    - uses: actions/checkout@v3
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Reconfigure libcgroup with samples enabled
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-samples
+    - name: Build the library
+      run: make
+
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
     runs-on: ubuntu-20.04
