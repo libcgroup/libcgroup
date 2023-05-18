@@ -2247,7 +2247,7 @@ err:
 	return exists;
 }
 
-void cgroup_set_default_systemd_cgroup(void)
+int cgroup_set_default_systemd_cgroup(void)
 {
 	FILE *systemd_def_cgrp_f;
 	size_t len;
@@ -2270,12 +2270,14 @@ void cgroup_set_default_systemd_cgroup(void)
 
 	if (systemd_default_cgroup_exists()) {
 		pthread_rwlock_unlock(&systemd_default_cgroup_lock);
-		return;
+		return 1;
 	}
 err:
 	pthread_rwlock_unlock(&systemd_default_cgroup_lock);
 	cgroup_dbg(", continuing without systemd default cgroup.\n", systemd_default_cgroup);
 	systemd_default_cgroup[0] = '\0';
+
+	return 0;
 }
 #else
 int cgroup_add_systemd_opts(const char * const config, const char * const value)
@@ -2290,5 +2292,8 @@ int cgroup_alloc_systemd_opts(const char * const config, const char * const valu
 
 void cgroup_cleanup_systemd_opts(void) { }
 
-void cgroup_set_default_systemd_cgroup(void) { }
+int cgroup_set_default_systemd_cgroup(void)
+{
+	return 0;
+}
 #endif
