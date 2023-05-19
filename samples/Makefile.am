@@ -1,2 +1,2 @@
-DIST_SUBDIRS = config c
+DIST_SUBDIRS = config c python
 SUBDIRS = $(DIST_SUBDIRS)
