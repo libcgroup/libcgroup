@@ -565,7 +565,7 @@ cdef class Cgroup:
             raise RuntimeError("cgroup_create_scope2 failed: {}".format(ret))
 
     @staticmethod
-    def cgroup_set_default_systemd_cgroup():
+    def __set_default_systemd_cgroup():
         """Set systemd_default_cgroup
 
         Arguments:
@@ -578,7 +578,43 @@ cdef class Cgroup:
         cgroup sub-tree is constructed for systemd delegation.
         """
         Cgroup.cgroup_init()
-        cgroup.cgroup_set_default_systemd_cgroup()
+        ret = cgroup.cgroup_set_default_systemd_cgroup()
+
+        if ret != 1:
+            raise RuntimeError('Failed to set the default systemd cgroup')
+
+    @staticmethod
+    def write_default_systemd_scope(slice_name, scope_name, set_default=True):
+        """Write the provided slice and scope to the libcgroup /var/run file
+
+        Arguments:
+        slice_name - Slice name, e.g. libcgroup.slice
+        scope_name - Scope name, e.g. database.scope
+        set_default - If true, set this as the default path for libcgroup APIs
+                      and tools
+
+        Description:
+        Write the provided slice and scope to the libcgroup var/run file.  This
+        convenience function provides a mechanism for setting a slice/scope as
+        the default path within libcgroup.  Any API or cmdline operation will
+        utilize this path as the "root" cgroup, but it can be overridden on a
+        case-by-case basis.
+
+        So if the default slice/scope is set to "libcgroup.slice/database.scope",
+        and the user wants to access "libcgroup.slice/database.scope/foo", then
+        they can use the following:
+
+            # Within libcgroup, this will expand to
+            # libcgroup.slice/database.scope/foo
+            cg = Cgroup('foo')
+        """
+        ret = cgroup.cgroup_write_systemd_default_cgroup(c_str(slice_name),
+                                                         c_str(scope_name))
+        if ret != 1:
+            raise RuntimeError("Failed to write the default slice/scope")
+
+        if set_default:
+            Cgroup.__set_default_systemd_cgroup()
 
     cdef compare(self, Cgroup other):
         """Compare this cgroup instance with another cgroup instance
