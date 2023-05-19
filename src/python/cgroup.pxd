@@ -47,6 +47,13 @@ cdef extern from "libcgroup.h":
         cgroup_systemd_mode_t mode
         pid_t pid
 
+    cdef enum cgroup_log_level:
+        CGROUP_LOG_CONT
+        CGROUP_LOG_ERROR
+        CGROUP_LOG_WARNING
+        CGROUP_LOG_INFO
+        CGROUP_LOG_DEBUG
+
     int cgroup_init()
     const cgroup_library_version * cgroup_version()
 
@@ -119,4 +126,6 @@ cdef extern from "libcgroup.h":
                                            char **current_path)
 
     int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char * const controllers[])
+
+    void cgroup_set_default_logger(int log_level)
 # vim: set et ts=4 sw=4:

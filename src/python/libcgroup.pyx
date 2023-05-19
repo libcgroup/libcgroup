@@ -37,6 +37,13 @@ cdef class SystemdMode:
     CGROUP_SYSTEMD_MODE_IGNORE_DEPS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_DEPS
     CGROUP_SYSTEMD_MODE_IGNORE_REQS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_REQS
 
+cdef class LogLevel:
+    CGROUP_LOG_CONT = cgroup.CGROUP_LOG_CONT
+    CGROUP_LOG_ERROR = cgroup.CGROUP_LOG_ERROR
+    CGROUP_LOG_WARNING = cgroup.CGROUP_LOG_WARNING
+    CGROUP_LOG_INFO = cgroup.CGROUP_LOG_INFO
+    CGROUP_LOG_DEBUG = cgroup.CGROUP_LOG_DEBUG
+
 def c_str(string):
     return bytes(string, "ascii")
 
@@ -709,6 +716,18 @@ cdef class Cgroup:
         if ret is not 0:
             raise RuntimeError("cgroup_change_cgroup_path failed :"
                                "{}".format(ret))
+
+    @staticmethod
+    def log_level(log_level):
+        """Set the libcgroup log level
+
+        Arguments:
+        log_level - libcgroup.LogLevel
+
+        Description:
+        Set the libcgroup logger to stdout at the specified log_level
+        """
+        cgroup.cgroup_set_default_logger(log_level)
 
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp);
