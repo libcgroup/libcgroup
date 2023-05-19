@@ -253,6 +253,7 @@ AC_CONFIG_FILES([Makefile
 	samples/Makefile
 	samples/c/Makefile
 	samples/config/Makefile
+	samples/python/Makefile
 	include/Makefile
 	include/libcgroup/init.h
 	doc/Makefile
