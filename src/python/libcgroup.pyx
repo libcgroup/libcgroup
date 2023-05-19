@@ -679,6 +679,14 @@ cdef class Cgroup:
         cdef pid_t *pids
         cdef int size
 
+        if len(self.controllers) == 0:
+            ret = cgroup.cgroup_get_procs(c_str(self.name), NULL, &pids, &size)
+            if ret is not 0:
+                raise RuntimeError("cgroup_get_procs failed: {}".format(ret))
+
+            for i in range(0, size):
+                pid_list.append(int(pids[i]))
+
         for ctrl_key in self.controllers:
             ret = cgroup.cgroup_get_procs(c_str(self.name),
                         c_str(self.controllers[ctrl_key].name), &pids, &size)
