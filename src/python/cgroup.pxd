@@ -110,7 +110,9 @@ cdef extern from "libcgroup.h":
     int cgroup_create_scope2(cgroup *cgroup, int ignore_ownership,
                              const cgroup_systemd_scope_opts * const opts)
 
-    void cgroup_set_default_systemd_cgroup()
+    int cgroup_set_default_systemd_cgroup()
+    int cgroup_write_systemd_default_cgroup(const char * const slice_name,
+                                            const char * const scope_name)
 
     int cgroup_compare_cgroup(cgroup *cgroup_a, cgroup *cgroup_b)
 

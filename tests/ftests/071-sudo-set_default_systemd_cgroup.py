@@ -124,7 +124,7 @@ def test(config):
     if result == consts.TEST_FAILED:
         return result, cause
 
-    Cgroup.cgroup_set_default_systemd_cgroup()
+    Cgroup.__set_default_systemd_cgroup()
 
     # Create cgroup after setting the default systemd cgroup
     result, cause = create_cgrp(config, SYSTEMD_CGNAME)
@@ -144,11 +144,11 @@ def teardown(config):
 
     # unset the default systemd cgroup by deleting the
     # /var/run/libcgroup/systemd and calling
-    # cgroup_set_default_systemd_cgroup()
+    # __set_default_systemd_cgroup()
     if os.path.exists(SYSTEMD_DEFAULT_CGROUP_FILE):
         os.unlink(SYSTEMD_DEFAULT_CGROUP_FILE)
 
-    Cgroup.cgroup_set_default_systemd_cgroup()
+    Cgroup.__set_default_systemd_cgroup()
 
     for cgroup in reversed(CGRPS_LIST):
         cgroup.delete()
