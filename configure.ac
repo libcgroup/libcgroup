@@ -252,6 +252,7 @@ AC_CONFIG_FILES([Makefile
 	tests/gunit/Makefile
 	samples/Makefile
 	samples/c/Makefile
+	samples/cmdline/Makefile
 	samples/config/Makefile
 	samples/python/Makefile
 	include/Makefile
