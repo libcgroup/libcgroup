@@ -11,16 +11,19 @@ from libcgroup import Cgroup
 from run import Run
 import consts
 import ftests
+import random
+import string
 import sys
 import os
 
 MNT_COUNT = 101
 MNT_POINT = '/tmp/999stress/'
 DIR_PREFIX = 'name'
+RANDOM_DIR = ''.join(random.choices(string.ascii_letters, k=5))
 
 
 def cgroup_path(count):
-    return MNT_POINT + DIR_PREFIX + str(count)
+    return MNT_POINT + RANDOM_DIR + '/' + DIR_PREFIX + str(count)
 
 
 def prereqs(config):
@@ -31,6 +34,7 @@ def setup(config):
     cmd = ['sudo', 'mkdir']
 
     cmd.append(MNT_POINT)
+    cmd.append(MNT_POINT + RANDOM_DIR)
 
     for count in range(MNT_COUNT):
         cmd.append(cgroup_path(count))
@@ -73,6 +77,7 @@ def teardown(config):
     for count in range(MNT_COUNT):
         cmd.append(cgroup_path(count))
 
+    cmd.append(MNT_POINT + RANDOM_DIR)
     cmd.append(MNT_POINT)
 
     # execute rmdir top-level top-level/sub-directory* at once.
