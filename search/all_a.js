@@ -10,5 +10,6 @@ var searchData=
   ['ecgroupparsefail_7',['ECGROUPPARSEFAIL',['../group__group__errors.html#gga06fc87d81c62e9abb8790b6e5713c55bac62bda67f3029c39ef456100008b1f39',1,'error.h']]],
   ['ecgrulesparsefail_8',['ECGRULESPARSEFAIL',['../group__group__errors.html#ga515eba7218b187ffe263b7d9ecb3ac1b',1,'error.h']]],
   ['enabled_9',['enabled',['../structcontroller__data.html#a24be412cfb6c19f7a13a4bff9e55206e',1,'controller_data']]],
-  ['ext_5fcgroup_5frecord_10',['ext_cgroup_record',['../structext__cgroup__record.html',1,'']]]
+  ['example_5fopts_10',['example_opts',['../structexample__opts.html',1,'']]],
+  ['ext_5fcgroup_5frecord_11',['ext_cgroup_record',['../structext__cgroup__record.html',1,'']]]
 ];
