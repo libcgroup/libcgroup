@@ -59,7 +59,7 @@ def test(config):
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
     for controller in CONTROLLERS:
         cg.add_controller(controller)
-    pid_list = cg.get_procs().sort()
+    pid_list = cg.get_processes().sort()
 
     if pid_list != initial_pid_list:
         result = consts.TEST_FAILED
@@ -72,7 +72,7 @@ def test(config):
     emptycg = Cgroup(EMPTY_CGNAME, Version.CGROUP_V2)
     for controller in CONTROLLERS:
         emptycg.add_controller(controller)
-    empty_pid_list = emptycg.get_procs()
+    empty_pid_list = emptycg.get_processes()
 
     if len(empty_pid_list) != 0:
         result = consts.TEST_FAILED

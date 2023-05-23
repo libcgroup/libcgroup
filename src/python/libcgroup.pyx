@@ -594,7 +594,7 @@ cdef class Cgroup:
         else:
             return False
 
-    def get_procs(self):
+    def get_processes(self):
         """Get the processes in this cgroup
 
         Return:
