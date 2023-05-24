@@ -15,8 +15,12 @@ __author__ =  'Tom Hromatka <tom.hromatka@oracle.com>'
 __date__ = "25 October 2021"
 
 from posix.types cimport pid_t, mode_t
+from libc.stdlib cimport malloc, free
+from libc.string cimport strcpy
 cimport cgroup
 import os
+
+CONTROL_NAMELEN_MAX = 32
 
 cdef class Version:
     CGROUP_UNK = cgroup.CGROUP_UNK
@@ -752,7 +756,7 @@ cdef class Cgroup:
         return current_path.decode('ascii')
 
     @staticmethod
-    def move_process(pid, dest_cgname):
+    def move_process(pid, dest_cgname, controller=None):
         """Move a process to the specified cgroup
 
         Return:
@@ -762,11 +766,29 @@ cdef class Cgroup:
         Invokes the libcgroup C function, cgroup_change_cgroup_path().
         It moves a process to the specified cgroup dest_cgname.
 
+        To move the process to a cgroup v1 cgroup, the controller must be
+        provided.  For cgroup v2, the controller is optional
+
         Note:
         * Writes to the cgroup sysfs
-        * Only works on cgroup v2 (unified) hierarchies
         """
-        ret = cgroup.cgroup_change_cgroup_path(c_str(dest_cgname), pid, NULL)
+        cdef char *controllers[2]
+
+        if not controller:
+            ret = cgroup.cgroup_change_cgroup_path(c_str(dest_cgname), pid, NULL)
+        elif isinstance(controller, str):
+            controllers[0] = <char *>malloc(CONTROL_NAMELEN_MAX)
+            strcpy(controllers[0], c_str(controller))
+            controllers[1] = NULL
+
+            ret = cgroup.cgroup_change_cgroup_path(c_str(dest_cgname), pid,
+                                                   <const char * const *>controllers)
+            free(controllers[0])
+        else:
+            #
+            # In the future we could add support for a list of controllers
+            #
+            raise TypeError("Unsupported controller type: {}".format(type(controller)))
 
         if ret is not 0:
             raise RuntimeError("cgroup_change_cgroup_path failed :"
