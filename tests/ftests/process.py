@@ -51,14 +51,16 @@ class Process(object):
             pass
 
     @staticmethod
-    def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1, ignore_systemd=False):
+    def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1,
+                               ignore_systemd=False, replace_idle=False):
         cmd = ["/usr/bin/perl",
                "-e",
                "'while(1){{sleep({})}};'".format(sleep_time)
                ]
 
         try:
-            Cgroup.cgexec(config, controller, cgname, cmd, ignore_systemd=ignore_systemd)
+            Cgroup.cgexec(config, controller, cgname, cmd, ignore_systemd=ignore_systemd,
+                          replace_idle=replace_idle)
         except RunError:
             # When this process is killed, it will throw a run error.
             # Ignore it.
@@ -113,7 +115,7 @@ class Process(object):
 
     # Create a simple process in the requested cgroup
     def create_process_in_cgroup(self, config, controller, cgname,
-                                 cgclassify=True, ignore_systemd=False):
+                                 cgclassify=True, ignore_systemd=False, replace_idle=False):
         if cgclassify:
             child_pid = self.create_process(config)
             Cgroup.classify(config, controller, cgname, child_pid, ignore_systemd=ignore_systemd)
@@ -126,7 +128,8 @@ class Process(object):
             sleep_time = len(self.children) + 1
 
             p = mp.Process(target=Process.__cgexec_infinite_loop,
-                           args=(config, controller, cgname, sleep_time, ignore_systemd, ))
+                           args=(config, controller, cgname, sleep_time, ignore_systemd,
+                                 replace_idle, ))
             p.start()
 
             self.children.append(p)
