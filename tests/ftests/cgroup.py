@@ -969,7 +969,7 @@ class Cgroup(object):
     # exec is a keyword in python, so let's name this function cgexec
     @staticmethod
     def cgexec(config, controller, cgname, cmdline, sticky=False,
-               cghelp=False,  ignore_systemd=False):
+               cghelp=False,  ignore_systemd=False, replace_idle=False):
         """cgexec equivalent method
         """
         cmd = list()
@@ -980,6 +980,9 @@ class Cgroup(object):
 
         if (ignore_systemd):
             cmd.append('-b')
+
+        if (replace_idle):
+            cmd.append('-r')
 
         cmd.append('-g')
         cmd.append('{}:{}'.format(controller, cgname))
