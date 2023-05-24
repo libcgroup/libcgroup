@@ -5,30 +5,24 @@
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from cgroup import Cgroup as CgroupCli, Mode
-from libcgroup import Version, Cgroup
+from libcgroup import Version, Cgroup, Mode
+from cgroup import Cgroup as CgroupCli
+from process import Process
 import consts
 import ftests
+import time
 import sys
 import os
 
 
-CONTROLLER = 'cpu'
-SYSTEMD_CGNAME = '071_cg_in_scope'
 OTHER_CGNAME = '071_cg_not_in_scope'
-
 SLICE = 'libcgtests.slice'
 SCOPE = 'test071.scope'
 
-CONFIG_FILE_NAME = os.path.join(os.getcwd(), '071cgconfig.conf')
-SYSTEMD_DEFAULT_CGROUP_DIR = '/var/run/libcgroup'
-SYSTEMD_DEFAULT_CGROUP_FILE = '/var/run/libcgroup/systemd'
-
-# List of libcgroup.Cgroup objects
-CGRPS_LIST = list()
-MODE = Mode.CGROUP_MODE_UNK
+CONTROLLER = 'cpu'
 
 
 def prereqs(config):
@@ -42,116 +36,130 @@ def prereqs(config):
     return result, cause
 
 
-def create_cgrp(config, CGNAME, controller=CONTROLLER, ignore_systemd=False):
-    global CGRPS_LIST, MODE
-
-    result = consts.TEST_PASSED
-    cause = None
-
-    cgrp = Cgroup(CGNAME, Version.CGROUP_V1)
-    if controller is not None:
-        cgrp.add_controller(controller)
-    cgrp.create()
-
-    if not CgroupCli.exists(config, controller, CGNAME, ignore_systemd=ignore_systemd):
-        result = consts.TEST_FAILED
-        if MODE == Mode.CGROUP_MODE_UNIFIED:
-            cause = 'Failed to create {}'.format(os.path.join('/sys/fs/cgroup', CGNAME))
-        else:
-            cause = (
-                        'Failed to create {}'
-                        ''.format(os.path.join('/sys/fs/cgroup', (controller or ''), CGNAME))
-                    )
-        return result, cause
-
-    CGRPS_LIST.append(cgrp)
-
-    return result, cause
-
-
 def setup(config):
-    global MODE
-
-    result = consts.TEST_PASSED
-    cause = None
-
-    # probe the current cgroup set up mode
-    MODE = Cgroup.cgroup_mode()
-
-    if not os.path.isdir(SYSTEMD_DEFAULT_CGROUP_DIR):
-        os.mkdir(SYSTEMD_DEFAULT_CGROUP_DIR)
-
-    # Emulate the systemd slice/scope creation
-    f = open(SYSTEMD_DEFAULT_CGROUP_FILE, 'w')
-    f.write(os.path.join(SLICE, SCOPE))
-    f.close()
-
-    if not os.path.exists(SYSTEMD_DEFAULT_CGROUP_FILE):
-        result = consts.TEST_FAILED
-        cause = 'Failed to create %s' % SYSTEMD_DEFAULT_CGROUP_FILE
-        return result, cause
-
-    # create /sys/fs/cgroup/cpu/libcgtests.slice (v1) or /sys/fs/cgroup/libcgtests.slice (v2)
-    result, cause = create_cgrp(config, SLICE, ignore_systemd=True)
-    if result == consts.TEST_FAILED:
-        return result, cause
-
-    # create /sys/fs/cgroup/cpu/libcgtests.slice/test071.scope (v1) or
-    #        /sys/fs/cgroup/libcgtests.slice/tests071.scope (v2)
-    result, cause = create_cgrp(config, os.path.join(SLICE, SCOPE), ignore_systemd=True)
-    if result == consts.TEST_FAILED:
-        return result, cause
-
-    # In hybrid mode /sys/fs/cgroup/unified/libcgtests.slice/test071.scope
-    # is created by the systemd and we relay on it for checking if the
-    # slice and scope were set as default systemd cgroup (new cgroup root)
-    if MODE == Mode.CGROUP_MODE_HYBRID:
-        result, cause = create_cgrp(config, SLICE, None, ignore_systemd=True)
-        if result == consts.TEST_FAILED:
-            return result, cause
-
-        result, cause = create_cgrp(config, os.path.join(SLICE, SCOPE), None, ignore_systemd=True)
-
-    return result, cause
+    pass
 
 
 def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    # Create cgroup before setting the default systemd cgroup
-    result, cause = create_cgrp(config, OTHER_CGNAME, ignore_systemd=True)
-    if result == consts.TEST_FAILED:
-        return result, cause
+    #
+    # Test 1 - Ensure __set_default_systemd_cgroup() throws an exception if
+    #          libcgroup doesn't set a default (slice/scope) cgroup path
+    #
+    try:
+        Cgroup.__set_default_systemd_cgroup()
+    except RuntimeError as re:
+        if 'Failed to set' not in str(re):
+            result = consts.TEST_FAILED
+            cause = 'Expected \'Failed to set\' to be in the exception, ' \
+                    'received {}'.format(str(re))
+    else:
+        result = consts.TEST_FAILED
+        cause = '__set_default_systemd_cgroup() erroneously passed'
 
-    Cgroup.__set_default_systemd_cgroup()
+    #
+    # Test 2 - write_default_systemd_scope() should succeed if the slice/scope
+    #          are invalid and we're not setting it as the default.  If we
+    #          create a cgroup at this point, it should be created at the root
+    #          cgroup level, and the default slice/scope should have no bearing
+    #
+    Cgroup.write_default_systemd_scope(SLICE, SCOPE, False)
 
-    # Create cgroup after setting the default systemd cgroup
-    result, cause = create_cgrp(config, SYSTEMD_CGNAME)
-    if result == consts.TEST_FAILED:
-        return result, cause
+    pid = config.process.create_process(config)
+    cg = Cgroup(OTHER_CGNAME, Version.CGROUP_V2)
+    cg.add_controller(CONTROLLER)
+    cg.create()
+    Cgroup.move_process(pid, OTHER_CGNAME, CONTROLLER)
+    cg_pid = cg.get_processes()[0]
 
-    return result, cause
+    if pid != cg_pid:
+        result = consts.TEST_FAILED
+        tmp_cause = 'Expected pid {} to be in {} cgroup, but received pid {} ' \
+                    'via python bindings instead'.format(pid, OTHER_CGNAME, cg_pid)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+    cli_pid = CgroupCli.get_pids_in_cgroup(config, OTHER_CGNAME, CONTROLLER)[0]
+
+    if pid != cli_pid:
+        result = consts.TEST_FAILED
+        tmp_cause = 'Expected pid {} to be in {} cgroup, but received pid {} ' \
+                    'via CLI instead'.format(pid, OTHER_CGNAME, cli_pid)
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+    Process.kill(config, pid)
+    cg.delete()
+
+    #
+    # Test 3 - Write the slice/scope and attempt to set them as the default.
+    #          This should fail because they haven't been created yet, and thus
+    #          it's an invalid path
+    #
+    try:
+        Cgroup.write_default_systemd_scope(SLICE, SCOPE, True)
+    except RuntimeError as re:
+        if 'Failed to set' not in str(re):
+            result = consts.TEST_FAILED
+            tmp_cause = 'Expected \'Failed to set\' to be in the exception, ' \
+                        'received {}'.format(str(re))
+            cause = '\n'.join(filter(None, [cause, tmp_cause]))
+    else:
+        result = consts.TEST_FAILED
+        tmp_cause = 'write_default_systemd_scope() erroneously passed'
+        cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+    #
+    # Test 4 - Create a systemd scope and set it as the default.  Everything
+    #          should work properly in this case
+    #
+    pid = None
+    if Cgroup.cgroup_mode() != Mode.CGROUP_MODE_LEGACY:
+        pid = config.process.create_process(config)
+        Cgroup.create_scope(SCOPE, SLICE, pid=pid)
+        Cgroup.write_default_systemd_scope(SLICE, SCOPE)
+
+        cg = Cgroup('/', Version.CGROUP_V2)
+        cg_pid = cg.get_processes()[0]
+
+        if pid != cg_pid:
+            result = consts.TEST_FAILED
+            tmp_cause = 'Expected pid {} to be in \'/\' cgroup, but received pid {} ' \
+                        'instead'.format(pid, cg_pid)
+            cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+        path = Cgroup.get_current_controller_path(pid)
+        if path != os.path.join('/', SLICE, SCOPE):
+            result = consts.TEST_FAILED
+            tmp_cause = 'Expected pid path to be: {}, but received path {} ' \
+                        'instead'.format(os.path.join('/', SLICE, SCOPE), path)
+            cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+        cli_pid = CgroupCli.get_pids_in_cgroup(config, os.path.join(SLICE, SCOPE), CONTROLLER)[0]
+
+        if pid != cli_pid:
+            result = consts.TEST_FAILED
+            tmp_cause = 'Expected pid {} to be in {} cgroup, but received pid {} ' \
+                        'via CLI instead'.format(pid, os.path.join(SLICE, SCOPE), cli_pid)
+            cause = '\n'.join(filter(None, [cause, tmp_cause]))
+
+    return result, cause, pid
 
 
-def teardown(config):
-    global CGRPS_LIST
+def teardown(config, pid):
+    if pid:
+        Process.kill(config, pid)
 
-    # the last object in the list is created with the default
-    # systemd cgroup set for others we need unset it
-    cgroup = CGRPS_LIST.pop()
-    cgroup.delete()
+    # Give systemd a chance to remove the scope
+    time.sleep(0.5)
 
-    # unset the default systemd cgroup by deleting the
-    # /var/run/libcgroup/systemd and calling
-    # __set_default_systemd_cgroup()
-    if os.path.exists(SYSTEMD_DEFAULT_CGROUP_FILE):
-        os.unlink(SYSTEMD_DEFAULT_CGROUP_FILE)
+    Cgroup.clear_default_systemd_scope()
 
-    Cgroup.__set_default_systemd_cgroup()
-
-    for cgroup in reversed(CGRPS_LIST):
-        cgroup.delete()
+    try:
+        cg = Cgroup(SLICE, Version.CGROUP_V2)
+        cg.delete()
+    except RuntimeError:
+        pass
 
 
 def main(config):
@@ -159,14 +167,13 @@ def main(config):
     if result != consts.TEST_PASSED:
         return [result, cause]
 
-    [result, cause] = setup(config)
-    if result != consts.TEST_PASSED:
-        return [result, cause]
+    setup(config)
 
     try:
-        [result, cause] = test(config)
+        pid = None
+        [result, cause, pid] = test(config)
     finally:
-        teardown(config)
+        teardown(config, pid)
 
     return [result, cause]
 
