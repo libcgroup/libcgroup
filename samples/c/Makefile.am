@@ -7,7 +7,11 @@ noinst_PROGRAMS = setuid walk_test read_stats walk_task get_controller	\
 		  get_mount_point proctest get_all_controller		\
 		  get_variable_names test_named_hierarchy		\
 		  get_procs wrapper_test logger empty_cgroup_v2		\
-		  get_setup_mode create_systemd_scope
+		  get_setup_mode
+
+if WITH_SYSTEMD
+noinst_PROGRAMS += create_systemd_scope
+endif
 
 setuid_SOURCES=setuid.c
 walk_test_SOURCES=walk_test.c
