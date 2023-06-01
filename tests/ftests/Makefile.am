@@ -105,6 +105,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  082-pybindings-cgrp_get_curr_ctrl_path-v2.py \
 			  083-pybindings-helpers_cgroup_mode.py \
 			  084-sudo-cgcreate_systemd_scope_pid.py \
+			  085-sudo-cgexec_systemd_scope.py \
 			  086-sudo-systemd_cmdline_example.py \
 			  087-sudo-move_pid.py \
 			  998-cgdelete-non-existing-shared-mnt-cgroup-v1.py
