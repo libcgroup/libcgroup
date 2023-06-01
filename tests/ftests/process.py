@@ -118,7 +118,8 @@ class Process(object):
                                  cgclassify=True, ignore_systemd=False, replace_idle=False):
         if cgclassify:
             child_pid = self.create_process(config)
-            Cgroup.classify(config, controller, cgname, child_pid, ignore_systemd=ignore_systemd)
+            Cgroup.classify(config, controller, cgname, child_pid,
+                            ignore_systemd=ignore_systemd, replace_idle=replace_idle)
         else:
             # use cgexec
 
@@ -147,14 +148,16 @@ class Process(object):
             thread.start()
 
     def create_threaded_process_in_cgroup(self, config, controller, cgname,
-                                          threads=2, cgclassify=True, ignore_systemd=False):
+                                          threads=2, cgclassify=True, ignore_systemd=False,
+                                          replace_idle=False):
 
         p = mp.Process(target=self.create_threaded_process,
                        args=(config, threads, ))
         p.start()
 
         if cgclassify:
-            Cgroup.classify(config, controller, cgname, p.pid, ignore_systemd=ignore_systemd)
+            Cgroup.classify(config, controller, cgname, p.pid,
+                            ignore_systemd=ignore_systemd, replace_idle=replace_idle)
 
         self.children.append(p)
         self.children_pids.append(p.pid)

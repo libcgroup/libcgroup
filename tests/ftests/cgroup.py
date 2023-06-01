@@ -459,12 +459,15 @@ class Cgroup(object):
 
     @staticmethod
     def classify(config, controller, cgname, pid_list, sticky=False,
-                 cancel_sticky=False, ignore_systemd=False):
+                 cancel_sticky=False, ignore_systemd=False, replace_idle=False):
         cmd = list()
 
         if not config.args.container:
             cmd.append('sudo')
         cmd.append(Cgroup.build_cmd_path('cgclassify'))
+
+        if replace_idle:
+            cmd.append('-r')
 
         if ignore_systemd:
             cmd.append('-b')
