@@ -40,6 +40,11 @@ If this option is not used then
 control group based on \fB/etc/cgrules.conf\fR.
 
 .TP
+.B -r
+Replaces systemd scope's idle process with the
+\fBfirst process\fR of the list of process (\fBpidlist\fR).
+
+.TP
 .B --sticky
 If this option is used, the daemon of service cgred (cgrulesengd process)
 does not change both the specified \fBpidlist\fR and their children tasks.
