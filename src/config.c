@@ -852,7 +852,8 @@ next_controller:
 		cgroup_free_controller(cgc);
 		cgrp_cpy->index = 0;
 	}
-	return 0;
+
+	ret = 0;
 err:
 	cgroup_free(&convert_cgrp);
 	cgroup_free(&cgrp_cpy);
