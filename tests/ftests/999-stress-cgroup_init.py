@@ -17,9 +17,9 @@ import sys
 import os
 
 MNT_COUNT = 101
-MNT_POINT = '/tmp/999stress/'
+MNT_POINT = '/tmp/'
 DIR_PREFIX = 'name'
-RANDOM_DIR = ''.join(random.choices(string.ascii_letters, k=5))
+RANDOM_DIR = ''.join(random.choices(string.ascii_letters, k=5)) + '-999stress'
 
 
 def cgroup_path(count):
@@ -33,7 +33,6 @@ def prereqs(config):
 def setup(config):
     cmd = ['sudo', 'mkdir']
 
-    cmd.append(MNT_POINT)
     cmd.append(MNT_POINT + RANDOM_DIR)
 
     for count in range(MNT_COUNT):
@@ -78,7 +77,6 @@ def teardown(config):
         cmd.append(cgroup_path(count))
 
     cmd.append(MNT_POINT + RANDOM_DIR)
-    cmd.append(MNT_POINT)
 
     # execute rmdir top-level top-level/sub-directory* at once.
     Run.run(cmd)
