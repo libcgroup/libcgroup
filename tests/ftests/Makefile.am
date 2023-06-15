@@ -108,6 +108,7 @@ EXTRA_DIST_PYTHON_TESTS = \
 			  085-sudo-cgexec_systemd_scope.py \
 			  086-sudo-systemd_cmdline_example.py \
 			  087-sudo-move_pid.py \
+			  088-sudo-cgclassify_systemd_scope.py \
 			  998-cgdelete-non-existing-shared-mnt-cgroup-v1.py
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
