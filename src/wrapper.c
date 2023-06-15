@@ -136,6 +136,7 @@ int cgroup_add_all_controllers(struct cgroup *cgroup)
 
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		if (strlen(cg_cgroup_v2_mount_path) == 0) {
+			pthread_rwlock_unlock(&cg_mount_table_lock);
 			ret = ECGOTHER;
 			goto out;
 		}
