@@ -162,8 +162,8 @@ def&#160;</td><td class="memItemRight" valign="bottom"><b>get_cgroup_mounts</b> 
 <tr class="memitem:aac4abad748a0d921af8a8c5f4411656f"><td class="memItemLeft" align="right" valign="top"><a id="aac4abad748a0d921af8a8c5f4411656f" name="aac4abad748a0d921af8a8c5f4411656f"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>lscgroup</b> (config, cghelp=False, controller=None, path=None)</td></tr>
 <tr class="separator:aac4abad748a0d921af8a8c5f4411656f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad76723bcd8bf2a1ec1c61910132c73ea"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#ad76723bcd8bf2a1ec1c61910132c73ea">cgexec</a> (config, controller, cgname, cmdline, sticky=False, cghelp=False, ignore_systemd=False)</td></tr>
-<tr class="separator:ad76723bcd8bf2a1ec1c61910132c73ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c351de65e993594e938a7a943f2e3d2"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a8c351de65e993594e938a7a943f2e3d2">cgexec</a> (config, controller, cgname, cmdline, sticky=False, cghelp=False, ignore_systemd=False, replace_idle=False)</td></tr>
+<tr class="separator:a8c351de65e993594e938a7a943f2e3d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73fa3246ac5e2cc89745e3ec58e82f3d"><td class="memItemLeft" align="right" valign="top"><a id="a73fa3246ac5e2cc89745e3ec58e82f3d" name="a73fa3246ac5e2cc89745e3ec58e82f3d"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><b>get_pids_in_cgroup</b> (config, <a class="el" href="structcgroup.html">cgroup</a>, controller)</td></tr>
 <tr class="separator:a73fa3246ac5e2cc89745e3ec58e82f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -197,8 +197,8 @@ Data Fields</h2></td></tr>
 <tr class="separator:a3a411a7fa6ac4da9c0d7f38b31d73728"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ad76723bcd8bf2a1ec1c61910132c73ea" name="ad76723bcd8bf2a1ec1c61910132c73ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad76723bcd8bf2a1ec1c61910132c73ea">&#9670;&#160;</a></span>cgexec()</h2>
+<a id="a8c351de65e993594e938a7a943f2e3d2" name="a8c351de65e993594e938a7a943f2e3d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c351de65e993594e938a7a943f2e3d2">&#9670;&#160;</a></span>cgexec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -246,7 +246,13 @@ Data Fields</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>replace_idle</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
