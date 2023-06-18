@@ -284,6 +284,8 @@ static pid_t find_scope_pid(pid_t pid)
 	}
 
 	while (fgets(buffer, FILENAME_MAX, pid_proc_fp)) {
+		memset(ctrl_name, '\0', sizeof(CONTROL_NAMELEN_MAX));
+
 		/* read according to the cgroup mode */
 		if (strstr(buffer, "::"))
 			ret = sscanf(buffer, "%d::%4096s\n", &idx, cgroup_name);
