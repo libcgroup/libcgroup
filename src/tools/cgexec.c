@@ -335,6 +335,8 @@ static pid_t find_scope_pid(pid_t pid)
 		 * have libcgroup_systemd_idle_thread
 		 */
 		_scope_pid = search_systemd_idle_thread_task(pids, size);
+		free(pids);
+
 		if (_scope_pid == -1)
 			continue;
 
