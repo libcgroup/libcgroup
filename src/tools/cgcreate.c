@@ -71,6 +71,12 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 	ret = cgroup_create_scope2(cg, 0, &opts);
 	if (!ret && set_default) {
 		scope = strstr(cg->name, "/");
+		if (!scope) {
+			err("%s: Invalid scope name %s, expected <slice>/<scope>\n",
+			    prog_name, cg->name);
+			ret = ECGINVAL;
+			goto err;
+		}
 		len = strlen(cg->name) - strlen(scope);
 		strncpy(slice, cg->name, len);
 		slice[len] = '\0';
