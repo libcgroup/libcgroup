@@ -78,7 +78,7 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 			goto err;
 		}
 		len = strlen(cg->name) - strlen(scope);
-		strncpy(slice, cg->name, len);
+		strncpy(slice, cg->name, FILENAME_MAX - 1);
 		slice[len] = '\0';
 		scope++;
 
