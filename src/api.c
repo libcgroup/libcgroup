@@ -4914,8 +4914,9 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 				 * line, skip this line.
 				 */
 				if (unified) {
-					fscanf(pid_cgroup_fd, "%*[^\n]\n");
-					continue;
+					ret = fscanf(pid_cgroup_fd, "%*[^\n]\n");
+					if (ret == 0)
+						continue;
 				}
 
 				cgroup_warn("read failed for pid_cgroup_fd ret %d\n", ret);
