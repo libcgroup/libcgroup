@@ -50,7 +50,7 @@ static void usage(int status, const char *program_name)
 #ifdef WITH_SYSTEMD
 	info("  -b				Ignore default systemd delegate hierarchy\n");
 #endif
-	info("  -c                              Display controller version\n");
+	info("  -c				Display controller version\n");
 }
 
 static int get_controller_from_name(const char * const name, char **controller)

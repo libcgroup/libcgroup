@@ -45,7 +45,7 @@ static void usage(int status, const char *program_name)
 	info("  -b				Ignore default systemd");
 	info("delegate hierarchy\n");
 	info("  -c, --scope			Create a delegated systemd scope\n");
-	info("  -p, --pid=pid                   Task pid to use to create systemd ");
+	info("  -p, --pid=pid			Task pid to use to create systemd ");
 	info("scope\n");
 	info("  -S, --setdefault		Set this scope as the default scope ");
 	info("delegate hierarchy\n");
