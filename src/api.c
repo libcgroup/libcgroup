@@ -1272,7 +1272,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	 * wish to read/modify.  Add it to our cg_mount_table so that it can be manipulated
 	 * like other "normal" controllers
 	 */
-	controllers = malloc(strlen(ret_c) + strlen(CGROUP_FILE_PREFIX) + 1);
+	controllers = malloc(strlen(ret_c) + strlen(CGROUP_FILE_PREFIX) + 2);
 	if (!controllers) {
 		ret = ECGOTHER;
 		goto out;
