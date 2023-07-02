@@ -207,7 +207,6 @@ cdef class Cgroup:
         Does not modify the cgroup sysfs
         """
         cdef cgroup.cgroup_controller *cgcp
-        cdef char * value
 
         ctrl_name = setting_name.split('.')[0]
 
