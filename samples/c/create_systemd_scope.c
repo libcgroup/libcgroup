@@ -209,10 +209,10 @@ error:
 
 static int move_pids_to_tmp_cgroup(const struct example_opts * const opts)
 {
+	struct cgroup *cg = NULL;
 	int ret, pid_cnt, i;
 	pid_t *pids = NULL;
 	int saved_ret = 0;
-	struct cgroup *cg;
 
 	/*
 	 * Since we told libcgroup that our slice and scope are the default, we can
