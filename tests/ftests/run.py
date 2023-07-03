@@ -9,11 +9,12 @@
 from subprocess import TimeoutExpired
 from log import Log
 import subprocess
+import time
 
 
 class Run(object):
     @staticmethod
-    def run(command, shell_bool=False, ignore_profiling_errors=True, timeout=None):
+    def __run(command, shell_bool, timeout):
         if shell_bool:
             if isinstance(command, str):
                 # nothing to do.  command is already formatted as a string
@@ -67,6 +68,19 @@ class Run(object):
                             '\n\tstderr = {}'
                             ''.format(' '.join(command), ret, out, err)
                          )
+
+        return ret, out, err
+
+    @staticmethod
+    def run(command, shell_bool=False, ignore_profiling_errors=True, timeout=None):
+        ret, out, err = Run.__run(command, shell_bool, timeout)
+
+        if err.find('Error: websocket: bad handshake') >= 0:
+            # LXD sometimes throws this error on underpowered machines.
+            # Wait a bit, then try the request again
+            Log.log_error('Received \'{}\' error.  Re-running command'.format(err))
+            time.sleep(5)
+            ret, out, err = Run.__run(command, shell_bool, timeout)
 
         if ret != 0:
             raise RunError("Command '{}' failed".format(''.join(command)),
