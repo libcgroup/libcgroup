@@ -461,10 +461,10 @@ error:
 
 static int delete_tmp_cgroup(void)
 {
+	struct cgroup *cg = NULL;
 	int ret, pid_cnt, i;
 	int saved_errno = 0;
 	pid_t *pids = NULL;
-	struct cgroup *cg;
 
 	ret = cgroup_get_procs(TMP_CGNAME, NULL, &pids, &pid_cnt);
 	if (ret) {
