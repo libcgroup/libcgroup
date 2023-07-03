@@ -8,6 +8,7 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
+from libcgroup import Mode
 import consts
 import ftests
 import sys
@@ -20,8 +21,17 @@ GRANDCHILD = 'grandchildcg'
 
 
 def prereqs(config):
-    # This test should run on both cgroup v1 and v2
-    pass
+    result = consts.TEST_PASSED
+    cause = None
+
+    # This test has shown inconsistent failures on underpowered legacy
+    # machines when run within a container.  Skip that configuration
+    if Cgroup.get_cgroup_mode(config) == Mode.CGROUP_MODE_LEGACY and \
+       config.args.container:
+        result = consts.TEST_SKIPPED
+        cause = 'Skip this test in containerized legacy hierarchies'
+
+    return result, cause
 
 
 def setup(config):
@@ -53,7 +63,10 @@ def teardown(config):
 
 
 def main(config):
-    prereqs(config)
+    [result, cause] = prereqs(config)
+    if result != consts.TEST_PASSED:
+        return [result, cause]
+
     setup(config)
     [result, cause] = test(config)
     teardown(config)
