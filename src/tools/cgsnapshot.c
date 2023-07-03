@@ -556,8 +556,13 @@ static int parse_controllers(cont_name_t cont_names[CG_CONTROLLER_MAX], const ch
 	/* go through the list of controllers/mount point pairs */
 	while (ret == 0) {
 		if (strcmp(path, controller.path) == 0) {
-			/* if it is still the same mount point */
-			if (max < CG_CONTROLLER_MAX) {
+			/*
+			 * if it is still the same mount point
+			 *
+			 * note that the last entry in controllers[][] must be '\0', so
+			 * we need to stop populating the array at CG_CONTROLLER_MAX - 1
+			 */
+			if (max < CG_CONTROLLER_MAX - 1) {
 				strncpy(controllers[max], controller.name, FILENAME_MAX);
 				(controllers[max])[FILENAME_MAX-1] = '\0';
 				max++;
