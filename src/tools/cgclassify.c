@@ -41,7 +41,7 @@ static int rollback_pid_cgroups(pid_t pid);
 struct cgroup_info {
 	char ctrl_name[CONTROL_NAMELEN_MAX];
 	char cgrp_path[FILENAME_MAX];
-}info[MAX_MNT_ELEMENTS];
+}info[MAX_MNT_ELEMENTS + 1];
 
 static void usage(int status, const char *program_name)
 {
