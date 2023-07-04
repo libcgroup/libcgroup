@@ -4936,6 +4936,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 			if (!*current_path) {
 				last_errno = errno;
 				ret = ECGOTHER;
+				goto done;
 			}
 			ret = 0;
 			goto done;
