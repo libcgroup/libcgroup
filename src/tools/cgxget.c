@@ -861,13 +861,13 @@ int main(int argc, char *argv[])
 		cgroup_set_default_systemd_cgroup();
 
 	ret = convert_cgroups(&cg_list, cg_list_len, version, CGROUP_DISK);
-	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
+	if ((ret && ret != ECGNOVERSIONCONVERT) ||
+	    (ret == ECGNOVERSIONCONVERT && !ignore_unmappable))
 		/*
-		 * The user has specified that we should ignore any errors
-		 * due to being unable to map from v1 to v2 or vice versa
+		 * If the user not has specified that we ignore any errors
+		 * due to being unable to map from v1 to v2 or vice versa,
+		 * return error, else ignore the error and continue.
 		 */
-		ret = 0;
-	else if (ret)
 		goto err;
 
 	ret = get_values(cg_list, cg_list_len);
