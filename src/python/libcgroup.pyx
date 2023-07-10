@@ -161,7 +161,6 @@ cdef class Cgroup:
         Does not modify the cgroup sysfs
         """
         cdef cgroup.cgroup_controller * cgcp
-        cdef cgroup.cgroup * cgp
 
         cgcp = cgroup.cgroup_add_controller(self._cgp,
                                             c_str(ctrl_name))
