@@ -11,7 +11,7 @@
 """ Python bindings for the libcgroup library
 """
 
-__author__ =  'Tom Hromatka <tom.hromatka@oracle.com>'
+__author__ = 'Tom Hromatka <tom.hromatka@oracle.com>'
 __date__ = "25 October 2021"
 
 from posix.types cimport pid_t, mode_t
@@ -47,12 +47,15 @@ cdef class LogLevel:
     CGROUP_LOG_INFO = cgroup.CGROUP_LOG_INFO
     CGROUP_LOG_DEBUG = cgroup.CGROUP_LOG_DEBUG
 
+
 def c_str(string):
     return bytes(string, "ascii")
+
 
 def indent(in_str, cnt):
     leading_indent = cnt * ' '
     return ''.join(leading_indent + line for line in in_str.splitlines(True))
+
 
 class Controller:
     def __init__(self, name):
@@ -81,6 +84,7 @@ class Controller:
             return False
 
         return True
+
 
 cdef class Cgroup:
     """ Python object representing a libcgroup cgroup """
