@@ -1,0 +1,4 @@
+[tool.cython-lint]
+max-line-length = 100
+# E128 - continuation line under-indented for visual indent
+ignore = ['E128']
