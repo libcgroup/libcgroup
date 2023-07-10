@@ -18,7 +18,6 @@ from posix.types cimport pid_t, mode_t
 from libc.stdlib cimport malloc, free
 from libc.string cimport strcpy
 cimport cgroup
-import os
 
 CONTROL_NAMELEN_MAX = 32
 
