@@ -219,7 +219,7 @@ cdef class Cgroup:
                 raise RuntimeError("Failed to get controller {}".format(
                                    ctrl_name))
 
-        if setting_value == None:
+        if setting_value is None:
             ret = cgroup.cgroup_add_value_string(cgcp,
                       c_str(setting_name), NULL)
         else:
@@ -377,7 +377,7 @@ cdef class Cgroup:
         mount_points = []
         ret = cgroup.cgroup_list_mount_points(version, &a)
         if ret is not 0:
-            raise RuntimeError("cgroup_list_mount_points failed: {}".format(ret));
+            raise RuntimeError("cgroup_list_mount_points failed: {}".format(ret))
 
         i = 0
         while a[i]:
@@ -812,6 +812,6 @@ cdef class Cgroup:
         cgroup.cgroup_set_default_logger(log_level)
 
     def __dealloc__(self):
-        cgroup.cgroup_free(&self._cgp);
+        cgroup.cgroup_free(&self._cgp)
 
 # vim: set et ts=4 sw=4:
