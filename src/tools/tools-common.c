@@ -207,7 +207,15 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list, char *dirn
 		errno = 0;
 		item = readdir(d);
 		if (item && (item->d_type == DT_REG || item->d_type == DT_LNK)) {
-			char *tmp;
+			char *tmp, *file_ext;
+
+			/* we are interested in .conf files, skip others */
+			file_ext = strstr(item->d_name, ".conf");
+			if (!file_ext)
+				continue;
+
+			if (strcmp(file_ext, ".conf") || strlen(item->d_name) == 5)
+				continue;
 
 			ret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
 			if (ret < 0) {
