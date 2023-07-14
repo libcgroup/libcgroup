@@ -597,13 +597,14 @@ static int indent_multiline_value(struct control_value * const cv)
 
 static int fill_empty_controller(struct cgroup * const cg, struct cgroup_controller * const cgc)
 {
-	struct dirent *ctrl_dir = NULL;
-	bool found_mount = false;
-	int i, path_len, ret = 0;
-	char path[FILENAME_MAX] = { '\0' };
+	char cgrp_ctrl_path[FILENAME_MAX] = { '\0' };
+	char mnt_path[FILENAME_MAX] = { '\0' };
 #ifdef WITH_SYSTEMD
 	char tmp[FILENAME_MAX] = { '\0' };
 #endif
+	struct dirent *ctrl_dir = NULL;
+	int i, mnt_path_len, ret = 0;
+	bool found_mount = false;
 	DIR *dir = NULL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
@@ -619,10 +620,10 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 	if (found_mount == false)
 		goto out;
 
-	if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
+	if (!cg_build_path_locked(NULL, mnt_path, cg_mount_table[i].name))
 		goto out;
 
-	path_len = strlen(path);
+	mnt_path_len = strlen(mnt_path);
 #ifdef WITH_SYSTEMD
 	/*
 	 * If the user has set a slice/scope as setdefault in the
@@ -635,33 +636,33 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 	 * cgget -g cpu:/foo
 	 */
 	if (cg->name[0] == '/' && cg->name[1] != '\0' &&
-	    strncmp(path + (path_len - 7), ".scope/", 7) == 0) {
-		snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
-		strncpy(path, tmp, FILENAME_MAX - 1);
-		path[FILENAME_MAX - 1] = '\0';
+	    strncmp(mnt_path + (mnt_path_len - 7), ".scope/", 7) == 0) {
+		snprintf(tmp, FILENAME_MAX, "%s", dirname(mnt_path));
+		strncpy(mnt_path, tmp, FILENAME_MAX - 1);
+		mnt_path[FILENAME_MAX - 1] = '\0';
 
-		path_len = strlen(path);
-		if (strncmp(path + (path_len - 6), ".slice", 6) == 0) {
-			snprintf(tmp, FILENAME_MAX, "%s", dirname(path));
-			strncpy(path, tmp, FILENAME_MAX - 1);
-			path[FILENAME_MAX - 1] = '\0';
+		mnt_path_len = strlen(mnt_path);
+		if (strncmp(mnt_path + (mnt_path_len - 6), ".slice", 6) == 0) {
+			snprintf(tmp, FILENAME_MAX, "%s", dirname(mnt_path));
+			strncpy(mnt_path, tmp, FILENAME_MAX - 1);
+			mnt_path[FILENAME_MAX - 1] = '\0';
 		} else {
-			cgroup_dbg("Malformed path %s (expected slice name)\n", path);
+			cgroup_dbg("Malformed path %s (expected slice name)\n", mnt_path);
 			ret = ECGOTHER;
 			goto out;
 		}
 	}
 #endif
-	strncat(path, cg->name, FILENAME_MAX - path_len - 1);
-	path[sizeof(path) - 1] = '\0';
+	strncat(mnt_path, cg->name, FILENAME_MAX - mnt_path_len - 1);
+	mnt_path[sizeof(mnt_path) - 1] = '\0';
 
-	if (access(path, F_OK))
+	if (access(mnt_path, F_OK))
 		goto out;
 
-	if (!cg_build_path_locked(cg->name, path, cg_mount_table[i].name))
+	if (!cg_build_path_locked(cg->name, cgrp_ctrl_path, cg_mount_table[i].name))
 		goto out;
 
-	dir = opendir(path);
+	dir = opendir(cgrp_ctrl_path);
 	if (!dir) {
 		ret = ECGOTHER;
 		goto out;
