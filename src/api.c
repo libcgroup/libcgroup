@@ -5723,25 +5723,26 @@ static int cg_get_procname_from_proc_status(pid_t pid, char **procname_status)
 static int cg_get_procname_from_proc_cmdline(pid_t pid, const char *pname_status,
 					     char **pname_cmdline)
 {
+	char pid_cwd_path[FILENAME_MAX];
+	char pid_cmd_path[FILENAME_MAX];
 	char buf_pname[FILENAME_MAX];
 	char buf_cwd[FILENAME_MAX];
-	char path[FILENAME_MAX];
 	int ret = ECGFAIL;
 	int len = 0;
 	int c = 0;
 	FILE *f;
 
 	memset(buf_cwd, '\0', sizeof(buf_cwd));
-	sprintf(path, "/proc/%d/cwd", pid);
+	sprintf(pid_cwd_path, "/proc/%d/cwd", pid);
 
-	if (readlink(path, buf_cwd, sizeof(buf_cwd)) < 0)
+	if (readlink(pid_cwd_path, buf_cwd, sizeof(buf_cwd)) < 0)
 		return ECGROUPNOTEXIST;
 
 	/* readlink doesn't append a null */
 	buf_cwd[FILENAME_MAX - 1] = '\0';
 
-	sprintf(path, "/proc/%d/cmdline", pid);
-	f = fopen(path, "re");
+	sprintf(pid_cmd_path, "/proc/%d/cmdline", pid);
+	f = fopen(pid_cmd_path, "re");
 	if (!f)
 		return ECGROUPNOTEXIST;
 
@@ -5781,13 +5782,13 @@ static int cg_get_procname_from_proc_cmdline(pid_t pid, const char *pname_status
 
 		strcat(buf_cwd, "/");
 		strcat(buf_cwd, buf_pname);
-		if (!realpath(buf_cwd, path)) {
+		if (!realpath(buf_cwd, pid_cmd_path)) {
 			last_errno = errno;
 			ret = ECGOTHER;
 			break;
 		}
 
-		*pname_cmdline = strdup(path);
+		*pname_cmdline = strdup(pid_cmd_path);
 		if (*pname_cmdline == NULL) {
 			last_errno = errno;
 			ret = ECGOTHER;
