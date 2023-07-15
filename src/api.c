@@ -3639,11 +3639,12 @@ fill_error:
  */
 int cgroup_get_cgroup(struct cgroup *cgroup)
 {
+	char cgrp_ctrl_path[FILENAME_MAX];
 	struct dirent *ctrl_dir = NULL;
+	char mnt_path[FILENAME_MAX];
 	int initial_controller_cnt;
-	int controller_cnt = 0;
 	char *control_path = NULL;
-	char path[FILENAME_MAX];
+	int controller_cnt = 0;
 	DIR *dir = NULL;
 	int error;
 	int i, j;
@@ -3665,7 +3666,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 	for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
 		struct cgroup_controller *cgc;
 		struct stat stat_buffer;
-		int path_len;
+		int mnt_path_len;
 
 		if (initial_controller_cnt > 0) {
 			bool skip_this_controller = true;
@@ -3684,24 +3685,24 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 				continue;
 		}
 
-		if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
+		if (!cg_build_path_locked(NULL, mnt_path, cg_mount_table[i].name))
 			continue;
 
-		path_len = strlen(path);
-		strncat(path, cgroup->name, FILENAME_MAX - path_len - 1);
-		path[sizeof(path) - 1] = '\0';
+		mnt_path_len = strlen(mnt_path);
+		strncat(mnt_path, cgroup->name, FILENAME_MAX - mnt_path_len - 1);
+		mnt_path[sizeof(mnt_path) - 1] = '\0';
 
-		if (access(path, F_OK))
+		if (access(mnt_path, F_OK))
 			continue;
 
-		if (!cg_build_path_locked(cgroup->name, path, cg_mount_table[i].name)) {
+		if (!cg_build_path_locked(cgroup->name, cgrp_ctrl_path, cg_mount_table[i].name)) {
 			/* This fails when the cgroup does not exist for that controller. */
 			continue;
 		}
 
 		/* Get the uid and gid information. */
 		if (cg_mount_table[i].version == CGROUP_V1) {
-			ret = asprintf(&control_path, "%s/tasks", path);
+			ret = asprintf(&control_path, "%s/tasks", cgrp_ctrl_path);
 
 			if (ret < 0) {
 				last_errno = errno;
@@ -3723,7 +3724,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		} else { /* cgroup v2 */
 			bool enabled;
 
-			error = cgroupv2_get_controllers(path, cg_mount_table[i].name,
+			error = cgroupv2_get_controllers(cgrp_ctrl_path, cg_mount_table[i].name,
 							 &enabled);
 			if (error == ECGROUPNOTMOUNTED) {
 				/*
@@ -3752,7 +3753,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			goto unlock_error;
 		}
 
-		dir = opendir(path);
+		dir = opendir(cgrp_ctrl_path);
 		if (!dir) {
 			last_errno = errno;
 			error = ECGOTHER;
