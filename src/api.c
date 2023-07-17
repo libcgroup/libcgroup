@@ -2109,8 +2109,9 @@ int cgroup_attach_task(struct cgroup *cgroup)
 int cg_mkdir_p(const char *path)
 {
 	char *real_path = NULL;
-	int stat_ret, ret = 0;
+	char *tmp_path = NULL;
 	struct stat st;
+	int ret = 0;
 	int i = 0;
 	char pos;
 
@@ -2135,7 +2136,6 @@ int cg_mkdir_p(const char *path)
 
 		/* 0775 == S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH */
 		ret = mkdir(real_path, 0775);
-		real_path[i] = pos;
 		if (ret) {
 			switch (errno) {
 			case EEXIST:
@@ -2144,19 +2144,21 @@ int cg_mkdir_p(const char *path)
 			case EPERM:
 				ret = ECGROUPNOTOWNER;
 				goto done;
-			default:
-				/* Check if path exists */
-				real_path[i] = '\0';
-				stat_ret = stat(real_path, &st);
-				real_path[i] = pos;
-				if (stat_ret == 0) {
-					ret = 0;	/* Path exists */
-					break;
-				}
+			case EROFS:
+				/*
+				 * Check if path exists, use tmp_path to
+				 * keep Coverity happy
+				 */
+				tmp_path = real_path;
+				ret = stat(tmp_path, &st);
+				if (ret == 0)
+					break;	/* Path exists */
+			default: /* fallthrough */
 				ret = ECGROUPNOTALLOWED;
 				goto done;
 			}
 		}
+		real_path[i] = pos;
 	} while (real_path[i]);
 
 done:
