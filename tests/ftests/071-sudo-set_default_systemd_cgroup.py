@@ -45,11 +45,11 @@ def test(config):
     cause = None
 
     #
-    # Test 1 - Ensure __set_default_systemd_cgroup() throws an exception if
+    # Test 1 - Ensure _set_default_systemd_cgroup() throws an exception if
     #          libcgroup doesn't set a default (slice/scope) cgroup path
     #
     try:
-        Cgroup.__set_default_systemd_cgroup()
+        Cgroup._set_default_systemd_cgroup()
     except RuntimeError as re:
         if 'Failed to set' not in str(re):
             result = consts.TEST_FAILED
@@ -57,7 +57,7 @@ def test(config):
                     'received {}'.format(str(re))
     else:
         result = consts.TEST_FAILED
-        cause = '__set_default_systemd_cgroup() erroneously passed'
+        cause = '_set_default_systemd_cgroup() erroneously passed'
 
     #
     # Test 2 - write_default_systemd_scope() should succeed if the slice/scope

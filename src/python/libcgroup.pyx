@@ -570,7 +570,7 @@ cdef class Cgroup:
             raise RuntimeError("cgroup_create_scope2 failed: {}".format(ret))
 
     @staticmethod
-    def __set_default_systemd_cgroup():
+    def _set_default_systemd_cgroup():
         """Set systemd_default_cgroup
 
         Arguments:
@@ -619,7 +619,7 @@ cdef class Cgroup:
             raise RuntimeError("Failed to write the default slice/scope")
 
         if set_default:
-            Cgroup.__set_default_systemd_cgroup()
+            Cgroup._set_default_systemd_cgroup()
 
     @staticmethod
     def clear_default_systemd_scope():
@@ -636,7 +636,7 @@ cdef class Cgroup:
             pass
 
         try:
-            Cgroup.__set_default_systemd_cgroup()
+            Cgroup._set_default_systemd_cgroup()
         except RuntimeError:
             pass
 
