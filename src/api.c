@@ -596,10 +596,10 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 	struct cgroup_rule *newrule = NULL;
 
 	/* Structure to get GID from group name */
-	struct group *grp = NULL;
+	struct group *grp;
 
 	/* Structure to get UID from user name */
-	struct passwd *pwd = NULL;
+	struct passwd *pwd;
 
 	/* Temporary storage for a configuration rule */
 	char key[CGROUP_RULE_MAXKEY] = { '\0' };
@@ -665,6 +665,10 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 			cgroup_warn("skipped child of invalid rule, line %d.\n", linenum);
 			continue;
 		}
+
+		/* clear the buffer. */
+		grp = NULL;
+		pwd = NULL;
 
 		/*
 		 * If there is something left, it should be a rule.  Otherwise,
@@ -883,10 +887,6 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 		for (i = 0; lst->tail->controllers[i]; i++)
 			cgroup_dbg(" %s", lst->tail->controllers[i]);
 		cgroup_dbg("\n");
-
-		/* Finally, clear the buffer. */
-		grp = NULL;
-		pwd = NULL;
 	}
 
 	/* If we make it here, there were no errors. */
