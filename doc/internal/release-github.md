@@ -24,9 +24,9 @@ release.
 
     # ./bootstrap.sh
     # export PATH=$PATH:/path/to/cov-build
-    # cov-build --dir cov-init make
+    # cov-build --dir cov-int make
     # # verify the build succeeded.  Examine $? and cov-int/build-log.txt
-    # tar czvf libcgroup-main@ae6b2682f10e.tar.gz cov-int
+    # tar czvf libcgroup-main@<current hash>.tar.gz cov-int
     # Upload the tar file to Coverity
 
 #### 6. Perform any distribution test builds
