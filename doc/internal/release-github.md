@@ -42,7 +42,7 @@ release.
 
 	# git branch "release-X.Y"
 
-#### 9. Update the version number in configure.ac AC_INIT(...) macro
+#### 9. Update and commit the version number in configure.ac AC_INIT(...) macro and LIBRARY version macros
 
 #### 10. Tag the release in the local repository with a signed tag
 
@@ -58,7 +58,7 @@ release.
 
 	<unpack the release tarball in a temporary directory>
 	# ./configure --sysconfdir=/etc --localstatedir=/var \
-	--enable-opaque-hierarchy="name=systemd" --enable-python
+	--enable-opaque-hierarchy="name=systemd" --enable-python --enable-systemd
 	# make check
 
 #### 13. Generate a checksum for the release tarball
