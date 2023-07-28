@@ -170,6 +170,8 @@ def teardown(config):
     # We need a pause, so that cgroup.procs gets updated.
     time.sleep(1)
 
+    os.remove(CONFIG_FILE_NAME)
+
     try:
         Cgroup.delete(config, CONTROLLER, cgname=SLICE, ignore_systemd=True)
     except RunError as re:
