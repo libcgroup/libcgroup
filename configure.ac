@@ -236,6 +236,20 @@ if test x$with_pam = xtrue; then
 		header files!])])
 fi
 
+if test x$with_systemd = xtrue; then
+       AC_CHECK_LIB([systemd],
+                    [sd_bus_message_new_method_call],
+                    [],
+                    [AC_MSG_ERROR([Cannot compile systemd support without
+		    libsystemd!])])
+
+       AC_CHECK_HEADERS(
+               [systemd/sd-bus.h],
+               [],
+               [AC_MSG_ERROR([Cannot compile systemd support - missing
+	       systemd header files!])])
+fi
+
 AX_CODE_COVERAGE
 
 AC_CONFIG_FILES([Makefile
