@@ -150,6 +150,77 @@ jobs:
     - name: Build the library
       run: make
 
+  nosystemd:
+    name: Build without systemd enabled
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Update the system
+      run: |
+        sudo apt-get update
+    - uses: actions/checkout@v3
+      with:
+        submodules: false
+    - name: Install dependencies
+      run: |
+        sudo apt-get install libpam-dev lcov python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool lcov -y
+    - name: Install cython
+      run: sudo pip install cython
+    - name: Initialize submodules
+      run: |
+        git submodule update --init --recursive
+        pushd googletest/googletest
+        git checkout release-1.8.0
+        cmake -DBUILD_SHARED_LIBS=ON .
+        make
+        popd
+    - name: Automake
+      run: |
+        test -d m4 || mkdir m4
+        autoreconf -fi
+        rm -fr autom4te.cache
+    - name: Run configure with systemd disabled
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-systemd=no --enable-samples
+    - name: Build the library
+      run: make
+    - run: lcov -i -d . -c -o lcov.base
+      shell: bash
+    - name: Run the unit tests
+      run: |
+        pushd tests/gunit
+        make check
+        popd
+    - name: Run the functional tests
+      run: |
+        pushd src/python/build/lib.*
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        popd
+        pushd tests/ftests
+        ./ftests.py -l 10 -L ftests.log
+        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38,77,81 --no-container
+        popd
+    - name: Archive test logs
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: No systemd test logs
+        path: ./*.log
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "No systemd Functional Tests"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: No systemd Code Coverage
+        path: lcov.*
+
   functionaltestsv1:
     name: Cgroup v1 Functional Tests
     runs-on: ubuntu-20.04
@@ -391,7 +462,7 @@ jobs:
     name: Finalize the test run
     if: ${{ always() }}
     needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2_legacy,
-            functionaltestsv2_hybrid, functionaltestsv2_unified]
+            functionaltestsv2_hybrid, functionaltestsv2_unified, nosystemd]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results
