@@ -33,12 +33,14 @@ cdef class Mode:
     CGROUP_MODE_HYBRID = cgroup.CGROUP_MODE_HYBRID
     CGROUP_MODE_UNIFIED = cgroup.CGROUP_MODE_UNIFIED
 
+ifdef(`WITH_SYSTEMD',
 cdef class SystemdMode:
     CGROUP_SYSTEMD_MODE_FAIL = cgroup.CGROUP_SYSTEMD_MODE_FAIL
     CGROUP_SYSTEMD_MODE_REPLACE = cgroup.CGROUP_SYSTEMD_MODE_REPLACE
     CGROUP_SYSTEMD_MODE_ISOLATE = cgroup.CGROUP_SYSTEMD_MODE_ISOLATE
     CGROUP_SYSTEMD_MODE_IGNORE_DEPS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_DEPS
     CGROUP_SYSTEMD_MODE_IGNORE_REQS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_REQS
+)
 
 cdef class LogLevel:
     CGROUP_LOG_CONT = cgroup.CGROUP_LOG_CONT
@@ -65,10 +67,10 @@ class Controller:
         self.settings = dict()
 
     def __str__(self):
-        out_str = "Controller {}\n".format(self.name)
+        out_str = "Controller {}\n".`format'(self.name)
 
         for setting_key in self.settings:
-            out_str += indent("{} = {}\n".format(setting_key,
+            out_str += indent("{} = {}\n".`format'(setting_key,
                               self.settings[setting_key]), 4)
 
         return out_str
@@ -96,14 +98,14 @@ cdef class Cgroup:
     def cgroup_init():
         ret = cgroup.cgroup_init()
         if ret != 0:
-            raise RuntimeError("Failed to initialize libcgroup: {}".format(ret))
+            raise RuntimeError("Failed to initialize libcgroup: {}".`format'(ret))
 
     def __cinit__(self, name, version):
         Cgroup.cgroup_init()
 
         self._cgp = cgroup.cgroup_new_cgroup(c_str(name))
         if self._cgp == NULL:
-            raise RuntimeError("Failed to create cgroup {}".format(name))
+            raise RuntimeError("Failed to create cgroup {}".`format'(name))
 
     def __init__(self, name, version):
         """Initialize this cgroup instance
@@ -120,7 +122,7 @@ cdef class Cgroup:
         self.version = version
 
     def __str__(self):
-        out_str = "Cgroup {}\n".format(self.name)
+        out_str = "Cgroup {}\n".`format'(self.name)
         for ctrl_key in self.controllers:
             out_str += indent(str(self.controllers[ctrl_key]), 4)
 
@@ -168,7 +170,7 @@ cdef class Cgroup:
         cgcp = cgroup.cgroup_add_controller(self._cgp,
                                             c_str(ctrl_name))
         if cgcp == NULL:
-            raise RuntimeError("Failed to add controller {} to cgroup".format(
+            raise RuntimeError("Failed to add controller {} to cgroup".`format'(
                                ctrl_name))
 
         self.controllers[ctrl_name] = Controller(ctrl_name)
@@ -220,7 +222,7 @@ cdef class Cgroup:
             cgcp = cgroup.cgroup_get_controller(self._cgp,
                                                 c_str(ctrl_name))
             if cgcp == NULL:
-                raise RuntimeError("Failed to get controller {}".format(
+                raise RuntimeError("Failed to get controller {}".`format'(
                                    ctrl_name))
 
         if setting_value is None:
@@ -230,7 +232,7 @@ cdef class Cgroup:
             ret = cgroup.cgroup_add_value_string(cgcp,
                       c_str(setting_name), c_str(setting_value))
         if ret != 0:
-            raise RuntimeError("Failed to add setting {}: {}".format(
+            raise RuntimeError("Failed to add setting {}: {}".`format'(
                                setting_name, ret))
 
     def _pythonize_cgroup(self):
@@ -244,7 +246,7 @@ cdef class Cgroup:
             cgcp = cgroup.cgroup_get_controller(self._cgp,
                        c_str(self.controllers[ctrlr_key].name))
             if cgcp == NULL:
-                raise RuntimeError("Failed to get controller {}".format(
+                raise RuntimeError("Failed to get controller {}".`format'(
                                    ctrlr_key))
 
             self.controllers[ctrlr_key] = Controller(ctrlr_key)
@@ -256,7 +258,7 @@ cdef class Cgroup:
                 ret = cgroup.cgroup_get_value_string(cgcp,
                           setting_name, &setting_value)
                 if ret != 0:
-                    raise RuntimeError("Failed to get value {}: {}".format(
+                    raise RuntimeError("Failed to get value {}: {}".`format'(
                                        setting_name, ret))
 
                 name = setting_name.decode("ascii")
@@ -283,7 +285,7 @@ cdef class Cgroup:
         ret = cgroup.cgroup_convert_cgroup(out_cgp._cgp,
                   out_version, self._cgp, self.version)
         if ret != 0:
-            raise RuntimeError("Failed to convert cgroup: {}".format(ret))
+            raise RuntimeError("Failed to convert cgroup: {}".`format'(ret))
 
         for ctrlr_key in self.controllers:
             out_cgp.controllers[ctrlr_key] = Controller(ctrlr_key)
@@ -320,7 +322,7 @@ cdef class Cgroup:
 
         ret = cgroup.cgroup_cgxget(&self._cgp, self.version, ignore)
         if ret != 0:
-            raise RuntimeError("cgxget failed: {}".format(ret))
+            raise RuntimeError("cgxget failed: {}".`format'(ret))
 
         self._pythonize_cgroup()
 
@@ -344,7 +346,7 @@ cdef class Cgroup:
 
         ret = cgroup.cgroup_cgxset(self._cgp, self.version, ignore)
         if ret != 0:
-            raise RuntimeError("cgxset failed: {}".format(ret))
+            raise RuntimeError("cgxset failed: {}".`format'(ret))
 
     def create(self, ignore_ownership=True):
         """Write this cgroup to the cgroup sysfs
@@ -358,7 +360,7 @@ cdef class Cgroup:
         """
         ret = cgroup.cgroup_create_cgroup(self._cgp, ignore_ownership)
         if ret != 0:
-            raise RuntimeError("Failed to create cgroup: {}".format(ret))
+            raise RuntimeError("Failed to create cgroup: {}".`format'(ret))
 
     @staticmethod
     def mount_points(version):
@@ -381,7 +383,7 @@ cdef class Cgroup:
         mount_points = []
         ret = cgroup.cgroup_list_mount_points(version, &a)
         if ret is not 0:
-            raise RuntimeError("cgroup_list_mount_points failed: {}".format(ret))
+            raise RuntimeError("cgroup_list_mount_points failed: {}".`format'(ret))
 
         i = 0
         while a[i]:
@@ -399,6 +401,8 @@ cdef class Cgroup:
         Cgroup.cgroup_init()
         return cgroup.cgroup_setup_mode()
 
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     @staticmethod
     def create_scope(scope_name='libcgroup.scope', slice_name='libcgroup.slice', delegated=True,
                      systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
@@ -407,15 +411,15 @@ cdef class Cgroup:
         Arguments:
         scope_name - name of the scope to be created
         slice_name - name of the slice where the scope should reside
-        delegated - if true, then systemd will not manage the cgroup aspects of the scope.  It
+        delegated - if true`,' then systemd will not manage the cgroup aspects of the scope.  It
                     is up to the user to manage the cgroup settings
         systemd_mode - setting to tell systemd how to handle creation of this scope and
                        resolve conflicts if the scope and/or slice exist
-        pid - pid of the process to place in the scope.  If None is provided, libcgroup will
+        pid - pid of the process to place in the scope.  If None is provided`,' libcgroup will
               place a dummy process in the scope
 
         Description:
-        Create a systemd scope under slice_name.  If delegated is true, then systemd will
+        Create a systemd scope under slice_name.  If delegated is true`,' then systemd will
         not manage the cgroup aspects of the scope.
         """
         cdef cgroup.cgroup_systemd_scope_opts opts
@@ -435,7 +439,8 @@ cdef class Cgroup:
 
         ret = cgroup.cgroup_create_scope(c_str(scope_name), c_str(slice_name), &opts)
         if ret is not 0:
-            raise RuntimeError("cgroup_create_scope failed: {}".format(ret))
+            raise RuntimeError("cgroup_create_scope failed: {}".``format''(ret))
+)
 
     def get(self):
         """Get the cgroup information from the cgroup sysfs
@@ -447,7 +452,7 @@ cdef class Cgroup:
 
         ret = cgroup.cgroup_get_cgroup(self._cgp)
         if ret is not 0:
-            raise RuntimeError("cgroup_get_cgroup failed: {}".format(ret))
+            raise RuntimeError("cgroup_get_cgroup failed: {}".`format'(ret))
 
         ctrl_cnt = cgroup.cgroup_get_controller_count(self._cgp)
         for i in range(0, ctrl_cnt):
@@ -468,7 +473,7 @@ cdef class Cgroup:
         """
         ret = cgroup.cgroup_delete_cgroup(self._cgp, ignore_migration)
         if ret is not 0:
-            raise RuntimeError("cgroup_delete_cgroup failed: {}".format(ret))
+            raise RuntimeError("cgroup_delete_cgroup failed: {}".`format'(ret))
 
     def attach(self, pid=None, root_cgroup=False):
         """Attach a process to a cgroup
@@ -492,7 +497,7 @@ cdef class Cgroup:
                 ret = cgroup.cgroup_attach_task_pid(self._cgp, pid)
 
         if ret is not 0:
-            raise RuntimeError("cgroup_attach_task failed: {}".format(ret))
+            raise RuntimeError("cgroup_attach_task failed: {}".`format'(ret))
 
     def set_uid_gid(self, tasks_uid, tasks_gid, ctrl_uid, ctrl_gid):
         """Set the desired owning uid/gid for the tasks file and the entire cgroup hierarchy
@@ -509,7 +514,7 @@ cdef class Cgroup:
         """
         ret = cgroup.cgroup_set_uid_gid(self._cgp, tasks_uid, tasks_gid, ctrl_uid, ctrl_gid)
         if ret is not 0:
-            raise RuntimeError("cgroup_set_uid_gid failed: {}".format(ret))
+            raise RuntimeError("cgroup_set_uid_gid failed: {}".`format'(ret))
 
     def set_permissions(self, dir_mode, ctrl_mode, task_mode):
         """Set the permission bits on the cgroup
@@ -534,22 +539,24 @@ cdef class Cgroup:
 
         cgroup.cgroup_set_permissions(self._cgp, dmode, cmode, tmode)
 
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     def create_scope2(self, ignore_ownership=True, delegated=True,
                       systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
         """Create a systemd scope using the cgroup instance
 
         Arguments:
-        ignore_ownership - if true, do not modify the owning user/group for the cgroup directory
+        ignore_ownership - if true`,' do not modify the owning user/group for the cgroup directory
                            and control files
-        delegated - if true, then systemd will not manage the cgroup aspects of the scope.  It
+        delegated - if true`,' then systemd will not manage the cgroup aspects of the scope.  It
                     is up to the user to manage the cgroup settings
         systemd_mode - setting to tell systemd how to handle creation of this scope and
                        resolve conflicts if the scope and/or slice exist
-        pid - pid of the process to place in the scope.  If None is provided, libcgroup will
+        pid - pid of the process to place in the scope.  If None is provided`,' libcgroup will
               place a dummy process in the scope
 
         Description:
-        Create a systemd scope using the cgroup instance in this class.  If delegated is true,
+        Create a systemd scope using the cgroup instance in this class.  If delegated is true`,'
         then systemd will not manage the cgroup aspects of the scope.
         """
         cdef cgroup.cgroup_systemd_scope_opts opts
@@ -567,7 +574,7 @@ cdef class Cgroup:
 
         ret = cgroup.cgroup_create_scope2(self._cgp, ignore_ownership, &opts)
         if ret is not 0:
-            raise RuntimeError("cgroup_create_scope2 failed: {}".format(ret))
+            raise RuntimeError("cgroup_create_scope2 failed: {}".``format''(ret))
 
     @staticmethod
     def _set_default_systemd_cgroup():
@@ -577,8 +584,8 @@ cdef class Cgroup:
         None
 
         Description:
-        Reads /run/libcgroup/systemd and if the file exists, sets the
-        systemd_default_cgroup. Then on all the paths constructed, has
+        Reads /run/libcgroup/systemd and if the file exists`,' sets the
+        systemd_default_cgroup. Then on all the paths constructed`,' has
         the systemd_default_cgroup appended to it.  This is used when
         cgroup sub-tree is constructed for systemd delegation.
         """
@@ -593,20 +600,20 @@ cdef class Cgroup:
         """Write the provided slice and scope to the libcgroup /var/run file
 
         Arguments:
-        slice_name - Slice name, e.g. libcgroup.slice
-        scope_name - Scope name, e.g. database.scope
-        set_default - If true, set this as the default path for libcgroup APIs
+        slice_name - Slice name`,' e.g. libcgroup.slice
+        scope_name - Scope name`,' e.g. database.scope
+        set_default - If true`,' set this as the default path for libcgroup APIs
                       and tools
 
         Description:
         Write the provided slice and scope to the libcgroup var/run file.  This
         convenience function provides a mechanism for setting a slice/scope as
         the default path within libcgroup.  Any API or cmdline operation will
-        utilize this path as the "root" cgroup, but it can be overridden on a
+        utilize this path as the "root" cgroup`,' but it can be overridden on a
         case-by-case basis.
 
-        So if the default slice/scope is set to "libcgroup.slice/database.scope",
-        and the user wants to access "libcgroup.slice/database.scope/foo", then
+        So if the default slice/scope is set to "libcgroup.slice/database.scope"`,'
+        and the user wants to access "libcgroup.slice/database.scope/foo"`,' then
         they can use the following:
 
             # Within libcgroup, this will expand to
@@ -639,6 +646,7 @@ cdef class Cgroup:
             Cgroup._set_default_systemd_cgroup()
         except RuntimeError:
             pass
+)
 
     cdef compare(self, Cgroup other):
         """Compare this cgroup instance with another cgroup instance
@@ -680,10 +688,10 @@ cdef class Cgroup:
         cdef pid_t *pids
         cdef int size
 
-        if len(self.controllers) == 0:
+        if `len'(self.controllers) == 0:
             ret = cgroup.cgroup_get_procs(c_str(self.name), NULL, &pids, &size)
             if ret is not 0:
-                raise RuntimeError("cgroup_get_procs failed: {}".format(ret))
+                raise RuntimeError("cgroup_get_procs failed: {}".`format'(ret))
 
             for i in range(0, size):
                 pid_list.append(int(pids[i]))
@@ -692,7 +700,7 @@ cdef class Cgroup:
             ret = cgroup.cgroup_get_procs(c_str(self.name),
                         c_str(self.controllers[ctrl_key].name), &pids, &size)
             if ret is not 0:
-                raise RuntimeError("cgroup_get_procs failed: {}".format(ret))
+                raise RuntimeError("cgroup_get_procs failed: {}".`format'(ret))
 
             for i in range(0, size):
                 pid_list.append(int(pids[i]))
@@ -756,11 +764,11 @@ cdef class Cgroup:
         else:
             raise TypeError("cgroup_get_current_controller_path failed: "
                             "expected controller type string, but passed "
-                            "{}".format(type(controller)))
+                            "{}".`format'(type(controller)))
 
         if ret is not 0:
             raise RuntimeError("cgroup_get_current_controller_path failed :"
-                               "{}".format(ret))
+                               "{}".`format'(ret))
 
         return current_path.decode('ascii')
 
@@ -797,11 +805,11 @@ cdef class Cgroup:
             #
             # In the future we could add support for a list of controllers
             #
-            raise TypeError("Unsupported controller type: {}".format(type(controller)))
+            raise TypeError("Unsupported controller type: {}".`format'(type(controller)))
 
         if ret is not 0:
             raise RuntimeError("cgroup_change_cgroup_path failed :"
-                               "{}".format(ret))
+                               "{}".`format'(ret))
 
     @staticmethod
     def log_level(log_level):

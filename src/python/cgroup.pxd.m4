@@ -35,6 +35,8 @@ cdef extern from "libcgroup.h":
         unsigned int minor
         unsigned int release
 
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     cdef enum cgroup_systemd_mode_t:
         CGROUP_SYSTEMD_MODE_FAIL
         CGROUP_SYSTEMD_MODE_REPLACE
@@ -46,6 +48,7 @@ cdef extern from "libcgroup.h":
         int delegated
         cgroup_systemd_mode_t mode
         pid_t pid
+)
 
     cdef enum cgroup_log_level:
         CGROUP_LOG_CONT
@@ -85,8 +88,11 @@ cdef extern from "libcgroup.h":
 
     cg_setup_mode_t cgroup_setup_mode()
 
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
                             const cgroup_systemd_scope_opts * const opts)
+)
 
     int cgroup_get_cgroup(cgroup *cg)
 
@@ -107,12 +113,15 @@ cdef extern from "libcgroup.h":
     void cgroup_set_permissions(cgroup *cgroup, mode_t control_dperm, mode_t control_fperm,
                            mode_t task_fperm)
 
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     int cgroup_create_scope2(cgroup *cgroup, int ignore_ownership,
                              const cgroup_systemd_scope_opts * const opts)
 
     int cgroup_set_default_systemd_cgroup()
     int cgroup_write_systemd_default_cgroup(const char * const slice_name,
                                             const char * const scope_name)
+)
 
     int cgroup_compare_cgroup(cgroup *cgroup_a, cgroup *cgroup_b)
 
