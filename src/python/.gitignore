@@ -1,4 +1,7 @@
 build/
+libcgroup.pyx
+cgroup.pxd
+setup.py
 Makefile
 Makefile.in
 __init__.py

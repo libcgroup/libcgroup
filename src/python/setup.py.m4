@@ -22,6 +22,8 @@ setup(
     maintainer_email='tom.hromatka@oracle.com',
     license='LGPLv2.1',
     platforms='Linux',
+ifdef(`WITH_SYSTEMD',
+    # comment to appease m4
     ext_modules=cythonize([
             Extension(
                       'libcgroup', ['libcgroup.pyx'],
@@ -30,6 +32,15 @@ setup(
                       libraries=['systemd']
                      ),
              ])
+    ,
+    ext_modules=cythonize([
+            Extension(
+                      'libcgroup', ['libcgroup.pyx'],
+                      # unable to handle libtool libraries directly
+                      extra_objects=['../.libs/libcgroup.a'],
+                     ),
+             ])
+)
 )
 
 # vim: set et ts=4 sw=4:
