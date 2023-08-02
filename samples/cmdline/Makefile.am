@@ -8,6 +8,8 @@
 
 if WITH_SAMPLES
 
+if WITH_SYSTEMD
 EXTRA_DIST = systemd-with-idle-process.md
+endif
 
 endif

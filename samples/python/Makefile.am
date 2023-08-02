@@ -8,7 +8,9 @@
 
 if WITH_SAMPLES
 
+if WITH_SYSTEMD
 EXTRA_DIST = create_systemd_scope.py
+endif
 
 endif
 
