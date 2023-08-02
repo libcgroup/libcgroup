@@ -262,11 +262,11 @@ def run_tests(config):
             try:
                 filesuite = filename.split('-')[1]
             except IndexError:
-                Log.log_error(
-                                'Skipping {}.  It doesn\'t conform to the '
-                                'filename format'
-                                ''.format(filename)
-                             )
+                Log.log_critical(
+                                 'Skipping {}.  It doesn\'t conform to the '
+                                 'filename format'
+                                 ''.format(filename)
+                                )
                 continue
 
             if config.args.suite == consts.TESTS_RUN_ALL_SUITES or \
