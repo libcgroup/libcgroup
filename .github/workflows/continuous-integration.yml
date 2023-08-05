@@ -46,6 +46,26 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+  checkpatch:
+    name: checkpatch review
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: 'Calculate PR commits + 1'
+        run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+      - name: Run checkpatch review
+        uses: webispy/checkpatch-action@v9
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
   doxygen:
     name: Doxygen
     # Only run Doxygen against the main branch
