@@ -88,6 +88,8 @@ extern "C" {
 #define max(x, y) ((y) < (x)?(x):(y))
 #define min(x, y) ((y) > (x)?(x):(y))
 
+#define ARRAY_SIZE(x)	(sizeof(x) / sizeof((x)[0]))
+
 struct control_value {
 	char name[FILENAME_MAX];
 	char value[CG_CONTROL_VALUE_MAX];
