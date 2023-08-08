@@ -20,7 +20,7 @@ static const char * const NAMES[] = {
 	"cpu.foo",
 	"cpu.bar"
 };
-static const int NAMES_CNT = sizeof(NAMES) / sizeof(NAMES[0]);
+static const int NAMES_CNT = ARRAY_SIZE(NAMES);
 
 static const char * const VALUES[] = {
 	"999",
@@ -28,7 +28,7 @@ static const char * const VALUES[] = {
 	"random",
 	"data"
 };
-static const int VALUES_CNT = sizeof(VALUES) / sizeof(VALUES[0]);
+static const int VALUES_CNT = ARRAY_SIZE(VALUES);
 
 
 class SetValuesRecursiveTest : public ::testing::Test {
