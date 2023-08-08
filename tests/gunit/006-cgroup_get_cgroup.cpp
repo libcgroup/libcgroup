@@ -39,8 +39,7 @@ static const char * const CONTROLLERS[] = {
 	"namespaces",
 	"netns",
 };
-static const int CONTROLLERS_CNT =
-	sizeof(CONTROLLERS) / sizeof(CONTROLLERS[0]);
+static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 
 static const char * const NAMES[][MAX_NAMES] = {
 	{"tasks", "cpu.shares", "cpu.weight", "cpu.foo", NULL},
@@ -50,7 +49,7 @@ static const char * const NAMES[][MAX_NAMES] = {
 	{"tasks", "namespaces.blah", NULL, NULL, NULL},
 	{"tasks", "netns.foo", "netns.bar", "netns.baz", NULL},
 };
-static const int NAMES_CNT = sizeof(NAMES) / sizeof(NAMES[0]);
+static const int NAMES_CNT = ARRAY_SIZE(NAMES);
 
 static const char * const VALUES[][MAX_NAMES] = {
 	{"1234", "512", "100", "abc123", NULL},
@@ -60,7 +59,7 @@ static const char * const VALUES[][MAX_NAMES] = {
 	{"59832", "The Quick Brown Fox", NULL, NULL, NULL},
 	{"987\n654", "root", "/sys/fs", "0xdeadbeef", NULL},
 };
-static const int VALUES_CNT = sizeof(VALUES) / sizeof(VALUES[0]);
+static const int VALUES_CNT = ARRAY_SIZE(VALUES);
 
 static const char * const CG_NAME = "tomcatcg";
 static const mode_t MODE = S_IRWXU | S_IRWXG | S_IRWXO;
