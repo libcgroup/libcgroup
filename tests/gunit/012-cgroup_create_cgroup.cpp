@@ -23,8 +23,7 @@ static const char * const CONTROLLERS[] = {
 	"namespaces",
 	"netns",
 };
-static const int CONTROLLERS_CNT =
-	sizeof(CONTROLLERS) / sizeof(CONTROLLERS[0]);
+static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 
 static cg_version_t VERSIONS[] = {
 	CGROUP_V1,
@@ -34,8 +33,7 @@ static cg_version_t VERSIONS[] = {
 	CGROUP_V1,
 	CGROUP_V2,
 };
-static const int VERSIONS_CNT =
-	sizeof(VERSIONS) / sizeof(VERSIONS[0]);
+static const int VERSIONS_CNT = ARRAY_SIZE(VERSIONS);
 
 class CgroupCreateCgroupTest : public ::testing::Test {
 	protected:
