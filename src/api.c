@@ -4994,7 +4994,7 @@ const char *cgroup_strerror(int code)
 			"unknown error" : errtext;
 #endif
 	}
-	if (idx >= sizeof(cgroup_strerror_codes)/sizeof(cgroup_strerror_codes[0]))
+	if (idx >= ARRAY_SIZE(cgroup_strerror_codes))
 		return "Invalid error code";
 
 	return cgroup_strerror_codes[idx];
