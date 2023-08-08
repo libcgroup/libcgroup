@@ -23,7 +23,7 @@ static const char * const modes[] = {
 	"ignore-dependencies",	/* CGROUP_SYSTEMD_MODE_IGNORE_DEPS */
 	"ignore-requirements",	/* CGROUP_SYSTEMD_MODE_IGNORE_REQS */
 };
-static_assert((sizeof(modes) / sizeof(modes[0])) == CGROUP_SYSTEMD_MODE_CNT,
+static_assert(ARRAY_SIZE(modes) == CGROUP_SYSTEMD_MODE_CNT,
 	      "modes[] array must be same length as CGROUP_SYSTEMD_MODE_CNT");
 
 static const char * const sender = "org.freedesktop.systemd1";
