@@ -23,8 +23,7 @@ static const char * const CHILD_DIRS[] = {
 	"test3-ctrlrenabled",
 	"test4-ctrlrdisabled",
 };
-static const int CHILD_DIRS_CNT =
-	sizeof(CHILD_DIRS) / sizeof(CHILD_DIRS[0]);
+static const int CHILD_DIRS_CNT = ARRAY_SIZE(CHILD_DIRS);
 
 static const char * const CONTROLLERS[] = {
 	"cpu",
@@ -34,8 +33,7 @@ static const char * const CONTROLLERS[] = {
 	"net_cls",
 	"pids",
 };
-static const int CONTROLLERS_CNT =
-	sizeof(CONTROLLERS) / sizeof(CONTROLLERS[0]);
+static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 
 static const enum cg_version_t VERSIONS[] = {
 	CGROUP_V2,
