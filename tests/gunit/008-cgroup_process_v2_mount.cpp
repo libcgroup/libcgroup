@@ -24,8 +24,7 @@ static const char * const CONTROLLERS[] = {
 	"pids",
 	"rdma",
 };
-static const int CONTROLLERS_CNT =
-	sizeof(CONTROLLERS) / sizeof(CONTROLLERS[0]);
+static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 
 static int mnt_tbl_idx = 0;
 
