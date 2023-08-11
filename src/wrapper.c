@@ -802,10 +802,10 @@ char *cgroup_get_cgroup_name(struct cgroup *cgroup)
  */
 bool is_cgroup_mode_legacy(void)
 {
-       enum cg_setup_mode_t setup_mode;
+	enum cg_setup_mode_t setup_mode;
 
-       setup_mode = cgroup_setup_mode();
-       return (setup_mode == CGROUP_MODE_LEGACY);
+	setup_mode = cgroup_setup_mode();
+	return (setup_mode == CGROUP_MODE_LEGACY);
 }
 
 /*
@@ -814,10 +814,10 @@ bool is_cgroup_mode_legacy(void)
  */
 bool is_cgroup_mode_hybrid(void)
 {
-       enum cg_setup_mode_t setup_mode;
+	enum cg_setup_mode_t setup_mode;
 
-       setup_mode = cgroup_setup_mode();
-       return (setup_mode == CGROUP_MODE_HYBRID);
+	setup_mode = cgroup_setup_mode();
+	return (setup_mode == CGROUP_MODE_HYBRID);
 }
 
 /*
@@ -826,8 +826,8 @@ bool is_cgroup_mode_hybrid(void)
  */
 bool is_cgroup_mode_unified(void)
 {
-       enum cg_setup_mode_t setup_mode;
+	enum cg_setup_mode_t setup_mode;
 
-       setup_mode = cgroup_setup_mode();
-       return (setup_mode == CGROUP_MODE_UNIFIED);
+	setup_mode = cgroup_setup_mode();
+	return (setup_mode == CGROUP_MODE_UNIFIED);
 }
