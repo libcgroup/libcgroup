@@ -161,6 +161,7 @@ int cgroup_string_list_add_item(struct cgroup_string_list *list, const char *ite
 
 	if (list->size <= list->count) {
 		char **tmp = realloc(list->items, sizeof(char *) * list->size*2);
+
 		if (tmp == NULL)
 			return ECGFAIL;
 		list->items = tmp;
