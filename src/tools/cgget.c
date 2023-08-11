@@ -839,7 +839,7 @@ static int find_cgroup_mount_type(void)
 	int ret = 0;
 
 	setup_mode = cgroup_setup_mode();
-	switch(setup_mode) {
+	switch (setup_mode) {
 	case CGROUP_MODE_LEGACY:
 		info("Legacy Mode (Cgroup v1 only).\n");
 		break;
@@ -866,7 +866,7 @@ static int print_controller_version(void)
 	int ret = 0;
 
 	/* perf_event controller is the one with the lengthiest name */
-	info("%-11s\t%-7s\n", "#Controller","Version");
+	info("%-11s\t%-7s\n", "#Controller", "Version");
 	ret = cgroup_get_controller_begin(&handle, &controller);
 	while (ret == 0) {
 		ret = cgroup_get_controller_version(controller.name, &version);
