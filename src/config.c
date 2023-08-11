@@ -106,8 +106,8 @@ static pthread_rwlock_t systemd_default_cgroup_lock = PTHREAD_RWLOCK_INITIALIZER
  * cgroup_systemd_opts is dynamically allocated, hence having head
  * and tail helps in traversing.
  */
-static struct cgroup_systemd_opts *cgroup_systemd_opts_head = NULL;
-static struct cgroup_systemd_opts *cgroup_systemd_opts_tail = NULL;
+static struct cgroup_systemd_opts *cgroup_systemd_opts_head;
+static struct cgroup_systemd_opts *cgroup_systemd_opts_tail;
 
 static int config_create_slice_scope(char * const tmp_systemd_default_cgroup);
 #endif
@@ -599,6 +599,7 @@ void cgroup_config_cleanup_mount_table(void)
 int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 {
 	char *ns_tbl_name, *ns_tbl_path;
+
 	if (namespace_table_index >= CG_CONTROLLER_MAX)
 		return 0;
 
@@ -606,7 +607,7 @@ int cgroup_config_insert_into_namespace_table(char *name, char *nspath)
 
 	ns_tbl_name = config_namespace_table[namespace_table_index].name;
 	strncpy(ns_tbl_name, name, CONTROL_NAMELEN_MAX - 1);
-	ns_tbl_name[CONTROL_NAMELEN_MAX - 1 ] = '\0';
+	ns_tbl_name[CONTROL_NAMELEN_MAX - 1] = '\0';
 
 	ns_tbl_path = config_namespace_table[namespace_table_index].mount.path;
 	strncpy(ns_tbl_path, nspath, FILENAME_MAX - 1);
@@ -1798,9 +1799,9 @@ int cgroup_load_templates_cache_from_files(int *file_index)
 		if (template_table_index == 0)
 			/* the rules cache is empty */
 			return cgroup_init_templates_cache(CGCONFIG_CONF_FILE);
-		else
-			/* cache is not empty */
-			return cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
+
+		/* cache is not empty */
+		return cgroup_reload_cached_templates(CGCONFIG_CONF_FILE);
 	}
 
 	if (template_table) {
