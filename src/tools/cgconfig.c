@@ -166,9 +166,8 @@ int main(int argc, char *argv[])
 		goto free_cgroup;
 	}
 
-	if (dirm_change | filem_change) {
+	if (dirm_change | filem_change)
 		cgroup_set_permissions(default_group, dir_mode, file_mode, tasks_mode);
-	}
 
 	error = cgroup_config_set_default(default_group);
 	if (error) {
