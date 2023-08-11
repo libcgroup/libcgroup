@@ -5,7 +5,7 @@
  * Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
  *
  * Description: This file contains the sample code to demonstrate usage of
- * 		cgroup_setup_mode() API.
+ *		cgroup_setup_mode() API.
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@ int main(void)
 	}
 
 	setup_mode = cgroup_setup_mode();
-	switch(setup_mode) {
+	switch (setup_mode) {
 	case CGROUP_MODE_LEGACY:
 		printf("cgroup mode: Legacy\n");
 		break;
