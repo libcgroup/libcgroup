@@ -179,9 +179,9 @@ int is_on_list(char *name, struct deny_list_type *list)
 	/* go through the list of all values */
 	while (record != NULL) {
 		/* if the variable name is found */
-		if (strcmp(record->name, name) == 0) {
+		if (strcmp(record->name, name) == 0)
 			return 1; /* return its value */
-		}
+
 		record = record->next;
 	}
 
@@ -531,7 +531,7 @@ static int is_ctlr_on_list(char controllers[CG_CONTROLLER_MAX][FILENAME_MAX],
 	for (i = 0; tmp_controllers[i][0] != '\0'; i++) {
 		/*
 		 * gcc complains about truncation when using snprintf() and
-		 * and coverity complains about truncation when using strncpy().
+		 * coverity complains about truncation when using strncpy().
 		 * Avoid both these warnings by directly invoking memcpy()
 		 */
 		memcpy(controllers[i], tmp_controllers[i], sizeof(controllers[i]));
@@ -661,9 +661,8 @@ static void parse_mountpoint(cont_name_t cont_names[CG_CONTROLLER_MAX], char *na
 			/* controller is on the list */
 			if (show_mountpoints(name)) {
 				/* the controller is not mounted */
-				if ((flags & FL_SILENT) == 0) {
+				if ((flags & FL_SILENT) == 0)
 					err("ERROR: %s hierarchy not mounted\n", name);
-				}
 			break;
 			}
 		break;
@@ -695,9 +694,9 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX], const ch
 	}
 
 	if (ret != ECGEOF) {
-		if ((flags &  FL_SILENT) != 0) {
+		if ((flags &  FL_SILENT) != 0)
 			err("E: in get next controller %s\n", cgroup_strerror(ret));
-		}
+
 		final_ret = ret;
 	}
 
@@ -712,9 +711,9 @@ static int parse_mountpoints(cont_name_t cont_names[CG_CONTROLLER_MAX], const ch
 	}
 
 	if (ret != ECGEOF) {
-		if ((flags &  FL_SILENT) != 0) {
+		if ((flags &  FL_SILENT) != 0)
 			err("E: in get next controller %s\n", cgroup_strerror(ret));
-		}
+
 		final_ret = ret;
 	}
 
