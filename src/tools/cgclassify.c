@@ -41,7 +41,7 @@ static int rollback_pid_cgroups(pid_t pid);
 struct cgroup_info {
 	char ctrl_name[CONTROL_NAMELEN_MAX];
 	char cgrp_path[FILENAME_MAX];
-}info[MAX_MNT_ELEMENTS + 1];
+} info[MAX_MNT_ELEMENTS + 1];
 
 static void usage(int status, const char *program_name)
 {
@@ -302,7 +302,7 @@ static pid_t find_scope_pid(pid_t pid, int capture)
 	char *_ctrl_name = NULL;
 	int idx, ret, size = 0;
 	pid_t *pids;
-	int i=0;
+	int i = 0;
 
 	/*
 	 * Let's parse the cgroup of the pid, to check if its in one or
@@ -329,7 +329,7 @@ static pid_t find_scope_pid(pid_t pid, int capture)
 		if (strstr(buffer, "::")) {
 			snprintf(ctrl_name, CONTROL_NAMELEN_MAX, "unified");
 			ret = sscanf(buffer, "%d::%4096s\n", &idx, cgroup_name);
-		} else{
+		} else {
 			ret = sscanf(buffer, "%d:%[^:]:%4096s\n", &idx, ctrl_name, cgroup_name);
 		}
 
