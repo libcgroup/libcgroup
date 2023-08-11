@@ -1257,7 +1257,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 			goto out;
 		}
 
-		while(t->next != NULL)
+		while (t->next != NULL)
 			t = t->next;
 		t->next = tmp;
 
@@ -1396,7 +1396,7 @@ static int check_mount_point_opt(const char *mnt, const char *mnt_opt, int * con
 	}
 
 	*is_set = 0;
-	while((mntopt = hasmntopt(ent, mnt_opt))) {
+	while ((mntopt = hasmntopt(ent, mnt_opt))) {
 		mnt_opt_delim = mntopt[strlen(mnt_opt)];
 		if (mnt_opt_delim == '\0' || mnt_opt_delim == ',') {
 			*is_set  = 1;
@@ -2341,11 +2341,12 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 		ret = (stat(path, &path_stat));
 		if (ret < 0) {
 			last_errno = errno;
-			error = ECGROUPVALUENOTEXIST;;
+			error = ECGROUPVALUENOTEXIST;
 			goto err;
 		}
 
-		if (!(path_stat.st_mode & S_IWUSR))
+		/* 0200 == S_IWUSR */
+		if (!(path_stat.st_mode & 0200))
 			continue;
 
 		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path, cv->value, ret);
@@ -2384,8 +2385,8 @@ err:
  * @param ctrl_name Name of the controller to check
  * @param output parameter that indicates whether the controller is enabled
  * @param file to open and parse
- * 	0 = cgroup.subtree_control
- * 	1 = cgroup.controllers
+ *	0 = cgroup.subtree_control
+ *	1 = cgroup.controllers
  */
 STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
 				  bool * const enabled, int file_enum)
@@ -3399,14 +3400,14 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 				if (first_error == 0 &&
 				    (ret != ECGROUPNOTEXIST ||
 				    (ret == ECGROUPNOTEXIST && cgrp_del_on_shared_mnt == 0))) {
-						first_errno = last_errno;
-						first_error = ECGOTHER;
+					first_errno = last_errno;
+					first_error = ECGOTHER;
 				}
 				continue;
 			}
 
 			if (is_cgrp_ctrl_shared_mnt(controller_name))
-					cgrp_del_on_shared_mnt = 1;
+				cgrp_del_on_shared_mnt = 1;
 
 			if (parent_name == NULL) {
 				/* Root group is being deleted. */
@@ -4819,9 +4820,8 @@ int cgroup_init_rules_cache(void)
 
 	/* Attempt to read the configuration file and cache the rules. */
 	ret = cgroup_parse_rules(true, CGRULE_INVALID, CGRULE_INVALID, NULL);
-	if (ret) {
+	if (ret)
 		cgroup_dbg("Could not initialize rule cache, error was: %d\n", ret);
-	}
 
 	return ret;
 }
@@ -4990,7 +4990,7 @@ const char *cgroup_strerror(int code)
 #ifdef STRERROR_R_CHAR_P
 		return strerror_r(cgroup_get_last_errno(), errtext, MAXLEN);
 #else
-		return strerror_r(cgroup_get_last_errno(), errtext, sizeof (errtext)) ?
+		return strerror_r(cgroup_get_last_errno(), errtext, sizeof(errtext)) ?
 			"unknown error" : errtext;
 #endif
 	}
@@ -5118,7 +5118,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path, int de
 	if (!cg_build_path(base_path, full_path, controller))
 		return ECGOTHER;
 
-	entry = calloc(sizeof(struct cgroup_tree_handle), 1);
+	entry = calloc(1, sizeof(struct cgroup_tree_handle));
 
 	if (!entry) {
 		last_errno = errno;
@@ -6328,7 +6328,7 @@ static int search_and_append_mnt_path(struct cg_mount_point **mount_point, char 
 	struct cg_mount_point *mnt_point, *mnt_tmp, *mnt_prev;
 
 	mnt_tmp = *mount_point;
-	while(mnt_tmp) {
+	while (mnt_tmp) {
 		if (strcmp(mnt_tmp->path, path) == 0)
 			return ECGVALUEEXISTS;
 
@@ -6401,9 +6401,9 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version, char ***mount
 	 * paths are not part of the cg_mount_table.  Check and append
 	 * them to mnt_paths.
 	 */
-	if (cgrp_version == CGROUP_V2 && cg_cgroup_v2_empty_mount_paths ) {
+	if (cgrp_version == CGROUP_V2 && cg_cgroup_v2_empty_mount_paths) {
 		mount_point = cg_cgroup_v2_empty_mount_paths;
-		while(mount_point) {
+		while (mount_point) {
 			ret = search_and_append_mnt_path(&mnt_tmp, mount_point->path);
 			if (ret)
 				goto err;
@@ -6413,7 +6413,7 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version, char ***mount
 		}
 	}
 
-	mnt_paths = malloc(sizeof(char*) * (idx + 1));
+	mnt_paths = malloc(sizeof(char *) * (idx + 1));
 	if (mnt_paths == NULL) {
 		last_errno = errno;
 		ret = ECGOTHER;
@@ -6439,7 +6439,7 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version, char ***mount
 err:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 
-	while(mnt_tmp) {
+	while (mnt_tmp) {
 		mount_point = mnt_tmp;
 		mnt_tmp = mnt_tmp->next;
 		free(mount_point);
@@ -6474,9 +6474,8 @@ enum cg_setup_mode_t cgroup_setup_mode(void)
 	struct statfs cgrp_buf;
 	int i, ret = 0;
 
-	if (!cgroup_initialized) {
+	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
-	}
 
 	setup_mode = CGROUP_MODE_UNK;
 
