@@ -223,6 +223,7 @@ static int cgre_store_parent_info(pid_t pid)
 	if (array_pi.index >= array_pi.num_allocation) {
 		int alloc = array_pi.num_allocation + NUM_PER_REALLOCATIOM;
 		void *new_array = realloc(array_pi.parent_info, sizeof(info) * alloc);
+
 		if (!new_array) {
 			flog(LOG_WARNING, "Failed to allocate memory\n");
 			return 1;
@@ -314,6 +315,7 @@ static int cgre_store_unchanged_process(pid_t pid, int flags)
 	if (array_unch.index >= array_unch.num_allocation) {
 		int alloc = array_unch.num_allocation + NUM_PER_REALLOCATIOM;
 		void *new_array = realloc(array_unch.proc, sizeof(unchanged_pid_t) * alloc);
+
 		if (!new_array) {
 			flog(LOG_WARNING, "Failed to allocate memory\n");
 			return 1;
