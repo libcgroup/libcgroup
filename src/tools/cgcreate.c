@@ -99,7 +99,7 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 		 * the usual "0" on success.
 		 */
 		ret = 0;
-        }
+	}
 
 err:
 	return ret;
@@ -328,11 +328,10 @@ int main(int argc, char *argv[])
 		if (dirm_change | filem_change)
 			cgroup_set_permissions(cgroup, dir_mode, file_mode, tasks_mode);
 
-		if (create_scope) {
+		if (create_scope)
 			ret = create_systemd_scope(cgroup, argv[0], set_default_scope, scope_pid);
-		} else {
+		else
 			ret = cgroup_create_cgroup(cgroup, 0);
-		}
 		if (ret) {
 			err("%s: can't create cgroup %s: %s\n", argv[0], cgroup->name,
 			    cgroup_strerror(ret));
