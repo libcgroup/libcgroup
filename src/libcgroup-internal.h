@@ -241,8 +241,8 @@ void init_cgroup_table(struct cgroup *cgroups, size_t count);
  * Main mounting structures
  *
  * cg_mount_table_lock must be held to access:
- * 	cg_mount_table
- * 	cg_cgroup_v2_mount_path
+ *	cg_mount_table
+ *	cg_cgroup_v2_mount_path
  */
 extern struct cg_mount_table_s cg_mount_table[CG_CONTROLLER_MAX];
 extern char cg_cgroup_v2_mount_path[FILENAME_MAX];
