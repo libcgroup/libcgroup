@@ -124,7 +124,7 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 		}
 
 		if (child_pid == 0) {
-			char *args[] = {"libcgroup_systemd_idle_thread", NULL};
+			static char * const args[] = {"libcgroup_systemd_idle_thread", NULL};
 
 			/*
 			 * Have the child sleep forever.  Systemd will delete the scope if
@@ -241,7 +241,7 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	}
 
 	/* The callback will null out the job_path pointer on completion */
-	while(job_path) {
+	while (job_path) {
 		sdret = sd_bus_process(bus, NULL);
 		if (sdret < 0) {
 			cgroup_err("failed to process the sd bus: %d\n", errno);
