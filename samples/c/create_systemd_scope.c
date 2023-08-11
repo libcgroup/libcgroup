@@ -13,22 +13,22 @@
 
 /*
  * To compile and link this program:
- * 	(From the root of the libcgroup source code directory)
- * 	$ ./bootstrap
- * 	$ ./configure --sysconfdir=/etc --localstatedir=/var \
- * 	  --enable-opaque-hierarchy="name=systemd" --enable-systemd \
- * 	  --enable-python --enable-samples
- * 	$ make
+ *	(From the root of the libcgroup source code directory)
+ *	$ ./bootstrap
+ *	$ ./configure --sysconfdir=/etc --localstatedir=/var \
+ *	  --enable-opaque-hierarchy="name=systemd" --enable-systemd \
+ *	  --enable-python --enable-samples
+ *	$ make
  *
  * Add the libcgroup idle thread to your PATH.  (Some distros restrict the
  * modification of the $PATH environment variable when invoking sudo, so you
  * will need to manually copy the executable to your path.)
- * 	$ sudo cp src/libcgroup_systemd_idle_thread /a/path/in/your/sudo/path
+ *	$ sudo cp src/libcgroup_systemd_idle_thread /a/path/in/your/sudo/path
  *
  * To run this program:
  *      $ # Note that there are more options.  Run `create_systemd_scope -h` for more info
- * 	$ sudo LD_LIBRARY_PATH=src/.libs ./samples/c/create_systemd_scope \
- * 	  --slice <yourslicename> --scope <yourscopename>
+ *	$ sudo LD_LIBRARY_PATH=src/.libs ./samples/c/create_systemd_scope \
+ *	  --slice <yourslicename> --scope <yourscopename>
  */
 
 /*
