@@ -73,7 +73,7 @@ int cgroup_convert_int(struct cgroup_controller * const dst_cgc, const char * co
 		/* now scale from the input range to the output range */
 		out_value = out_value * out_dflt_int / in_dflt_int;
 
-		out_value_str = calloc(sizeof(char), OUT_VALUE_STR_LEN);
+		out_value_str = calloc(OUT_VALUE_STR_LEN, sizeof(char));
 		if (!out_value_str) {
 			ret = ECGOTHER;
 			goto out;
