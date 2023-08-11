@@ -129,7 +129,7 @@ TEST_F(BuildPathV1Test, BuildPathV1_ControllerMatchWithName)
  *
  * This test finds a matching controller in the mount table.  The
  * namespace is valid, but the cgroup name is NULL.  This exercises
- * exercises the `if (cg_namespace_table[i])` statement
+ * the `if (cg_namespace_table[i])` statement
  * https://github.com/libcgroup/libcgroup/blob/62f76650db84c0a25f76ece3a79d9d16a1e9f931/src/api.c#L1278
  */
 TEST_F(BuildPathV1Test, BuildPathV1_ControllerMatchWithNs)
