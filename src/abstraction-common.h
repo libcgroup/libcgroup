@@ -70,10 +70,10 @@ int cgroup_convert_passthrough(struct cgroup_controller * const dst_cgc,
 			       void *in_dflt, void *out_dflt);
 
 /**
- * Convert from an unmapple setting
+ * Convert from an unmappable setting
  *
  * @param dst_cgc Destination cgroup controller (unused)
- * @param in_value Contents of the input setting (unsed)
+ * @param in_value Contents of the input setting (unused)
  * @param out_setting Destination cgroup setting (unused)
  * @param in_dflt Default value of the input setting (unused)
  * @param out_dflt Default value of the output setting (unused)
