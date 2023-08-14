@@ -54,7 +54,7 @@ const struct cgroup_library_version library_version = {
 };
 
 /*
- * The errno which happend the last time (have to be thread specific)
+ * The errno which happened the last time (have to be thread specific)
  */
 __thread int last_errno;
 
@@ -912,7 +912,7 @@ finish:
  * CGRULES_CONF_FILE. This way we keep the back compatibility.
  *
  * Original description of this function moved to cgroup_parse_rules_file.
- * Also cloned and all occurences of file changed to files.
+ * Also cloned and all occurrences of file changed to files.
  *
  * Parse the configuration files that maps UID/GIDs to cgroups. If ever the
  * configuration files are modified, applications should call this function to
@@ -982,7 +982,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid, const char *mp
 
 		/*
 		 * Cannot read directory. However, CGRULES_CONF_FILE is
-		 * succesfully parsed. Thus return as a success for back
+		 * successfully parsed. Thus return as a success for back
 		 * compatibility.
 		 */
 		pthread_rwlock_unlock(&rl_lock);
@@ -1001,7 +1001,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid, const char *mp
 
 				/*
 				 * Cannot read directory.
-				 * However, CGRULES_CONF_FILE is succesfully
+				 * However, CGRULES_CONF_FILE is successfully
 				 * parsed. Thus return as a success for back
 				 * compatibility.
 				 */
@@ -1310,7 +1310,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 			continue;
 		}
 
-		/* This controller is not in the mount table.  add it */
+		/* This controller is not in the mount table.  Add it */
 		cgroup_cg_mount_table_append(controller, ent->mnt_dir, CGROUP_V2, mnt_tbl_idx,
 					     controller, shared_mnt);
 
@@ -3152,7 +3152,7 @@ err_nomem:
  * Move all processes from one task file to another.
  * @param input_tasks Pre-opened file to read tasks from.
  * @param output_tasks Pre-opened file to write tasks to.
- * @return 0 on succes, >0 on error.
+ * @return 0 on success, >0 on error.
  */
 static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
 {
@@ -4255,7 +4255,7 @@ static int add_controller(struct cgroup **pgroup, char *group_name,
 	int ret = 0;
 
 	if  (group == NULL) {
-		/* It is the first controllerc the group have to be created */
+		/* It is the first controller the group have to be created */
 		group = cgroup_new_cgroup(group_name);
 		if (group == NULL) {
 			ret = ECGFAIL;
@@ -4884,7 +4884,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 	/*
 	 * Why do we grab the cg_mount_table_lock?, the reason is that the
 	 * cgroup of a pid can change via the cgroup_attach_task_pid() call.
-	 * To make sure, we return consitent and safe results, we acquire the
+	 * To make sure, we return consistent and safe results, we acquire the
 	 * lock upfront. We can optimize by acquiring and releasing
 	 * the lock in the while loop, but that will be more expensive.
 	 */
@@ -5616,13 +5616,13 @@ STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 		 * 7:devices:/user.slice
 		 */
 
-		/* Read in the cgroup number.  we don't care about it */
+		/* Read in the cgroup number.  We don't care about it */
 		stok_buff = strtok(buf, ":");
 		/* Read in the controller name */
 		stok_buff = strtok(NULL, ":");
 
 		/*
-		 * After this point, we have allocated memory.  if we return
+		 * After this point, we have allocated memory.  If we return
 		 * an error code after this, it's up to us to free the memory
 		 * we allocated
 		 */
