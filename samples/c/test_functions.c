@@ -137,7 +137,7 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	strncpy(group, grpname, sizeof(group) - 1);
 	retval = set_controller(ctl, controller_name, control_file);
 	if (retval) {
-		fprintf(stderr, "Setting controller failled\n");
+		fprintf(stderr, "Setting controller failed\n");
 		return NULL;
 	}
 
@@ -581,7 +581,7 @@ int check_fsmounted(int multimnt)
 
 	tmp_entry = (struct mntent *) malloc(sizeof(struct mntent));
 	if (!tmp_entry) {
-		perror("Error: failled to mallloc for mntent\n");
+		perror("Error: failed to malloc for mntent\n");
 		ret = errno;
 		goto error;
 	}
@@ -798,7 +798,7 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 	int ret;
 
 	/*
-	 * No need to test the next 3 scenarios separately for Multimnt
+	 * No need to test the next 3 scenarios separately for multimnt
 	 * so testing them only under single mount
 	 */
 	if (fs_mounted == FS_MOUNTED) {
