@@ -44,7 +44,7 @@ extern "C" {
  *
  * @todo not all iterators follow this pattern, e.g. cgroup_walk_tree_begin()
  * can result both in a state that  cgroup_walk_tree_end() is not needed
- * and will sigsegv and in a state that cgroup_walk_tree_end() is needed
+ * and will SIGSEGV and in a state that cgroup_walk_tree_end() is needed
  * to free allocated memory. Complete review is needed!
  * @par Example of iterator usage:
  * @code
@@ -190,7 +190,7 @@ int cgroup_walk_tree_set_flags(void **handle, int flags);
  * @param handle The handle to be used during iteration.
  * @param buffer The buffer to read the value into.
  * The buffer is always zero-terminated.
- * @param max Maximal lenght of the buffer
+ * @param max Maximal length of the buffer
  * @return #ECGEOF when the stats file is empty.
  */
 
@@ -208,7 +208,7 @@ int cgroup_read_value_begin(const char * const controller, const char *path,
  * @param data returned the string.
  * @param buffer The buffer to read the value into.
  * The buffer is always zero-terminated.
- * @param max Maximal lenght of the buffer
+ * @param max Maximal length of the buffer
  * @return #ECGEOF when the iterator finishes getting the list of stats.
  */
 int cgroup_read_value_next(void **handle, char *buffer, int max);
@@ -222,7 +222,7 @@ int cgroup_read_value_end(void **handle);
  * @}
  *
  * @name Read group stats
- * libcgroup's cgroup_get_value_string() reads only relatively short parametrs
+ * libcgroup's cgroup_get_value_string() reads only relatively short parameters
  * of a group. Use following functions to read @c stats parameter, which can
  * be quite long.
  */
