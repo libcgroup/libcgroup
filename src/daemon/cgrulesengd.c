@@ -803,7 +803,7 @@ close_and_exit:
 /**
  * Start logging. Opens syslog and/or log file and sets log level.
  *	@param logp Path of the log file, NULL if no log file was specified
- *	@param logf Syslog facility, NULL if no facility was specified
+ *	@param logf syslog facility, NULL if no facility was specified
  *	@param logv Log verbosity, 1 is the default, 0 = no logging, 4 = everything
  */
 static void cgre_start_log(const char *logp, int logf, int logv)
@@ -869,7 +869,7 @@ static void cgre_start_log(const char *logp, int logf, int logv)
  * parent process.  Note too that stdout, stdin, and stderr are closed in
  * daemon mode, and a file descriptor for a log file is opened.
  *	@param logp Path of the log file, NULL if no log file was specified
- *	@param logf Syslog facility, 0 if no facility was specified
+ *	@param logf syslog facility, 0 if no facility was specified
  *	@param daemon False to turn off daemon mode (no fork, leave FDs open)
  *	@param logv Log verbosity, 1 is the default, 0 = no logging, 5 = everything
  *	@return 0 on success, > 0 on error
@@ -1042,7 +1042,7 @@ int main(int argc, char *argv[])
 	/* Patch to the log file */
 	const char *logp = NULL;
 
-	/* Syslog facility */
+	/* syslog facility */
 	int facility = 0;
 
 	/* Verbose level */
@@ -1278,7 +1278,7 @@ int main(int argc, char *argv[])
 
 	flog(LOG_INFO, "Started the CGroup Rules Engine Daemon.\n");
 
-	/* We loop endlesly in this function, unless we encounter an error. */
+	/* We loop endlessly in this function, unless we encounter an error. */
 	ret =  cgre_create_netlink_socket_process_msg();
 
 finished:
