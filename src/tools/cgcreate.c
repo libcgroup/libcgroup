@@ -95,7 +95,7 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 		}
 
 		/*
-		 * the default was successfully set.  override the return of "1" back to
+		 * the default was successfully set.  Override the return of "1" back to
 		 * the usual "0" on success.
 		 */
 		ret = 0;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 	int i, j;
 	int c;
 
-	/* no parametr on input */
+	/* no parameter on input */
 	if (argc < 2) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	/* initialize libcg */
+	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
 		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
