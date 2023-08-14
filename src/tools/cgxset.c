@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	int c;
 
-	/* no parametr on input */
+	/* no parameter on input */
 	if (argc < 2) {
 		err("Usage is %s -r <name=value> <relative path to cgroup>\n", argv[0]);
 		return -1;
