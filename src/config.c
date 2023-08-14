@@ -962,7 +962,7 @@ static int config_validate_namespaces(void)
 		}
 
 		/*
-		 * We want to handle all the subsytems that are mounted
+		 * We want to handle all the subsystems that are mounted
 		 * together. So initialize j to start from the next point
 		 * in the mount table.
 		 */
@@ -1028,7 +1028,7 @@ out_error:
  * looking to load namespace configurations.
  *
  * This function will order the namespace table in the same fashion as how
- * the mou table is setup.
+ * the mount table is setup.
  *
  * Also it will setup namespaces for all the controllers mounted. In case a
  * controller does not have a namespace assigned to it, it will set it to null.
@@ -1355,8 +1355,8 @@ static int cgroup_config_try_unmount(struct cg_mount_table_s *mount_info)
 	}
 	cgroup_walk_tree_end(&handle);
 	if (ret == 0) {
-		cgroup_dbg("won't unmount %s: hieararchy is not empty\n", mount_info->name);
-		return 0; /* the hieararchy is not empty */
+		cgroup_dbg("won't unmount %s: hierarchy is not empty\n", mount_info->name);
+		return 0; /* the hierarchy is not empty */
 	}
 	if (ret != ECGEOF)
 		return ret;
@@ -1858,7 +1858,7 @@ int cgroup_load_templates_cache_from_files(int *file_index)
 
 /*
  * Create a given cgroup, based on template configuration if it is present
- * if the template is not present cgroup is creted using cgroup_create_cgroup
+ * if the template is not present cgroup is created using cgroup_create_cgroup
  */
 int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_name, int flags)
 {
