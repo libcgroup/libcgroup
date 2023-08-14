@@ -94,7 +94,7 @@ int cgroup_string_list_add_item(struct cgroup_string_list *list, const char *ite
  * (without subdirs) to list of strings.
  * The function exits on error.
  * @param list The list to add files to.
- * @param dirname Full path to directory to examime.
+ * @param dirname Full path to directory to examine.
  * @param program_name Name of the executable, it will be used for
  *	printing errors to stderr.
  */
@@ -105,7 +105,7 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list, char *dirn
  * Parse file permissions as octal number.
  * @param string A string to parse, must contain 3-4 characters '0'-'7'.
  * @param pmode Parsed mode.
- * @oaram program_name Argv[0] to show error messages.
+ * @oaram program_name argv[0] to show error messages.
  */
 int parse_mode(char *string, mode_t *pmode, const char *program_name);
 
@@ -114,7 +114,7 @@ int parse_mode(char *string, mode_t *pmode, const char *program_name);
  * @param string A string to parse.
  * @param uid Parsed UID (-1 if 'user' is missing in the string).
  * @param gid Parsed GID (-1 if 'group' is missing in the string).
- * @param program_name Argv[0] to show error messages.
+ * @param program_name argv[0] to show error messages.
  */
 int parse_uid_gid(char *string, uid_t *uid, gid_t *gid, const char *program_name);
 
