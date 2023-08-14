@@ -109,7 +109,7 @@ static int print_all_controllers_in_hierarchy(const char *tname, int hierarchy, 
 			goto end;
 
 		/*
-		 * v1 controllers should be in the hierachy.
+		 * v1 controllers should be in the hierarchy.
 		 * v2 controllers will have a hierarchy value of zero
 		 */
 		if (version == CGROUP_V1 && info.hierarchy != hierarchy)
@@ -165,7 +165,7 @@ static int cgroup_list_all_controllers(const char *tname, cont_name_t cont_name[
 	ret = cgroup_get_all_controller_begin(&handle, &info);
 	while (ret == 0) {
 		if (info.hierarchy == 0) {
-			/* the controller is not attached to any hierachy */
+			/* the controller is not attached to any hierarchy */
 			if (flags & FL_ALL) {
 				/* display only if -a flag is set */
 				info("%s\n", info.name);
