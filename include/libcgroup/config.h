@@ -71,7 +71,7 @@ int cgroup_config_unload_config(const char *pathname, int flags);
  * then.
  *
  * @param new_default New default permissions from this group are copied to
- * libcgroup internal structures. I.e., this group can be freed immediatelly
+ * libcgroup internal structures. I.e., this group can be freed immediately
  * after this function returns.
  */
 int cgroup_config_set_default(struct cgroup *new_default);
