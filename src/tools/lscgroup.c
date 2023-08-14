@@ -149,7 +149,7 @@ static int print_cgroup(struct cgroup_group_spec *cgroup_spec, int flags)
 				if (ret)
 					return ret;
 				if ((flags & FL_LIST) != 0) {
-					/* we succesfully finish printing */
+					/* we successfully finish printing */
 					output = 0;
 					break;
 				}
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* initialize libcg */
+	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
 		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
