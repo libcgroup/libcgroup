@@ -236,7 +236,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
  * @endcode
  * @todo what is this good for? Why the list of controllers added by
  * cgroup_add_controller() is not used, like in cgroup_create_cgroup()? I can't
- * crate subgroup of root group in just one hierarchy with this function!
+ * create subgroup of root group in just one hierarchy with this function!
  *
  * @param cgroup The cgroup to create. Only it's name is used, everything else
  *	is discarded.
@@ -321,7 +321,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup);
 
 /**
  * Copy all controllers, their parameters and values. Group name, permissions
- * and ownerships are not coppied. All existing controllers
+ * and ownerships are not copied. All existing controllers
  * in the source group are discarded.
  *
  * @param dst Destination group.
