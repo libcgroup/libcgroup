@@ -62,7 +62,7 @@ int parse_cgroup_spec(struct cgroup_group_spec **cdptr, char *optarg, int capaci
 	if (!pathptr)
 		return -1;
 
-	/* instanciate cgroup_data. */
+	/* instantiate cgroup_data. */
 	cdptr[i] = calloc(1, sizeof(struct cgroup_group_spec));
 	if (!cdptr[i]) {
 		fprintf(stderr, "%s\n", strerror(errno));
