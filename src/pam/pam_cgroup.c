@@ -110,7 +110,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, cons
 
 	D(("user name is %s", user_name));
 
-	/* Initialize libcg */
+	/* Initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
 		if (ctrl & PAM_DEBUG_ARG)
@@ -118,7 +118,7 @@ PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, cons
 		return PAM_SESSION_ERR;
 	}
 
-	D(("Initialized libcgroup successfuly."));
+	D(("Initialized libcgroup successfully."));
 
 	/* Determine the pid of the task */
 	pid = getpid();
