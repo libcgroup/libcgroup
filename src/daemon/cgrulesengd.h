@@ -85,7 +85,7 @@ int cgre_handle_message(struct cn_msg *cn_hdr);
  * parent process.  Note too that stdout, stdin, and stderr are closed in
  * daemon mode, and a file descriptor for a log file is opened.
  *	@param logp Path of the log file, NULL if no log file was specified
- *	@param logf Syslog facility, NULL if no facility was specified
+ *	@param logf syslog facility, NULL if no facility was specified
  *	@param daemon False to turn off daemon mode (no fork, leave FDs open)
  *	@param logv Log verbosity:
  *		2 is the default, 0 = no logging, 5 = everything
