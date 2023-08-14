@@ -38,7 +38,7 @@ extern "C" {
 
 /*
  * Max number of mounted hierarchies. Event if one controller is mounted
- * per hier, it can not exceed CG_CONTROLLER_MAX
+ * per hierarchy, it can not exceed CG_CONTROLLER_MAX
  */
 #define CG_HIER_MAX  CG_CONTROLLER_MAX
 
@@ -149,7 +149,7 @@ struct cgroup_rules_data {
 
 	/* Details of user under consideration for destination cgroup */
 	struct passwd *pw;
-	/* Gid of the process */
+	/* gid of the process */
 	gid_t gid;
 };
 
