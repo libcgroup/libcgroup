@@ -649,7 +649,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p >Copy all controllers, their parameters and values. Group name, permissions and ownerships are not coppied. All existing controllers in the source group are discarded.</p>
+<p >Copy all controllers, their parameters and values. Group name, permissions and ownerships are not copied. All existing controllers in the source group are discarded.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dst</td><td>Destination group. </td></tr>
@@ -734,7 +734,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p >Physically create new control group in kernel, with all parameters and values copied from its parent group. The group is created in all hierarchies, where the parent group exists. I.e. following code creates subgroup in all hierarchies, because all of them have root (=parent) group. </p><div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *foo = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;foo&quot;</span>);</div>
 <div class="line"><a class="code hl_function" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>(foo, 0);</div>
 <div class="ttc" id="agroup__group__groups_html_ga90e1ce96f3cb540f7e82d076dd938f62"><div class="ttname"><a href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a></div><div class="ttdeci">int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)</div><div class="ttdef"><b>Definition:</b> api.c:3103</div></div>
-</div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't crate subgroup of root group in just one hierarchy with this function!</dd></dl>
+</div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cgroup</td><td>The cgroup to create. Only it's name is used, everything else is discarded. </td></tr>

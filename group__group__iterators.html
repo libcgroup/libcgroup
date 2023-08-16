@@ -114,7 +114,7 @@ Data Structures</h2></td></tr>
 <tr class="separator:gad348f041e283860cbf6bcea567e23a21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Read group stats</h2></td></tr>
-<tr><td class="ititle" colspan="2"><p >libcgroup's <a class="el" href="group__group__groups.html#gafaa51e5ffe09f8ad05585a1d3b6f7fa9">cgroup_get_value_string()</a> reads only relatively short parametrs of a group. Use following functions to read <code>stats</code> parameter, which can be quite long. </p>
+<tr><td class="ititle" colspan="2"><p >libcgroup's <a class="el" href="group__group__groups.html#gafaa51e5ffe09f8ad05585a1d3b6f7fa9">cgroup_get_value_string()</a> reads only relatively short parameters of a group. Use following functions to read <code>stats</code> parameter, which can be quite long. </p>
 </td></tr>
 <tr class="memitem:ga1138e47f124f0f634586db5e0c4ae5de"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#ga1138e47f124f0f634586db5e0c4ae5de">cgroup_read_stats_begin</a> (const char *controller, const char *path, void **handle, struct <a class="el" href="structcgroup__stat.html">cgroup_stat</a> *stat)</td></tr>
 <tr class="separator:ga1138e47f124f0f634586db5e0c4ae5de"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -185,7 +185,7 @@ Data Structures</h2></td></tr>
 <li><p class="startli"><code>void <em>iterator_name</em>_end(void **handle)</code></p><ul>
 <li>Free any data associated with the iterator. This function must be called even when <code><em>iterator_name</em>_begin()</code> fails.</li>
 </ul>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will SIGSEGV and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd></dl>
 <dl class="section user"><dt>Example of iterator usage:</dt><dd><div class="fragment"><div class="line"><span class="keywordtype">void</span> *handle; <span class="comment">// our iterator handle</span></div>
 <div class="line">my_type item; <span class="comment">// the data returned by the iterator</span></div>
 <div class="line"><span class="keywordtype">int</span> ret;</div>
@@ -814,7 +814,7 @@ Data Structures</h2></td></tr>
     <tr><td class="paramname">name</td><td>is variable name. </td></tr>
     <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
     <tr><td class="paramname">buffer</td><td>The buffer to read the value into. The buffer is always zero-terminated. </td></tr>
-    <tr><td class="paramname">max</td><td>Maximal lenght of the buffer </td></tr>
+    <tr><td class="paramname">max</td><td>Maximal length of the buffer </td></tr>
   </table>
   </dd>
 </dl>
@@ -877,7 +877,7 @@ Data Structures</h2></td></tr>
     <tr><td class="paramname">handle</td><td>The handle to be used during iteration. </td></tr>
     <tr><td class="paramname">data</td><td>returned the string. </td></tr>
     <tr><td class="paramname">buffer</td><td>The buffer to read the value into. The buffer is always zero-terminated. </td></tr>
-    <tr><td class="paramname">max</td><td>Maximal lenght of the buffer </td></tr>
+    <tr><td class="paramname">max</td><td>Maximal length of the buffer </td></tr>
   </table>
   </dd>
 </dl>

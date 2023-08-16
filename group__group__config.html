@@ -187,7 +187,7 @@ $(function() {
 <p >Use <a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup()</a> to create a dummy group and <a class="el" href="group__group__groups.html#ga53b9e13e30660c805ab5773d69397a43">cgroup_set_uid_gid()</a> and <a class="el" href="group__group__groups.html#gaa0400f1ff2fba7fbb6db82d97039d92b">cgroup_set_permissions()</a> to set its permissions. Use NO_UID_GID instead of GID/UID and NO_PERMS instead of file/directory permissions to let kernel decide the default permissions where you don't want specific user and/or permissions. Kernel then uses current user/group and permissions from umask then.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">new_default</td><td>New default permissions from this group are copied to libcgroup internal structures. I.e., this group can be freed immediatelly after this function returns. </td></tr>
+    <tr><td class="paramname">new_default</td><td>New default permissions from this group are copied to libcgroup internal structures. I.e., this group can be freed immediately after this function returns. </td></tr>
   </table>
   </dd>
 </dl>

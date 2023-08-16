@@ -82,7 +82,7 @@ $(function() {
 <dt>Global <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
 <dd><a class="anchor" id="_todo000005"></a>what is ignore_ownership good for?  </dd>
 <dt>Global <a class="el" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't crate subgroup of root group in just one hierarchy with this function!</p>
+<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</p>
 <p class="enddd"><a class="anchor" id="_todo000007"></a>what is ignore_ownership good for?  </p>
 </dd>
 <dt>Global <a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup</a>  (struct cgroup *cgroup, int ignore_migration)</dt>
@@ -102,7 +102,7 @@ $(function() {
 <dt>Global <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin</a>  (const char *controller, const char *base_path, int depth, void **handle, struct <a class="el" href="structcgroup__file__info.html">cgroup_file_info</a> *info, int *base_level)</dt>
 <dd><a class="anchor" id="_todo000012"></a>why base_level is not hidden in **handle?  </dd>
 <dt>Module <a class="el" href="group__group__iterators.html">group_iterators</a>  </dt>
-<dd><a class="anchor" id="_todo000011"></a>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will sigsegv and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd>
+<dd><a class="anchor" id="_todo000011"></a>not all iterators follow this pattern, e.g. <a class="el" href="group__group__iterators.html#ga7b19f10c06abb96d8c8ae88a04888a68">cgroup_walk_tree_begin()</a> can result both in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is not needed and will SIGSEGV and in a state that <a class="el" href="group__group__iterators.html#ga09a70990837a58e506a264f8c50d4cde">cgroup_walk_tree_end()</a> is needed to free allocated memory. Complete review is needed! </dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
