@@ -22,6 +22,7 @@ SLICE = 'libcgroup.slice'
 CGNAME = os.path.join(SLICE, '078cgcreate.scope')
 IN_SCOPE_CHILD_CGNAME = os.path.join(CGNAME, 'in_scope_childcg')
 OUT_OF_SCOPE_CHILD_CGNAME = '078outofscopechild'
+INVAL_CGNAME = os.path.join(SLICE, 'cpu.scope')
 
 
 def prereqs(config):
@@ -66,6 +67,15 @@ def test(config):
     Cgroup.create_and_validate(config, None, IN_SCOPE_CHILD_CGNAME)
     Cgroup.create_and_validate(config, None, OUT_OF_SCOPE_CHILD_CGNAME)
 
+    try:
+        Cgroup.create_and_validate(config, CONTROLLERS, INVAL_CGNAME, create_scope=True)
+    except RunError as re:
+        if 'Invalid scope name, using controller name cpu' not in str(re):
+            raise re
+    else:
+        result = consts.TEST_FAILED
+        cause = 'Erroneously succeeded in creating scope {}', format(INVAL_CGNAME)
+
     return result, cause
 
 
@@ -76,6 +86,14 @@ def teardown(config):
     pid = int(Cgroup.get(config, None, CGNAME, setting='cgroup.procs',
                          print_headers=False, values_only=True, ignore_systemd=True))
     Process.kill(config, pid)
+
+    # try deleting INVAL_CGNAME for the cases, where it was erroneously created.
+    try:
+        pid = int(Cgroup.get(config, None, INVAL_CGNAME, setting='cgroup.procs',
+                             print_headers=False, values_only=True, ignore_systemd=True))
+        Process.kill(config, pid)
+    except RunError:
+        pass
 
     # systemd will automatically remove the cgroup once there are no more pids in
     # the cgroup, so we don't need to delete CGNAME.  But let's try to remove the
