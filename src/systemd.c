@@ -26,6 +26,29 @@ static const char * const modes[] = {
 static_assert(ARRAY_SIZE(modes) == CGROUP_SYSTEMD_MODE_CNT,
 	      "modes[] array must be same length as CGROUP_SYSTEMD_MODE_CNT");
 
+/*
+ * controller_name table borrowed from:
+ * https://github.com/systemd/systemd/blob/main/src/basic/cgroup-util.c#L2260
+ */
+static const char * const controller_name[] = {
+	/* subset of controllers (cgroup v1/v2), systemd supports */
+	"cpu",
+	"cpuacct",
+	"cpuset",
+	"io",
+	"blkio",
+	"memory",
+	"devices",
+	"pids",
+
+	/* systemd pseudo BPF based controllers (cgroup v2 ) */
+	"bpf-firewall",
+	"bpf-devices",
+	"bpf-foreign",
+	"bpf-socket-bind",
+	"bpf-restrict-network-interfaces",
+};
+
 static const char * const sender = "org.freedesktop.systemd1";
 static const char * const path = "/org/freedesktop/systemd1";
 static const char * const interface = "org.freedesktop.systemd1.Manager";
@@ -84,6 +107,61 @@ static int job_removed_callback(sd_bus_message *message, void *user_data, sd_bus
 	return 0;
 }
 
+static int validate_scope_slice_name(const char * const scope_name, const char * const slice_name)
+{
+	char *_scope_name = NULL;
+	int i, len, ret = 0;
+
+	/* get the scope name without the suffix, min length is <n>.scope */
+	len = strlen(scope_name) - 6;
+	if (len < 1)
+		cgroup_warn("Invalid scope name %s\n", scope_name);
+	else if (strcmp(&scope_name[len], ".scope") != 0)
+		cgroup_warn("scope doesn't have expected suffix\n");
+
+	/* get the slice name without the suffix, min length is <n>.slice */
+	len = strlen(slice_name) - 6;
+	if (len < 1)
+		cgroup_warn("Invalid slice name %s\n", slice_name);
+	else if (strcmp(&slice_name[len], ".slice") != 0)
+		cgroup_warn("slice doesn't have expected suffix\n");
+
+	/*
+	 * systemd will silently prefix a '_' to the scope name and
+	 * create, and delegate it under the slice. If it matches with any
+	 * of the controller in the controller_name[]. i.e.,
+	 * oracle.slice/cpuset.scope, will be created as
+	 * oracle.slice/_cpuset.scope
+	 *
+	 * Disallow such scope names, that will cause confusion to the
+	 * users, where they might try to operate scope cgroup, but
+	 * the delegated scope is _scope cgroup.
+	 */
+	_scope_name = strdup(scope_name);
+	if (_scope_name == NULL) {
+		cgroup_err("Failed to allocate memory for _scope_name\n");
+		last_errno = errno;
+		ret = 1;
+		goto out;
+	}
+
+	len = strlen(_scope_name) - 6;	/* strlen(".scope") + '\0' */
+	_scope_name[len] = '\0';
+
+	for (i = 0; i < ARRAY_SIZE(controller_name); i++) {
+		if (strcmp(_scope_name, controller_name[i]))
+			continue;
+
+		cgroup_err("Invalid scope name, using controller name %s\n", controller_name[i]);
+		ret = 1;
+		break;
+	}
+
+	free(_scope_name);
+out:
+	return ret;
+}
+
 int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
 			const struct cgroup_systemd_scope_opts * const opts)
 {
@@ -98,10 +176,8 @@ int cgroup_create_scope(const char * const scope_name, const char * const slice_
 	if (!scope_name || !slice_name || !opts)
 		return ECGINVAL;
 
-	if (strcmp(&scope_name[strlen(scope_name) - strlen(".scope")], ".scope") != 0)
-		cgroup_warn("scope doesn't have expected suffix\n");
-	if (strcmp(&slice_name[strlen(slice_name) - strlen(".slice")], ".slice") != 0)
-		cgroup_warn("slice doesn't have expected suffix\n");
+	if (validate_scope_slice_name(scope_name, slice_name))
+		return ECGINVAL;
 
 	if (opts->mode >= CGROUP_SYSTEMD_MODE_CNT) {
 		cgroup_err("invalid systemd mode: %d\n", opts->mode);
