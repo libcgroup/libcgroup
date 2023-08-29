@@ -163,8 +163,7 @@ int cgroup_walk_tree_begin(const char *controller, const char *base_path, int de
  * @param base_level Value of base_level returned by cgroup_walk_tree_begin().
  * @return #ECGEOF when we are done walking through the nodes.
  */
-int cgroup_walk_tree_next(int depth, void **handle,
-			  struct cgroup_file_info *info, int base_level);
+int cgroup_walk_tree_next(int depth, void **handle, struct cgroup_file_info *info, int base_level);
 
 /**
  * Release the iterator.
@@ -275,14 +274,13 @@ int cgroup_read_stats_end(void **handle);
 
 /**
  * Read the tasks file to get the list of tasks in a cgroup.
- * @param cgroup Name of the cgroup.
+ * @param cgrp Name of the cgroup.
  * @param controller Name of the cgroup subsystem.
  * @param handle The handle to be used in the iteration.
  * @param pid The pid read from the tasks file.
  * @return #ECGEOF when the group does not contain any tasks.
  */
-int cgroup_get_task_begin(const char *cgroup, const char *controller, void **handle,
-			  pid_t *pid);
+int cgroup_get_task_begin(const char *cgrp, const char *controller, void **handle, pid_t *pid);
 
 /**
  * Read the next task value.
@@ -376,8 +374,7 @@ struct controller_data {
  * @param handle The handle to be used for iteration.
  * @param info The structure which will be filled with controller data.
  */
-int cgroup_get_all_controller_begin(void **handle,
-	struct controller_data *info);
+int cgroup_get_all_controller_begin(void **handle, struct controller_data *info);
 /**
  * Read next controllers from /proc/cgroups.
  * @param handle The handle to be used for iteration.
@@ -407,8 +404,7 @@ int cgroup_get_all_controller_end(void **handle);
  * @param path Buffer to fill the path into. The buffer must be at least
  * FILENAME_MAX characters long.
  */
-int cgroup_get_subsys_mount_point_begin(const char *controller, void **handle,
-					char *path);
+int cgroup_get_subsys_mount_point_begin(const char *controller, void **handle, char *path);
 
 /**
  * Read next mount point of the hierarchy with given controller.
