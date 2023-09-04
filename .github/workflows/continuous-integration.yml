@@ -22,7 +22,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Differential ShellCheck
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - uses: mattnotmitt/doxygen-action@v1
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -112,7 +112,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -132,7 +132,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -158,7 +158,7 @@ jobs:
     - name: Update the system
       run: |
         sudo apt-get update
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Install dependencies
@@ -230,7 +230,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -287,7 +287,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -331,7 +331,7 @@ jobs:
     runs-on: cgroup-legacy
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -375,7 +375,7 @@ jobs:
     runs-on: cgroup-hybrid
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
@@ -419,7 +419,7 @@ jobs:
     runs-on: cgroup-unified
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: false
     - name: Initialize the directory
