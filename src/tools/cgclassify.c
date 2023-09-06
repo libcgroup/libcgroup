@@ -416,8 +416,8 @@ static pid_t find_scope_pid(pid_t pid, int capture)
 		}
 
 		if (_scope_pid != scope_pid) {
-			err("Failed to replace scope idle_thread, found two idle_thread\n");
-			err(" %u %u\n", scope_pid, _scope_pid);
+			err("Failed to replace scope idle_thread, found two idle_thread %u %u\n",
+			    scope_pid, _scope_pid);
 			scope_pid = -1;
 			goto out;
 		}
