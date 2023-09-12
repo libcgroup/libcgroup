@@ -50,7 +50,7 @@ class BuildPathV1Test : public ::testing::Test {
 
 			ret = snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
 				 "/sys/fs/cgroup/%s", cg_mount_table[i].name);
-			ASSERT_LT(ret, sizeof(cg_mount_table[i].mount.path));
+			ASSERT_LT(ret, (int)sizeof(cg_mount_table[i].mount.path));
 
 			cg_mount_table[i].mount.next = NULL;
 		}
