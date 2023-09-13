@@ -94,7 +94,7 @@ class CgroupGetCgroupTest : public ::testing::Test {
 	void SetUp() override
 	{
 		char tmp_path[FILENAME_MAX];
-		int i, j, names_len, ret;
+		int i, ret;
 
 		ASSERT_EQ(NAMES_CNT, CONTROLLERS_CNT);
 		ASSERT_EQ(NAMES_CNT, VALUES_CNT);
@@ -165,7 +165,6 @@ class CgroupGetCgroupTest : public ::testing::Test {
 static void vectorize_cg(const struct cgroup * const cg,
 			 vector<string>& cg_vec)
 {
-	const char *cgname, *cgcname, *value;
 	int i, j;
 
 	for (i = 0; i < cg->index; i++) {
