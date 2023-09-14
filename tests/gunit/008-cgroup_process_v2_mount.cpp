@@ -55,10 +55,6 @@ class CgroupProcessV2MntTest : public ::testing::Test {
 
 	void SetUp() override
 	{
-		char tmp_path[FILENAME_MAX];
-		int i, ret;
-		FILE *f;
-
 		CreateHierarchy(PARENT_DIR);
 
 		/* make another directory to test the duplicate logic */
