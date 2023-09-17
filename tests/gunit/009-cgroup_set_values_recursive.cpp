@@ -93,9 +93,13 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 					sizeof(struct control_value));
 		ASSERT_NE(ctrlr.values[i], nullptr);
 
-		strncpy(ctrlr.values[i]->name, NAMES[i], FILENAME_MAX);
+		strncpy(ctrlr.values[i]->name, NAMES[i], FILENAME_MAX - 1);
+		ctrlr.values[i]->name[FILENAME_MAX - 1] = '\0';
+
 		strncpy(ctrlr.values[i]->value, VALUES[i],
-			CG_CONTROL_VALUE_MAX);
+			CG_CONTROL_VALUE_MAX - 1);
+		ctrlr.values[i]->value[CG_CONTROL_VALUE_MAX - 1] = '\0';
+
 		if (i == 0)
 			ctrlr.values[i]->dirty = true;
 		else
