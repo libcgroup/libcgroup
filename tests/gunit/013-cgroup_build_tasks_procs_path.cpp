@@ -50,7 +50,7 @@ class BuildTasksProcPathTest : public ::testing::Test {
 
 			ret = snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
 				 "/sys/fs/cgroup/%s", cg_mount_table[i].name);
-			ASSERT_LT(ret, sizeof(cg_mount_table[i].mount.path));
+			ASSERT_LT(ret, (int)sizeof(cg_mount_table[i].mount.path));
 
 			cg_mount_table[i].mount.next = NULL;
 
@@ -109,7 +109,6 @@ TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV1)
 TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV2)
 {
 	char ctrlname[] = "controller3";
-	struct cgroup_controller ctrlr = {0};
 	char path[FILENAME_MAX];
 	char cgname[] = "tomcat";
 	int ret;
@@ -123,7 +122,6 @@ TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV2)
 TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV1WithNs)
 {
 	char ctrlname[] = "controller4";
-	struct cgroup_controller ctrlr = {0};
 	char path[FILENAME_MAX];
 	char cgname[] = "database12";
 	int ret;
@@ -137,7 +135,6 @@ TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV1WithNs)
 TEST_F(BuildTasksProcPathTest, BuildTasksProcPathTest_CgV2WithNs)
 {
 	char ctrlname[] = "controller1";
-	struct cgroup_controller ctrlr = {0};
 	char path[FILENAME_MAX];
 	char cgname[] = "server";
 	int ret;
