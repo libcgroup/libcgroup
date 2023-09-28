@@ -24,9 +24,7 @@ class GetSubtreeControlTest : public ::testing::Test {
 	protected:
 
 	void SetUp() override {
-		char tmp_path[FILENAME_MAX];
-		int ret, i;
-		FILE *f;
+		int ret;
 
 		ret = mkdir(PARENT_DIR, S_IRWXU | S_IRWXG | S_IRWXO);
 		ASSERT_EQ(ret, 0);
