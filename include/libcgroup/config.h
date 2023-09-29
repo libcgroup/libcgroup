@@ -100,8 +100,7 @@ int cgroup_load_templates_cache_from_files(int *file_index);
  * @param tmpl_files
  */
 struct cgroup_string_list;
-void cgroup_templates_cache_set_source_files(
-	struct cgroup_string_list *tmpl_files);
+void cgroup_templates_cache_set_source_files(struct cgroup_string_list *tmpl_files);
 
 /**
  * Physically create a new control group in kernel, based on given control
@@ -123,9 +122,7 @@ void cgroup_templates_cache_set_source_files(
  * @param template_name Template name used for cgroup setting
  * @param flags Bit flags to change the behavior
  */
-int cgroup_config_create_template_group(
-	struct cgroup *cgroup, char *template_name,
-	int flags);
+int cgroup_config_create_template_group(struct cgroup *cgrp, char *template_name, int flags);
 
 /**
  * @}

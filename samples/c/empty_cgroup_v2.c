@@ -15,7 +15,7 @@
 
 int main(int argc, char **argv)
 {
-	struct cgroup *cgroup = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret = 0;
 
 	ret = cgroup_init();
@@ -24,17 +24,17 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	cgroup = cgroup_new_cgroup(CGRP_NAME);
-	if (!cgroup) {
+	cgrp = cgroup_new_cgroup(CGRP_NAME);
+	if (!cgrp) {
 		fprintf(stderr, "Failed to allocate cgroup %s\n", CGRP_NAME);
 		exit(1);
 	}
 
-	ret = cgroup_create_cgroup(cgroup, 0);
+	ret = cgroup_create_cgroup(cgrp, 0);
 	if (ret)
 		fprintf(stderr, "Failed to create cgroup %s\n", CGRP_NAME);
 
-	cgroup_free(&cgroup);
+	cgroup_free(&cgrp);
 
 	return ret;
 }

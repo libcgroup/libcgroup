@@ -326,7 +326,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 {
 	struct group *group, *group_buffer;
 	struct passwd *pw, *pw_buffer;
-	char buffer[CGROUP_BUFFER_LEN];
+	char buffer[CGRP_BUFFER_LEN];
 	struct cgroup *config_cgroup;
 	long val = atoi(value);
 	int table_index;
@@ -350,7 +350,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 			if (!pw)
 				goto group_task_error;
 
-			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN, &pw_buffer);
+			getpwnam_r(value, pw, buffer, CGRP_BUFFER_LEN, &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto group_task_error;
@@ -370,7 +370,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 				goto group_task_error;
 
 			if (getgrnam_r(value, group, buffer,
-				       CGROUP_BUFFER_LEN, &group_buffer) != 0) {
+				       CGRP_BUFFER_LEN, &group_buffer) != 0) {
 				free(group);
 				goto group_task_error;
 			}
@@ -436,7 +436,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 {
 	struct group *group, *group_buffer;
 	struct passwd *pw, *pw_buffer;
-	char buffer[CGROUP_BUFFER_LEN];
+	char buffer[CGRP_BUFFER_LEN];
 	struct cgroup *config_cgroup;
 	long val = atoi(value);
 	int table_index;
@@ -460,7 +460,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			if (!pw)
 				goto admin_error;
 
-			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN, &pw_buffer);
+			getpwnam_r(value, pw, buffer, CGRP_BUFFER_LEN, &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto admin_error;
@@ -478,7 +478,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			if (!group)
 				goto admin_error;
 
-			if (getgrnam_r(value, group, buffer, CGROUP_BUFFER_LEN,
+			if (getgrnam_r(value, group, buffer, CGRP_BUFFER_LEN,
 				       &group_buffer) != 0) {
 				free(group);
 				goto admin_error;

@@ -37,29 +37,29 @@ static const struct option long_options[] = {
 
 int flags; /* used input method */
 
-static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
+static struct cgroup *copy_name_value_from_cgroup(char src_cgrp_path[FILENAME_MAX])
 {
-	struct cgroup *src_cgroup;
+	struct cgroup *src_cgrp;
 	int ret = 0;
 
 	/* create source cgroup */
-	src_cgroup = cgroup_new_cgroup(src_cg_path);
-	if (!src_cgroup) {
+	src_cgrp = cgroup_new_cgroup(src_cgrp_path);
+	if (!src_cgrp) {
 		err("can't create cgroup: %s\n", cgroup_strerror(ECGFAIL));
-		goto scgroup_err;
+		goto scgrp_err;
 	}
 
 	/* copy the name-version values to the cgroup structure */
-	ret = cgroup_get_cgroup(src_cgroup);
+	ret = cgroup_get_cgroup(src_cgrp);
 	if (ret != 0) {
-		err("cgroup %s error: %s\n", src_cg_path, cgroup_strerror(ret));
-		goto scgroup_err;
+		err("cgroup %s error: %s\n", src_cgrp_path, cgroup_strerror(ret));
+		goto scgrp_err;
 	}
 
-	return src_cgroup;
+	return src_cgrp;
 
-scgroup_err:
-	cgroup_free(&src_cgroup);
+scgrp_err:
+	cgroup_free(&src_cgrp);
 
 	return NULL;
 }
@@ -151,10 +151,10 @@ int main(int argc, char *argv[])
 	int nv_number = 0;
 	int nv_max = 0;
 
-	struct cgroup *converted_src_cgroup = NULL;
-	char src_cg_path[FILENAME_MAX] = "\0";
-	struct cgroup *src_cgroup = NULL;
-	struct cgroup *cgroup = NULL;
+	struct cgroup *converted_src_cgrp = NULL;
+	char src_cgrp_path[FILENAME_MAX] = "\0";
+	struct cgroup *src_cgrp = NULL;
+	struct cgroup *cgrp = NULL;
 
 	enum cg_version_t src_version = CGROUP_UNK;
 	bool ignore_unmappable = false;
@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
 				goto err;
 			}
 			flags |= FL_COPY;
-			strncpy(src_cg_path, optarg, FILENAME_MAX);
-			src_cg_path[FILENAME_MAX-1] = '\0';
+			strncpy(src_cgrp_path, optarg, FILENAME_MAX);
+			src_cgrp_path[FILENAME_MAX-1] = '\0';
 			break;
 		case '1':
 			src_version = CGROUP_V1;
@@ -250,8 +250,7 @@ int main(int argc, char *argv[])
 	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0],
-		    cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -261,48 +260,47 @@ int main(int argc, char *argv[])
 
 	/* copy the name-value pairs from -r options */
 	if ((flags & FL_RULES) != 0) {
-		src_cgroup = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
-		if (src_cgroup == NULL)
+		src_cgrp = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
+		if (src_cgrp == NULL)
 			goto err;
 	}
 
 	/* copy the name-value from the given group */
 	if ((flags & FL_COPY) != 0) {
-		src_cgroup = copy_name_value_from_cgroup(src_cg_path);
-		if (src_cgroup == NULL)
+		src_cgrp = copy_name_value_from_cgroup(src_cgrp_path);
+		if (src_cgrp == NULL)
 			goto err;
 	}
 
 	while (optind < argc) {
 		/* create new cgroup */
-		cgroup = cgroup_new_cgroup(argv[optind]);
-		if (!cgroup) {
+		cgrp = cgroup_new_cgroup(argv[optind]);
+		if (!cgrp) {
 			ret = ECGFAIL;
 			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
 		}
 
 		/* copy the values from the source cgroup to new one */
-		ret = cgroup_copy_cgroup(cgroup, src_cgroup);
+		ret = cgroup_copy_cgroup(cgrp, src_cgrp);
 		if (ret != 0) {
-			err("%s: cgroup %s error: %s\n", argv[0], src_cg_path,
+			err("%s: cgroup %s error: %s\n", argv[0], src_cgrp_path,
 			    cgroup_strerror(ret));
 			goto err;
 		}
 
-		converted_src_cgroup = cgroup_new_cgroup(cgroup->name);
-		if (converted_src_cgroup == NULL) {
+		converted_src_cgrp = cgroup_new_cgroup(cgrp->name);
+		if (converted_src_cgrp == NULL) {
 			ret = ECGCONTROLLERCREATEFAILED;
 			goto err;
 		}
 
 		/*
 		 * If a failure occurs between this comment and the "End of above comment"
-		 * below, then we need to manually free converted_src_cgroup.
+		 * below, then we need to manually free converted_src_cgrp.
 		 */
 
-		ret = cgroup_convert_cgroup(converted_src_cgroup, CGROUP_DISK, src_cgroup,
-					    src_version);
+		ret = cgroup_convert_cgroup(converted_src_cgrp, CGROUP_DISK, src_cgrp, src_version);
 		if ((ret && ret != ECGNOVERSIONCONVERT) ||
 		    (ret == ECGNOVERSIONCONVERT && !ignore_unmappable)) {
 			/*
@@ -310,33 +308,33 @@ int main(int argc, char *argv[])
 			 * due to being unable to map from v1 to v2 or vice versa,
 			 * return error, else ignore the error and continue.
 			 */
-			free(converted_src_cgroup);
+			free(converted_src_cgrp);
 			goto err;
 		}
 
 		/*
-		 * End of above comment about converted_src_cgroup needing to be manually freed.
+		 * End of above comment about converted_src_cgrp needing to be manually freed.
 		 */
 
-		cgroup_free(&cgroup);
-		cgroup = converted_src_cgroup;
+		cgroup_free(&cgrp);
+		cgrp = converted_src_cgrp;
 
 		/* modify cgroup based on values of the new one */
-		ret = cgroup_modify_cgroup(cgroup);
+		ret = cgroup_modify_cgroup(cgrp);
 		if (ret) {
 			err("%s: cgroup modify error: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
 		}
 
 		optind++;
-		cgroup_free(&cgroup);
+		cgroup_free(&cgrp);
 	}
 
 err:
-	if (cgroup)
-		cgroup_free(&cgroup);
-	if (src_cgroup)
-		cgroup_free(&src_cgroup);
+	if (cgrp)
+		cgroup_free(&cgrp);
+	if (src_cgrp)
+		cgroup_free(&src_cgrp);
 	free(name_value);
 
 	return ret;
@@ -344,19 +342,19 @@ err:
 #endif /* !UNIT_TEST */
 
 #ifdef LIBCG_LIB
-int cgroup_cgxset(const struct cgroup * const cgroup, enum cg_version_t version,
+int cgroup_cgxset(const struct cgroup * const cgrp, enum cg_version_t version,
 		  bool ignore_unmappable)
 {
-	struct cgroup *converted_cgroup;
+	struct cgroup *converted_cgrp;
 	int ret;
 
-	converted_cgroup = cgroup_new_cgroup(cgroup->name);
-	if (converted_cgroup == NULL) {
+	converted_cgrp = cgroup_new_cgroup(cgrp->name);
+	if (converted_cgrp == NULL) {
 		ret = ECGCONTROLLERCREATEFAILED;
 		goto err;
 	}
 
-	ret = cgroup_convert_cgroup(converted_cgroup, CGROUP_DISK, cgroup, version);
+	ret = cgroup_convert_cgroup(converted_cgrp, CGROUP_DISK, cgrp, version);
 	if (ret == ECGNOVERSIONCONVERT && ignore_unmappable)
 		/*
 		 * The user has specified that we should ignore any errors
@@ -367,13 +365,13 @@ int cgroup_cgxset(const struct cgroup * const cgroup, enum cg_version_t version,
 		goto err;
 
 	/* modify cgroup based on values of the new one */
-	ret = cgroup_modify_cgroup(converted_cgroup);
+	ret = cgroup_modify_cgroup(converted_cgrp);
 	if (ret)
 		goto err;
 
 err:
-	if (converted_cgroup)
-		cgroup_free(&converted_cgroup);
+	if (converted_cgrp)
+		cgroup_free(&converted_cgrp);
 
 	return ret;
 }
