@@ -64,8 +64,8 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 	void InitMountTable(void)
 	{
 		char tmp_path[FILENAME_MAX] = {0};
-		int ret, i;
 		FILE *f;
+		int i;
 
 		ASSERT_EQ(VERSIONS_CNT, CONTROLLERS_CNT);
 
