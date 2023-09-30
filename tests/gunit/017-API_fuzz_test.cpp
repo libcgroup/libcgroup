@@ -187,7 +187,6 @@ TEST_F(APIArgsTest, API_cgroup_add_controller)
 	const char * const new_cg_ctrl = NULL;
 	struct cgroup_controller *cgc = NULL;
 	struct cgroup *cgroup = NULL;
-	int ret;
 
 	// case 1
 	// cgrp = NULL, name = NULL
@@ -477,7 +476,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
 	// check if the value was set right
 	ret = cgroup_get_value_uint64(cgc, name, &value);
 	ASSERT_EQ(ret, 0);
-	ASSERT_EQ(value, 1024);
+	ASSERT_EQ((int)value, 1024);
 
 	free(name);
 }
