@@ -27,6 +27,8 @@ static const struct option long_options[] = {
 
 int flags; /* used input method */
 
+static char *program_name;
+
 static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
 {
 	struct cgroup *src_cgroup;
@@ -54,7 +56,38 @@ scgroup_err:
 	return NULL;
 }
 
-static void usage(int status, const char *program_name)
+static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const new_cgrp)
+{
+	struct cgroup *cgrp;
+	int ret = 0;
+
+	/* create new cgroup */
+	cgrp = cgroup_new_cgroup(new_cgrp);
+	if (!cgrp) {
+		ret = ECGFAIL;
+		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
+		return ret;
+	}
+
+	/* copy the values from the source cgroup to new one */
+	ret = cgroup_copy_cgroup(cgrp, src_cgrp);
+	if (ret != 0) {
+		err("%s: cgroup %s error: %s\n", program_name, src_cgrp->name,
+		    cgroup_strerror(ret));
+		goto err;
+	}
+
+	/* modify cgroup based on values of the new one */
+	ret = cgroup_modify_cgroup(cgrp);
+	if (ret)
+		err("%s: cgroup modify error: %s\n", program_name, cgroup_strerror(ret));
+
+err:
+	cgroup_free(&cgrp);
+	return ret;
+}
+
+static void usage(int status)
 {
 	if (status != 0) {
 		err("Wrong input parameters, ");
@@ -139,14 +172,15 @@ int main(int argc, char *argv[])
 
 	char src_cg_path[FILENAME_MAX] = "\0";
 	struct cgroup *src_cgroup = NULL;
-	struct cgroup *cgroup = NULL;
 
 	int ret = 0;
 	int c;
 
+	program_name = argv[0];
+
 	/* no parameter on input */
 	if (argc < 2) {
-		err("Usage is %s -r <name=value> relative path to cgroup>\n", argv[0]);
+		err("Usage is %s -r <name=value> relative path to cgroup>\n", program_name);
 		exit(EXIT_BADARGS);
 	}
 
@@ -162,13 +196,13 @@ int main(int argc, char *argv[])
 		switch (c) {
 #endif
 		case 'h':
-			usage(0, argv[0]);
+			usage(0);
 			ret = 0;
 			goto err;
 
 		case 'r':
 			if ((flags &  FL_COPY) != 0) {
-				usage(1, argv[0]);
+				usage(1);
 				ret = EXIT_BADARGS;
 				goto err;
 			}
@@ -180,13 +214,13 @@ int main(int argc, char *argv[])
 				name_value = (struct control_value *)
 					realloc(name_value, nv_max * sizeof(struct control_value));
 				if (!name_value) {
-					err("%s: not enough memory\n", argv[0]);
+					err("%s: not enough memory\n", program_name);
 					ret = -1;
 					goto err;
 				}
 			}
 
-			ret = parse_r_flag(argv[0], optarg, &name_value[nv_number]);
+			ret = parse_r_flag(program_name, optarg, &name_value[nv_number]);
 			if (ret)
 				goto err;
 
@@ -194,7 +228,7 @@ int main(int argc, char *argv[])
 			break;
 		case COPY_FROM_OPTION:
 			if (flags != 0) {
-				usage(1, argv[0]);
+				usage(1);
 				ret = EXIT_BADARGS;
 				goto err;
 			}
@@ -203,7 +237,7 @@ int main(int argc, char *argv[])
 			src_cg_path[FILENAME_MAX-1] = '\0';
 			break;
 		default:
-			usage(1, argv[0]);
+			usage(1);
 			ret = EXIT_BADARGS;
 			goto err;
 		}
@@ -211,13 +245,13 @@ int main(int argc, char *argv[])
 
 	/* no cgroup name */
 	if (!argv[optind]) {
-		err("%s: no cgroup specified\n", argv[0]);
+		err("%s: no cgroup specified\n", program_name);
 		ret = EXIT_BADARGS;
 		goto err;
 	}
 
 	if (flags == 0) {
-		err("%s: no name-value pair was set\n", argv[0]);
+		err("%s: no name-value pair was set\n", program_name);
 		ret = EXIT_BADARGS;
 		goto err;
 	}
@@ -225,7 +259,8 @@ int main(int argc, char *argv[])
 	/* initialize libcgroup */
 	ret = cgroup_init();
 	if (ret) {
-		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
+		err("%s: libcgroup initialization failed: %s\n", program_name,
+		    cgroup_strerror(ret));
 		goto err;
 	}
 
@@ -248,39 +283,15 @@ int main(int argc, char *argv[])
 	}
 
 	while (optind < argc) {
-		/* create new cgroup */
-		cgroup = cgroup_new_cgroup(argv[optind]);
-		if (!cgroup) {
-			ret = ECGFAIL;
-			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
-			goto cgroup_free_err;
-		}
-
-		/* copy the values from the source cgroup to new one */
-		ret = cgroup_copy_cgroup(cgroup, src_cgroup);
-		if (ret != 0) {
-			err("%s: cgroup %s error: %s\n", argv[0], src_cg_path,
-			    cgroup_strerror(ret));
-			goto cgroup_free_err;
-		}
-
-		/* modify cgroup based on values of the new one */
-		ret = cgroup_modify_cgroup(cgroup);
-		if (ret) {
-			err("%s: cgroup modify error: %s\n", argv[0], cgroup_strerror(ret));
-			goto cgroup_free_err;
-		}
+		ret = cgroup_set_cgroup_values(src_cgroup, argv[optind]);
+		if (ret)
+			goto err;
 
 		optind++;
-		cgroup_free(&cgroup);
 	}
 
-cgroup_free_err:
-	if (cgroup)
-		cgroup_free(&cgroup);
-	if (src_cgroup)
-		cgroup_free(&src_cgroup);
 err:
+	cgroup_free(&src_cgroup);
 	free(name_value);
 
 	return ret;
