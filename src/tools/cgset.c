@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdio.h>
+#include <errno.h>
 
 #define FL_RULES	1
 #define FL_COPY		2
@@ -56,7 +57,7 @@ scgroup_err:
 	return NULL;
 }
 
-static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const new_cgrp)
+static struct cgroup *create_and_copy_cgroup(struct cgroup *src_cgrp, const char * const new_cgrp)
 {
 	struct cgroup *cgrp;
 	int ret = 0;
@@ -64,9 +65,8 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 	/* create new cgroup */
 	cgrp = cgroup_new_cgroup(new_cgrp);
 	if (!cgrp) {
-		ret = ECGFAIL;
 		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
-		return ret;
+		return NULL;
 	}
 
 	/* copy the values from the source cgroup to new one */
@@ -77,10 +77,142 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 		goto err;
 	}
 
+	return cgrp;
+
+err:
+	cgroup_free(&cgrp);
+	return NULL;
+}
+
+static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const new_cgrp)
+{
+	struct cgroup *cgrp;
+	int ret = ECGFAIL;
+
+	cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
+	if (!cgrp)
+		return ret;
+
 	/* modify cgroup based on values of the new one */
 	ret = cgroup_modify_cgroup(cgrp);
 	if (ret)
 		err("%s: cgroup modify error: %s\n", program_name, cgroup_strerror(ret));
+
+	cgroup_free(&cgrp);
+	return ret;
+}
+
+static int _cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp)
+{
+	struct cgroup_file_info info;
+	int prefix_len;
+	void *handle;
+	int lvl, ret;
+
+
+	ret = cgroup_walk_tree_begin(src_cgrp->controller[0]->name, new_cgrp, 0, &handle, &info,
+			&lvl);
+	if (ret) {
+		err("%s: failed to walk the tree for cgroup %s controller %s\n",
+		    program_name, new_cgrp, src_cgrp->controller[0]->name);
+
+		return ret;
+	}
+
+	prefix_len = strlen(info.full_path) - strlen(new_cgrp) - 1;
+	ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len]);
+	if (ret)
+		goto err;
+
+	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0) {
+		if (info.type == CGROUP_FILE_TYPE_DIR) {
+
+			ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len]);
+			if (ret)
+				goto err;
+		}
+	}
+
+err:
+	if (ret == ECGEOF)
+		ret = 0; /* we successfully walked the tree */
+
+	cgroup_walk_tree_end(&handle);
+	return ret;
+}
+
+static int cgroup_copy_controller_idx(struct cgroup *dst_cgrp, struct cgroup *src_cgrp, int idx)
+{
+	struct cgroup_controller *src_cgc = src_cgrp->controller[idx];
+	struct cgroup_controller *dst_cgc = NULL;
+	int ret, i;
+
+	dst_cgc = cgroup_add_controller(dst_cgrp, src_cgc->name);
+	if (!dst_cgc) {
+		err("%s: failed to add controller %s to %s\n", program_name, src_cgc->name,
+							       dst_cgrp->name);
+		return ECGFAIL;
+	}
+
+	for (i = 0; i < src_cgc->index; i++) {
+		ret = cgroup_add_value_string(dst_cgc, src_cgc->values[i]->name,
+					      src_cgc->values[i]->value);
+		if (ret) {
+			err("%s: Failed to add value %s to cgroup %s controller %s\n",
+			    program_name, src_cgc->values[i]->name, dst_cgrp->name, src_cgc->name);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static int cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp)
+{
+	struct cgroup *cgrp;
+	int i, ret = ECGFAIL;
+
+	if (is_cgroup_mode_unified()) {
+		cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
+		if (!cgrp)
+			return ret;
+
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp);
+		goto err;
+	}
+
+	/*
+	 * for non-unified mode, split every controller and walk the
+	 * tree. Unlike unified mode the cgroups in the controller
+	 * hierarchy might differ, hence walk per controller.
+	 *
+	 *          cpu       memory
+	 *         /  \         |
+	 *        a   a1        a
+	 *        |           /   \
+	 *        b1         b1   b2
+	 *        |               |
+	 *        c               c
+	 */
+	cgrp = cgroup_new_cgroup(new_cgrp);
+	if (!cgrp) {
+		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
+		return ret;
+	}
+
+	for (i = 0; i < src_cgrp->index; i++) {
+		cgroup_free_controllers(cgrp);
+
+		ret = cgroup_copy_controller_idx(cgrp, src_cgrp, i);
+		if (ret)
+			goto err;
+
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp);
+		if (ret)
+			goto err;
+	}
+
+	ret = 0;
 
 err:
 	cgroup_free(&cgrp);
@@ -105,6 +237,8 @@ static void usage(int status)
 	info("  -b					Ignore default systemd ");
 	info("delegate hierarchy\n");
 #endif
+	info("  -R                                      Recursively set variable(s)");
+	info(" for cgroups under <cgroup_path>\n");
 }
 #endif /* !UNIT_TEST */
 
@@ -168,6 +302,7 @@ int main(int argc, char *argv[])
 	int ignore_default_systemd_delegate_slice = 0;
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
+	int recursive = 0;
 	int nv_max = 0;
 
 	char src_cg_path[FILENAME_MAX] = "\0";
@@ -186,13 +321,13 @@ int main(int argc, char *argv[])
 
 	/* parse arguments */
 #ifdef WITH_SYSTEMD
-	while ((c = getopt_long (argc, argv, "r:hb", long_options, NULL)) != -1) {
+	while ((c = getopt_long (argc, argv, "r:hbR", long_options, NULL)) != -1) {
 		switch (c) {
 		case 'b':
 			ignore_default_systemd_delegate_slice = 1;
 			break;
 #else
-	while ((c = getopt_long (argc, argv, "r:h", long_options, NULL)) != -1) {
+	while ((c = getopt_long (argc, argv, "r:hR", long_options, NULL)) != -1) {
 		switch (c) {
 #endif
 		case 'h':
@@ -225,6 +360,7 @@ int main(int argc, char *argv[])
 				goto err;
 
 			nv_number++;
+
 			break;
 		case COPY_FROM_OPTION:
 			if (flags != 0) {
@@ -235,6 +371,9 @@ int main(int argc, char *argv[])
 			flags |= FL_COPY;
 			strncpy(src_cg_path, optarg, FILENAME_MAX);
 			src_cg_path[FILENAME_MAX-1] = '\0';
+			break;
+		case 'R':
+			recursive = 1;
 			break;
 		default:
 			usage(1);
@@ -283,7 +422,10 @@ int main(int argc, char *argv[])
 	}
 
 	while (optind < argc) {
-		ret = cgroup_set_cgroup_values(src_cgroup, argv[optind]);
+		if (recursive)
+			ret = cgroup_set_cgroup_values_r(src_cgroup, argv[optind]);
+		else
+			ret = cgroup_set_cgroup_values(src_cgroup, argv[optind]);
 		if (ret)
 			goto err;
 
