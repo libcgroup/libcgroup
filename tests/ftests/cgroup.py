@@ -246,7 +246,7 @@ class Cgroup(object):
 
     @staticmethod
     def __set(config, cmd, cgname=None, setting=None, value=None,
-              copy_from=None, cghelp=False, ignore_systemd=False):
+              copy_from=None, cghelp=False, ignore_systemd=False, recursive=False):
         if setting is not None or value is not None:
             if isinstance(setting, str) and (isinstance(value, str) or isinstance(value, int)):
                 cmd.append('-r')
@@ -286,6 +286,9 @@ class Cgroup(object):
         if cghelp:
             cmd.append('-h')
 
+        if recursive:
+            cmd.append('-R')
+
         if config.args.container:
             return config.container.run(cmd)
         else:
@@ -293,7 +296,7 @@ class Cgroup(object):
 
     @staticmethod
     def set(config, cgname=None, setting=None, value=None, copy_from=None,
-            cghelp=False, ignore_systemd=False):
+            cghelp=False, ignore_systemd=False, recursive=False):
         """cgset equivalent method
 
         The following variants of cgset are being tested by the
@@ -315,7 +318,7 @@ class Cgroup(object):
         cmd.append(Cgroup.build_cmd_path('cgset'))
 
         return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
-                            cghelp, ignore_systemd)
+                            cghelp, ignore_systemd, recursive)
 
     @staticmethod
     def xset(config, cgname=None, setting=None, value=None, copy_from=None,
