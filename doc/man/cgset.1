@@ -7,9 +7,9 @@
 cgset \- set the parameters of given cgroup(s)
 
 .SH SYNOPSIS
-\fBcgset\fR [\fB-b\fR] [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
+\fBcgset\fR [\fB-b\fR] [\fB-R\fR] [\fB-r\fR <\fIname=value\fR>] <\fBcgroup_path\fR> ...
 .br
-\fBcgset\fR [\fB-b\fR] \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
+\fBcgset\fR [\fB-b\fR] [\fB-R\fR] \fB--copy-from\fR <\fIsource_cgroup_path\fR> <\fBcgroup_path\fR> ...
 
 .SH DESCRIPTION
 Set the parameters of input cgroups.
@@ -30,6 +30,11 @@ cgroup root hierarchy.
 defines the name of the file to set and
 the value which should be written to that file.
 This parameter can be used multiple times.
+
+.TP
+.B -R
+recursively sets variable settings passed with -r option
+to cgroup_path and its descendant cgroups.
 
 .TP
 .B --copy-from <source_cgroup_path>
