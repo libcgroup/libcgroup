@@ -2534,6 +2534,36 @@ out:
 	return error;
 }
 
+/*
+ * Test if the controller is enabled in the root_cgrp.subtree_control file
+ * and enable the controller, if not enabled.
+ */
+static int test_and_set_ctrl_mnt_path(const char * const mount_path, const char * const ctrl_name)
+{
+	bool enabled;
+	int ret;
+
+	/* return if the controller is enabled */
+	ret = cgroupv2_get_subtree_control(mount_path, ctrl_name, &enabled);
+	if (ret == ECGOTHER)
+		return ret;
+
+	if (enabled == true)
+		return 0;
+
+	/* check if the controller is available is controllers file */
+	ret = cgroupv2_get_controllers(mount_path, ctrl_name, &enabled);
+	if (ret == ECGOTHER || ret == ECGROUPNOTMOUNTED)
+		return ret;
+
+	/* enable the controller in the subtree_control file */
+	ret = cgroupv2_subtree_control(mount_path, ctrl_name, 1);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 /**
  * Recursively enable/disable a controller in the cgv2 subtree_control file
  *
@@ -2570,6 +2600,22 @@ STATIC int cgroupv2_subtree_control_recursive(char *path, const char *ctrl_name,
 	 */
 	mount_len = strlen(cg_mount_table[i].mount.path);
 	path_copy[mount_len] = '\0';
+
+	/*
+	 * systemd by default only enables cpu, cpuset, io, memory, and pids
+	 * controller in the root_cgroup.subtree_control. Trying to enable
+	 * hugetlb and misc controller in a nested cgroups, will fail
+	 * because they are not, enabled the controller in the root_cgroup.
+	 * i.e. # cgcreate -ghugetlb:foo/bar
+	 *
+	 * check if the controller is enabled in the
+	 * root_cgroup.subtree_control file and if not enable it. Let's
+	 * check for all controllers, so that it accommodates other
+	 * controllers systemd decides to disable by default in the future.
+	 */
+	error = test_and_set_ctrl_mnt_path(path_copy, ctrl_name);
+	if (error)
+		goto out;
 
 	tmp_path = strtok_r(&path[mount_len], "/", &stok_buff);
 	do {
