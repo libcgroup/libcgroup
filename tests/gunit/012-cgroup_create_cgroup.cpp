@@ -82,6 +82,16 @@ class CgroupCreateCgroupTest : public ::testing::Test {
 				f = fopen(tmp_path, "w");
 				ASSERT_NE(f, nullptr);
 				fclose(f);
+
+				memset(tmp_path, 0, sizeof(tmp_path));
+				snprintf(tmp_path, FILENAME_MAX - 1,
+					 "%s/cgroup.controllers",
+					 PARENT_DIR);
+
+				f = fopen(tmp_path, "a");
+				ASSERT_NE(f, nullptr);
+				fprintf(f, "%s ",  CONTROLLERS[i]);
+				fclose(f);
 				break;
 			default:
 				/* we shouldn't get here.  fail the test */
