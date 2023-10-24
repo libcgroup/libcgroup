@@ -15,6 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <errno.h>
 #include <stdio.h>
 
 #define FL_RULES	1
@@ -38,6 +39,9 @@ static const struct option long_options[] = {
 int flags; /* used input method */
 
 static char *program_name;
+
+/* cgroup.subtree_control -r name, value */
+static struct control_value *cgrp_subtree_ctrl_val;
 
 static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
 {
@@ -99,6 +103,10 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 	struct cgroup *cgrp, *converted_src_cgrp;
 	int ret = ECGFAIL;
 
+	/* subtree_cgrp (src_cgrp) can be empty */
+	if (!src_cgrp)
+		return 0;
+
 	cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
 	if (!cgrp)
 		return ret;
@@ -144,18 +152,44 @@ err:
 	return ret;
 }
 
+static int is_leaf_node(void **handle)
+{
+	struct cgroup_tree_handle *entry;
+	FTSENT *ent;
+
+	entry = (struct  cgroup_tree_handle *)  *handle;
+	ent = fts_children(entry->fts, 0);
+	if (!ent)
+		return errno;
+
+	while (ent != NULL) {
+		/* return on the first child cgroup */
+		if (ent->fts_info == FTS_D)
+			return 0;
+
+		ent = ent->fts_link;
+	}
+
+	return 1;
+}
 
 static int _cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp,
-				    bool ignore_unmappable, enum cg_version_t src_version)
+				    bool ignore_unmappable, enum cg_version_t src_version,
+				       bool post_order_walk)
 {
+	struct cgroup_controller *ctrl = NULL;
+	bool subtree_control = false;
 	struct cgroup_file_info info;
 	int prefix_len;
 	void *handle;
 	int lvl, ret;
 
+	ctrl = src_cgrp->controller[0];
 
-	ret = cgroup_walk_tree_begin(src_cgrp->controller[0]->name, new_cgrp, 0, &handle, &info,
-			&lvl);
+	if (!strcmp(ctrl->values[0]->name, "cgroup.subtree_control"))
+		subtree_control = true;
+
+	ret = cgroup_walk_tree_begin(ctrl->name, new_cgrp, 0, &handle, &info, &lvl);
 	if (ret) {
 		err("%s: failed to walk the tree for cgroup %s controller %s\n",
 		    program_name, new_cgrp, src_cgrp->controller[0]->name);
@@ -163,20 +197,43 @@ static int _cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * con
 		return ret;
 	}
 
+	if (post_order_walk) {
+		ret = cgroup_walk_tree_set_flags(&handle, CGROUP_WALK_TYPE_POST_DIR);
+		if (ret) {
+			err("%s: failed to set CGROUP_WALK_TYPE_POST_DIR flag\n", program_name);
+			goto err;
+		}
+	}
+
 	prefix_len = strlen(info.full_path) - strlen(new_cgrp) - 1;
-	ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
-				       ignore_unmappable, src_version);
-	if (ret)
-		goto err;
+
+	/* In post order cgroup tree walk, parent should be modify last */
+	if (!post_order_walk) {
+		ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
+					       ignore_unmappable, src_version);
+		if (ret)
+			goto err;
+	}
 
 	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0) {
 		if (info.type == CGROUP_FILE_TYPE_DIR) {
+
+			/* skip modify subtree_control file for the leaf nodes */
+			if (subtree_control && is_leaf_node(&handle))
+				continue;
 
 			ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
 						       ignore_unmappable, src_version);
 			if (ret)
 				goto err;
 		}
+	}
+
+	if (post_order_walk) {
+		ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
+					       ignore_unmappable, src_version);
+		if (ret)
+			goto err;
 	}
 
 err:
@@ -213,18 +270,91 @@ static int cgroup_copy_controller_idx(struct cgroup *dst_cgrp, struct cgroup *sr
 	return 0;
 }
 
+static int cgroup_populate_cgroup_ctrl(const char * const new_cgrp, bool ignore_unmappable,
+				       enum cg_version_t src_version)
+{
+	char *ctrl, *ctrl_list = cgrp_subtree_ctrl_val->value;
+	struct cgroup_controller *cgc;
+	struct cgroup *cgrp;
+	int ret = ECGFAIL;
+
+	/* create new cgroup */
+	cgrp = cgroup_new_cgroup(new_cgrp);
+	if (!cgrp) {
+		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
+		return ret;
+	}
+
+	cgc =  cgroup_add_controller(cgrp, "cgroup");
+	if (!cgc)  {
+		err("%s: failed to add controller cgroup to %s\n", program_name, cgrp->name);
+		goto err;
+	}
+
+	/*
+	 * this is need for adding the controller setting, which
+	 * will be reset in the loop below.
+	 */
+	ret = cgroup_add_value_string(cgc, cgrp_subtree_ctrl_val->name,
+			cgrp_subtree_ctrl_val->value);
+	if (ret) {
+		err("%s: failed to add value %s to cgroup %s controller cgroup\n", program_name,
+				cgrp_subtree_ctrl_val->name, cgrp->name);
+		goto err;
+	}
+
+	while ((ctrl = strtok(ctrl_list, " ")) != NULL) {
+		ret = cgroup_set_value_string(cgc, cgrp_subtree_ctrl_val->name, ctrl);
+		if (ret) {
+			err("%s: failed to set value %s:%s to cgroup %s controller cgroup\n",
+			    program_name, cgrp_subtree_ctrl_val->name, ctrl, cgrp->name);
+			goto err;
+		}
+
+		if (ctrl[0] == '-')
+			ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable,
+							  src_version, true);
+		else if (ctrl[0] == '+')
+			ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable,
+							  src_version, false);
+		else
+			ret = ECGFAIL;
+
+		if (ret)
+			goto err;
+
+		ctrl_list = NULL;
+	}
+
+	ret = 0;
+
+err:
+	cgroup_free(&cgrp);
+	return ret;
+}
+
 static int cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp,
 				    bool ignore_unmappable, enum cg_version_t src_version)
 {
-	struct cgroup *cgrp;
+	struct cgroup *cgrp = NULL;
 	int i, ret = ECGFAIL;
 
+	if (cgrp_subtree_ctrl_val) {
+		ret = cgroup_populate_cgroup_ctrl(new_cgrp, ignore_unmappable, src_version);
+		if (ret)
+			goto err;
+	}
+
 	if (is_cgroup_mode_unified()) {
+		if (!src_cgrp->index)
+			return 0;
+
 		cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
 		if (!cgrp)
 			return ret;
 
-		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable, src_version);
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable,
+						  src_version, false);
 		goto err;
 	}
 
@@ -254,7 +384,8 @@ static int cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * cons
 		if (ret)
 			goto err;
 
-		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable, src_version);
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable,
+						  src_version, false);
 		if (ret)
 			goto err;
 	}
@@ -346,6 +477,25 @@ err:
 }
 
 #ifndef UNIT_TEST
+static int add_subtree_control_name_value(struct control_value *name_value)
+{
+	if (cgrp_subtree_ctrl_val) {
+		err("%s: duplicate -r %s option found\n", program_name, name_value->name);
+		return ECGFAIL;
+	}
+
+	cgrp_subtree_ctrl_val = calloc(1, sizeof(struct control_value));
+	if (!cgrp_subtree_ctrl_val) {
+		err("%s: not enough memory\n", program_name);
+		return ECGFAIL;
+	}
+
+	snprintf(cgrp_subtree_ctrl_val->name, FILENAME_MAX, "%s", name_value->name);
+	snprintf(cgrp_subtree_ctrl_val->value, CG_CONTROL_VALUE_MAX, "%s", name_value->value);
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef WITH_SYSTEMD
@@ -357,6 +507,7 @@ int main(int argc, char *argv[])
 	int nv_max = 0;
 
 	char src_cg_path[FILENAME_MAX] = "\0";
+	struct cgroup *subtree_cgrp = NULL;
 	struct cgroup *src_cgroup = NULL;
 
 	enum cg_version_t src_version = CGROUP_UNK;
@@ -370,6 +521,14 @@ int main(int argc, char *argv[])
 	if (argc < 2) {
 		err("Usage is %s -r <name=value> <relative path to cgroup>\n", program_name);
 		return -1;
+	}
+
+	/* initialize libcgroup */
+	ret = cgroup_init();
+	if (ret) {
+		err("%s: libcgroup initialization failed: %s\n", program_name,
+		    cgroup_strerror(ret));
+		goto err;
 	}
 
 #ifdef WITH_SYSTEMD
@@ -411,7 +570,15 @@ int main(int argc, char *argv[])
 			if (ret)
 				goto err;
 
-			nv_number++;
+			if (!strcmp(name_value[nv_number].name, "cgroup.subtree_control")) {
+				ret = add_subtree_control_name_value(&name_value[nv_number]);
+				if (ret)
+					goto err;
+				memset(&name_value[nv_number], '\0', sizeof(struct control_value));
+			} else {
+				nv_number++;
+			}
+
 			break;
 		case COPY_FROM_OPTION:
 			if (flags != 0) {
@@ -473,6 +640,13 @@ int main(int argc, char *argv[])
 		src_cgroup = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
 		if (src_cgroup == NULL)
 			goto err;
+
+		if (cgrp_subtree_ctrl_val && !recursive) {
+			subtree_cgrp = create_cgroup_from_name_value_pairs("tmp1",
+							cgrp_subtree_ctrl_val, 1);
+			if (!subtree_cgrp)
+				goto err;
+		}
 	}
 
 	/* copy the name-value from the given group */
@@ -484,12 +658,17 @@ int main(int argc, char *argv[])
 
 	while (optind < argc) {
 
-		if (recursive)
+		if (recursive) {
 			ret = cgroup_set_cgroup_values_r(src_cgroup, argv[optind],
 							 ignore_unmappable, src_version);
-		else
+		} else {
+			ret = cgroup_set_cgroup_values(subtree_cgrp, argv[optind],
+						       ignore_unmappable, src_version);
+			if (ret)
+				goto err;
 			ret = cgroup_set_cgroup_values(src_cgroup, argv[optind],
 						       ignore_unmappable, src_version);
+		}
 		if (ret)
 			goto err;
 
@@ -498,6 +677,7 @@ int main(int argc, char *argv[])
 
 err:
 	cgroup_free(&src_cgroup);
+	cgroup_free(&subtree_cgrp);
 	free(name_value);
 
 	return ret;
