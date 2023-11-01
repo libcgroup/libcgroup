@@ -53,6 +53,7 @@ def setup(config):
 
     if (is_hybrid_with_ctrl(config)):
         Cgroup.create(config, None, GRANDCHILD)
+        Cgroup.create(config, CONTROLLERS[1], PARENT)
 
 
 def cgroup_settings_helper(config, SETTING, VALUE, DEF_VAL):
