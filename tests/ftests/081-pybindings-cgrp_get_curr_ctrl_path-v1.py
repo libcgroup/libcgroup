@@ -7,7 +7,7 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
-from cgroup import Cgroup as CgroupCli, Mode
+from cgroup import Cgroup as CgroupCli, Mode, CgroupVersion
 from libcgroup import Cgroup, Version
 from process import Process
 import consts
@@ -64,11 +64,19 @@ def test(config):
     # Test 2 - get the relative path of cgroup, for the pid's memory controller.
     #          It's expected to fail because we not had created cgroup.
     #
-    cgrp_path = cgrp.get_current_controller_path(pid, "memory")
-    if cgrp_path == expected_path:
-        result = consts.TEST_FAILED
-        tmp_cause = 'cgroup path unexpectedly formed {}'.format(cgrp_path)
-        cause = '\n'.join(filter(None, [cause, tmp_cause]))
+    try:
+        cgrp_path = cgrp.get_current_controller_path(pid, "memory")
+        if cgrp_path == expected_path:
+            result = consts.TEST_FAILED
+            tmp_cause = 'cgroup path unexpectedly formed {}'.format(cgrp_path)
+            cause = '\n'.join(filter(None, [cause, tmp_cause]))
+    except RuntimeError as re:
+        if (Cgroup.cgroup_mode() == Mode.CGROUP_MODE_HYBRID and
+           CgroupVersion.get_version("memory") == CgroupVersion.CGROUP_V2):
+            if '50001' in str(re):
+                pass
+        else:
+            raise re
 
     #
     # Test 3 - get the relative path of cgroup, for the pid's invalid controller.
