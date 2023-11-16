@@ -135,7 +135,9 @@ static struct option longopts[] = {
 int main(int argc, char *argv[])
 {
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	int ret = 0, i, exit_code = 0;
 	int skip_replace_idle = 0;
 	pid_t scope_pid = -1;
@@ -197,9 +199,10 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* this is false always for disable-systemd */
+#ifdef WITH_SYSTEMD
 	if (!ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	for (i = optind; i < argc; i++) {
 		pid = (pid_t) strtol(argv[i], &endptr, 10);
