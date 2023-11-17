@@ -133,7 +133,9 @@ int main(int argc, char *argv[])
 	uid_t tuid = CGRULE_INVALID, auid = CGRULE_INVALID;
 	gid_t tgid = CGRULE_INVALID, agid = CGRULE_INVALID;
 
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	int set_default_scope = 0;
 	int create_scope = 0;
 	pid_t scope_pid = -1;
@@ -276,9 +278,10 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	/* this will always be false if WITH_SYSTEMD is not defined */
+#ifdef WITH_SYSTEMD
 	if (!create_scope && !ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	/* for each new cgroup */
 	for (i = 0; i < capacity; i++) {
