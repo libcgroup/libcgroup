@@ -113,7 +113,9 @@ static int skip_add_controller(int counter, int *skip, struct ext_cgroup_record 
 
 int main(int argc, char *argv[])
 {
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	struct cgroup_group_spec **cgroup_list = NULL;
 	struct ext_cgroup_record *ecg_list = NULL;
 	struct cgroup_controller *cgc;
@@ -186,9 +188,10 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* this is false always for disable-systemd */
+#ifdef WITH_SYSTEMD
 	if (!ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	/* parse groups on command line */
 	for (i = optind; i < argc; i++) {
