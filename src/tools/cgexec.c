@@ -70,7 +70,9 @@ static void usage(int status, const char *program_name)
 int main(int argc, char *argv[])
 {
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	pid_t scope_pid = -1;
 	int child_status = 0;
 	int replace_idle = 0;
@@ -129,9 +131,10 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	/* this is false always for disable-systemd */
+#ifdef WITH_SYSTEMD
 	if (!ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	/* Just for debugging purposes. */
 	uid = geteuid();
