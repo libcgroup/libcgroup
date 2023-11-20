@@ -795,7 +795,7 @@ static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
 
 int main(int argc, char *argv[])
 {
-	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS | MODE_SYSTEMD_DELEGATE;
+	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
 	struct cgroup **cg_list = NULL;
 	int cg_list_len = 0;
 	int ret = 0, i;
@@ -811,6 +811,10 @@ int main(int argc, char *argv[])
 		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
+
+#ifdef WITH_SYSTEMD
+	mode |= MODE_SYSTEMD_DELEGATE;
+#endif
 
 	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode);
 	if (ret)
