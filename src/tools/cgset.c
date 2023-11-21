@@ -444,7 +444,9 @@ static int add_subtree_control_name_value(struct control_value *name_value)
 
 int main(int argc, char *argv[])
 {
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
 	int recursive = 0;
@@ -564,9 +566,10 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	/* this is false always for disable-systemd */
+#ifdef WITH_SYSTEMD
 	if (!ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	/* copy the name-value pairs from -r options */
 	if ((flags & FL_RULES) != 0) {
