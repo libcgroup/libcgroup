@@ -833,7 +833,7 @@ out:
 
 int main(int argc, char *argv[])
 {
-	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS | MODE_SYSTEMD_DELEGATE;
+	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
 	enum cg_version_t version = CGROUP_UNK;
 	struct cgroup **cg_list = NULL;
 	bool ignore_unmappable = false;
@@ -851,6 +851,10 @@ int main(int argc, char *argv[])
 		err("%s: libcgroup initialization failed: %s\n", argv[0], cgroup_strerror(ret));
 		goto err;
 	}
+
+#ifdef WITH_SYSTEMD
+	mode |= MODE_SYSTEMD_DELEGATE;
+#endif
 
 	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode, &version, &ignore_unmappable);
 	if (ret)
