@@ -246,7 +246,9 @@ int main(int argc, char *argv[])
 	};
 
 	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+#ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
+#endif
 	int flags = 0;
 	int ret = 0;
 	int c;
@@ -291,9 +293,10 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	/* this is false always for disable-systemd */
+#ifdef WITH_SYSTEMD
 	if (!ignore_default_systemd_delegate_slice)
 		cgroup_set_default_systemd_cgroup();
+#endif
 
 	/* read the list of controllers */
 	while (optind < argc) {
