@@ -7,7 +7,10 @@ SUBDIRS = . daemon pam tools
 if ENABLE_PYTHON
 SUBDIRS += python
 endif
+
+if WITH_SYSTEMD
 EXTRA_DIST = libcgroup_systemd_idle_thread
+endif
 
 # generate parse.h  from parse.y
 AM_YFLAGS = -d
@@ -28,10 +31,7 @@ lib_LTLIBRARIES = libcgroup.la
 libcgroup_la_SOURCES = parse.h parse.y lex.l api.c config.c libcgroup-internal.h libcgroup.map \
 		       wrapper.c log.c abstraction-common.c abstraction-common.h \
 		       abstraction-map.c abstraction-map.h abstraction-cpu.c abstraction-cpuset.c \
-		       tools/cgxget.c tools/cgxset.c
-if WITH_SYSTEMD
-libcgroup_la_SOURCES += systemd.c
-endif
+		       systemd.c tools/cgxget.c tools/cgxset.c
 
 libcgroup_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)
 libcgroup_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -DSTATIC=static -DLIBCG_LIB -fPIC
@@ -47,10 +47,7 @@ noinst_LTLIBRARIES = libcgroupfortesting.la
 libcgroupfortesting_la_SOURCES = parse.h parse.y lex.l api.c config.c libcgroup-internal.h \
 				 libcgroup.map wrapper.c log.c abstraction-common.c \
 				 abstraction-common.h abstraction-map.c abstraction-map.h \
-				 abstraction-cpu.c abstraction-cpuset.c
-if WITH_SYSTEMD
-libcgroupfortesting_la_SOURCES += systemd.c
-endif
+				 abstraction-cpu.c abstraction-cpuset.c systemd.c
 
 libcgroupfortesting_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)
 libcgroupfortesting_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -DSTATIC= -DUNIT_TEST
