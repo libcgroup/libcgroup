@@ -19,7 +19,6 @@
 
 #include <libcgroup.h>
 #include <libcgroup-internal.h>
-#include <libcgroup/systemd.h>
 
 #include <pthread.h>
 #include <assert.h>
@@ -2284,18 +2283,28 @@ err:
 #else
 int cgroup_add_systemd_opts(const char * const config, const char * const value)
 {
-	return 1;
+	cgroup_err("Systemd support not compiled\n");
+	return 0;
 }
 
 int cgroup_alloc_systemd_opts(const char * const config, const char * const value)
 {
-	return 1;
+	cgroup_err("Systemd support not compiled\n");
+	return 0;
 }
 
 void cgroup_cleanup_systemd_opts(void) { }
 
 int cgroup_set_default_systemd_cgroup(void)
 {
+	cgroup_err("Systemd support not compiled\n");
+	return 0;
+}
+
+int cgroup_write_systemd_default_cgroup(const char * const slice,
+					const char * const scope)
+{
+	cgroup_err("Systemd support not compiled\n");
 	return 0;
 }
 #endif

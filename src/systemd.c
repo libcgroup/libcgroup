@@ -6,6 +6,8 @@
  */
 
 #include <libcgroup-internal.h>
+
+#ifdef WITH_SYSTEMD
 #include <systemd/sd-bus.h>
 #include <libcgroup.h>
 #include <unistd.h>
@@ -422,3 +424,24 @@ err:
 
 	return ret;
 }
+#else
+int cgroup_set_default_scope_opts(struct cgroup_systemd_scope_opts * const opts)
+{
+	cgroup_err("Systemd support not compiled\n");
+	return 1;
+}
+
+int cgroup_create_scope(const char * const scope_name, const char * const slice_name,
+			const struct cgroup_systemd_scope_opts * const opts)
+{
+	cgroup_err("Systemd support not compiled\n");
+	return 1;
+}
+
+int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
+			 const struct cgroup_systemd_scope_opts * const opts)
+{
+	cgroup_err("Systemd support not compiled\n");
+	return 1;
+}
+#endif
