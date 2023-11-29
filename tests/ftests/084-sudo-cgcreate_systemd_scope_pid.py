@@ -7,9 +7,10 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
-from cgroup import Cgroup
 from process import Process
+from systemd import Systemd
 from libcgroup import Mode
+from cgroup import Cgroup
 from run import RunError
 import consts
 import ftests
@@ -34,6 +35,10 @@ def prereqs(config):
     if Cgroup.get_cgroup_mode(config) != Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
         cause = 'This test requires the unified cgroup hierarchy'
+
+    if not Systemd.is_systemd_enabled():
+        result = consts.TEST_SKIPPED
+        cause = 'Systemd support not compiled in'
 
     return result, cause
 
