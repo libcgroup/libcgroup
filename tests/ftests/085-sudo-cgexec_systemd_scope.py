@@ -9,6 +9,7 @@
 
 from multiprocessing import active_children
 from process import Process
+from systemd import Systemd
 from cgroup import Cgroup
 from run import RunError
 import consts
@@ -31,6 +32,10 @@ def prereqs(config):
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
+
+    if not Systemd.is_systemd_enabled():
+        result = consts.TEST_SKIPPED
+        cause = 'Systemd support not compiled in'
 
     return result, cause
 
