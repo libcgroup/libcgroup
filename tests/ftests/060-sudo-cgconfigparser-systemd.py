@@ -74,6 +74,10 @@ def prereqs(config):
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
 
+    if not Systemd.is_systemd_enabled():
+        result = consts.TEST_SKIPPED
+        cause = 'Systemd support not compiled in'
+
     return result, cause
 
 
