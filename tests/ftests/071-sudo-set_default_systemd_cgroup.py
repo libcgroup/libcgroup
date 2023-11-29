@@ -11,6 +11,7 @@
 from libcgroup import Version, Cgroup, Mode
 from cgroup import Cgroup as CgroupCli
 from process import Process
+from systemd import Systemd
 import consts
 import ftests
 import time
@@ -32,6 +33,10 @@ def prereqs(config):
     if config.args.container:
         result = consts.TEST_SKIPPED
         cause = 'This test cannot be run within a container'
+
+    if not Systemd.is_systemd_enabled():
+        result = consts.TEST_SKIPPED
+        cause = 'Systemd support not compiled in'
 
     return result, cause
 
