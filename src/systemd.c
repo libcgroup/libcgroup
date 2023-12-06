@@ -424,6 +424,11 @@ err:
 
 	return ret;
 }
+
+bool cgroup_is_systemd_enabled(void)
+{
+	return true;
+}
 #else
 int cgroup_set_default_scope_opts(struct cgroup_systemd_scope_opts * const opts)
 {
@@ -443,5 +448,10 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 {
 	cgroup_err("Systemd support not compiled\n");
 	return 1;
+}
+
+bool cgroup_is_systemd_enabled(void)
+{
+	return false;
 }
 #endif
