@@ -133,6 +133,11 @@ void cgroup_cleanup_systemd_opts(void);
 int cgroup_write_systemd_default_cgroup(const char * const slice,
 					const char * const scope);
 
+/*
+ * Return true if systemd support is compiled into the libcgroup library
+ */
+bool cgroup_is_systemd_enabled(void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
