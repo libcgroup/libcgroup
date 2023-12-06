@@ -6,8 +6,9 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from cgroup import Cgroup as CgroupCli
 from run import Run, RunError
-from cgroup import Cgroup
+from libcgroup import Cgroup
 import os
 
 
@@ -70,7 +71,12 @@ class Systemd(object):
         # In case the error occurs before the creation of slice/scope and
         # we may very well be on the teardown path, ignore the exception
         try:
-            Cgroup.delete(config, controller, cgname=_slice, ignore_systemd=True)
+            CgroupCli.delete(config, controller, cgname=_slice, ignore_systemd=True)
         except RunError as re:
             if 'No such file or directory' not in re.stderr:
                 raise re
+
+    # Check if libcgroup is compiled with --enable-systemd
+    @staticmethod
+    def is_systemd_enabled():
+        return Cgroup.is_systemd_enabled()
