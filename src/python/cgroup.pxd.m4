@@ -130,4 +130,7 @@ cdef extern from "libcgroup.h":
     int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char * const controllers[])
 
     void cgroup_set_default_logger(int log_level)
+
+    bool cgroup_is_systemd_enabled()
+
 # vim: set et ts=4 sw=4:
