@@ -815,6 +815,13 @@ cdef class Cgroup:
         """
         cgroup.cgroup_set_default_logger(log_level)
 
+    @staticmethod
+    def is_systemd_enabled():
+        """Returns true if libcgroup is compiled with systemd support
+        """
+
+        return cgroup.cgroup_is_systemd_enabled()
+
     def __dealloc__(self):
         cgroup.cgroup_free(&self._cgp)
 
