@@ -33,14 +33,12 @@ cdef class Mode:
     CGROUP_MODE_HYBRID = cgroup.CGROUP_MODE_HYBRID
     CGROUP_MODE_UNIFIED = cgroup.CGROUP_MODE_UNIFIED
 
-ifdef(`WITH_SYSTEMD',
 cdef class SystemdMode:
     CGROUP_SYSTEMD_MODE_FAIL = cgroup.CGROUP_SYSTEMD_MODE_FAIL
     CGROUP_SYSTEMD_MODE_REPLACE = cgroup.CGROUP_SYSTEMD_MODE_REPLACE
     CGROUP_SYSTEMD_MODE_ISOLATE = cgroup.CGROUP_SYSTEMD_MODE_ISOLATE
     CGROUP_SYSTEMD_MODE_IGNORE_DEPS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_DEPS
     CGROUP_SYSTEMD_MODE_IGNORE_REQS = cgroup.CGROUP_SYSTEMD_MODE_IGNORE_REQS
-)
 
 cdef class LogLevel:
     CGROUP_LOG_CONT = cgroup.CGROUP_LOG_CONT
@@ -401,8 +399,6 @@ cdef class Cgroup:
         Cgroup.cgroup_init()
         return cgroup.cgroup_setup_mode()
 
-ifdef(`WITH_SYSTEMD',
-    # comment to appease m4
     @staticmethod
     def create_scope(scope_name='libcgroup.scope', slice_name='libcgroup.slice', delegated=True,
                      systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
@@ -439,8 +435,7 @@ ifdef(`WITH_SYSTEMD',
 
         ret = cgroup.cgroup_create_scope(c_str(scope_name), c_str(slice_name), &opts)
         if ret is not 0:
-            raise RuntimeError("cgroup_create_scope failed: {}".``format''(ret))
-)
+            raise RuntimeError("cgroup_create_scope failed: {}".`format'(ret))
 
     def get(self):
         """Get the cgroup information from the cgroup sysfs
@@ -539,8 +534,6 @@ ifdef(`WITH_SYSTEMD',
 
         cgroup.cgroup_set_permissions(self._cgp, dmode, cmode, tmode)
 
-ifdef(`WITH_SYSTEMD',
-    # comment to appease m4
     def create_scope2(self, ignore_ownership=True, delegated=True,
                       systemd_mode=SystemdMode.CGROUP_SYSTEMD_MODE_FAIL, pid=None):
         """Create a systemd scope using the cgroup instance
@@ -574,7 +567,7 @@ ifdef(`WITH_SYSTEMD',
 
         ret = cgroup.cgroup_create_scope2(self._cgp, ignore_ownership, &opts)
         if ret is not 0:
-            raise RuntimeError("cgroup_create_scope2 failed: {}".``format''(ret))
+            raise RuntimeError("cgroup_create_scope2 failed: {}".`format'(ret))
 
     @staticmethod
     def _set_default_systemd_cgroup():
@@ -646,7 +639,6 @@ ifdef(`WITH_SYSTEMD',
             Cgroup._set_default_systemd_cgroup()
         except RuntimeError:
             pass
-)
 
     cdef compare(self, Cgroup other):
         """Compare this cgroup instance with another cgroup instance
