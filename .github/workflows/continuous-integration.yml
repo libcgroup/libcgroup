@@ -119,7 +119,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Unit Test Code Coverage
         path: lcov.*
@@ -222,7 +222,7 @@ jobs:
         popd
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: No systemd test logs
         path: ./*.log
@@ -237,7 +237,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: No systemd Code Coverage
         path: lcov.*
@@ -269,7 +269,7 @@ jobs:
         popd
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v1 test logs
         path: ./*.log
@@ -284,7 +284,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v1 Code Coverage
         path: lcov.*
@@ -327,7 +327,7 @@ jobs:
         cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v1v2 test logs
         path: tests/ftests/*.log
@@ -342,7 +342,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v1v2 Code Coverage
         path: lcov.*
@@ -371,7 +371,7 @@ jobs:
         cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 test logs - legacy
         path: tests/ftests/*.log
@@ -386,7 +386,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 Code Coverage - legacy
         path: lcov.*
@@ -415,7 +415,7 @@ jobs:
         cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 test logs - hybrid
         path: tests/ftests/*.log
@@ -430,7 +430,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 Code Coverage - hybrid
         path: lcov.*
@@ -459,7 +459,7 @@ jobs:
         cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 test logs - unified
         path: tests/ftests/*.log
@@ -474,7 +474,7 @@ jobs:
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Cgroup v2 Code Coverage - unified
         path: lcov.*
