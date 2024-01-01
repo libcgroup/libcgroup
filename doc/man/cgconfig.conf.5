@@ -253,6 +253,53 @@ Templates does not use
 .B default
 section settings.
 
+.I systemd
+section has this form (supported on cgroup v2):
+.RS
+.nf
+.ft B
+.sp
+systemd {
+.RS
+.ft B
+slice = <slice-name.slice>;
+scope = <scope-name.scope>;
+setdefault = <yes>;
+pid = <pid>;
+.ft B
+.RE
+}
+.fi
+.RE
+.ft
+
+.TP
+.B slice
+The name of the systemd slice unit, should end with '.slice'  and obey the rules set forth by systemd slice unit. The slice unit is created, if it doesn't exist.  This configuration requires
+.B 'scope=<scope-name.scope>'.
+The term  'unit'  and 'cgroup' is used interchangeably.
+
+.TP
+.B scope
+The name of the systemd scope unit should end with '.scope'  and obey the rules set forth by systemd transient scope unit. This configuration requires
+.B 'slice=<slice-name.scope>'
+
+.TP
+.B setdefault
+Set the scope as the default libcgroup scope. This default scope is used by libcgroup tools to build up the cgroup path.
+
+.TP
+.B pid
+Moves the provided pid into the <slice-name.slice>/<scope-name.scope>. Without this configuration, libcgroup will create and attach a default idle program
+.B 'libcgroup_systemd_idle_thread'
+required by a systemd transient scope unit. The
+.B 'scope-name.scope'
+is automatically removed by systemd when the last task in the cgroup exits, but the
+.B 'slice-name.slice'
+will exist until manually removed.
+
+.LP
+
 .I /etc/cgconfig.d/
 directory can be used for additional configuration files. cgrulesengd searches this directory for additional templates.
 
@@ -788,6 +835,26 @@ mount -t cgroup cgroup -o nodev,nosuid,noexec,cpu /mnt/cgroups/cpu
 It mounts the cpu controller with MS_NODEV, MS_NOSUID and MS_NOEXEC
 options passed.
 
+
+.SS Example 9
+.LP
+The configuration file:
+
+.LP
+.RS
+.nf
+systemd {
+.RS
+slice = database.slice;
+scope = db.scope;
+setdefault = yes;
+.RE
+}
+
+.fi
+.RE
+
+This creates a systemd transient scope unit db.scope under the systemd slice unit database.slice and spawns a libcgroup_systemd_idle_thread in the scope cgroup unit. The 'setdefault' configuration appends database.slice/db.scope to the path constructed by libcgroup and its tools.
 
 .SH RECOMMENDATIONS
 .SS Keep hierarchies separated
