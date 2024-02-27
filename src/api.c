@@ -6089,20 +6089,16 @@ static int pid_compare(const void *a, const void *b)
  *
  * Caller must free up pids.
  */
-int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
+static int read_pids(char *path, pid_t **pids, int *size)
 {
-	char cgroup_path[FILENAME_MAX];
-	int tot_procs = 16;
+	int tot_pids = 16;
 	pid_t *tmp_list;
-	FILE *procs;
+	FILE *pid_file;
 	int n = 0;
 	int err;
 
-	cg_build_path(name, cgroup_path, controller);
-	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX-strlen(cgroup_path));
-
-	procs = fopen(cgroup_path, "r");
-	if (!procs) {
+	pid_file = fopen(path, "r");
+	if (!pid_file) {
 		last_errno = errno;
 		*pids = NULL;
 		*size = 0;
@@ -6113,31 +6109,31 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 	}
 
 	/* Keep doubling the memory allocated if needed */
-	tmp_list = malloc(sizeof(pid_t) * tot_procs);
+	tmp_list = malloc(sizeof(pid_t) * tot_pids);
 	if (!tmp_list) {
 		last_errno = errno;
-		fclose(procs);
+		fclose(pid_file);
 		return ECGOTHER;
 	}
 
-	while (!feof(procs)) {
-		while (!feof(procs) && n < tot_procs) {
+	while (!feof(pid_file)) {
+		while (!feof(pid_file) && n < tot_pids) {
 			pid_t pid;
 
-			err = fscanf(procs, "%u", &pid);
+			err = fscanf(pid_file, "%u", &pid);
 			if (err == EOF)
 				break;
 			tmp_list[n] = pid;
 			n++;
 		}
-		if (!feof(procs)) {
+		if (!feof(pid_file)) {
 			pid_t *orig_list = tmp_list;
 
-			tot_procs *= 2;
-			tmp_list = realloc(tmp_list, sizeof(pid_t) * tot_procs);
+			tot_pids *= 2;
+			tmp_list = realloc(tmp_list, sizeof(pid_t) * tot_pids);
 			if (!tmp_list) {
 				last_errno = errno;
-				fclose(procs);
+				fclose(pid_file);
 				free(orig_list);
 				*pids = NULL;
 				*size = 0;
@@ -6145,13 +6141,33 @@ int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
 			}
 		}
 	}
-	fclose(procs);
+	fclose(pid_file);
 
 	*size = n;
 	qsort(tmp_list, n, sizeof(pid_t), &pid_compare);
 	*pids = tmp_list;
 
 	return 0;
+}
+
+int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
+{
+	char cgroup_path[FILENAME_MAX];
+
+	cg_build_path(name, cgroup_path, controller);
+	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX-strlen(cgroup_path));
+
+	return read_pids(cgroup_path, pids, size);
+}
+
+int cgroup_get_threads(char *name, char *controller, pid_t **pids, int *size)
+{
+	char cgroup_path[FILENAME_MAX];
+
+	cg_build_path(name, cgroup_path, controller);
+	strncat(cgroup_path, "/cgroup.threads", FILENAME_MAX-strlen(cgroup_path));
+
+	return read_pids(cgroup_path, pids, size);
 }
 
 int cgroup_dictionary_create(struct cgroup_dictionary **dict,

@@ -589,6 +589,17 @@ char *cgroup_get_value_name(struct cgroup_controller *controller, int index);
 int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size);
 
 /**
+ * Get the list of threads in a cgroup. This list is guaranteed to
+ * be sorted. It is not necessary that it is unique.
+ * @param name The name of the cgroup
+ * @param controller The name of the controller
+ * @param pids The list of pids. Should be uninitialized when passed
+ * to the API. Should be freed by the caller using free.
+ * @param size The size of the pids array returned by the API.
+ */
+int cgroup_get_threads(char *name, char *controller, pid_t **pids, int *size);
+
+/**
  * Change permission of files and directories of given group
  * @param cgroup The cgroup which permissions should be changed
  * @param dir_mode The permission mode of group directory
