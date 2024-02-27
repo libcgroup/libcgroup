@@ -164,3 +164,7 @@ CGROUP_3.0 {
 	cgroup_is_systemd_enabled;
 	cgroup_attach_thread_tid;
 } CGROUP_2.0;
+
+CGROUP_3.2 {
+	cgroup_get_threads;
+} CGROUP_3.0;
