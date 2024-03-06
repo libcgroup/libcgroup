@@ -2012,16 +2012,7 @@ err:
 	return ret;
 }
 
-/**
- *  cgroup_attach_task_pid is used to assign tasks to a cgroup.
- *  struct cgroup *cgroup: The cgroup to assign the thread to.
- *  pid_t tid: The thread to be assigned to the cgroup.
- *
- *  returns 0 on success.
- *  returns ECGROUPNOTOWNER if the caller does not have access to the cgroup.
- *  returns ECGROUPNOTALLOWED for other causes of failure.
- */
-int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
+static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid)
 {
 	char path[FILENAME_MAX] = {0};
 	char *controller_name;
@@ -2087,6 +2078,20 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 }
 
 /**
+ *  cgroup_attach_task_pid is used to assign tasks to a cgroup.
+ *  struct cgroup *cgroup: The cgroup to assign the thread to.
+ *  pid_t tid: The thread to be assigned to the cgroup.
+ *
+ *  returns 0 on success.
+ *  returns ECGROUPNOTOWNER if the caller does not have access to the cgroup.
+ *  returns ECGROUPNOTALLOWED for other causes of failure.
+ */
+int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
+{
+	return cgroup_attach_task_tid(cgroup, tid);
+}
+
+/**
  * cgroup_attach_task is used to attach the current thread to a cgroup.
  * struct cgroup *cgroup: The cgroup to assign the current thread to.
  *
@@ -2095,11 +2100,8 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 int cgroup_attach_task(struct cgroup *cgroup)
 {
 	pid_t tid = cg_gettid();
-	int error;
 
-	error = cgroup_attach_task_pid(cgroup, tid);
-
-	return error;
+	return cgroup_attach_task_tid(cgroup, tid);
 }
 
 /**
