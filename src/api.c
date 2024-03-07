@@ -2012,10 +2012,33 @@ err:
 	return ret;
 }
 
-static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid)
+static int cgroup_v1_build_procs_path(const char * const ctrl_name, char *path)
+{
+	enum cg_version_t version;
+	size_t len;
+	int ret;
+
+	ret = cgroup_get_controller_version(ctrl_name, &version);
+	if (ret)
+		return ret;
+
+	if (version != CGROUP_V1)
+		return ret;
+
+	/* replace tasks with cgroup.procs file name in the path */
+	len = strlen(path) - 5;
+	path[len] = '\0';
+
+	strncat(path, "cgroup.procs", FILENAME_MAX - (len + 1));
+	path[FILENAME_MAX - 1] = '\0';
+
+	return ret;
+}
+
+static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_tids)
 {
 	char path[FILENAME_MAX] = {0};
-	char *controller_name;
+	char *controller_name = NULL;
 	int empty_cgroup = 0;
 	int i, ret = 0;
 
@@ -2032,6 +2055,12 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid)
 							    cg_mount_table[i].name);
 			if (ret)
 				return ret;
+
+			if (move_tids) {
+				ret = cgroup_v1_build_procs_path(controller_name, path);
+				if (ret)
+					return ret;
+			}
 
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret) {
@@ -2069,6 +2098,12 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid)
 			if (ret)
 				return ret;
 
+			if (move_tids) {
+				ret = cgroup_v1_build_procs_path(controller_name, path);
+				if (ret)
+					return ret;
+			}
+
 			ret = __cgroup_attach_task_pid(path, tid);
 			if (ret)
 				return ret;
@@ -2088,7 +2123,7 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid)
  */
 int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid)
 {
-	return cgroup_attach_task_tid(cgroup, tid);
+	return cgroup_attach_task_tid(cgroup, tid, 0);
 }
 
 /**
@@ -2101,7 +2136,7 @@ int cgroup_attach_task(struct cgroup *cgroup)
 {
 	pid_t tid = cg_gettid();
 
-	return cgroup_attach_task_tid(cgroup, tid);
+	return cgroup_attach_task_tid(cgroup, tid, 0);
 }
 
 /**
