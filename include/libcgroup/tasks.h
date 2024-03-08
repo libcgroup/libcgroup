@@ -204,6 +204,13 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
 int cgroup_register_unchanged_process(pid_t pid, int flags);
 
 /**
+ * Move given threads (=thread) to given control group.
+ * @param cgroup Destination control group.
+ * @param tid The task to move.
+ */
+int cgroup_attach_thread_tid(struct cgroup *cgroup, pid_t tid);
+
+/**
  * @}
  * @}
  */

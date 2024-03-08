@@ -162,4 +162,5 @@ CGROUP_3.0 {
 	is_cgroup_mode_hybrid;
 	is_cgroup_mode_unified;
 	cgroup_is_systemd_enabled;
+	cgroup_attach_thread_tid;
 } CGROUP_2.0;

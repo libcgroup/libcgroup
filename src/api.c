@@ -2140,6 +2140,20 @@ int cgroup_attach_task(struct cgroup *cgroup)
 }
 
 /**
+ *  cgroup_attach_thread_tid is used to assign threads to a cgroup.
+ *  struct cgroup *cgroup: The cgroup to assign the thread to.
+ *  pid_t tid: The thread to be assigned to the cgroup.
+ *
+ *  returns 0 on success.
+ *  returns ECGROUPNOTOWNER if the caller does not have access to the cgroup.
+ *  returns ECGROUPNOTALLOWED for other causes of failure.
+ */
+int cgroup_attach_thread_tid(struct cgroup *cgroup, pid_t tid)
+{
+	return cgroup_attach_task_tid(cgroup, tid, 1);
+}
+
+/**
  * cg_mkdir_p, emulate the mkdir -p command (recursively creating paths)
  * @path: path to create
  */
