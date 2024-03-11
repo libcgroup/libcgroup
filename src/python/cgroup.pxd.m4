@@ -133,4 +133,6 @@ cdef extern from "libcgroup.h":
 
     bool cgroup_is_systemd_enabled()
 
+    int cgroup_attach_thread_tid(cgroup * cgroup, pid_t tid)
+
 # vim: set et ts=4 sw=4:
