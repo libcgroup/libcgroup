@@ -470,12 +470,14 @@ cdef class Cgroup:
         if ret is not 0:
             raise RuntimeError("cgroup_delete_cgroup failed: {}".`format'(ret))
 
-    def attach(self, pid=None, root_cgroup=False):
+    def attach(self, pid=None, root_cgroup=False, attach_threads=False):
         """Attach a process to a cgroup
 
         Arguments:
         pid - pid to be attached.  If none, then the current pid is attached
         root_cgroup - if True, then the pid will be attached to the root cgroup
+        attach_threads - if True, pid will be written in cgroup.procs (v1)
+
 
         Description:
         Attach a process to a cgroup
@@ -486,10 +488,16 @@ cdef class Cgroup:
             else:
                 ret = cgroup.cgroup_attach_task(self._cgp)
         else:
-            if root_cgroup:
-                ret = cgroup.cgroup_attach_task_pid(NULL, pid)
+            if attach_threads:
+                if root_cgroup:
+                    ret = cgroup.cgroup_attach_thread_tid(NULL, pid)
+                else:
+                    ret = cgroup.cgroup_attach_thread_tid(self._cgp, pid)
             else:
-                ret = cgroup.cgroup_attach_task_pid(self._cgp, pid)
+                if root_cgroup:
+                    ret = cgroup.cgroup_attach_task_pid(NULL, pid)
+                else:
+                    ret = cgroup.cgroup_attach_task_pid(self._cgp, pid)
 
         if ret is not 0:
             raise RuntimeError("cgroup_attach_task failed: {}".`format'(ret))
