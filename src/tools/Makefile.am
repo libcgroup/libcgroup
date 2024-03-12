@@ -69,6 +69,11 @@ cgsnapshot_SOURCES = cgsnapshot.c
 cgsnapshot_LIBS = $(CODE_COVERAGE_LIBS)
 cgsnapshot_CFLAGS = $(CODE_COVERAGE_CFLAGS) $(EXTRA_CFLAGS)
 
+if ENABLE_PYTHON
+EXTRA_DIST = \
+	cgpsitree.py
+endif
+
 install-exec-hook:
 	chmod u+s $(DESTDIR)$(bindir)/cgexec
 
