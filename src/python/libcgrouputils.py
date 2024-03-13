@@ -11,6 +11,54 @@
 
 import subprocess
 
+class LibcgroupPid(object):
+    def __init__(self, pid, command=None):
+        self.pid = pid
+        self.command = command
+        self.pidstats = dict()
+
+    def __str__(self):
+        out_str = 'LibcgroupPid: {}'.format(self.pid)
+        out_str += '\n\tcommand = {}'.format(self.command)
+        for key, value in self.pidstats.items():
+            out_str += '\n\tpidstats[{}] = {}'.format(key, value)
+
+        return out_str
+
+    @staticmethod
+    def create_from_pidstat(pid):
+        cmd = list()
+        cmd.append('pidstat')
+        cmd.append('-H')
+        cmd.append('-h')
+        cmd.append('-r')
+        cmd.append('-u')
+        cmd.append('-v')
+        cmd.append('-p')
+        cmd.append('{}'.format(pid))
+
+        out = run(cmd)
+
+        for line in out.splitlines():
+            if not len(line.strip()):
+                continue
+            if line.startswith('Linux'):
+                # ignore the kernel info
+                continue
+            if line.startswith('#'):
+                line = line.lstrip('#')
+                keys = line.split()
+                continue
+
+            # the last line of pidstat is information regarding the pid
+            values = line.split()
+
+            cgpid = LibcgroupPid(pid)
+            for i, key in enumerate(keys):
+                cgpid.pidstats[key] = values[i]
+
+            return cgpid
+
 def run(command, run_in_shell=False):
     if run_in_shell:
         if isinstance(command, str):
