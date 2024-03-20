@@ -2392,7 +2392,7 @@ STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
 				  bool * const enabled, int file_enum)
 {
 	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c, *filename;
-	int ret, error = ECGROUPNOTMOUNTED;
+	int ret, error = 0;
 	char buffer[FILENAME_MAX];
 	FILE *fp = NULL;
 
@@ -2447,7 +2447,6 @@ STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
 	token = strtok_r(buffer, " ", &saveptr);
 	do {
 		if (strncmp(ctrl_name, token, FILENAME_MAX) == 0) {
-			error = 0;
 			*enabled = true;
 			break;
 		}
