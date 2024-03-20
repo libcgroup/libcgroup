@@ -187,6 +187,8 @@ Data Structures</h2></td></tr>
 <tr class="separator:ga9d01743fd3f97014e08fc67149ec5f0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga08a4fe913d59f61a39e61b8b02537dc2" id="r_ga08a4fe913d59f61a39e61b8b02537dc2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga08a4fe913d59f61a39e61b8b02537dc2">cgroup_get_procs</a> (char *name, char *controller, pid_t **pids, int *size)</td></tr>
 <tr class="separator:ga08a4fe913d59f61a39e61b8b02537dc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaef08e8ede63669bb7578fe79d03cd66b" id="r_gaef08e8ede63669bb7578fe79d03cd66b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaef08e8ede63669bb7578fe79d03cd66b">cgroup_get_threads</a> (char *name, char *controller, pid_t **pids, int *size)</td></tr>
+<tr class="separator:gaef08e8ede63669bb7578fe79d03cd66b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaef0bf6cd480f2dcb5e964de151a27dd1" id="r_gaef0bf6cd480f2dcb5e964de151a27dd1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaef0bf6cd480f2dcb5e964de151a27dd1">cg_chmod_recursive</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, mode_t dir_mode, int dirm_change, mode_t file_mode, int filem_change)</td></tr>
 <tr class="separator:gaef0bf6cd480f2dcb5e964de151a27dd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab60b1f528fbfb17d69a88f499c7071aa" id="r_gab60b1f528fbfb17d69a88f499c7071aa"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gab60b1f528fbfb17d69a88f499c7071aa">cgroup_get_cgroup_name</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
@@ -1127,6 +1129,55 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
       </table>
 </div><div class="memdoc">
 <p>Get the list of process in a cgroup. This list is guaranteed to be sorted. It is not necessary that it is unique. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>The name of the cgroup </td></tr>
+    <tr><td class="paramname">controller</td><td>The name of the controller </td></tr>
+    <tr><td class="paramname">pids</td><td>The list of pids. Should be uninitialized when passed to the API. Should be freed by the caller using free. </td></tr>
+    <tr><td class="paramname">size</td><td>The size of the pids array returned by the API. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="gaef08e8ede63669bb7578fe79d03cd66b" name="gaef08e8ede63669bb7578fe79d03cd66b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaef08e8ede63669bb7578fe79d03cd66b">&#9670;&#160;</a></span>cgroup_get_threads()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int cgroup_get_threads </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>controller</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pid_t **&#160;</td>
+          <td class="paramname"><em>pids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Get the list of threads in a cgroup. This list is guaranteed to be sorted. It is not necessary that it is unique. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>The name of the cgroup </td></tr>
     <tr><td class="paramname">controller</td><td>The name of the controller </td></tr>
