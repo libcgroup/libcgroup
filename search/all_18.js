@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['readme_0',['readme',['../md_README.html',1,'README'],['../md_tests_2README.html',1,'README']]],
+  ['release_20create_20new_20release_20x_20y_20branch_1',['8. If this is a new major/minor release, create new &apos;release-X.Y&apos; branch',['../md_doc_2internal_2release-github.html#autotoc_md16',1,'']]],
+  ['release_20in_20the_20local_20repository_20with_20a_20signed_20tag_2',['10. Tag the release in the local repository with a signed tag',['../md_doc_2internal_2release-github.html#autotoc_md18',1,'']]],
+  ['release_20milestone_20have_20been_20resolved_3',['1. Verify that all issues assigned to the release milestone have been resolved',['../md_doc_2internal_2release-github.html#autotoc_md9',1,'']]],
+  ['release_20notes_20for_20older_20releases_20which_20are_20now_20unsupported_4',['17. Update the GitHub release notes for older releases which are now unsupported',['../md_doc_2internal_2release-github.html#autotoc_md25',1,'']]],
+  ['release_20process_5',['The libcgroup Release Process',['../md_doc_2internal_2release-github.html',1,'']]],
+  ['release_20tag_20to_20the_20main_20github_20repository_6',['15. Push the release tag to the main GitHub repository',['../md_doc_2internal_2release-github.html#autotoc_md23',1,'']]],
+  ['release_20tarball_7',['release tarball',['../md_doc_2internal_2release-github.html#autotoc_md19',1,'11. Build final release tarball'],['../md_doc_2internal_2release-github.html#autotoc_md21',1,'13. Generate a checksum for the release tarball']]],
+  ['release_20tarball_20and_20checksum_20using_20the_20maintainer_20s_20key_8',['14. GPG sign the release tarball and checksum using the maintainer&apos;s key',['../md_doc_2internal_2release-github.html#autotoc_md22',1,'']]],
+  ['release_20tarball_20in_20a_20separate_20directory_9',['12. Verify the release tarball in a separate directory',['../md_doc_2internal_2release-github.html#autotoc_md20',1,'']]],
+  ['release_20using_20the_20associated_20tag_20and_20upload_20the_20following_20files_10',['16. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md24',1,'']]],
+  ['releases_20which_20are_20now_20unsupported_11',['17. Update the GitHub release notes for older releases which are now unsupported',['../md_doc_2internal_2release-github.html#autotoc_md25',1,'']]],
+  ['reporting_20problems_12',['Reporting Problems',['../md_SECURITY.html#autotoc_md29',1,'']]],
+  ['repository_13',['15. Push the release tag to the main GitHub repository',['../md_doc_2internal_2release-github.html#autotoc_md23',1,'']]],
+  ['repository_20with_20a_20signed_20tag_14',['10. Tag the release in the local repository with a signed tag',['../md_doc_2internal_2release-github.html#autotoc_md18',1,'']]],
+  ['requests_15',['Submitting via GitHub Pull Requests',['../md_CONTRIBUTING.html#autotoc_md8',1,'']]],
+  ['requirements_3a_16',['Requirements:',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md27',1,'']]],
+  ['resolved_17',['1. Verify that all issues assigned to the release milestone have been resolved',['../md_doc_2internal_2release-github.html#autotoc_md9',1,'']]],
+  ['resolving_20sensitive_20security_20issues_18',['Resolving Sensitive Security Issues',['../md_SECURITY.html#autotoc_md30',1,'']]],
+  ['restart_20the_20process_19',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
+  ['resulted_20in_20code_20changes_20restart_20the_20process_20',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
+  ['results_21',['Results',['../md_tests_2ftests_2README.html#autotoc_md34',1,'']]],
+  ['run_22',['Run',['../classftests_1_1run_1_1Run.html',1,'ftests::run']]],
+  ['runerror_23',['RunError',['../classftests_1_1run_1_1RunError.html',1,'ftests::run']]],
+  ['runs_20without_20error_24',['3. Verify that the bundled test suite runs without error',['../md_doc_2internal_2release-github.html#autotoc_md11',1,'']]]
+];

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['the_20libcgroup_20release_20process_0',['The libcgroup Release Process',['../md_doc_internal_release_github.html',1,'']]],
-  ['the_20libcgroup_20security_20vulnerability_20handling_20process_1',['The libcgroup Security Vulnerability Handling Process',['../md_SECURITY.html',1,'']]],
-  ['todo_20list_2',['Todo List',['../todo.html',1,'']]]
+  ['process_0',['process',['../md_samples_2cmdline_2systemd-with-idle-process.html',1,'systemd-with-idle-process'],['../md_doc_2internal_2release-github.html',1,'The libcgroup Release Process'],['../md_SECURITY.html',1,'The libcgroup Security Vulnerability Handling Process']]],
+  ['project_1',['How to Contribute to the libcgroup Project',['../md_CONTRIBUTING.html',1,'']]]
 ];

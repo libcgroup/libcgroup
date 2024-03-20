@@ -1,6 +1,30 @@
 var searchData=
 [
-  ['delegated_0',['delegated',['../structcgroup__systemd__scope__opts.html#afeebc7db4b83ce4a7d2aeefb8089df86',1,'cgroup_systemd_scope_opts']]],
-  ['deny_5flist_5ftype_1',['deny_list_type',['../structdeny__list__type.html',1,'']]],
-  ['depth_2',['depth',['../structcgroup__file__info.html#ad56dca35266f0f5f5c2666b946d72709',1,'cgroup_file_info']]]
+  ['a_20checksum_20for_20the_20release_20tarball_0',['13. Generate a checksum for the release tarball',['../md_doc_2internal_2release-github.html#autotoc_md21',1,'']]],
+  ['a_20new_20github_20release_20using_20the_20associated_20tag_20and_20upload_20the_20following_20files_1',['16. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md24',1,'']]],
+  ['a_20new_20major_20minor_20release_20create_20new_20release_20x_20y_20branch_2',['8. If this is a new major/minor release, create new &apos;release-X.Y&apos; branch',['../md_doc_2internal_2release-github.html#autotoc_md16',1,'']]],
+  ['a_20separate_20directory_3',['12. Verify the release tarball in a separate directory',['../md_doc_2internal_2release-github.html#autotoc_md20',1,'']]],
+  ['a_20signed_20tag_4',['10. Tag the release in the local repository with a signed tag',['../md_doc_2internal_2release-github.html#autotoc_md18',1,'']]],
+  ['a_20systemd_20scope_20and_20child_20hierarchy_20via_20libcgroup_20command_20line_5',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md26',1,'']]],
+  ['ac_20ac_5finit_20macro_20and_20library_20version_20macros_6',['9. Update and commit the version number in configure.ac AC_INIT(...) macro and LIBRARY version macros',['../md_doc_2internal_2release-github.html#autotoc_md17',1,'']]],
+  ['ac_5finit_20macro_20and_20library_20version_20macros_7',['9. Update and commit the version number in configure.ac AC_INIT(...) macro and LIBRARY version macros',['../md_doc_2internal_2release-github.html#autotoc_md17',1,'']]],
+  ['actions_20are_20all_20passing_8',['2. Verify that the Github Actions are all passing',['../md_doc_2internal_2release-github.html#autotoc_md10',1,'']]],
+  ['add_20new_20tests_20for_20new_20functionality_9',['Add New Tests for New Functionality',['../md_CONTRIBUTING.html#autotoc_md2',1,'']]],
+  ['all_20issues_20assigned_20to_20the_20release_20milestone_20have_20been_20resolved_10',['1. Verify that all issues assigned to the release milestone have been resolved',['../md_doc_2internal_2release-github.html#autotoc_md9',1,'']]],
+  ['all_20passing_11',['2. Verify that the Github Actions are all passing',['../md_doc_2internal_2release-github.html#autotoc_md10',1,'']]],
+  ['and_20checksum_20using_20the_20maintainer_20s_20key_12',['14. GPG sign the release tarball and checksum using the maintainer&apos;s key',['../md_doc_2internal_2release-github.html#autotoc_md22',1,'']]],
+  ['and_20child_20hierarchy_20via_20libcgroup_20command_20line_13',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md26',1,'']]],
+  ['and_20commit_20the_20version_20number_20in_20configure_20ac_20ac_5finit_20macro_20and_20library_20version_20macros_14',['9. Update and commit the version number in configure.ac AC_INIT(...) macro and LIBRARY version macros',['../md_doc_2internal_2release-github.html#autotoc_md17',1,'']]],
+  ['and_20upload_20the_20following_20files_15',['16. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md24',1,'']]],
+  ['any_20distribution_20test_20builds_16',['6. Perform any distribution test builds',['../md_doc_2internal_2release-github.html#autotoc_md14',1,'']]],
+  ['any_20problems_20were_20found_20up_20to_20this_20point_20that_20resulted_20in_20code_20changes_20restart_20the_20process_17',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
+  ['api_18',['2. Group manipulation API',['../group__group__groups.html',1,'']]],
+  ['apiargstest_19',['APIArgsTest',['../classAPIArgsTest.html',1,'']]],
+  ['are_20all_20passing_20',['2. Verify that the Github Actions are all passing',['../md_doc_2internal_2release-github.html#autotoc_md10',1,'']]],
+  ['are_20no_20outstanding_20defects_20from_20coverity_21',['5. Verify that there are no outstanding defects from Coverity',['../md_doc_2internal_2release-github.html#autotoc_md13',1,'']]],
+  ['are_20now_20unsupported_22',['17. Update the GitHub release notes for older releases which are now unsupported',['../md_doc_2internal_2release-github.html#autotoc_md25',1,'']]],
+  ['array_5fparent_5finfo_23',['array_parent_info',['../structarray__parent__info.html',1,'']]],
+  ['array_5funchanged_24',['array_unchanged',['../structarray__unchanged.html',1,'']]],
+  ['assigned_20to_20the_20release_20milestone_20have_20been_20resolved_25',['1. Verify that all issues assigned to the release milestone have been resolved',['../md_doc_2internal_2release-github.html#autotoc_md9',1,'']]],
+  ['associated_20tag_20and_20upload_20the_20following_20files_26',['16. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md24',1,'']]]
 ];

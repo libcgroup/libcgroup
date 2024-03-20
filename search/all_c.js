@@ -1,7 +1,10 @@
 var searchData=
 [
-  ['get_0',['get',['../classftests_1_1cgroup_1_1Cgroup.html#ab63264471e48ae19535b3bdb1dd6fdab',1,'ftests::cgroup::Cgroup']]],
-  ['get_5fand_5fvalidate_1',['get_and_validate',['../classftests_1_1cgroup_1_1Cgroup.html#a482f16c7da777b3b445a3d7bea504672',1,'ftests::cgroup::Cgroup']]],
-  ['getcgroupsfromproccgroupstest_2',['GetCgroupsFromProcCgroupsTest',['../classGetCgroupsFromProcCgroupsTest.html',1,'']]],
-  ['getsubtreecontroltest_3',['GetSubtreeControlTest',['../classGetSubtreeControlTest.html',1,'']]]
+  ['defects_20from_20coverity_0',['5. Verify that there are no outstanding defects from Coverity',['../md_doc_2internal_2release-github.html#autotoc_md13',1,'']]],
+  ['delegated_1',['delegated',['../structcgroup__systemd__scope__opts.html#afeebc7db4b83ce4a7d2aeefb8089df86',1,'cgroup_systemd_scope_opts']]],
+  ['deny_5flist_5ftype_2',['deny_list_type',['../structdeny__list__type.html',1,'']]],
+  ['depth_3',['depth',['../structcgroup__file__info.html#ad56dca35266f0f5f5c2666b946d72709',1,'cgroup_file_info']]],
+  ['directory_4',['12. Verify the release tarball in a separate directory',['../md_doc_2internal_2release-github.html#autotoc_md20',1,'']]],
+  ['disclosure_5',['Public Disclosure',['../md_SECURITY.html#autotoc_md31',1,'']]],
+  ['distribution_20test_20builds_6',['6. Perform any distribution test builds',['../md_doc_2internal_2release-github.html#autotoc_md14',1,'']]]
 ];
