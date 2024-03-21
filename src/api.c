@@ -2443,7 +2443,7 @@ STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
 				  bool * const enabled, int file_enum)
 {
 	char *path_copy = NULL, *saveptr = NULL, *token, *ret_c, *filename;
-	int ret, error = ECGROUPNOTMOUNTED;
+	int ret, error = 0;
 	char buffer[FILENAME_MAX];
 	FILE *fp = NULL;
 
@@ -2498,7 +2498,6 @@ STATIC int __cgroupv2_get_enabled(const char *path, const char *ctrl_name,
 	token = strtok_r(buffer, " ", &saveptr);
 	do {
 		if (strncmp(ctrl_name, token, FILENAME_MAX) == 0) {
-			error = 0;
 			*enabled = true;
 			break;
 		}
@@ -2625,7 +2624,7 @@ static int test_and_set_ctrl_mnt_path(const char * const mount_path, const char 
 STATIC int cgroupv2_subtree_control_recursive(char *path, const char *ctrl_name, bool enable)
 {
 	char *path_copy, *tmp_path, *stok_buff = NULL;
-	bool found_mount = false;
+	bool found_mount = false, controller_enabled = false;
 	size_t mount_len;
 	int i, error = 0;
 
@@ -2678,6 +2677,12 @@ STATIC int cgroupv2_subtree_control_recursive(char *path, const char *ctrl_name,
 		error = cg_create_control_group(path_copy);
 		if (error)
 			goto out;
+
+		error = cgroupv2_get_subtree_control(path_copy, ctrl_name, &controller_enabled);
+		if (error)
+			goto out;
+		if (controller_enabled)
+			continue;
 
 		error = cgroupv2_subtree_control(path_copy, ctrl_name, enable);
 		if (error)
