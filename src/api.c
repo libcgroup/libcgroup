@@ -2625,7 +2625,7 @@ static int test_and_set_ctrl_mnt_path(const char * const mount_path, const char 
 STATIC int cgroupv2_subtree_control_recursive(char *path, const char *ctrl_name, bool enable)
 {
 	char *path_copy, *tmp_path, *stok_buff = NULL;
-	bool found_mount = false;
+	bool found_mount = false, controller_enabled = false;
 	size_t mount_len;
 	int i, error = 0;
 
@@ -2677,6 +2677,12 @@ STATIC int cgroupv2_subtree_control_recursive(char *path, const char *ctrl_name,
 
 		error = cg_create_control_group(path_copy);
 		if (error)
+			goto out;
+
+		error = cgroupv2_get_subtree_control(path_copy, ctrl_name, &controller_enabled);
+		if (controller_enabled)
+			continue;
+		if (error != ECGROUPNOTMOUNTED)
 			goto out;
 
 		error = cgroupv2_subtree_control(path_copy, ctrl_name, enable);
