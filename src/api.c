@@ -536,10 +536,16 @@ STATIC int cgroup_parse_rules_options(char *options, struct cgroup_rule * const 
 		cmp_len = min(strlen(stok_buff), strlen(CGRULE_OPTION_IGNORE));
 		if (strlen(stok_buff) == strlen(CGRULE_OPTION_IGNORE) &&
 		    strncmp(stok_buff, CGRULE_OPTION_IGNORE, cmp_len) == 0) {
-			rule->is_ignore = true;
+			rule->is_ignore = 1;
 			continue;
 		}
 
+		cmp_len = min(strlen(stok_buff), strlen(CGRULE_OPTION_IGNORE_RT));
+		if (strlen(stok_buff) == strlen(CGRULE_OPTION_IGNORE_RT) &&
+		    strncmp(stok_buff, CGRULE_OPTION_IGNORE_RT, cmp_len) == 0) {
+			rule->is_ignore = 2;
+			continue;
+		}
 		/*
 		 * "ignore" is the only currently supported option.
 		 * Raise an error if we get here.
@@ -818,7 +824,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 
 		newrule->uid = uid;
 		newrule->gid = gid;
-		newrule->is_ignore = false;
+		newrule->is_ignore = 0;
 
 		len_username = min(len_username, sizeof(newrule->username) - 1);
 		strncpy(newrule->username, user, len_username);
@@ -4085,6 +4091,29 @@ static int cgroup_find_matching_controller(char * const *rule_controllers,
 	return ret;
 }
 
+static bool cgroup_is_rt_task(const pid_t pid)
+{
+	int sched_prio_min, sched_prio_max;
+	struct sched_param pid_param;
+	int ret;
+
+	ret = sched_getparam(pid, &pid_param);
+	if (ret == -1) {
+		ret = ECGOTHER;
+		last_errno = errno;
+		return false;
+	}
+
+	sched_prio_min = sched_get_priority_min(SCHED_RR);
+	sched_prio_max = sched_get_priority_max(SCHED_RR);
+
+	if (pid_param.sched_priority >= sched_prio_min &&
+	    pid_param.sched_priority <= sched_prio_max)
+		return true;
+
+	return false;
+}
+
 /**
  * Evaluates if rule is an ignore rule and the pid/procname match this rule.
  * If rule is an ignore rule and the pid/procname match this rule, then this
@@ -4102,7 +4131,7 @@ STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pi
 	char *controller_list[MAX_MNT_ELEMENTS] = { '\0' };
 	char *cgroup_list[MAX_MNT_ELEMENTS] = { '\0' };
 	int rule_matching_controller_idx;
-	int cgroup_list_matching_idx;
+	int cgroup_list_matching_idx = 0;
 	bool found_match = false;
 	char *token, *saveptr;
 	int ret, i;
@@ -4111,16 +4140,21 @@ STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pi
 		/* Immediately return if the 'ignore' option is not set */
 		return false;
 
+	if (rule->is_ignore == 2 && cgroup_is_rt_task(pid) == false)
+		return false;
+
 	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list, controller_list,
 					       MAX_MNT_ELEMENTS);
 	if (ret < 0)
 		goto out;
 
-	ret = cgroup_find_matching_destination(cgroup_list, rule->destination,
-					       &cgroup_list_matching_idx);
-	if (ret < 0)
-		/* No cgroups matched */
-		goto out;
+	if (strcmp(rule->destination, "*")) {
+		ret = cgroup_find_matching_destination(cgroup_list, rule->destination,
+						       &cgroup_list_matching_idx);
+		if (ret < 0)
+			/* No cgroups matched */
+			goto out;
+	}
 
 	token = strtok_r(controller_list[cgroup_list_matching_idx], ",", &saveptr);
 	while (token != NULL) {
