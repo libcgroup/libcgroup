@@ -207,29 +207,53 @@ int cgroup_string_list_add_directory(struct cgroup_string_list *list, char *dirn
 	do {
 		errno = 0;
 		item = readdir(d);
-		if (item && (item->d_type == DT_REG || item->d_type == DT_LNK)) {
-			char *tmp, *file_ext;
+		if (item) {
+			char *fullpath;
+			unsigned char dtype = item->d_type;
 
-			/* we are interested in .conf files, skip others */
-			file_ext = strstr(item->d_name, ".conf");
-			if (!file_ext)
-				continue;
-
-			if (strcmp(file_ext, ".conf") || strlen(item->d_name) == 5)
-				continue;
-
-			ret = asprintf(&tmp, "%s/%s", dirname, item->d_name);
+			ret = asprintf(&fullpath, "%s/%s", dirname, item->d_name);
 			if (ret < 0) {
 				fprintf(stderr, "%s: out of memory\n", program_name);
 				exit(1);
 			}
-			ret = cgroup_string_list_add_item(list, tmp);
-			free(tmp);
-			count++;
-			if (ret) {
-				fprintf(stderr, "%s: %s\n", program_name, cgroup_strerror(ret));
-				exit(1);
+
+			if (dtype == DT_UNKNOWN) {
+				struct stat st;
+				int err = 0;
+
+				err = stat(fullpath, &st);
+				if (err != 0) {
+					fprintf(stderr, "%s: cannot stat %s: %s\n",
+						program_name, fullpath, strerror(errno));
+					exit(1);
+				}
+
+				if (st.st_mode & S_IFREG)
+					dtype = DT_REG;
+
 			}
+
+			if (dtype == DT_REG || dtype == DT_LNK) {
+				char *file_ext;
+
+				/* we are interested in .conf files, skip others */
+				file_ext = strstr(item->d_name, ".conf");
+				if (!file_ext)
+					continue;
+
+				if (strcmp(file_ext, ".conf") || strlen(item->d_name) == 5)
+					continue;
+
+				ret = cgroup_string_list_add_item(list, fullpath);
+				count++;
+				if (ret) {
+					fprintf(stderr, "%s: %s\n", program_name,
+						cgroup_strerror(ret));
+					exit(1);
+				}
+			}
+
+			free(fullpath);
 		}
 		if (!item && errno) {
 			fprintf(stderr, "%s: cannot read %s: %s\n", program_name, dirname,
