@@ -12,6 +12,7 @@ from run import Run, RunError
 import multiprocessing as mp
 from libcgroup import Mode
 from enum import Enum
+import platform
 import consts
 import utils
 import time
@@ -82,6 +83,13 @@ class CgroupVersion(Enum):
                             'Unknown version for controller {}'
                             ''.format(controller)
                         )
+
+    # get the current kernel version
+    @staticmethod
+    def get_kernel_version(config):
+        kernel_version_str = str(platform.release())
+        kernel_version = kernel_version_str.split('.')[0:3]
+        return kernel_version
 
 
 class Cgroup(object):
