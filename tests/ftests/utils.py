@@ -7,6 +7,7 @@
 #
 
 from run import Run
+import platform
 
 
 # function to indent a block of text by cnt number of spaces
@@ -78,5 +79,11 @@ def get_file_permissions(config, filename):
         return config.container.run(cmd, shell_bool=True)
     else:
         return Run.run(cmd, shell_bool=True)
+
+# get the current kernel version
+def get_kernel_version(config):
+    kernel_version_str = str(platform.release())
+    kernel_version = kernel_version_str.split('.')[0:3]
+    return kernel_version
 
 # vim: set et ts=4 sw=4:
