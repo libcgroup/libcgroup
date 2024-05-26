@@ -145,7 +145,10 @@ def test(config):
     try:
         Cgroup.configparser(config, load_file=CONFIG_FILE_NAME)
     except RunError as re:
-        if 'already exists' not in re.stdout:
+        if (
+                'already exists' not in re.stdout and
+                'was already loaded or has a fragment file' not in re.stdout
+           ):
             result = consts.TEST_FAILED
             cause = 'Unexpected error  {}'.format(re.stdout)
     else:
