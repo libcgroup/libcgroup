@@ -12,6 +12,7 @@ from systemd import Systemd
 from run import RunError
 import consts
 import ftests
+import utils
 import sys
 import os
 
@@ -77,8 +78,13 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
+    expected_out_len = 10
+    kernel_ver = utils.get_kernel_version(config)
+    if int(kernel_ver[0]) <= 5 and int(kernel_ver[1]) <= 4:
+        expected_out_len = 8
+
     out = Cgroup.get(config, controller=CONTROLLER, cgname=SYSTEMD_CGNAME)
-    if len(out.splitlines()) < 10:
+    if len(out.splitlines()) < expected_out_len:
         # This cgget command gets all of the settings/values within the cgroup.
         # We don't care about the exact data, but there should be at least 10
         # lines of settings/values
@@ -89,7 +95,7 @@ def test(config):
                 )
 
     out = Cgroup.get(config, controller=CONTROLLER, cgname=OTHER_CGNAME, ignore_systemd=True)
-    if len(out.splitlines()) < 10:
+    if len(out.splitlines()) < expected_out_len:
         result = consts.TEST_FAILED
         tmp_cause = (
                         'cgget failed to read at least 10 lines from '
