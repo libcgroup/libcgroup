@@ -627,7 +627,7 @@ class Cgroup(object):
             elif re.ret == 0 and 'ERROR: can\'t get' in re.stderr:
                 res = re.stdout
             else:
-                raise(re)
+                raise (re)
 
         # convert the cgsnapshot stdout to a dict of cgroup objects
         return Cgroup.snapshot_to_dict(res)
