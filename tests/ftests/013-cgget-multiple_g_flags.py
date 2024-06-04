@@ -16,199 +16,7 @@ import os
 CONTROLLER1 = 'pids'
 CONTROLLER2 = 'cpu'
 CGNAME = '013cgget'
-
-EXPECTED_OUT_V1 = [
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.cfs_period_us: 100000
-    cpu.stat: nr_periods 0
-            nr_throttled 0
-            throttled_time 0
-    cpu.shares: 1024
-    cpu.cfs_quota_us: -1
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with cfs_bandwidth without cpu.stat nr_busts, burst_time
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.cfs_burst_us: 0
-    cpu.cfs_period_us: 100000
-    cpu.stat: nr_periods 0
-            nr_throttled 0
-            throttled_time 0
-    cpu.shares: 1024
-    cpu.idle: 0
-    cpu.cfs_quota_us: -1
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with cfs_bandwidth with cpu.stat nr_busts, burst_time
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.cfs_burst_us: 0
-    cpu.cfs_period_us: 100000
-    cpu.stat: nr_periods 0
-            nr_throttled 0
-            throttled_time 0
-            nr_bursts 0
-            burst_time 0
-    cpu.shares: 1024
-    cpu.idle: 0
-    cpu.cfs_quota_us: -1
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with cfs_bandwidth, pids.peak with cpu.stat nr_busts, burst_time
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    pids.peak: 0
-    cpu.cfs_burst_us: 0
-    cpu.cfs_period_us: 100000
-    cpu.stat: nr_periods 0
-            nr_throttled 0
-            throttled_time 0
-            nr_bursts 0
-            burst_time 0
-    cpu.shares: 1024
-    cpu.idle: 0
-    cpu.cfs_quota_us: -1
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max'''
-]
-
-
-EXPECTED_OUT_V2 = [
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with PSI
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-            full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with PSI, cfs_bandwidth without cpu.stat nr_busts, burst_time
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-            full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.idle: 0
-    cpu.max.burst: 0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with PSI, cfs_bandwidth with cpu.stat nr_busts, burst_time
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-            nr_bursts 0
-            burst_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-            full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.idle: 0
-    cpu.max.burst: 0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with PSI, cfs_bandwidth with cpu.stat nr_busts, burst_time, force_idle
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            core_sched.force_idle_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-            nr_bursts 0
-            burst_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-            full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.idle: 0
-    cpu.max.burst: 0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max''',
-    # with PSI, cfs_bandwidth, pids.peak
-    # with cpu.stat nr_busts, burst_time, force_idle
-    '''013cgget:
-    pids.current: 0
-    pids.events: max 0
-    pids.max: max
-    pids.peak: 0
-    cpu.weight: 100
-    cpu.stat: usage_usec 0
-            user_usec 0
-            system_usec 0
-            core_sched.force_idle_usec 0
-            nr_periods 0
-            nr_throttled 0
-            throttled_usec 0
-            nr_bursts 0
-            burst_usec 0
-    cpu.weight.nice: 0
-    cpu.pressure: some avg10=0.00 avg60=0.00 avg300=0.00 total=0
-            full avg10=0.00 avg60=0.00 avg300=0.00 total=0
-    cpu.idle: 0
-    cpu.max.burst: 0
-    cpu.max: max 100000
-    cpu.uclamp.min: 0.00
-    cpu.uclamp.max: max'''
-]
+OUT_PREFIX = '013cgget:\n'
 
 
 def prereqs(config):
@@ -224,9 +32,22 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
+    # Append pid controller [0] and cpu controller [N - 1]
+    EXPECTED_OUT_V1 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
+                       for expected_out in consts.EXPECTED_CPU_OUT_V1[:-1]]
+    # Append pid controller [1] and cpu controller [N]
+    EXPECTED_OUT_V1.append(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] +
+                           consts.EXPECTED_CPU_OUT_V1[-1])
+
+    # Append pid controller [0] and cpu controller [N - 1]
+    EXPECTED_OUT_V2 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
+                       for expected_out in consts.EXPECTED_CPU_OUT_V2[:-1]]
+    # Append pid controller [1] and cpu controller [N]
+    EXPECTED_OUT_V2.append(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] +
+                           consts.EXPECTED_CPU_OUT_V2[-1])
+
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
-
     version = CgroupVersion.get_version(CONTROLLER1)
 
     if version == CgroupVersion.CGROUP_V1:
