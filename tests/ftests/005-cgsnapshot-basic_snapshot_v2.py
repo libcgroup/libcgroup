@@ -15,13 +15,24 @@ import os
 
 CONTROLLER = 'cpuset'
 CGNAME = '005cgsnapshot'
-CGSNAPSHOT = """group 005cgsnapshot {
-                    cpuset {
-                            cpuset.cpus.partition="member";
-                            cpuset.mems="";
-                            cpuset.cpus="";
-                    }
-            }"""
+CGSNAPSHOT = [
+    """group 005cgsnapshot {
+            cpuset {
+                    cpuset.cpus.partition="member";
+                    cpuset.mems="";
+                    cpuset.cpus="";
+            }
+    }""",
+    """group 005cgsnapshot {
+            cpuset {
+                    cpuset.cpus.exclusive.effective="";
+                    cpuset.cpus.exclusive="";
+                    cpuset.cpus.partition="member";
+                    cpuset.mems="";
+                    cpuset.cpus="";
+            }
+    }"""
+]
 
 
 def prereqs(config):
@@ -43,11 +54,16 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    expected = Cgroup.snapshot_to_dict(CGSNAPSHOT)
+    expected_1 = Cgroup.snapshot_to_dict(CGSNAPSHOT[0])
+    expected_2 = Cgroup.snapshot_to_dict(CGSNAPSHOT[1])
     actual = Cgroup.snapshot(config, controller=CONTROLLER)
 
-    if expected[CGNAME].controllers[CONTROLLER] != \
-       actual[CGNAME].controllers[CONTROLLER]:
+    if (
+            expected_1[CGNAME].controllers[CONTROLLER] !=
+            actual[CGNAME].controllers[CONTROLLER] and
+            expected_2[CGNAME].controllers[CONTROLLER] !=
+            actual[CGNAME].controllers[CONTROLLER]
+       ):
         result = consts.TEST_FAILED
         cause = 'Expected cgsnapshot result did not equal actual cgsnapshot'
 
