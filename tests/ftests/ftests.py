@@ -452,6 +452,10 @@ def main(config):
     AUTOMAKE_HARD_ERROR = 99
     AUTOMAKE_PASSED = 0
 
+    if not (sys.version_info.major == 3 and sys.version_info.minor >= 6):
+        print("Minimum Python 3.6 required")
+        return AUTOMAKE_HARD_ERROR
+
     try:
         setup(config, record_time=True)
         [passed_cnt, failed_cnt, skipped_cnt] = run_tests(config)
