@@ -39,6 +39,12 @@ class CgroupMount(object):
             if self.version == CgroupVersion.CGROUP_V1:
                 self.controller = entries[3].split(',')[-1]
 
+                # kernel's compiled with CONFIG_CGROUP_FAVOR_DYNMODS on
+                # cgroup v1 will append mount points with favordynmods,
+                # remove it.
+                if self.controller == 'favordynmods':
+                    self.controller == entries[3].split(',')[-2]
+
                 if self.controller == 'clone_children':
                     # the cpuset controller may append this option to the end
                     # rather than the controller name like all other controllers
