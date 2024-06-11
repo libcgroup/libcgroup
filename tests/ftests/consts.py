@@ -65,6 +65,20 @@ EXPECTED_CPU_OUT_V1 = [
     cpu.idle: 0
     cpu.cfs_quota_us: -1
     cpu.uclamp.min: 0.00
+    cpu.uclamp.max: max''',
+    # cfs_bandwidth with cpu.stat nr_busts, burst_time
+    '''cpu.cfs_burst_us: 0
+    cpu.cfs_period_us: 100000
+    cpu.stat: nr_periods 0
+            nr_throttled 0
+            throttled_time 0
+            nr_bursts 0
+            burst_time 0
+    cpu.shares: 1024
+    cpu.idle: 0
+    cpu.stat.local: throttled_time 0
+    cpu.cfs_quota_us: -1
+    cpu.uclamp.min: 0.00
     cpu.uclamp.max: max'''
 ]
 
