@@ -32,19 +32,19 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    # Append pid controller [0] and cpu controller [N - 1]
+    # Append pid controller [0] and cpu controller [N - 2]
     EXPECTED_OUT_V1 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                       for expected_out in consts.EXPECTED_CPU_OUT_V1[:-1]]
-    # Append pid controller [1] and cpu controller [N]
-    EXPECTED_OUT_V1.append(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] +
-                           consts.EXPECTED_CPU_OUT_V1[-1])
+                       for expected_out in consts.EXPECTED_CPU_OUT_V1[:-2]]
+    # Append pid controller [1] and cpu controller [N, N - 1]
+    EXPECTED_OUT_V1.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
+                           for expected_out in consts.EXPECTED_CPU_OUT_V1[-2:])
 
-    # Append pid controller [0] and cpu controller [N - 1]
+    # Append pid controller [0] and cpu controller [N - 2]
     EXPECTED_OUT_V2 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                       for expected_out in consts.EXPECTED_CPU_OUT_V2[:-1]]
-    # Append pid controller [1] and cpu controller [N]
-    EXPECTED_OUT_V2.append(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] +
-                           consts.EXPECTED_CPU_OUT_V2[-1])
+                       for expected_out in consts.EXPECTED_CPU_OUT_V2[:-2]]
+    # Append pid controller [1] and cpu controller [N, N - 1]
+    EXPECTED_OUT_V2.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
+                           for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
 
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
