@@ -94,6 +94,10 @@ def test(config):
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     Process.kill(config, pid)
+
+    # Allow the cgroup sync, on killed pid
+    time.sleep(0.5)
+
     cg.delete()
 
     #
