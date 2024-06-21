@@ -73,7 +73,7 @@ def test(config):
         config.process.create_process_in_cgroup(config, CONTROLLER, CGNAME,
                                                 cgclassify=True, replace_idle=True)
     except RunError as re:
-        if "Failed to find idle_thread task" not in re.stderr:
+        if 'Failed to find idle_thread task' not in re.stderr:
             raise re
     else:
         result = consts.TEST_FAILED
@@ -99,7 +99,7 @@ def test(config):
         config.process.create_process_in_cgroup(config, CONTROLLER, OUT_OF_SCOPE_CGNAME1,
                                                 cgclassify=True, replace_idle=True)
     except RunError as re:
-        if "Failed to find idle_thread task" not in re.stderr:
+        if 'Failed to find idle_thread task' not in re.stderr:
             raise re
     else:
         result = consts.TEST_FAILED
@@ -126,7 +126,7 @@ def test(config):
         config.process.create_process_in_cgroup(config, CONTROLLER, OUT_OF_SCOPE_CGNAME2,
                                                 cgclassify=True, replace_idle=True)
     except RunError as re:
-        if "Failed to find idle_thread task" not in re.stderr:
+        if 'Failed to find idle_thread task' not in re.stderr:
             raise re
     else:
         result = consts.TEST_FAILED
