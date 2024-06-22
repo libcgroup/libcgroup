@@ -48,7 +48,7 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    expected_path = "/" + CHILDCG
+    expected_path = '/' + CHILDCG
     pid = CgroupCli.get_pids_in_cgroup(config, CHILDCG, CONTROLLER)[0]
     cgrp = Cgroup(CGNAME, Version.CGROUP_V2)
 
@@ -67,7 +67,7 @@ def test(config):
     #          It's expected to fail because we not had created cgroup.
     #
     try:
-        cgrp_path = cgrp.get_current_controller_path(pid, "memory")
+        cgrp_path = cgrp.get_current_controller_path(pid, 'memory')
     except RuntimeError as re:
         if '50001' not in str(re):
             raise re
@@ -77,7 +77,7 @@ def test(config):
     #          It's expected to fail because such controller doesn't exists.
     #
     try:
-        cgrp_path = cgrp.get_current_controller_path(pid, "invalid")
+        cgrp_path = cgrp.get_current_controller_path(pid, 'invalid')
     except RuntimeError as re:
         if '50011' not in str(re):
             raise re
