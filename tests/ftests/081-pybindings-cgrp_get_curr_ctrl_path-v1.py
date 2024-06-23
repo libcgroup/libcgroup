@@ -46,7 +46,7 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    expected_path = "/" + CGNAME
+    expected_path = '/' + CGNAME
     pid = CgroupCli.get_pids_in_cgroup(config, CGNAME, CONTROLLER)[0]
 
     cgrp = Cgroup(CGNAME, Version.CGROUP_V2)
@@ -65,14 +65,14 @@ def test(config):
     #          It's expected to fail because we not had created cgroup.
     #
     try:
-        cgrp_path = cgrp.get_current_controller_path(pid, "memory")
+        cgrp_path = cgrp.get_current_controller_path(pid, 'memory')
         if cgrp_path == expected_path:
             result = consts.TEST_FAILED
             tmp_cause = 'cgroup path unexpectedly formed {}'.format(cgrp_path)
             cause = '\n'.join(filter(None, [cause, tmp_cause]))
     except RuntimeError as re:
         if (Cgroup.cgroup_mode() == Mode.CGROUP_MODE_HYBRID and
-           CgroupVersion.get_version("memory") == CgroupVersion.CGROUP_V2):
+           CgroupVersion.get_version('memory') == CgroupVersion.CGROUP_V2):
             if '50001' in str(re):
                 pass
         else:
@@ -83,7 +83,7 @@ def test(config):
     #          It's expected to fail because such controller doesn't exists.
     #
     try:
-        cgrp_path = cgrp.get_current_controller_path(pid, "invalid")
+        cgrp_path = cgrp.get_current_controller_path(pid, 'invalid')
     except RuntimeError as re:
         if '50011' not in str(re):
             raise re
