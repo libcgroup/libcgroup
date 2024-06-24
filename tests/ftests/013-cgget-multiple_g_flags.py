@@ -10,6 +10,7 @@
 from cgroup import Cgroup, CgroupVersion
 import consts
 import ftests
+import utils
 import sys
 import os
 
@@ -32,51 +33,37 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    # Append pid controller [0] and cpu controller [N - 2]
-    EXPECTED_OUT_V1 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                       for expected_out in consts.EXPECTED_CPU_OUT_V1[:-2]]
-    # Append pid controller [1] and cpu controller [N, N - 1]
-    EXPECTED_OUT_V1.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                           for expected_out in consts.EXPECTED_CPU_OUT_V1[-2:])
-
-    # Append pid controller [0] and cpu controller [N - 2]
-    EXPECTED_OUT_V2 = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                       for expected_out in consts.EXPECTED_CPU_OUT_V2[:-2]]
-    # Append pid controller [1] and cpu controller [N, N - 1]
-    EXPECTED_OUT_V2.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                           for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
-
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
     version = CgroupVersion.get_version(CONTROLLER1)
 
     if version == CgroupVersion.CGROUP_V1:
-        for expected_out in EXPECTED_OUT_V1:
-            if len(out.splitlines()) == len(expected_out.splitlines()):
-                break
-    elif version == CgroupVersion.CGROUP_V2:
-        for expected_out in EXPECTED_OUT_V2:
-            if len(out.splitlines()) == len(expected_out.splitlines()):
-                break
+        # Append pid controller [0] and cpu controller [N - 2]
+        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
+                        for expected_out in consts.EXPECTED_CPU_OUT_V1[:-2]]
+        # Append pid controller [1] and cpu controller [N, N - 1]
+        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
+                            for expected_out in consts.EXPECTED_CPU_OUT_V1[-2:])
+    else:
+        # Append pid controller [0] and cpu controller [N - 2]
+        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
+                        for expected_out in consts.EXPECTED_CPU_OUT_V2[:-2]]
+        # Append pid controller [1] and cpu controller [N, N - 1]
+        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
+                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
 
-    if len(out.splitlines()) != len(expected_out.splitlines()):
-        result = consts.TEST_FAILED
-        cause = (
-                    'Expected {} lines but received {} lines'
-                    ''.format(len(expected_out.splitlines()),
-                              len(out.splitlines()))
-                )
-        return result, cause
+    for expected_out in EXPECTED_OUT:
+        if len(out.splitlines()) == len(expected_out.splitlines()):
+            result_, tmp_cause = utils.is_output_same(config, out, expected_out)
+            if result_ is True:
+                result = consts.TEST_PASSED
+                cause = None
+                break
+            else:
+                if cause is None:
+                    cause = "Tried Matching:\n==============="
 
-    for line_num, line in enumerate(out.splitlines()):
-        if line.strip() != expected_out.splitlines()[line_num].strip():
-            result = consts.TEST_FAILED
-            cause = (
-                        'Expected line:\n\t{}\nbut received line:\n\t{}'
-                        ''.format(expected_out.splitlines()[line_num].strip(),
-                                  line.strip())
-                    )
-            return result, cause
+                cause = '\n'.join(filter(None, [cause, expected_out]))
 
     return result, cause
 
