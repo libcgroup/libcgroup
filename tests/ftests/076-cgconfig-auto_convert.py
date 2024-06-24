@@ -24,7 +24,7 @@ CGNAME_V2 = '076cgconfig_v2'
 CFS_MAX = '"max 100000"'
 CPU_WEIGHT = '50'
 
-CONFIG_FILE = '''
+CONFIG_FILE = """
 group {} {{
     {} {{
         cpu.cfs_period_us = {};
@@ -37,7 +37,7 @@ group {} {{
         cpu.max = {};
         cpu.weight = {};
     }}
-}}'''.format(
+}}""".format(
                 CGNAME_V1, CONTROLLER, CFS_PERIOD, CFS_QUOTA, CPU_SHARES,
                 CGNAME_V2, CONTROLLER, CFS_MAX, CPU_WEIGHT
             )
