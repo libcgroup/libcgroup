@@ -80,6 +80,7 @@ def get_file_permissions(config, filename):
     else:
         return Run.run(cmd, shell_bool=True)
 
+
 # get the current kernel version
 def get_kernel_version(config):
     kernel_version_str = str(platform.release())
