@@ -78,7 +78,7 @@ def test(config):
             return result, cause
     except RunError:
         result = consts.TEST_FAILED
-        cause = 'Failed to read pid in {}\'s cgroup.procs'.format(CGNAME1)
+        cause = "Failed to read pid in {}'s cgroup.procs".format(CGNAME1)
         return result, cause
 
     #
@@ -106,7 +106,7 @@ def test(config):
             return result, cause
     except RunError:
         result = consts.TEST_FAILED
-        cause = 'Failed to read pid in {}\'s cgroup.procs'.format(CGNAME2)
+        cause = "Failed to read pid in {}'s cgroup.procs".format(CGNAME2)
 
     return result, cause
 
