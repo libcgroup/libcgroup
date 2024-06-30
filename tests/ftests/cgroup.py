@@ -329,7 +329,7 @@ class Cgroup(object):
     @staticmethod
     def xset(config, cgname=None, setting=None, value=None, copy_from=None,
              version=CgroupVersion.CGROUP_UNK, cghelp=False,
-             ignore_unmappable=False, ignore_systemd=False):
+             ignore_unmappable=False, ignore_systemd=False, recursive=False):
         """cgxset equivalent method
         """
         cmd = list()
@@ -346,7 +346,7 @@ class Cgroup(object):
             cmd.append('-i')
 
         return Cgroup.__set(config, cmd, cgname, setting, value, copy_from,
-                            cghelp, ignore_systemd)
+                            cghelp, ignore_systemd, recursive)
 
     @staticmethod
     def __get(config, cmd, controller=None, cgname=None, setting=None,
