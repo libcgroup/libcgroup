@@ -66,18 +66,16 @@ scgroup_err:
 	return NULL;
 }
 
-static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const new_cgrp,
-				    bool ignore_unmappable, enum cg_version_t src_version)
+static struct cgroup *create_and_copy_cgroup(struct cgroup *src_cgrp, const char * const new_cgrp)
 {
-	struct cgroup *cgrp, *converted_src_cgrp;
+	struct cgroup *cgrp;
 	int ret = 0;
 
 	/* create new cgroup */
 	cgrp = cgroup_new_cgroup(new_cgrp);
 	if (!cgrp) {
-		ret = ECGFAIL;
 		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
-		return ret;
+		return NULL;
 	}
 
 	/* copy the values from the source cgroup to new one */
@@ -87,6 +85,23 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 		    cgroup_strerror(ret));
 		goto err;
 	}
+
+	return cgrp;
+
+err:
+	cgroup_free(&cgrp);
+	return NULL;
+}
+
+static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const new_cgrp,
+				    bool ignore_unmappable, enum cg_version_t src_version)
+{
+	struct cgroup *cgrp, *converted_src_cgrp;
+	int ret = ECGFAIL;
+
+	cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
+	if (!cgrp)
+		return ret;
 
 	converted_src_cgrp = cgroup_new_cgroup(cgrp->name);
 	if (converted_src_cgrp == NULL) {
@@ -129,6 +144,126 @@ err:
 	return ret;
 }
 
+
+static int _cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp,
+				    bool ignore_unmappable, enum cg_version_t src_version)
+{
+	struct cgroup_file_info info;
+	int prefix_len;
+	void *handle;
+	int lvl, ret;
+
+
+	ret = cgroup_walk_tree_begin(src_cgrp->controller[0]->name, new_cgrp, 0, &handle, &info,
+			&lvl);
+	if (ret) {
+		err("%s: failed to walk the tree for cgroup %s controller %s\n",
+		    program_name, new_cgrp, src_cgrp->controller[0]->name);
+
+		return ret;
+	}
+
+	prefix_len = strlen(info.full_path) - strlen(new_cgrp) - 1;
+	ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
+				       ignore_unmappable, src_version);
+	if (ret)
+		goto err;
+
+	while ((ret = cgroup_walk_tree_next(0, &handle, &info, lvl)) == 0) {
+		if (info.type == CGROUP_FILE_TYPE_DIR) {
+
+			ret = cgroup_set_cgroup_values(src_cgrp, &info.full_path[prefix_len],
+						       ignore_unmappable, src_version);
+			if (ret)
+				goto err;
+		}
+	}
+
+err:
+	if (ret == ECGEOF)
+		ret = 0; /* we successfully walked the tree */
+
+	cgroup_walk_tree_end(&handle);
+	return ret;
+}
+
+static int cgroup_copy_controller_idx(struct cgroup *dst_cgrp, struct cgroup *src_cgrp, int idx)
+{
+	struct cgroup_controller *src_cgc = src_cgrp->controller[idx];
+	struct cgroup_controller *dst_cgc = NULL;
+	int ret, i;
+
+	dst_cgc = cgroup_add_controller(dst_cgrp, src_cgc->name);
+	if (!dst_cgc) {
+		err("%s: failed to add controller %s to %s\n", program_name, src_cgc->name,
+		    dst_cgrp->name);
+		return ECGFAIL;
+	}
+
+	for (i = 0; i < src_cgc->index; i++) {
+		ret = cgroup_add_value_string(dst_cgc, src_cgc->values[i]->name,
+					      src_cgc->values[i]->value);
+		if (ret) {
+			err("%s: Failed to add value %s to cgroup %s controller %s\n",
+			    program_name, src_cgc->values[i]->name, dst_cgrp->name, src_cgc->name);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static int cgroup_set_cgroup_values_r(struct cgroup *src_cgrp, const char * const new_cgrp,
+				    bool ignore_unmappable, enum cg_version_t src_version)
+{
+	struct cgroup *cgrp;
+	int i, ret = ECGFAIL;
+
+	if (is_cgroup_mode_unified()) {
+		cgrp = create_and_copy_cgroup(src_cgrp, new_cgrp);
+		if (!cgrp)
+			return ret;
+
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable, src_version);
+		goto err;
+	}
+
+	/*
+	 * for non-unified mode, split every controller and walk the
+	 * tree. Unlike unified mode the cgroups in the controller
+	 * hierarchy might differ, hence walk per controller.
+	 *
+	 *          cpu       memory
+	 *         /  \         |
+	 *        a   a1        a
+	 *        |           /   \
+	 *        b1         b1   b2
+	 *        |               |
+	 *        c               c
+	 */
+	cgrp = cgroup_new_cgroup(new_cgrp);
+	if (!cgrp) {
+		err("%s: can't add new cgroup: %s\n", program_name, cgroup_strerror(ret));
+		return ret;
+	}
+
+	for (i = 0; i < src_cgrp->index; i++) {
+		cgroup_free_controllers(cgrp);
+
+		ret = cgroup_copy_controller_idx(cgrp, src_cgrp, i);
+		if (ret)
+			goto err;
+
+		ret = _cgroup_set_cgroup_values_r(cgrp, new_cgrp, ignore_unmappable, src_version);
+		if (ret)
+			goto err;
+	}
+
+err:
+	cgroup_free(&cgrp);
+	return ret;
+}
+
 static void usage(int status)
 {
 	if (status != 0) {
@@ -150,6 +285,8 @@ static void usage(int status)
 #ifdef WITH_SYSTEMD
 	info("  -b                                      Ignore default systemd ");
 	info("delegate hierarchy\n");
+	info("  -R                                      Recursively set variable(s)");
+	info(" for cgroups under <cgroup_path>\n");
 #endif
 }
 #endif /* !UNIT_TEST */
@@ -216,6 +353,7 @@ int main(int argc, char *argv[])
 #endif
 	struct control_value *name_value = NULL;
 	int nv_number = 0;
+	int recursive = 0;
 	int nv_max = 0;
 
 	char src_cg_path[FILENAME_MAX] = "\0";
@@ -236,13 +374,13 @@ int main(int argc, char *argv[])
 
 #ifdef WITH_SYSTEMD
 	/* parse arguments */
-	while ((c = getopt_long (argc, argv, "r:h12ib", long_options, NULL)) != -1) {
+	while ((c = getopt_long (argc, argv, "r:h12ibR", long_options, NULL)) != -1) {
 		switch (c) {
 		case 'b':
 			ignore_default_systemd_delegate_slice = 1;
 			break;
 #else
-	while ((c = getopt_long (argc, argv, "r:h12i", long_options, NULL)) != -1) {
+	while ((c = getopt_long (argc, argv, "r:h12iR", long_options, NULL)) != -1) {
 		switch (c) {
 #endif
 		case 'h':
@@ -294,6 +432,9 @@ int main(int argc, char *argv[])
 		case 'i':
 			ignore_unmappable = true;
 			break;
+		case 'R':
+			recursive = 1;
+			break;
 		default:
 			usage(1);
 			ret = EXIT_BADARGS;
@@ -343,8 +484,12 @@ int main(int argc, char *argv[])
 
 	while (optind < argc) {
 
-		ret = cgroup_set_cgroup_values(src_cgroup, argv[optind], ignore_unmappable,
-					       src_version);
+		if (recursive)
+			ret = cgroup_set_cgroup_values_r(src_cgroup, argv[optind],
+							 ignore_unmappable, src_version);
+		else
+			ret = cgroup_set_cgroup_values(src_cgroup, argv[optind],
+						       ignore_unmappable, src_version);
 		if (ret)
 			goto err;
 
