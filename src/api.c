@@ -2035,11 +2035,101 @@ static int cgroup_v1_build_procs_path(const char * const ctrl_name, char *path)
 	return ret;
 }
 
+/**
+ * proc_pid_cgroup_parser() - Reads a line from /proc/<pid>/cgroup and parses it
+ * @fp The /proc/<pid>/cgroup, file handle
+ * @num Hierarchy number is filled from parsed line
+ * @controllers Controllers names are filled from the parsed line
+ * @cgroup_path Cgroup path is filled from the parsed line
+ *
+ * this function read the next line from the file handle and parses it.
+ * On success, returns 0 and fills the values into the function arguments passed and
+ * failure returns an error and the function arguments might contain stale values.
+ */
+static int proc_pid_cgroup_parser(FILE **fp, int *num, char *controllers, char *cgroup_path)
+{
+/*
+ * /proc/<pid>/cgroup:
+ * 7:memory:/user.slice/user-1000.slice/session-3.scope
+ * <int>11:CONTROL_NAMELEN_MAX:FILENAME_MAX
+ */
+#define LINE_LEN_MAX (11 + CONTROL_NAMELEN_MAX + FILENAME_MAX)
+	char *tmp, *line, *str, *start;
+	int len, ret = ECGOTHER;
+
+	if (!*fp)
+		return ECGINVAL;
+
+	start = line = malloc(LINE_LEN_MAX);
+	if (!line) {
+		last_errno = errno;
+		goto fail;
+	}
+
+	if (fgets(line, (LINE_LEN_MAX), *fp) == NULL) {
+		if (feof(*fp))
+			ret = ECGEOF;
+		goto fail;
+	}
+
+	/*
+	 * /proc/<pid>/cgroup, has two formats:
+	 * 7:memory:/user.slice/user-1000.slice/session-3.scope
+	 * 0::/user.slice/user-1000.slice/session-3.scope
+	 */
+	str = strstr(line, ":");
+	if (str == NULL)
+		goto fail;
+
+	if (num) {
+		len = str - line;
+		tmp = malloc(11); /* range of int is 10 digits */
+		if (!tmp) {
+			last_errno = errno;
+			goto fail;
+		}
+		strncpy(tmp, line, len);
+		tmp[len] = '\0';
+
+		*num = atoi(tmp);
+		free(tmp);
+	}
+
+	line = str + 1;
+	str = strstr(line, ":");
+	if (str == NULL)
+		goto fail;
+
+	if (controllers) {
+		len = str - line;
+		strncpy(controllers, line, len);
+		controllers[len] = '\0';
+	}
+
+	line = str + 1;
+	if (cgroup_path) {
+		len = strlen(line);
+		strncpy(cgroup_path, line, len - 1);
+		cgroup_path[len - 1] = '\0';
+	}
+
+	ret = 0;
+
+fail:
+	if (start)
+		free(start);
+
+	return ret;
+}
+
 static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_tids)
 {
+	char controllers[CG_CONTROLLER_MAX];
+	char cgroup_path[FILENAME_MAX];
 	char path[FILENAME_MAX] = {0};
 	char *controller_name = NULL;
 	int empty_cgroup = 0;
+	FILE *pid_cgroup_fd;
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -2049,25 +2139,63 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_ti
 
 	/* if the cgroup is NULL, attach the task to the root cgroup. */
 	if (!cgroup) {
-		pthread_rwlock_rdlock(&cg_mount_table_lock);
-		for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
-			ret = cgroup_build_tasks_procs_path(path, sizeof(path), NULL,
-							    cg_mount_table[i].name);
-			if (ret)
-				return ret;
-
-			if (move_tids) {
-				ret = cgroup_v1_build_procs_path(controller_name, path);
-				if (ret)
-					return ret;
-			}
-
-			ret = __cgroup_attach_task_pid(path, tid);
-			if (ret) {
-				pthread_rwlock_unlock(&cg_mount_table_lock);
-				return ret;
-			}
+		snprintf(path, FILENAME_MAX, "/proc/%d/cgroup", tid);
+		pid_cgroup_fd = fopen(path, "re");
+		if (!pid_cgroup_fd) {
+			cgroup_warn("failed to open /proc/%d/cgroup\n", tid);
+			return ECGROUPNOTALLOWED;
 		}
+
+		pthread_rwlock_rdlock(&cg_mount_table_lock);
+		do {
+			ret = proc_pid_cgroup_parser(&pid_cgroup_fd, NULL, controllers,
+						     cgroup_path);
+			if (ret)
+				goto cgrp_root_migration_done;
+
+			/*
+			 * 0:memory:/ means that tid is not part of this hierarchy,
+			 * so skip migrating task to cgroup_root.
+			 */
+			if (strlen(cgroup_path) == 1)
+				continue;
+
+			for (i = 0;
+			     i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
+
+				if (!cg_build_path_locked(NULL, path, cg_mount_table[i].name))
+					continue;
+
+				/*
+				 * legacy mode:
+				 *	7:memory:/user.slice/user-1000.slice/session-3.scope
+				 * concatenate /tasks to the patch
+				 * unified/hybrid:
+				 *	0::/user.slice/user-1000.slice/session-3.scope
+				 * concatenate /cgroup.procs to the path
+				 */
+				if (strncmp(controllers, cg_mount_table[i].name,
+					    CONTROL_NAMELEN_MAX) == 0)
+					strncat(path, "/tasks", FILENAME_MAX - strlen(path));
+				else if (strlen(controllers) == 0)
+					strncat(path, "/cgroup.procs", FILENAME_MAX - strlen(path));
+				else
+					continue;
+
+				cgroup_dbg("attaching %d to %s\n", tid, path);
+				ret = __cgroup_attach_task_pid(path, tid);
+				if (ret)
+					goto cgrp_root_migration_done;
+			}
+		} while (ret == 0);
+
+cgrp_root_migration_done:
+		if (ret == ECGEOF)
+			ret = 0;
+
+		if (pid_cgroup_fd)
+			fclose(pid_cgroup_fd);
+
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 	} else {
 		for (i = 0; i < cgroup->index; i++) {
