@@ -86,4 +86,21 @@ def get_kernel_version(config):
     kernel_version = kernel_version_str.split('.')[0:3]
     return kernel_version
 
+
+# match if both outputs are same
+def is_output_same(config, out, expected_out):
+    result = True
+    cause = None
+
+    for line_num, line in enumerate(out.splitlines()):
+        if line.strip() != expected_out.splitlines()[line_num].strip():
+            cause = (
+                    'Expected line:\n\t{}\nbut received line:\n\t{}'
+                    ''.format(expected_out.splitlines()[line_num].strip(), line.strip())
+                    )
+            result = False
+
+    return result, cause
+
+
 # vim: set et ts=4 sw=4:
