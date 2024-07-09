@@ -63,7 +63,7 @@ def test(config):
         Log.log_debug('Cgroup {} has pid {}'.format(SCOPE_CGNAME, pid))
     except RunError:
         result = consts.TEST_FAILED
-        cause = 'Failed to read pid in {}\'s cgroup.procs'.format(SCOPE_CGNAME)
+        cause = "Failed to read pid in {}'s cgroup.procs".format(SCOPE_CGNAME)
         return result, cause
 
     Cgroup.create_and_validate(config, None, CHILD_CGNAME)
