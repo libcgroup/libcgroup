@@ -64,7 +64,7 @@ def test(config):
         Log.log_debug('Cgroup {} has pid {}'.format(CGNAME, pid))
     except RunError:
         result = consts.TEST_FAILED
-        cause = 'Failed to read pid in {}\'s cgroup.procs'.format(CGNAME)
+        cause = "Failed to read pid in {}'s cgroup.procs".format(CGNAME)
         return result, cause
 
     # Since the scope was created without being made the default, we must specify
