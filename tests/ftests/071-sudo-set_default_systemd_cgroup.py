@@ -58,7 +58,7 @@ def test(config):
     except RuntimeError as re:
         if 'Failed to set' not in str(re):
             result = consts.TEST_FAILED
-            cause = 'Expected \'Failed to set\' to be in the exception, ' \
+            cause = "Expected 'Failed to set' to be in the exception, " \
                     'received {}'.format(str(re))
     else:
         result = consts.TEST_FAILED
@@ -110,7 +110,7 @@ def test(config):
     except RuntimeError as re:
         if 'Failed to set' not in str(re):
             result = consts.TEST_FAILED
-            tmp_cause = 'Expected \'Failed to set\' to be in the exception, ' \
+            tmp_cause = "Expected 'Failed to set' to be in the exception, " \
                         'received {}'.format(str(re))
             cause = '\n'.join(filter(None, [cause, tmp_cause]))
     else:
@@ -133,7 +133,7 @@ def test(config):
 
         if pid != cg_pid:
             result = consts.TEST_FAILED
-            tmp_cause = 'Expected pid {} to be in \'/\' cgroup, but received pid {} ' \
+            tmp_cause = "Expected pid {} to be in '/' cgroup, but received pid {} " \
                         'instead'.format(pid, cg_pid)
             cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
