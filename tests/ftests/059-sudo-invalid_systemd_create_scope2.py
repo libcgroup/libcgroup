@@ -48,7 +48,7 @@ def test(config):
     result = consts.TEST_PASSED
     cause = None
 
-    cg1 = Cgroup("InvalidNameBecauseNoSlash", Version.CGROUP_V2)
+    cg1 = Cgroup('InvalidNameBecauseNoSlash', Version.CGROUP_V2)
     cg1.add_controller(CONTROLLER)
     try:
         cg1.create_scope2()
@@ -60,7 +60,7 @@ def test(config):
         result = consts.TEST_FAILED
         cause = 'An invalid cgroup name unexpectedly passed: {}'.format(cg1.name)
 
-    cg2 = Cgroup("Invalid/TooMany/Slashes", Version.CGROUP_V2)
+    cg2 = Cgroup('Invalid/TooMany/Slashes', Version.CGROUP_V2)
     cg2.add_controller(CONTROLLER)
     try:
         cg2.create_scope2()
