@@ -94,7 +94,7 @@ def test(config):
     dir_mode = utils.get_file_permissions(config, dir_path)
     if int(dir_mode, 8) != DIR_MODE:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected directory mode to be {} but it\'s {}'.format(
+        tmp_cause = "Expected directory mode to be {} but it's {}".format(
                     format(DIR_MODE, '03o'), dir_mode)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
@@ -104,20 +104,20 @@ def test(config):
     ctrl_mode = utils.get_file_permissions(config, ctrl_path)
     if int(ctrl_mode, 8) != CTRL_MODE:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs mode to be {} but it\'s {}'.format(
+        tmp_cause = "Expected cgroup.procs mode to be {} but it's {}".format(
                     format(CTRL_MODE, '03o'), ctrl_mode)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     uid = utils.get_file_owner_uid(config, ctrl_path)
     if uid != CTRL_UID:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs owner to be {} but it\'s {}'.format(CTRL_UID, uid)
+        tmp_cause = "Expected cgroup.procs owner to be {} but it's {}".format(CTRL_UID, uid)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     gid = utils.get_file_owner_gid(config, ctrl_path)
     if gid != CTRL_GID:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs group to be {} but it\'s {}'.format(CTRL_GID, gid)
+        tmp_cause = "Expected cgroup.procs group to be {} but it's {}".format(CTRL_GID, gid)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     return result, cause
