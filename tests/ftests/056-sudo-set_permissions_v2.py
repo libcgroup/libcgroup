@@ -55,7 +55,7 @@ def test(config):
     dir_mode = utils.get_file_permissions(config, dir_path)
     if int(dir_mode, 8) != DIR_MODE:
         result = consts.TEST_FAILED
-        cause = 'Expected directory mode to be {} but it\'s {}'.format(
+        cause = "Expected directory mode to be {} but it's {}".format(
                     format(DIR_MODE, '03o'), dir_mode)
 
     ctrl_path = os.path.join(CgroupCli.get_controller_mount_point(CONTROLLER), CGNAME,
@@ -64,7 +64,7 @@ def test(config):
     ctrl_mode = utils.get_file_permissions(config, ctrl_path)
     if int(ctrl_mode, 8) != CTRL_MODE:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs mode to be {} but it\'s {}'.format(
+        tmp_cause = "Expected cgroup.procs mode to be {} but it's {}".format(
                     format(CTRL_MODE, '03o'), ctrl_mode)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
