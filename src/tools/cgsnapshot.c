@@ -106,6 +106,11 @@ int load_list(char *filename, struct deny_list_type **p_list)
 		if (ret == 0)
 			continue;
 
+		if (ret == EOF) {
+			ret = ECGEOF;
+			goto err;
+		}
+
 		new = (struct deny_list_type *) malloc(sizeof(struct deny_list_type));
 		if (new == NULL) {
 			err("ERROR: Memory allocation problem (%s)\n", strerror(errno));
