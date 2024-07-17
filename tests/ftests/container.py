@@ -102,6 +102,9 @@ class Container(object):
         try:
             Run.run(cmd)
             q.put(True)
+        except RunError as re:
+            if re.stderr.find('Instance is busy running a "create" operation') >= 0:
+                q.put(True)
         except Exception:  # noqa: E722
             q.put(False)
         except BaseException:  # noqa: E722
