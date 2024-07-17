@@ -124,8 +124,8 @@ Static Public Member Functions</h2></td></tr>
 <tr class="separator:ac194e3d63f44bb4802633fc0fe0d52b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aafa420c27460164b65f904ec531ae2b1" id="r_aafa420c27460164b65f904ec531ae2b1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#aafa420c27460164b65f904ec531ae2b1">set</a> (config, cgname=None, setting=None, value=None, copy_from=None, cghelp=False, ignore_systemd=False, recursive=False)</td></tr>
 <tr class="separator:aafa420c27460164b65f904ec531ae2b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7cd72ef09eae2778d15eb31f257c6058" id="r_a7cd72ef09eae2778d15eb31f257c6058"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a7cd72ef09eae2778d15eb31f257c6058">xset</a> (config, cgname=None, setting=None, value=None, copy_from=None, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False, ignore_systemd=False)</td></tr>
-<tr class="separator:a7cd72ef09eae2778d15eb31f257c6058"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80f6ba6c76930d3b0c06c1d92991ee56" id="r_a80f6ba6c76930d3b0c06c1d92991ee56"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a80f6ba6c76930d3b0c06c1d92991ee56">xset</a> (config, cgname=None, setting=None, value=None, copy_from=None, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False, ignore_systemd=False, recursive=False)</td></tr>
+<tr class="separator:a80f6ba6c76930d3b0c06c1d92991ee56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afafc77bed8ae711de49d451be07aa0b1" id="r_afafc77bed8ae711de49d451be07aa0b1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#afafc77bed8ae711de49d451be07aa0b1">get</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, cghelp=False, ignore_systemd=False)</td></tr>
 <tr class="separator:afafc77bed8ae711de49d451be07aa0b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34cbac14b2e9f5ff1a63254298f9e0a6" id="r_a34cbac14b2e9f5ff1a63254298f9e0a6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classftests_1_1cgroup_1_1Cgroup.html#a34cbac14b2e9f5ff1a63254298f9e0a6">xget</a> (config, controller=None, cgname=None, setting=None, print_headers=True, values_only=False, all_controllers=False, version=CgroupVersion.CGROUP_UNK, cghelp=False, ignore_unmappable=False, ignore_systemd=False)</td></tr>
@@ -770,8 +770,8 @@ str: The stdout result of cgxget
 </pre> 
 </div>
 </div>
-<a id="a7cd72ef09eae2778d15eb31f257c6058" name="a7cd72ef09eae2778d15eb31f257c6058"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7cd72ef09eae2778d15eb31f257c6058">&#9670;&#160;</a></span>xset()</h2>
+<a id="a80f6ba6c76930d3b0c06c1d92991ee56" name="a80f6ba6c76930d3b0c06c1d92991ee56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a80f6ba6c76930d3b0c06c1d92991ee56">&#9670;&#160;</a></span>xset()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -831,7 +831,13 @@ str: The stdout result of cgxget
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>ignore_systemd</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>recursive</em> = <code>False</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
