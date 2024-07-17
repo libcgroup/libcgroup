@@ -5019,6 +5019,12 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 					ret = fscanf(pid_cgroup_fd, "%*[^\n]\n");
 					if (ret == 0)
 						continue;
+
+					if (ret == EOF) {
+						last_errno = errno;
+						ret = ECGEOF;
+						goto done;
+					}
 				}
 
 				cgroup_warn("read failed for pid_cgroup_fd ret %d\n", ret);
