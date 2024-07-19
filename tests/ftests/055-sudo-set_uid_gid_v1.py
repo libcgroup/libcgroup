@@ -53,12 +53,12 @@ def test(config):
     tasks_uid = utils.get_file_owner_uid(config, tasks_path)
     if tasks_uid != TASKS_UID:
         result = consts.TEST_FAILED
-        cause = 'Expected tasks owner to be {} but it\'s {}'.format(TASKS_UID, tasks_uid)
+        cause = "Expected tasks owner to be {} but it's {}".format(TASKS_UID, tasks_uid)
 
     tasks_gid = utils.get_file_owner_gid(config, tasks_path)
     if tasks_gid != TASKS_GID:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected tasks group to be {} but it\'s {}'.format(TASKS_GID, tasks_gid)
+        tmp_cause = "Expected tasks group to be {} but it's {}".format(TASKS_GID, tasks_gid)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     ctrl_path = os.path.join(CgroupCli.get_controller_mount_point(CONTROLLER), CGNAME,
@@ -67,13 +67,13 @@ def test(config):
     ctrl_uid = utils.get_file_owner_uid(config, ctrl_path)
     if ctrl_uid != CTRL_UID:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs owner to be {} but it\'s {}'.format(CTRL_UID, ctrl_uid)
+        tmp_cause = "Expected cgroup.procs owner to be {} but it's {}".format(CTRL_UID, ctrl_uid)
         cause = '\n'.join(filter(None, [cause, tmp_cause]))
 
     ctrl_gid = utils.get_file_owner_gid(config, ctrl_path)
     if ctrl_gid != CTRL_GID:
         result = consts.TEST_FAILED
-        tmp_cause = 'Expected cgroup.procs group to be {} but it\'s {}'.format(CTRL_GID, ctrl_gid)
+        tmp_cause = "Expected cgroup.procs group to be {} but it's {}".format(CTRL_GID, ctrl_gid)
         if not cause:
             cause = tmp_cause
         else:
