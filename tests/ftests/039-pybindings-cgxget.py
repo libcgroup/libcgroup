@@ -58,8 +58,7 @@ def test(config):
         result = consts.TEST_FAILED
         cause = (
                     "Controller length doesn't match, expected 1, but "
-                    "received {}"
-                    "".format(len(cg1.controllers))
+                    'received {}'.format(len(cg1.controllers))
                 )
         return result, cause
 
@@ -67,8 +66,8 @@ def test(config):
         result = consts.TEST_FAILED
         cause = (
                     "Settings length doesn't match, expected 1, but "
-                    " received {}"
-                    "".format(len(cg1.controllers[CONTROLLER].settings))
+                    ' received {}'
+                    ''.format(len(cg1.controllers[CONTROLLER].settings))
                 )
         return result, cause
 
@@ -91,8 +90,7 @@ def test(config):
         result = consts.TEST_FAILED
         cause = (
                     "Controller length doesn't match, expected 1, but"
-                    " received {}"
-                    "".format(len(cg2.controllers))
+                    ' received {}'.format(len(cg2.controllers))
                 )
         return result, cause
 
@@ -100,8 +98,8 @@ def test(config):
         result = consts.TEST_FAILED
         cause = (
                     "Settings length doesn't match, expected 1, but"
-                    "received {}"
-                    "".format(len(cg2.controllers[CONTROLLER].settings))
+                    'received {}'
+                    ''.format(len(cg2.controllers[CONTROLLER].settings))
                 )
         return result, cause
 
