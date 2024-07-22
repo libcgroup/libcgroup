@@ -49,7 +49,11 @@ extern "C" {
 #define CGRULE_WILD	((uid_t) -2)
 
 #define CGRULE_SUCCESS_STORE_PID	"SUCCESS_STORE_PID"
-#define CGRULE_OPTION_IGNORE		"ignore" /* Definitions for the cgrules options field */
+/* Definitions for cgrules options field */
+#define CGRULE_OPTION_IGNORE		"ignore"
+#define CGRULE_OPTION_IGNORE_RT		"ignore_rt"
+#define CGRULE_OPT_IGNORE		1
+#define CGRULE_OPT_IGNORE_RT		2
 
 #define CGCONFIG_CONF_FILE		"/etc/cgconfig.conf"
 /* Minimum number of file in template file list for cgrulesengd */
@@ -157,7 +161,7 @@ struct cgroup_rules_data {
 struct cgroup_rule {
 	uid_t uid;
 	gid_t gid;
-	bool is_ignore;
+	int is_ignore;
 	char *procname;
 	char username[LOGIN_NAME_MAX];
 	char destination[FILENAME_MAX];
