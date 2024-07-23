@@ -7,7 +7,7 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup, Mode
 from run import RunError
 import consts
 import ftests
@@ -24,17 +24,9 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
+    if Cgroup.get_cgroup_mode(config) == Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
-        cause = 'This test requires the cgroup v1 cpu controller'
-
-    # cpuacct controller is only available on cgroup v1, if an exception
-    # gets raised, then no cgroup v1 controllers mounted.
-    try:
-        CgroupVersion.get_version('cpuacct')
-    except IndexError:
-        result = consts.TEST_SKIPPED
-        cause = 'This test requires the cgroup v1 cpuacct controller'
+        cause = 'This test requires the legacy/hybrid cgroup hierarchy'
 
     return result, cause
 
