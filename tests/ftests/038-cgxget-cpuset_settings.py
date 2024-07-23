@@ -93,7 +93,7 @@ def is_cpuset_exclusive_oddity(entry, out):
     # partition reason string"), doesn't return error but needs to be
     # read again
     if (entry[0] == 'cpuset.cpu_exclusive' and entry[1] == '1' and
-            (out == '0' or out[:12] == "root invalid")):
+            (out == '0' or out[:12] == 'root invalid')):
         return True
 
     if (entry[0] == 'cpuset.cpus.partition' and entry[1] == 'root' and
