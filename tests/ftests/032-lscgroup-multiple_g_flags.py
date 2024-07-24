@@ -29,11 +29,11 @@ SIBLING_CHILD_CGNAME = 'cousinlscgroup'
 # When invoking lscgroup with the -g flag, a trailing slash is present on
 # the first cgroup returned (i.e. the cgroup specified in the -g flag)
 #
-EXPECTED_OUT1 = '''{}:/{}/
+EXPECTED_OUT1 = """{}:/{}/
 {}:/{}/{}
 {}:/{}/{}/{}
 {}:/{}/
-{}:/{}/{}'''.format(CONTROLLER, PARENT_CGNAME,
+{}:/{}/{}""".format(CONTROLLER, PARENT_CGNAME,
                     CONTROLLER, PARENT_CGNAME, CHILD_CGNAME,
                     CONTROLLER, PARENT_CGNAME, CHILD_CGNAME, GRANDCHILD_CGNAME,
                     CONTROLLER, SIBLING_CGNAME,
@@ -83,9 +83,9 @@ def test(config):
         result = consts.TEST_FAILED
         cause = (
                     "Expected lscgroup output doesn't match received output\n"
-                    "Expected:\n{}\n"
-                    "Received:\n{}\n"
-                    "".format(utils.indent(EXPECTED_OUT1, 4),
+                    'Expected:\n{}\n'
+                    'Received:\n{}\n'
+                    ''.format(utils.indent(EXPECTED_OUT1, 4),
                               utils.indent(out, 4))
                 )
         return result, cause
