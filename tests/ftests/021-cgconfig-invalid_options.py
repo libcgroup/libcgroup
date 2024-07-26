@@ -17,12 +17,12 @@ import os
 CONTROLLER = 'cpuset'
 CGNAME = '021cgconfig'
 
-CONFIG_FILE = '''group
+CONFIG_FILE = """group
 {} {{
     {} {{
         cpuset.cpus = abc123;
     }}
-}}'''.format(CGNAME, CONTROLLER)
+}}""".format(CGNAME, CONTROLLER)
 
 USER = 'cguser021'
 
