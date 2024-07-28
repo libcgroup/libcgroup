@@ -19,11 +19,11 @@ import os
 CONTROLLER = 'cpuset'
 CGNAME = '019cgconfig'
 
-CONFIG_FILE = '''group
+CONFIG_FILE = """group
 {} {{
     {} {{
     }}
-}}'''.format(CGNAME, CONTROLLER)
+}}""".format(CGNAME, CONTROLLER)
 
 USER = 'cguser019'
 GROUP = 'cggroup019'
