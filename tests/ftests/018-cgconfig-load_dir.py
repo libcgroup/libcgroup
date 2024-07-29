@@ -23,7 +23,7 @@ SHARES = '123'
 LIMIT_IN_BYTES = '409600'
 SOFT_LIMIT_IN_BYTES = '376832'
 
-CONFIG_FILE = '''group
+CONFIG_FILE = """group
 {} {{
     {} {{
         cpu.cfs_period_us = {};
@@ -34,7 +34,7 @@ CONFIG_FILE = '''group
         memory.limit_in_bytes = {};
         memory.soft_limit_in_bytes = {};
     }}
-}}'''.format(CGNAME, CPU_CTRL, CFS_PERIOD, CFS_QUOTA, SHARES,
+}}""".format(CGNAME, CPU_CTRL, CFS_PERIOD, CFS_QUOTA, SHARES,
              MEMORY_CTRL, LIMIT_IN_BYTES, SOFT_LIMIT_IN_BYTES)
 
 CONFIG_FILE_DIR = os.path.join(os.getcwd(), '018cgconfig')
