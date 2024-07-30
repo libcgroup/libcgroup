@@ -19,14 +19,14 @@ CFS_PERIOD = '500000'
 CFS_QUOTA = '100000'
 SHARES = '999'
 
-CONFIG_FILE = '''group
+CONFIG_FILE = """group
 {} {{
     {} {{
         cpu.cfs_period_us = {};
         cpu.cfs_quota_us = {};
         cpu.shares = {};
     }}
-}}'''.format(CGNAME, CONTROLLER, CFS_PERIOD, CFS_QUOTA, SHARES)
+}}""".format(CGNAME, CONTROLLER, CFS_PERIOD, CFS_QUOTA, SHARES)
 
 CONFIG_FILE_NAME = os.path.join(os.getcwd(), '017cgconfig.conf')
 
