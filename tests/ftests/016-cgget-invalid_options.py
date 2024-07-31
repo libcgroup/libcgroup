@@ -91,7 +91,7 @@ def test(config):
             result = consts.TEST_FAILED
             cause = (
                         "#3 Expected 'cgget: error parsing parameter name' to "
-                        "be in stderr"
+                        'be in stderr'
                     )
             return result, cause
 
@@ -116,10 +116,7 @@ def test(config):
     except RunError as re:
         if 'cgget: cannot find controller' not in re.stderr:
             result = consts.TEST_FAILED
-            cause = (
-                        "#4 Expected 'cgget: cannot find controller' to be in "
-                        "stderr"
-                    )
+            cause = "#4 Expected 'cgget: cannot find controller' to be in stderr"
             return result, cause
 
         # legacy cgget returns 0 but populates stderr for this case.
