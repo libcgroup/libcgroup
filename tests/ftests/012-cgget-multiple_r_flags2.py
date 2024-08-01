@@ -25,14 +25,14 @@ SETTING2_V1 = 'memory.soft_limit_in_bytes'
 SETTING2_V2 = 'memory.high'
 VALUE2 = '4096000'
 
-EXPECTED_OUT = '''{}:
+EXPECTED_OUT = """{}:
 {}
 {}
 
 {}:
 {}
 {}
-'''.format(CGNAME1, VALUE1, VALUE2, CGNAME2, VALUE1, VALUE2)
+""".format(CGNAME1, VALUE1, VALUE2, CGNAME2, VALUE1, VALUE2)
 
 
 def prereqs(config):
