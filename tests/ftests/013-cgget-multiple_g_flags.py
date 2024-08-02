@@ -61,7 +61,7 @@ def test(config):
                 break
             else:
                 if cause is None:
-                    cause = "Tried Matching:\n==============="
+                    cause = 'Tried Matching:\n==============='
 
                 cause = '\n'.join(filter(None, [cause, expected_out]))
 
