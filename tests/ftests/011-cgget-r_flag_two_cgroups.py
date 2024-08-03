@@ -21,19 +21,19 @@ SETTING_V1 = 'memory.limit_in_bytes'
 SETTING_V2 = 'memory.max'
 VALUE = '2048000'
 
-EXPECTED_OUT_V1 = '''011cgget1:
+EXPECTED_OUT_V1 = """011cgget1:
 memory.limit_in_bytes: 2048000
 
 011cgget2:
 memory.limit_in_bytes: 2048000
-'''
+"""
 
-EXPECTED_OUT_V2 = '''011cgget1:
+EXPECTED_OUT_V2 = """011cgget1:
 memory.max: 2048000
 
 011cgget2:
 memory.max: 2048000
-'''
+"""
 
 
 def prereqs(config):
