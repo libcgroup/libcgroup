@@ -35,14 +35,14 @@ class Systemd(object):
     # configuration file, that gets passed to the cgconfigparser tool to
     # create systemd slice/scope.
     @staticmethod
-    def write_config_with_pid(config, config_fname, _slice, scope, setdefault="yes"):
+    def write_config_with_pid(config, config_fname, _slice, scope, setdefault='yes'):
         pid = config.process.create_process(config)
-        config_file = '''systemd {{
+        config_file = """systemd {{
             slice = {};
             scope = {};
             setdefault = {};
             pid = {};
-        }}'''.format(_slice, scope, setdefault, pid)
+        }}""".format(_slice, scope, setdefault, pid)
 
         f = open(config_fname, 'w')
         f.write(config_file)
