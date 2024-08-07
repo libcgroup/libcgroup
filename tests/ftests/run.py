@@ -78,7 +78,7 @@ class Run(object):
         if err.find('Error: websocket: bad handshake') >= 0:
             # LXD sometimes throws this error on underpowered machines.
             # Wait a bit, then try the request again
-            Log.log_critical('Received \'{}\' error.  Re-running command'.format(err))
+            Log.log_critical("Received '{}' error.  Re-running command".format(err))
             time.sleep(5)
             ret, out, err = Run.__run(command, shell_bool, timeout)
 
