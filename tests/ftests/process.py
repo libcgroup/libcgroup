@@ -35,8 +35,8 @@ class Process(object):
 
     @staticmethod
     def __infinite_loop(config, sleep_time=1):
-        cmd = ["/usr/bin/perl",
-               "-e",
+        cmd = ['/usr/bin/perl',
+               '-e',
                "'while(1){{sleep({})}};'".format(sleep_time)
                ]
 
@@ -53,8 +53,8 @@ class Process(object):
     @staticmethod
     def __cgexec_infinite_loop(config, controller, cgname, sleep_time=1,
                                ignore_systemd=False, replace_idle=False):
-        cmd = ["/usr/bin/perl",
-               "-e",
+        cmd = ['/usr/bin/perl',
+               '-e',
                "'while(1){{sleep({})}};'".format(sleep_time)
                ]
 
@@ -70,7 +70,7 @@ class Process(object):
         # get the PID of the newly spawned infinite loop
         cmd = (
                 "ps x | grep perl | grep 'sleep({})' | awk '{{print $1}}'"
-                "".format(sleep_time)
+                ''.format(sleep_time)
               )
 
         if config.args.container:
