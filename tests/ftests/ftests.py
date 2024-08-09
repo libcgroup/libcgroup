@@ -24,7 +24,7 @@ Log = log.Log
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Libcgroup Functional Tests")
+    parser = argparse.ArgumentParser('Libcgroup Functional Tests')
     parser.add_argument(
                             '-n', '--name',
                             help='name of the container',
@@ -87,8 +87,8 @@ def parse_args():
                         )
     parser.add_argument(
                             '-S', '--skip',
-                            help="Test number(s) to skip.  If unspecified, all"
-                                 " tests are run. To skip multiple tests, "
+                            help='Test number(s) to skip.  If unspecified, all'
+                                 ' tests are run. To skip multiple tests, '
                                  "separate them via a ',', e.g. '5,7,12'",
                             required=False,
                             default='',
@@ -127,7 +127,7 @@ def parse_args():
                             help='Print all information about this test run',
                             default=True,
                             required=False,
-                            action="store_false"
+                            action='store_false'
                         )
 
     config = Config(parser.parse_args())
@@ -166,10 +166,10 @@ def update_host_subuid():
                 found_line2 = True
 
     if not found_line1:
-        Run.run('sudo sh -c "echo {} >> /etc/subuid"'.format(
+        Run.run("sudo sh -c 'echo {} >> /etc/subuid'".format(
                 subuid_line1), shell_bool=True)
     if not found_line2:
-        Run.run('sudo sh -c "echo {} >> /etc/subuid"'.format(
+        Run.run("sudo sh -c 'echo {} >> /etc/subuid'".format(
                 subuid_line2), shell_bool=True)
 
 
@@ -190,10 +190,10 @@ def update_host_subgid():
                 found_line2 = True
 
     if not found_line1:
-        Run.run('sudo sh -c "echo {} >> /etc/subgid"'.format(
+        Run.run("sudo sh -c 'echo {} >> /etc/subgid'".format(
                 subgid_line1), shell_bool=True)
     if not found_line2:
-        Run.run('sudo sh -c "echo {} >> /etc/subgid"'.format(
+        Run.run("sudo sh -c 'echo {} >> /etc/subgid'".format(
                 subgid_line2), shell_bool=True)
 
 
@@ -243,7 +243,7 @@ def run_tests(config):
 
     for root, dirs, filenames in os.walk(config.ftest_dir):
         for filename in filenames:
-            if os.path.splitext(filename)[-1] != ".py":
+            if os.path.splitext(filename)[-1] != '.py':
                 # ignore non-python files
                 continue
 
@@ -254,7 +254,7 @@ def run_tests(config):
             except ValueError:
                 # D'oh.  This file must not be a test.  Skip it
                 Log.log_debug(
-                                'Skipping {}.  It doesn\'t start with an int'
+                                "Skipping {}.  It doesn\'t start with an int"
                                 ''.format(filename)
                              )
                 continue
@@ -263,7 +263,7 @@ def run_tests(config):
                 filesuite = filename.split('-')[1]
             except IndexError:
                 Log.log_critical(
-                                 'Skipping {}.  It doesn\'t conform to the '
+                                 "Skipping {}.  It doesn\'t conform to the "
                                  'filename format'
                                  ''.format(filename)
                                 )
@@ -323,62 +323,62 @@ def run_tests(config):
     failed_cnt = len(failed_tests)
     skipped_cnt = len(skipped_tests)
 
-    print("-----------------------------------------------------------------")
-    print("Test Results:")
+    print('-----------------------------------------------------------------')
+    print('Test Results:')
     date_str = datetime.datetime.now().strftime('%b %d %H:%M:%S')
     print(
             '\t{}{}'.format(
-                                '{0: <35}'.format("Run Date:"),
+                                '{0: <35}'.format('Run Date:'),
                                 '{0: >15}'.format(date_str)
                             )
          )
 
-    test_str = "{} test(s)".format(passed_cnt)
+    test_str = '{} test(s)'.format(passed_cnt)
     print(
             '\t{}{}'.format(
-                                '{0: <35}'.format("Passed:"),
+                                '{0: <35}'.format('Passed:'),
                                 '{0: >15}'.format(test_str)
                             )
          )
 
-    test_str = "{} test(s)".format(skipped_cnt)
+    test_str = '{} test(s)'.format(skipped_cnt)
     print(
             '\t{}{}'.format(
-                                '{0: <35}'.format("Skipped:"),
+                                '{0: <35}'.format('Skipped:'),
                                 '{0: >15}'.format(test_str)
                             )
          )
 
-    test_str = "{} test(s)".format(failed_cnt)
+    test_str = '{} test(s)'.format(failed_cnt)
     print(
             '\t{}{}'.format(
-                                '{0: <35}'.format("Failed:"),
+                                '{0: <35}'.format('Failed:'),
                                 '{0: >15}'.format(test_str)
                             )
          )
 
     for test in failed_tests:
         print(
-                "\t\tTest:\t\t\t\t{} - {}"
+                '\t\tTest:\t\t\t\t{} - {}'
                 ''.format(test[0], str(test[2]))
              )
-    print("-----------------------------------------------------------------")
+    print('-----------------------------------------------------------------')
 
     global setup_time
     global teardown_time
     if config.args.verbose:
-        print("Timing Results:")
+        print('Timing Results:')
         print(
                 '\t{}{}'.format(
-                                    '{0: <{1}}'.format("Test", filename_max),
-                                    '{0: >15}'.format("Time (sec)")
+                                    '{0: <{1}}'.format('Test', filename_max),
+                                    '{0: >15}'.format('Time (sec)')
                                 )
              )
         print(
-                # 15 is padding space of "Time (sec)"
+                # 15 is padding space of 'Time (sec)'
                 '\t{}'.format('-' * (filename_max + 15))
              )
-        time_str = "{0: 2.2f}".format(setup_time)
+        time_str = '{0: 2.2f}'.format(setup_time)
         print(
                 '\t{}{}'.format(
                                     '{0: <{1}}'.format('setup', filename_max),
@@ -389,7 +389,7 @@ def run_tests(config):
         all_tests = passed_tests + skipped_tests + failed_tests
         all_tests.sort()
         for test in all_tests:
-            time_str = "{0: 2.2f}".format(test[1])
+            time_str = '{0: 2.2f}'.format(test[1])
             print(
                     '\t{}{}'.format(
                                         '{0: <{1}}'.format(test[0],
@@ -397,7 +397,7 @@ def run_tests(config):
                                         '{0: >15}'.format(time_str)
                                     )
                   )
-        time_str = "{0: 2.2f}".format(teardown_time)
+        time_str = '{0: 2.2f}'.format(teardown_time)
         print(
                 '\t{}{}'
                 ''.format(
@@ -411,13 +411,13 @@ def run_tests(config):
             total_run_time += test[1]
         for test in failed_tests:
             total_run_time += test[1]
-        total_str = "{0: 5.2f}".format(total_run_time)
+        total_str = '{0: 5.2f}'.format(total_run_time)
         print('\t{}'.format('-' * (filename_max + 15)))
         print(
                 '\t{}{}'
                 ''.format(
                             '{0: <{1}}'
-                            ''.format("Total Run Time", filename_max),
+                            ''.format('Total Run Time', filename_max),
                             '{0: >15}'.format(total_str)
                          )
               )
@@ -453,7 +453,7 @@ def main(config):
     AUTOMAKE_PASSED = 0
 
     if not (sys.version_info.major == 3 and sys.version_info.minor >= 6):
-        print("Minimum Python 3.6 required")
+        print('Minimum Python 3.6 required')
         return AUTOMAKE_HARD_ERROR
 
     try:
