@@ -50,7 +50,7 @@ def setup(config):
 
 def read_cgroup_tasks_file(config, CONTROLLER, CGNAME):
     mnt_path = CgroupCli.get_controller_mount_point(CONTROLLER)
-    path = os.path.join(mnt_path, CGNAME, "tasks")
+    path = os.path.join(mnt_path, CGNAME, 'tasks')
 
     cgrp_pids = [line.strip() for line in open(path, 'r')]
     return cgrp_pids
