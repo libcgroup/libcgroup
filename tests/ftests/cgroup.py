@@ -630,7 +630,7 @@ class Cgroup(object):
             if re.ret == 0 and \
                'neither deny nor allow list' in re.stderr:
                 res = re.stdout
-            elif re.ret == 0 and 'ERROR: can\'t get' in re.stderr:
+            elif re.ret == 0 and "ERROR: can\'t get" in re.stderr:
                 res = re.stdout
             else:
                 raise (re)
@@ -1179,7 +1179,7 @@ class Cgroup(object):
             # all of the controllers exist,  Yippee
             return True
         else:
-            raise ValueError("Unsupported type: {}".format(type(ctrl_name)))
+            raise ValueError('Unsupported type: {}'.format(type(ctrl_name)))
 
     # Method to enable or disable controllers in the subtree control file
     @staticmethod
