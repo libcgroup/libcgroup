@@ -38,10 +38,10 @@ import time
 import sys
 import os
 
-TMP_CGNAME = "tmp"
-HIGH_CGNAME = "high-priority"
-MED_CGNAME = "medium-priority"
-LOW_CGNAME = "low-priority"
+TMP_CGNAME = 'tmp'
+HIGH_CGNAME = 'high-priority'
+MED_CGNAME = 'medium-priority'
+LOW_CGNAME = 'low-priority'
 
 
 def parse_args():
