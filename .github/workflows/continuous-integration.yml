@@ -35,6 +35,10 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
+      - name: Install flake8 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-flake8-quotes
       - name: Check out source repository
         uses: actions/checkout@v4
       - name: Set up Python environment
