@@ -2012,7 +2012,7 @@ err:
 	return ret;
 }
 
-static int cgroup_v1_build_procs_path(const char * const ctrl_name, char *path)
+static int cgroup_build_tid_path(const char * const ctrl_name, char *path)
 {
 	enum cg_version_t version;
 	size_t len;
@@ -2057,7 +2057,7 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_ti
 				return ret;
 
 			if (move_tids) {
-				ret = cgroup_v1_build_procs_path(controller_name, path);
+				ret = cgroup_build_tid_path(controller_name, path);
 				if (ret)
 					return ret;
 			}
@@ -2099,7 +2099,7 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_ti
 				return ret;
 
 			if (move_tids) {
-				ret = cgroup_v1_build_procs_path(controller_name, path);
+				ret = cgroup_build_tid_path(controller_name, path);
 				if (ret)
 					return ret;
 			}
