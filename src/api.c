@@ -1829,7 +1829,7 @@ char *cg_build_path(const char *name, char *path, const char *type)
 }
 
 static int cgroup_get_cg_type(const char * const path, char * const type,
-			      size_t type_sz)
+			      size_t type_sz, bool is_tid)
 {
 	char cg_type_path[FILENAME_MAX];
 	char cg_type[CGV2_CONTROLLERS_LL_MAX];
@@ -1858,17 +1858,24 @@ static int cgroup_get_cg_type(const char * const path, char * const type,
 
 	len = strlen(cg_type) - 1;
 	/*
-	 * Append cgroup.threads to the path, if the cgroup.type is threaded
-	 * and cgroup.procs for type domain, domain threaded. domain type is
-	 * used for regular cgroup and domain threaded for root of threaded
-	 * cgroup v2 subtree.  Another possible type is domain invalid, it's
-	 * an invalid state, under the threaded subtree.
+	 * Append cgroup.threads to the path, if the cgroup.type is 'threaded'
+	 * or 'domain threaded', with is_tid set. For cgroup.type 'domain' or
+	 * 'domain invalid' or 'domain threaded', with is_tid is unset, append
+	 * cgroup.procs to the path.
+	 *
+	 * domain type is used for regular cgroup and domain threaded for root
+	 * of threaded cgroup v2 subtree. Another possible type is domain invalid,
+	 * it's an invalid state, under the threaded subtree. is_tid is set when
+	 * called from cgroup_attach_thread_tid() or unset other wise.
+	 * Refer to Kernel's cgroup v2 documentation for more detailed explanation
+	 * on domains types.
 	 */
-	if (strncmp(cg_type, "domain", len) == 0 ||
-	    strncmp(cg_type, "domain threaded", len) == 0 ||
-	    strncmp(cg_type, "domain invalid", len) == 0) {
+	if (strncmp(cg_type, "domain", len) == 0         ||
+	    strncmp(cg_type, "domain invalid", len) == 0 ||
+	    (!is_tid && strncmp(cg_type, "domain threaded", len) == 0)) {
 		snprintf(type, type_sz, "cgroup.procs");
-	} else if (strncmp(cg_type, "threaded", len) == 0) {
+	} else if (strncmp(cg_type, "threaded", len) == 0 ||
+		   (is_tid && strncmp(cg_type, "domain threaded", len) == 0)) {
 		snprintf(type, type_sz, "cgroup.threads");
 	} else {
 		cgroup_warn("invalid %scgroup.type: %s\n", path, cg_type);
@@ -1902,7 +1909,7 @@ int cgroup_build_tasks_procs_path(char * const path, size_t path_sz, const char 
 		err = 0;
 		break;
 	case CGROUP_V2:
-		err = cgroup_get_cg_type(path, cg_type, sizeof(cg_type));
+		err = cgroup_get_cg_type(path, cg_type, sizeof(cg_type), 0);
 		if (err)
 			goto error;
 
