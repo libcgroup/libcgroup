@@ -2021,6 +2021,7 @@ err:
 
 static int cgroup_build_tid_path(const char * const ctrl_name, char *path)
 {
+	char cg_type[CGV2_CONTROLLERS_LL_MAX];
 	enum cg_version_t version;
 	size_t len;
 	int ret;
@@ -2028,6 +2029,25 @@ static int cgroup_build_tid_path(const char * const ctrl_name, char *path)
 	ret = cgroup_get_controller_version(ctrl_name, &version);
 	if (ret)
 		return ret;
+
+	if (version == CGROUP_V2) {
+
+		len = strlen(path) - 12;
+		if (strncmp(path + len, "cgroup.procs", 12) != 0) {
+			ret = ECGOTHER;
+			return ret;
+		}
+
+		/* right trim cgroup.procs file name in the path */
+		path[len] = '\0';
+
+		ret = cgroup_get_cg_type(path, cg_type, sizeof(cg_type), 1);
+		if (ret)
+			return ret;
+
+		strncat(path, cg_type, FILENAME_MAX - (len + 1));
+		path[FILENAME_MAX - 1] = '\0';
+	}
 
 	if (version != CGROUP_V1)
 		return ret;
