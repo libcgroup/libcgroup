@@ -10,6 +10,7 @@
 from cgroup import Cgroup
 import consts
 import ftests
+import utils
 import sys
 import os
 
@@ -50,6 +51,13 @@ def test(config):
             if lsmount == 'blkio' and mount.controller == 'io':
                 found = True
                 break
+
+        if not found and mount.controller == 'cpuset':
+            kernel_ver = utils.get_kernel_version(config)
+            if int(kernel_ver[0]) >= 6 and int(kernel_ver[1]) >= 12:
+                # Starting 6.12 cpuset is split into v1 and v2, where
+                # v1 is compiled only when CONFIG_CPUSET_V1 is enabled
+                found = True
 
         if not found:
             result = consts.TEST_FAILED
