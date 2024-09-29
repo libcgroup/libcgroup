@@ -52,11 +52,13 @@ def test(config):
                 found = True
                 break
 
-        if not found and mount.controller == 'cpuset':
+        if not found and (mount.controller == 'cpuset' or
+                          mount.controller == 'memory'):
             kernel_ver = utils.get_kernel_version(config)
             if int(kernel_ver[0]) >= 6 and int(kernel_ver[1]) >= 12:
-                # Starting 6.12 cpuset is split into v1 and v2, where
-                # v1 is compiled only when CONFIG_CPUSET_V1 is enabled
+                # Starting 6.12 cpuset and memory split into v1 and v2,
+                # where v1 is compiled only when CONFIG_CPUSET_V1 and
+                # CONFIG_MEMCG_v1 is enabled respectively.
                 found = True
 
         if not found:
