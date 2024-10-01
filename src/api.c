@@ -6240,7 +6240,7 @@ static int read_pids(char *path, pid_t **pids, int *size)
 	return 0;
 }
 
-int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size)
+int cgroup_get_procs(const char *name, const char *controller, pid_t **pids, int *size)
 {
 	char cgroup_path[FILENAME_MAX];
 
