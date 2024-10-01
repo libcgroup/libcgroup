@@ -586,7 +586,7 @@ char *cgroup_get_value_name(struct cgroup_controller *controller, int index);
  * to the API. Should be freed by the caller using free.
  * @param size The size of the pids array returned by the API.
  */
-int cgroup_get_procs(char *name, char *controller, pid_t **pids, int *size);
+int cgroup_get_procs(const char *name, const char *controller, pid_t **pids, int *size);
 
 /**
  * Get the list of threads in a cgroup. This list is guaranteed to
