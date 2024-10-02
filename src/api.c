@@ -6250,7 +6250,7 @@ int cgroup_get_procs(const char *name, const char *controller, pid_t **pids, int
 	return read_pids(cgroup_path, pids, size);
 }
 
-int cgroup_get_threads(char *name, char *controller, pid_t **pids, int *size)
+int cgroup_get_threads(const char *name, const char *controller, pid_t **pids, int *size)
 {
 	char cgroup_path[FILENAME_MAX];
 

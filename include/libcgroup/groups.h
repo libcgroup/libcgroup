@@ -597,7 +597,7 @@ int cgroup_get_procs(const char *name, const char *controller, pid_t **pids, int
  * to the API. Should be freed by the caller using free.
  * @param size The size of the pids array returned by the API.
  */
-int cgroup_get_threads(char *name, char *controller, pid_t **pids, int *size);
+int cgroup_get_threads(const char *name, const char *controller, pid_t **pids, int *size);
 
 /**
  * Change permission of files and directories of given group
