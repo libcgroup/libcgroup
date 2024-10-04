@@ -363,7 +363,7 @@ static void usage(int status)
 	info("  -b					Ignore default systemd ");
 	info("delegate hierarchy\n");
 #endif
-	info("  -R                                      Recursively set variable(s)");
+	info("  -R					Recursively set variable(s)");
 	info(" for cgroups under <cgroup_path>\n");
 }
 #endif /* !UNIT_TEST */
