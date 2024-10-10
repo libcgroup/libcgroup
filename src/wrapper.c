@@ -86,7 +86,7 @@ struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup, const cha
 	controller->cgroup = cgroup;
 	controller->index = 0;
 
-	if (strcmp(controller->name, CGROUP_FILE_PREFIX) == 0) {
+	if (strcmp(controller->name, CGRP_FILE_PREFIX) == 0) {
 		/*
 		 * Operating on the "cgroup" controller is only allowed
 		 * on cgroup v2 systems

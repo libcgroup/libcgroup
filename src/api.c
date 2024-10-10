@@ -133,7 +133,7 @@ const char * const cgroup_strerror_codes[] = {
 static const char * const cgroup_ignored_tasks_files[] = { "tasks", NULL };
 
 #ifndef UNIT_TEST
-static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+static int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgrp_list[],
 					    char *controller_list[], int list_len);
 
 static int cgroupv2_get_subtree_control(const char *path, const char *ctrl_name,
@@ -344,7 +344,7 @@ static int cg_chmod_recursive_controller(char *path, mode_t dir_mode, int dirm_c
 	return final_ret;
 }
 
-int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode, int dirm_change, mode_t file_mode,
+int cg_chmod_recursive(struct cgroup *cgrp, mode_t dir_mode, int dirm_change, mode_t file_mode,
 		       int filem_change)
 {
 	int final_ret = 0;
@@ -356,8 +356,8 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode, int dirm_change, 
 		last_errno = errno;
 		return ECGOTHER;
 	}
-	for (i = 0; i < cgroup->index; i++) {
-		if (!cg_build_path(cgroup->name, path, cgroup->controller[i]->name)) {
+	for (i = 0; i < cgrp->index; i++) {
+		if (!cg_build_path(cgrp->name, path, cgrp->controller[i]->name)) {
 			final_ret = ECGFAIL;
 			break;
 		}
@@ -372,18 +372,18 @@ int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode, int dirm_change, 
 	return final_ret;
 }
 
-void cgroup_set_permissions(struct cgroup *cgroup, mode_t control_dperm, mode_t control_fperm,
+void cgroup_set_permissions(struct cgroup *cgrp, mode_t control_dperm, mode_t control_fperm,
 			    mode_t task_fperm)
 {
-	if (!cgroup) {
+	if (!cgrp) {
 		/* ECGROUPNOTALLOWED */
 		cgroup_err("Cgroup, operation not allowed\n");
 		return;
 	}
 
-	cgroup->control_dperm = control_dperm;
-	cgroup->control_fperm = control_fperm;
-	cgroup->task_fperm = task_fperm;
+	cgrp->control_dperm = control_dperm;
+	cgrp->control_fperm = control_fperm;
+	cgrp->task_fperm = task_fperm;
 }
 
 static char *cgroup_basename(const char *path)
@@ -420,7 +420,7 @@ int cgroup_test_subsys_mounted(const char *name)
 		 * cgroup.procs. Allow this request as long as there's a
 		 * cgroup v2 controller mounted.
 		 */
-		if (strncmp(name, CGROUP_FILE_PREFIX, strlen(CGROUP_FILE_PREFIX)) == 0 &&
+		if (strncmp(name, CGRP_FILE_PREFIX, strlen(CGRP_FILE_PREFIX)) == 0 &&
 		    cg_mount_table[i].version == CGROUP_V2) {
 			pthread_rwlock_unlock(&cg_mount_table_lock);
 			return 1;
@@ -584,7 +584,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 	FILE *fp = NULL;
 
 	/* Buffer to store the line we're working on */
-	char buff[CGROUP_RULE_MAXLINE] = { '\0' };
+	char buff[CGRP_RULE_MAXLINE] = { '\0' };
 
 	/* Iterator for the line we're working on */
 	char *itr = NULL;
@@ -605,7 +605,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 	struct passwd *pwd;
 
 	/* Temporary storage for a configuration rule */
-	char key[CGROUP_RULE_MAXKEY] = { '\0' };
+	char key[CGRP_RULE_MAXKEY] = { '\0' };
 	char user[LOGIN_NAME_MAX] = { '\0' };
 	char controllers[CG_CONTROLLER_MAX] = { '\0' };
 	char destination[FILENAME_MAX] = { '\0' };
@@ -643,9 +643,8 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 	/* Open the configuration file. */
 	fp = fopen(filename, "re");
 	if (!fp) {
-		cgroup_warn("failed to open configuration file %s: %s\n", filename,
-			    strerror(errno));
-
+		cgroup_warn("failed to open configuration file %s: %s\n",
+			    filename, strerror(errno));
 		/* originally ret = 0, but this is parse fail, not success */
 		ret = ECGRULESPARSEFAIL;
 		goto finish;
@@ -982,7 +981,6 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid, const char *mp
 	d = opendir(dirname);
 	if (!d) {
 		cgroup_warn("Failed to open directory %s: %s\n", dirname, strerror(errno));
-
 		/*
 		 * Cannot read directory. However, CGRULES_CONF_FILE is
 		 * successfully parsed. Thus return as a success for back
@@ -1216,7 +1214,7 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 {
 	char *ret_c = NULL, line[CGV2_CONTROLLERS_LL_MAX], *stok_buff = NULL;
 	char *controller = NULL, *controllers = NULL;
-	char cgroup_controllers_path[FILENAME_MAX];
+	char cgrp_controllers_path[FILENAME_MAX];
 	int ret = 0, i, duplicate, shared_mnt;
 	FILE *fp = NULL;
 
@@ -1228,10 +1226,8 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	cg_cgroup_v2_mount_path[FILENAME_MAX-1] = '\0';
 
 	/* determine what v2 controllers are available on this mount */
-	snprintf(cgroup_controllers_path, FILENAME_MAX, "%s/%s", ent->mnt_dir,
-		 CGV2_CONTROLLERS_FILE);
-
-	fp = fopen(cgroup_controllers_path, "re");
+	snprintf(cgrp_controllers_path, FILENAME_MAX, "%s/%s", ent->mnt_dir, CGV2_CONTROLLERS_FILE);
+	fp = fopen(cgrp_controllers_path, "re");
 	if (!fp) {
 		ret = ECGOTHER;
 		goto out;
@@ -1275,13 +1271,13 @@ STATIC int cgroup_process_v2_mnt(struct mntent *ent, int *mnt_tbl_idx)
 	 * wish to read/modify.  Add it to our cg_mount_table so that it can be manipulated
 	 * like other "normal" controllers
 	 */
-	controllers = malloc(strlen(ret_c) + strlen(CGROUP_FILE_PREFIX) + 2);
+	controllers = malloc(strlen(ret_c) + strlen(CGRP_FILE_PREFIX) + 2);
 	if (!controllers) {
 		ret = ECGOTHER;
 		goto out;
 	}
 
-	sprintf(controllers, "%s %s", ret_c, CGROUP_FILE_PREFIX);
+	sprintf(controllers, "%s %s", ret_c, CGRP_FILE_PREFIX);
 
 	/*
 	 * cgroup.controllers returns a list of available controllers in
@@ -1407,10 +1403,8 @@ static int check_mount_point_opt(const char *mnt, const char *mnt_opt, int * con
 		}
 	}
 
-	if (*is_set == 0) {
-		cgroup_dbg("%s, not found in the list of ", mnt_opt);
-		cgroup_cont("mount options of %s\n", mnt);
-	}
+	if (*is_set == 0)
+		cgroup_dbg("%s, not found in the list of mount options of %s\n", mnt_opt, mnt);
 
 err:
 	if (proc_mount)
@@ -1428,17 +1422,17 @@ err:
  */
 static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 {
-	int hierarchy, num_cgroups, enabled;
+	int hierarchy, num_cgrps, enabled;
 	char subsys_name[FILENAME_MAX];
 	char mnt_opt[] = "subset=pid";
-	FILE *proc_cgroup;
 	char *buf = NULL;
+	FILE *proc_cgrp;
 	int mnt_opt_set;
 	int ret = 0;
 	int err, i = 0;
 
-	proc_cgroup = fopen("/proc/cgroups", "re");
-	if (!proc_cgroup) {
+	proc_cgrp = fopen("/proc/cgroups", "re");
+	if (!proc_cgrp) {
 		cgroup_warn("cannot open /proc/cgroups: %s\n", strerror(errno));
 		ret = check_mount_point_opt("/proc/self/mounts", mnt_opt, &mnt_opt_set);
 		if (ret)
@@ -1464,19 +1458,19 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 		goto err;
 	}
 
-	if (!fgets(buf, CGV2_CONTROLLERS_LL_MAX, proc_cgroup)) {
+	if (!fgets(buf, CGV2_CONTROLLERS_LL_MAX, proc_cgrp)) {
 		cgroup_err("cannot read /proc/cgroups: %s\n", strerror(errno));
 		last_errno = errno;
 		ret = ECGOTHER;
 		goto err;
 	}
 
-	while (!feof(proc_cgroup)) {
+	while (!feof(proc_cgrp)) {
 		/*
 		 * check Linux Kernel sources/kernel/cgroup/cgroup.c cgroup_init_early(),
 		 * MAX_CGROUP_TYPE_NAMELEN check for details on why 32 is used.
 		 */
-		err = fscanf(proc_cgroup, "%32s %d %d %d", subsys_name, &hierarchy, &num_cgroups,
+		err = fscanf(proc_cgrp, "%32s %d %d %d", subsys_name, &hierarchy, &num_cgrps,
 			     &enabled);
 		if (err < 0)
 			break;
@@ -1491,8 +1485,8 @@ static int cgroup_populate_controllers(char *controllers[CG_CONTROLLER_MAX])
 	}
 
 err:
-	if (proc_cgroup)
-		fclose(proc_cgroup);
+	if (proc_cgrp)
+		fclose(proc_cgrp);
 
 	if (buf)
 		free(buf);
@@ -1698,12 +1692,12 @@ static char *cg_concat_path(const char *pref, const char *suf, char *path)
 /* path value have to have size at least FILENAME_MAX */
 char *cg_build_path_locked(const char *name, char *path, const char *type)
 {
+	char *tmp_systemd_default_cgrp, *_path = NULL;
 	/*
 	 * len is the allocation size for path, that stores:
 	 * cg_mount_table[i].mount.path + '/' + cg_namespace_table[i] + '/'
 	 */
 	int i, ret, len = (FILENAME_MAX * 2) + 2;
-	char *tmp_systemd_default_cgroup, *_path = NULL;
 
 	/*
 	 * systemd_default_cgroup can't be clobbered.   The user may pass
@@ -1711,8 +1705,8 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	 * for example:
 	 * cgget -g cpu:/ -g cpu:cgrp1 -g cpu:/cgrp2
 	 */
-	tmp_systemd_default_cgroup = calloc(1, (sizeof(char) * len));
-	if (!tmp_systemd_default_cgroup) {
+	tmp_systemd_default_cgrp = calloc(1, (sizeof(char) * len));
+	if (!tmp_systemd_default_cgrp) {
 		cgroup_err("Failed to allocate memory for tmp_systemd_default_cgroup\n");
 		goto out;
 	}
@@ -1724,9 +1718,9 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	 * is "/", the cgroup root path is systemd_default_cgroup
 	 */
 	if (strlen(systemd_default_cgroup) && name && name[0] == '/' && name[1] != '\0')
-		tmp_systemd_default_cgroup[0] = '\0';
+		tmp_systemd_default_cgrp[0] = '\0';
 	else
-		snprintf(tmp_systemd_default_cgroup, len, "%s/", systemd_default_cgroup);
+		snprintf(tmp_systemd_default_cgrp, len, "%s/", systemd_default_cgroup);
 
 	/* allocate more space for systemd_default_cgroup + '/' */
 	len += (FILENAME_MAX + 1);
@@ -1751,7 +1745,7 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 	 */
 	if (!type && strlen(cg_cgroup_v2_mount_path) > 0) {
 		ret = snprintf(_path, len, "%s/%s", cg_cgroup_v2_mount_path,
-			       tmp_systemd_default_cgroup);
+			       tmp_systemd_default_cgrp);
 		if (ret >= FILENAME_MAX)
 			cgroup_dbg("filename too long: %s", _path);
 
@@ -1781,15 +1775,15 @@ char *cg_build_path_locked(const char *name, char *path, const char *type)
 		 *    a "real" controller mounted as cgroup v2
 		 */
 		if ((type && strcmp(cg_mount_table[i].name, type) == 0) ||
-		    (type && strcmp(type, CGROUP_FILE_PREFIX) == 0 &&
+		    (type && strcmp(type, CGRP_FILE_PREFIX) == 0 &&
 		     cg_mount_table[i].version == CGROUP_V2)) {
 
 			if (cg_namespace_table[i])
 				ret = snprintf(_path, len, "%s/%s%s/", cg_mount_table[i].mount.path,
-					       tmp_systemd_default_cgroup, cg_namespace_table[i]);
+					       tmp_systemd_default_cgrp, cg_namespace_table[i]);
 			else
 				ret = snprintf(_path, len, "%s/%s", cg_mount_table[i].mount.path,
-					       tmp_systemd_default_cgroup);
+					       tmp_systemd_default_cgrp);
 
 			if (ret >= FILENAME_MAX)
 				cgroup_dbg("filename too long: %s", _path);
@@ -1816,8 +1810,8 @@ out:
 	if (_path)
 		free(_path);
 
-	if (tmp_systemd_default_cgroup)
-		free(tmp_systemd_default_cgroup);
+	if (tmp_systemd_default_cgrp)
+		free(tmp_systemd_default_cgrp);
 
 	return path;
 }
@@ -2065,11 +2059,11 @@ static int cgroup_build_tid_path(const char * const ctrl_name, char *path)
 	return ret;
 }
 
-static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_tids)
+static int cgroup_attach_task_tid(struct cgroup *cgrp, pid_t tid, bool move_tids)
 {
 	char path[FILENAME_MAX] = {0};
 	char *controller_name = NULL;
-	int empty_cgroup = 0;
+	int empty_cgrp = 0;
 	int i, ret = 0;
 
 	if (!cgroup_initialized) {
@@ -2078,7 +2072,7 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_ti
 	}
 
 	/* if the cgroup is NULL, attach the task to the root cgroup. */
-	if (!cgroup) {
+	if (!cgrp) {
 		pthread_rwlock_rdlock(&cg_mount_table_lock);
 		for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
 			ret = cgroup_build_tasks_procs_path(path, sizeof(path), NULL,
@@ -2100,30 +2094,30 @@ static int cgroup_attach_task_tid(struct cgroup *cgroup, pid_t tid, bool move_ti
 		}
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 	} else {
-		for (i = 0; i < cgroup->index; i++) {
-			if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name)) {
+		for (i = 0; i < cgrp->index; i++) {
+			if (!cgroup_test_subsys_mounted(cgrp->controller[i]->name)) {
 				cgroup_warn("subsystem %s is not mounted\n",
-					    cgroup->controller[i]->name);
+					    cgrp->controller[i]->name);
 				return ECGROUPSUBSYSNOTMOUNTED;
 			}
 		}
 
-		if (cgroup->index == 0)
+		if (cgrp->index == 0)
 			/* Valid empty cgroup v2 with no controllers added. */
-			empty_cgroup = 1;
+			empty_cgrp = 1;
 
 		for (i = 0, controller_name = NULL;
-		     empty_cgroup > 0 || i < cgroup->index;
-		     i++, empty_cgroup--) {
+		     empty_cgrp > 0 || i < cgrp->index;
+		     i++, empty_cgrp--) {
 
-			if (cgroup->controller[i])
-				controller_name = cgroup->controller[i]->name;
+			if (cgrp->controller[i])
+				controller_name = cgrp->controller[i]->name;
 
-			ret = cgroupv2_controller_enabled(cgroup->name, controller_name);
+			ret = cgroupv2_controller_enabled(cgrp->name, controller_name);
 			if (ret)
 				return ret;
 
-			ret = cgroup_build_tasks_procs_path(path, sizeof(path), cgroup->name,
+			ret = cgroup_build_tasks_procs_path(path, sizeof(path), cgrp->name,
 							    controller_name);
 			if (ret)
 				return ret;
@@ -2727,7 +2721,7 @@ out:
 
 /**
  * cgroup_modify_cgroup modifies the cgroup control files.
- * struct cgroup *cgroup: The name will be the cgroup to be modified.
+ * struct cgroup *cgrp: The name will be the cgroup to be modified.
  * The values will be the values to be modified, those not mentioned in the
  * structure will not be modified.
  *
@@ -2736,7 +2730,7 @@ out:
  * returns 0 on success.
  */
 
-int cgroup_modify_cgroup(struct cgroup *cgroup)
+int cgroup_modify_cgroup(struct cgroup *cgrp)
 {
 	char base[FILENAME_MAX];
 	int error = 0;
@@ -2745,21 +2739,21 @@ int cgroup_modify_cgroup(struct cgroup *cgroup)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!cgroup)
+	if (!cgrp)
 		return ECGROUPNOTALLOWED;
 
-	for (i = 0; i < cgroup->index; i++) {
-		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name)) {
-			cgroup_warn("subsystem %s is not mounted\n", cgroup->controller[i]->name);
+	for (i = 0; i < cgrp->index; i++) {
+		if (!cgroup_test_subsys_mounted(cgrp->controller[i]->name)) {
+			cgroup_warn("subsystem %s is not mounted\n", cgrp->controller[i]->name);
 			return ECGROUPSUBSYSNOTMOUNTED;
 		}
 	}
 
-	for (i = 0; i < cgroup->index; i++) {
-		if (!cg_build_path(cgroup->name, base, cgroup->controller[i]->name))
+	for (i = 0; i < cgrp->index; i++) {
+		if (!cg_build_path(cgrp->name, base, cgrp->controller[i]->name))
 			continue;
 
-		error = cgroup_set_values_recursive(base, cgroup->controller[i], true);
+		error = cgroup_set_values_recursive(base, cgrp->controller[i], true);
 		if (error)
 			goto err;
 	}
@@ -2917,7 +2911,7 @@ err:
 	return error;
 }
 
-static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
+static int _cgroup_create_cgroup(const struct cgroup * const cgrp,
 				 const struct cgroup_controller * const controller,
 				 int ignore_ownership)
 {
@@ -2936,7 +2930,7 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	path = fts_path[0];
 
 	if (controller) {
-		if (!cg_build_path(cgroup->name, path, controller->name)) {
+		if (!cg_build_path(cgrp->name, path, controller->name)) {
 			error = ECGOTHER;
 			goto err;
 		}
@@ -2962,7 +2956,7 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 				goto err;
 		}
 	} else {
-		if (!cg_build_path(cgroup->name, path, NULL)) {
+		if (!cg_build_path(cgrp->name, path, NULL)) {
 			error = ECGOTHER;
 			goto err;
 		}
@@ -2982,13 +2976,13 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 
 	if (!ignore_ownership) {
 		cgroup_dbg("Changing ownership of %s\n", fts_path[0]);
-		error = cg_chown_recursive(fts_path, cgroup->control_uid, cgroup->control_gid);
+		error = cg_chown_recursive(fts_path, cgrp->control_uid, cgrp->control_gid);
 		if (!error)
 			error = cg_chmod_recursive_controller(fts_path[0],
-							      cgroup->control_dperm,
-							      cgroup->control_dperm != NO_PERMS,
-							      cgroup->control_fperm,
-							      cgroup->control_fperm != NO_PERMS,
+							      cgrp->control_dperm,
+							      cgrp->control_dperm != NO_PERMS,
+							      cgrp->control_fperm,
+							      cgrp->control_fperm != NO_PERMS,
 							      1, cgroup_ignored_tasks_files);
 	}
 
@@ -3002,8 +2996,8 @@ static int _cgroup_create_cgroup(const struct cgroup * const cgroup,
 	}
 
 	if (!ignore_ownership && version == CGROUP_V1) {
-		error = cgroup_chown_chmod_tasks(base, cgroup->tasks_uid, cgroup->tasks_gid,
-						 cgroup->task_fperm);
+		error = cgroup_chown_chmod_tasks(base, cgrp->tasks_uid, cgrp->tasks_gid,
+						 cgrp->task_fperm);
 		if (error)
 			goto err;
 	}
@@ -3018,14 +3012,14 @@ err:
 
 /**
  * cgroup_create_cgroup creates a new control group.
- * struct cgroup *cgroup: The control group to be created
+ * struct cgroup *cgrp: The control group to be created
  *
  * returns 0 on success. We recommend calling cg_delete_cgroup if this
  * routine fails. That should do the cleanup operation. If ECGCANTSETVALUE
  * is returned, the group was created successfully but not all controller
  * parameters were successfully set.
  */
-int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
+int cgroup_create_cgroup(struct cgroup *cgrp, int ignore_ownership)
 {
 	int error = 0;
 	int i;
@@ -3033,17 +3027,17 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!cgroup)
+	if (!cgrp)
 		return ECGROUPNOTALLOWED;
 
-	for (i = 0; i < cgroup->index;	i++) {
-		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+	for (i = 0; i < cgrp->index; i++) {
+		if (!cgroup_test_subsys_mounted(cgrp->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
-	if (cgroup->index == 0) {
+	if (cgrp->index == 0) {
 		/* Create an empty cgroup v2 cgroup */
-		error = _cgroup_create_cgroup(cgroup, NULL, ignore_ownership);
+		error = _cgroup_create_cgroup(cgrp, NULL, ignore_ownership);
 		if (error)
 			/*
 			 * Since we only attempted to create a single cgroup,
@@ -3058,8 +3052,8 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 	 * multiple subsystems mounted at one point, all of them *have* be
 	 * on the cgroup data structure. If not, we fail.
 	 */
-	for (i = 0; i < cgroup->index; i++) {
-		error = _cgroup_create_cgroup(cgroup, cgroup->controller[i], ignore_ownership);
+	for (i = 0; i < cgrp->index; i++) {
+		error = _cgroup_create_cgroup(cgrp, cgrp->controller[i], ignore_ownership);
 		if (error) {
 			int del_error;
 
@@ -3069,9 +3063,9 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
 			 * subtree_control file.  To safely undo changes there, we would need to
 			 * save the subtree_control file's previous value and restore it.
 			 */
-			del_error = cgroup_delete_cgroup(cgroup, 1);
+			del_error = cgroup_delete_cgroup(cgrp, 1);
 			if (del_error)
-				cgroup_err("Failed to delete %s: %s\n", cgroup->name,
+				cgroup_err("Failed to delete %s: %s\n", cgrp->name,
 					   cgroup_strerror(del_error));
 			return error;
 		}
@@ -3088,19 +3082,19 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership)
  * dirname() of the cgroup name as the likely parent name; the caller is
  * responsible for validating parent as appropriate.
  *
- * @param cgroup The cgroup to query for parent's name
+ * @param cgrp The cgroup to query for parent's name
  * @param parent Output, name of parent's group, or NULL if the
  *	provided cgroup is the root group.
  *	Caller is responsible to free the returned string.
  * @return 0 on success, > 0 on error
  */
-static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
+static int cgroup_get_parent_name(struct cgroup *cgrp, char **parent)
 {
 	char *pdir = NULL;
 	char *dir = NULL;
 	int ret = 0;
 
-	dir = strdup(cgroup->name);
+	dir = strdup(cgrp->name);
 	if (!dir) {
 		last_errno = errno;
 		return ECGOTHER;
@@ -3111,8 +3105,8 @@ static int cgroup_get_parent_name(struct cgroup *cgroup, char **parent)
 	cgroup_dbg("parent's group name is %s\n", pdir);
 
 	/* Check for root group */
-	if (strlen(cgroup->name) == 0 || !strcmp(cgroup->name, pdir)) {
-		cgroup_dbg("specified cgroup \"%s\" is root group\n", cgroup->name);
+	if (strlen(cgrp->name) == 0 || !strcmp(cgrp->name, pdir)) {
+		cgroup_dbg("specified cgroup \"%s\" is root group\n", cgrp->name);
 		*parent = NULL;
 	} else {
 		*parent = strdup(pdir);
@@ -3163,14 +3157,14 @@ static int is_cgrp_ctrl_shared_mnt(char *controller)
  * When namespaces are used, a group can have different parents for
  * different controllers.
  *
- * @param cgroup The cgroup
+ * @param cgrp The cgroup
  * @param controller The controller
  * @param parent Output, name of parent's group (if the group has parent) or
  *	NULL, if the provided cgroup is the root group and has no parent.
  *	Caller is responsible to free the returned string!
  * @return 0 on success, >0 on error.
  */
-static int cgroup_find_parent(struct cgroup *cgroup, char *controller, char **parent)
+static int cgroup_find_parent(struct cgroup *cgrp, char *controller, char **parent)
 {
 	struct stat stat_child, stat_parent;
 	char child_path[FILENAME_MAX];
@@ -3180,7 +3174,7 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller, char **pa
 	*parent = NULL;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	if (!cg_build_path_locked(cgroup->name, child_path, controller)) {
+	if (!cg_build_path_locked(cgrp->name, child_path, controller)) {
 		pthread_rwlock_unlock(&cg_mount_table_lock);
 		return ECGFAIL;
 	}
@@ -3216,7 +3210,7 @@ static int cgroup_find_parent(struct cgroup *cgroup, char *controller, char **pa
 		ret = 0;
 		cgroup_dbg("Parent is on different device\n");
 	} else {
-		ret = cgroup_get_parent_name(cgroup, parent);
+		ret = cgroup_get_parent_name(cgrp, parent);
 	}
 
 free_parent:
@@ -3225,24 +3219,24 @@ free_parent:
 }
 
 /**
- * @cgroup: cgroup data structure to be filled with parent values and then
+ * @cgrp: cgroup data structure to be filled with parent values and then
  *	passed down for creation
  * @ignore_ownership: Ignore doing a chown on the newly created cgroup
- * @return 0 on success, > 0 on failure.  If  ECGCANTSETVALUE is returned,
+ * @return 0 on success, > 0 on failure.  If ECGCANTSETVALUE is returned,
  *	the group was created
  * successfully, but not all controller parameters were copied from the
  * parent successfully; unfortunately, this is expected...
  */
-int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)
+int cgroup_create_cgroup_from_parent(struct cgroup *cgrp, int ignore_ownership)
 {
-	struct cgroup *parent_cgroup = NULL;
+	struct cgroup *parent_cgrp = NULL;
 	char *parent = NULL;
 	int ret = ECGFAIL;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	ret = cgroup_get_parent_name(cgroup, &parent);
+	ret = cgroup_get_parent_name(cgrp, &parent);
 	if (ret)
 		return ret;
 
@@ -3255,27 +3249,27 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership
 	}
 
 	cgroup_dbg("parent is %s\n", parent);
-	parent_cgroup = cgroup_new_cgroup(parent);
-	if (!parent_cgroup) {
+	parent_cgrp = cgroup_new_cgroup(parent);
+	if (!parent_cgrp) {
 		ret = ECGFAIL;
 		goto err_nomem;
 	}
 
-	if (cgroup_get_cgroup(parent_cgroup)) {
+	if (cgroup_get_cgroup(parent_cgrp)) {
 		ret = ECGFAIL;
 		goto err_parent;
 	}
 
-	cgroup_dbg("got parent group for %s\n", parent_cgroup->name);
-	ret = cgroup_copy_cgroup(cgroup, parent_cgroup);
+	cgroup_dbg("got parent group for %s\n", parent_cgrp->name);
+	ret = cgroup_copy_cgroup(cgrp, parent_cgrp);
 	if (ret)
 		goto err_parent;
 
-	cgroup_dbg("copied parent group %s to %s\n", parent_cgroup->name, cgroup->name);
-	ret = cgroup_create_cgroup(cgroup, ignore_ownership);
+	cgroup_dbg("copied parent group %s to %s\n", parent_cgrp->name, cgrp->name);
+	ret = cgroup_create_cgroup(cgrp, ignore_ownership);
 
 err_parent:
-	cgroup_free(&parent_cgroup);
+	cgroup_free(&parent_cgrp);
 err_nomem:
 	free(parent);
 	return ret;
@@ -3331,7 +3325,7 @@ static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
  * to the same hierarchy, this function is called once for each of these
  * controllers. And during the second call the group is already removed...
  *
- * @param cgroup_name Name of the group to remove.
+ * @param cgrp_name Name of the group to remove.
  * @param controller  Name of the controller.
  * @param target_tasks Opened tasks file of the target group, where all
  *	processes should be moved.
@@ -3339,18 +3333,18 @@ static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
  *	migration should be ignored (CGROUP_DELETE_IGNORE_MIGRATION) or not (0).
  * @returns 0 on success, >0 on error.
  */
-static int cg_delete_cgroup_controller(char *cgroup_name, char *controller, FILE *target_tasks,
-				       int flags)
+static int cg_delete_cgrp_controller(char *cgrp_name, char *controller, FILE *target_tasks,
+				     int flags)
 {
 	char path[FILENAME_MAX];
 	FILE *delete_tasks;
 	int ret = 0;
 
-	cgroup_dbg("Removing group %s:%s\n", controller, cgroup_name);
+	cgroup_dbg("Removing group %s:%s\n", controller, cgrp_name);
 
 	if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
 		/* Open tasks file of the group to delete. */
-		ret = cgroup_build_tasks_procs_path(path, sizeof(path), cgroup_name, controller);
+		ret = cgroup_build_tasks_procs_path(path, sizeof(path), cgrp_name, controller);
 		if (ret != 0)
 			return ECGROUPSUBSYSNOTMOUNTED;
 
@@ -3379,7 +3373,7 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller, FILE
 	}
 
 	/* Remove the group. */
-	if (!cg_build_path(cgroup_name, path, controller))
+	if (!cg_build_path(cgrp_name, path, controller))
 		return ECGROUPSUBSYSNOTMOUNTED;
 
 	ret = rmdir(path);
@@ -3399,15 +3393,15 @@ static int cg_delete_cgroup_controller(char *cgroup_name, char *controller, FILE
  * Recursively delete one control group. Moves all tasks from the group and
  * its subgroups to given task file.
  *
- * @param cgroup_name The group to delete.
+ * @param cgrp_name The group to delete.
  * @param controller The controller, where to delete.
  * @param target_tasks Opened file, where all tasks should be moved.
  * @param flags Combination of CGFLAG_DELETE_* flags. The function assumes
  *	that CGFLAG_DELETE_RECURSIVE is set.
  * @param delete_root Whether the group itself should be removed(1) or not(0).
  */
-static int cg_delete_cgroup_controller_recursive(char *cgroup_name, char *controller,
-						 FILE *target_tasks, int flags, int delete_root)
+static int cg_delete_cgrp_controller_recursive(char *cgrp_name, char *controller,
+					       FILE *target_tasks, int flags, int delete_root)
 {
 	char child_name[FILENAME_MAX + 1];
 	struct cgroup_file_info info;
@@ -3415,10 +3409,9 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name, char *contro
 	void *handle;
 	int ret;
 
-	cgroup_dbg("Recursively removing %s:%s\n", controller, cgroup_name);
+	cgroup_dbg("Recursively removing %s:%s\n", controller, cgrp_name);
 
-	ret = cgroup_walk_tree_begin(controller, cgroup_name, 0, &handle, &info, &level);
-
+	ret = cgroup_walk_tree_begin(controller, cgrp_name, 0, &handle, &info, &level);
 	if (ret == 0)
 		ret = cgroup_walk_tree_set_flags(&handle, CGROUP_WALK_TYPE_POST_DIR);
 
@@ -3434,10 +3427,10 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name, char *contro
 
 	while (ret == 0) {
 		if (info.type == CGROUP_FILE_TYPE_DIR && info.depth > 0) {
-			snprintf(child_name, sizeof(child_name), "%s/%s", cgroup_name,
+			snprintf(child_name, sizeof(child_name), "%s/%s", cgrp_name,
 				 info.full_path + group_len);
 
-			ret = cg_delete_cgroup_controller(child_name, controller, target_tasks,
+			ret = cg_delete_cgrp_controller(child_name, controller, target_tasks,
 							  flags);
 			if (ret != 0)
 				break;
@@ -3449,8 +3442,7 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name, char *contro
 		/* Iteration finished successfully, remove the root group. */
 		ret = 0;
 		if (delete_root)
-			ret = cg_delete_cgroup_controller(cgroup_name, controller, target_tasks,
-							  flags);
+			ret = cg_delete_cgrp_controller(cgrp_name, controller, target_tasks, flags);
 	}
 
 	cgroup_walk_tree_end(&handle);
@@ -3460,18 +3452,18 @@ static int cg_delete_cgroup_controller_recursive(char *cgroup_name, char *contro
 
 /**
  * cgroup_delete cgroup deletes a control group.
- * struct cgroup *cgroup takes the group which is to be deleted.
+ * struct cgroup *cgrp takes the group which is to be deleted.
  *
  * returns 0 on success.
  */
-int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration)
+int cgroup_delete_cgroup(struct cgroup *cgrp, int ignore_migration)
 {
 	int flags = ignore_migration ? CGFLAG_DELETE_IGNORE_MIGRATION : 0;
 
-	return cgroup_delete_cgroup_ext(cgroup, flags);
+	return cgroup_delete_cgroup_ext(cgrp, flags);
 }
 
-int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
+int cgroup_delete_cgroup_ext(struct cgroup *cgrp, int flags)
 {
 	int first_error = 0, first_errno = 0;
 	int cgrp_del_on_shared_mnt = 0;
@@ -3480,25 +3472,25 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	FILE *parent_tasks = NULL;
 	char *parent_name = NULL;
 	int delete_group = 1;
-	int empty_cgroup = 0;
+	int empty_cgrp = 0;
 	int i, ret;
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!cgroup)
+	if (!cgrp)
 		return ECGROUPNOTALLOWED;
 
 	if ((flags & CGFLAG_DELETE_RECURSIVE)
 	    && (flags & CGFLAG_DELETE_EMPTY_ONLY))
 		return ECGINVAL;
 
-	if (cgroup->index == 0)
+	if (cgrp->index == 0)
 		/* Valid empty cgroup v2 with not controllers added. */
-		empty_cgroup = 1;
+		empty_cgrp = 1;
 
-	for (i = 0; i < cgroup->index; i++) {
-		if (!cgroup_test_subsys_mounted(cgroup->controller[i]->name))
+	for (i = 0; i < cgrp->index; i++) {
+		if (!cgroup_test_subsys_mounted(cgrp->controller[i]->name))
 			return ECGROUPSUBSYSNOTMOUNTED;
 	}
 
@@ -3506,18 +3498,17 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 	 * Remove the group from all controllers and in the case of cgroup
 	 * with no controllers, perform all actions of a single controller.
 	 */
-	for (i = 0;
-	     empty_cgroup > 0 || i < cgroup->index; i++, empty_cgroup--) {
+	for (i = 0; empty_cgrp > 0 || i < cgrp->index; i++, empty_cgrp--) {
 
 		ret = 0;
 		controller_name = NULL;
 
-		if (cgroup->controller[i])
-			controller_name = cgroup->controller[i]->name;
+		if (cgrp->controller[i])
+			controller_name = cgrp->controller[i]->name;
 
 		/* Find parent, it can be different for each controller */
 		if (!(flags & CGFLAG_DELETE_EMPTY_ONLY)) {
-			ret = cgroup_find_parent(cgroup, controller_name, &parent_name);
+			ret = cgroup_find_parent(cgrp, controller_name, &parent_name);
 			if (ret) {
 				/*
 				 * ECGROPNOTEXIST is returned on cgroup v1, where
@@ -3587,12 +3578,12 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
 			}
 		}
 		if (flags & CGFLAG_DELETE_RECURSIVE) {
-			ret = cg_delete_cgroup_controller_recursive(cgroup->name, controller_name,
+			ret = cg_delete_cgrp_controller_recursive(cgrp->name, controller_name,
 								    parent_tasks, flags,
 								    delete_group);
 		} else {
-			ret = cg_delete_cgroup_controller(cgroup->name, controller_name,
-							  parent_tasks, flags);
+			ret = cg_delete_cgrp_controller(cgrp->name, controller_name, parent_tasks,
+							flags);
 		}
 
 		if (parent_tasks) {
@@ -3634,13 +3625,13 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags)
  * This function should really have more checks, but this version will assume
  * that the callers have taken care of everything. Including the locking.
  */
-static int cg_rd_ctrl_file(const char *subsys, const char *cgroup, const char *file, char **value)
+static int cg_rd_ctrl_file(const char *subsys, const char *cgrp, const char *file, char **value)
 {
 	char path[FILENAME_MAX];
 	FILE *ctrl_file = NULL;
 	int ret;
 
-	if (!cg_build_path_locked(cgroup, path, subsys))
+	if (!cg_build_path_locked(cgrp, path, subsys))
 		return ECGFAIL;
 
 	strncat(path, file, sizeof(path) - strlen(path));
@@ -3674,7 +3665,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgroup, const char *f
 /*
  * Call this function with required locks taken.
  */
-int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup, struct cgroup_controller *cgc,
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgrp, struct cgroup_controller *cgc,
 		    int cg_index)
 {
 	char path[FILENAME_MAX+1];
@@ -3699,11 +3690,10 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup, struct cgrou
 	 * This part really needs to be optimized out. Probably use some
 	 * sort of a flag, but this is fine for now.
 	 */
-	cg_build_path_locked(cgroup->name, path, cg_mount_table[cg_index].name);
+	cg_build_path_locked(cgrp->name, path, cg_mount_table[cg_index].name);
 	strncat(path, d_name, sizeof(path) - strlen(path));
 
 	error = stat(path, &stat_buffer);
-
 	if (error) {
 		error = ECGFAIL;
 		goto fill_error;
@@ -3730,26 +3720,24 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup, struct cgrou
 	 * compare the last 6 bytes
 	 */
 	if (strcmp(tmp_path, "/tasks")) {
-		cgroup->control_uid = stat_buffer.st_uid;
-		cgroup->control_gid = stat_buffer.st_gid;
+		cgrp->control_uid = stat_buffer.st_uid;
+		cgrp->control_gid = stat_buffer.st_gid;
 	}
 
 	ctrl_name = strtok_r(d_name, ".", &buffer);
-
 	if (!ctrl_name) {
 		error = ECGFAIL;
 		goto fill_error;
 	}
 
 	ctrl_file = strtok_r(NULL, ".", &buffer);
-
 	if (!ctrl_file) {
 		error = ECGINVAL;
 		goto fill_error;
 	}
 
 	if (strcmp(ctrl_name, cg_mount_table[cg_index].name) == 0) {
-		error = cg_rd_ctrl_file(cg_mount_table[cg_index].name, cgroup->name,
+		error = cg_rd_ctrl_file(cg_mount_table[cg_index].name, cgrp->name,
 					ctrl_dir->d_name, &ctrl_value);
 		if (error || !ctrl_value)
 			goto fill_error;
@@ -3773,7 +3761,7 @@ fill_error:
  *
  * return 0 on success.
  */
-int cgroup_get_cgroup(struct cgroup *cgroup)
+int cgroup_get_cgroup(struct cgroup *cgrp)
 {
 	char cgrp_ctrl_path[FILENAME_MAX];
 	struct dirent *ctrl_dir = NULL;
@@ -3791,12 +3779,12 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		return ECGROUPNOTINITIALIZED;
 	}
 
-	if (!cgroup) {
+	if (!cgrp) {
 		/* ECGROUPNOTALLOWED */
 		return ECGROUPNOTALLOWED;
 	}
 
-	initial_controller_cnt = cgroup->index;
+	initial_controller_cnt = cgrp->index;
 
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
 	for (i = 0; i < CG_CONTROLLER_MAX && cg_mount_table[i].name[0] != '\0'; i++) {
@@ -3811,8 +3799,8 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			 * The user has specified a list of controllers they are interested
 			 * in.  Only operate on the specified controllers
 			 */
-			for (j = 0; j < cgroup->index; j++) {
-				if (strncmp(cg_mount_table[i].name, cgroup->controller[j]->name,
+			for (j = 0; j < cgrp->index; j++) {
+				if (strncmp(cg_mount_table[i].name, cgrp->controller[j]->name,
 					    CONTROL_NAMELEN_MAX) == 0)
 					skip_this_controller = false;
 			}
@@ -3825,13 +3813,13 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			continue;
 
 		mnt_path_len = strlen(mnt_path);
-		strncat(mnt_path, cgroup->name, FILENAME_MAX - mnt_path_len - 1);
+		strncat(mnt_path, cgrp->name, FILENAME_MAX - mnt_path_len - 1);
 		mnt_path[sizeof(mnt_path) - 1] = '\0';
 
 		if (access(mnt_path, F_OK))
 			continue;
 
-		if (!cg_build_path_locked(cgroup->name, cgrp_ctrl_path, cg_mount_table[i].name)) {
+		if (!cg_build_path_locked(cgrp->name, cgrp_ctrl_path, cg_mount_table[i].name)) {
 			/* This fails when the cgroup does not exist for that controller. */
 			continue;
 		}
@@ -3853,8 +3841,8 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 				goto unlock_error;
 			}
 
-			cgroup->tasks_uid = stat_buffer.st_uid;
-			cgroup->tasks_gid = stat_buffer.st_gid;
+			cgrp->tasks_uid = stat_buffer.st_uid;
+			cgrp->tasks_gid = stat_buffer.st_gid;
 
 			free(control_path);
 		} else { /* cgroup v2 */
@@ -3881,9 +3869,9 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 		}
 
 		if (initial_controller_cnt)
-			cgc = cgroup_get_controller(cgroup, cg_mount_table[i].name);
+			cgc = cgroup_get_controller(cgrp, cg_mount_table[i].name);
 		else
-			cgc = cgroup_add_controller(cgroup, cg_mount_table[i].name);
+			cgc = cgroup_add_controller(cgrp, cg_mount_table[i].name);
 		if (!cgc) {
 			error = ECGINVAL;
 			goto unlock_error;
@@ -3903,7 +3891,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 			if (ctrl_dir->d_type != DT_REG)
 				continue;
 
-			error = cgroup_fill_cgc(ctrl_dir, cgroup, cgc, i);
+			error = cgroup_fill_cgc(ctrl_dir, cgrp, cgc, i);
 			for (j = 0; j < cgc->index; j++)
 				cgc->values[j]->dirty = false;
 
@@ -3939,7 +3927,7 @@ int cgroup_get_cgroup(struct cgroup *cgroup)
 	}
 
 	/*
-	 * Check if the group really exists or not.  The cgroup->index controller count can't
+	 * Check if the group really exists or not.  The cgrp->index controller count can't
 	 * be used in this case because cgroup v2 allows controllers to be enabled/disabled in
 	 * the subtree_control file.  Rather, cgroup_get_cgroup() tracks the number of possible
 	 * controllers in the controller_cnt variable and uses that to determine if the cgroup
@@ -3960,8 +3948,8 @@ unlock_error:
 	 * XX: Need to figure out how to cleanup? Cleanup just the stuff
 	 * we added, or the whole structure.
 	 */
-	cgroup_free_controllers(cgroup);
-	cgroup = NULL;
+	cgroup_free_controllers(cgrp);
+	cgrp = NULL;
 
 	return error;
 }
@@ -3972,7 +3960,7 @@ unlock_error:
  *
  *  returns 0 on success.
  */
-static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid, const char *dest,
+static int cg_prepare_cgroup(struct cgroup *cgrp, pid_t pid, const char *dest,
 			     const char * const controllers[])
 {
 	struct cgroup_controller *cptr = NULL;
@@ -3982,8 +3970,8 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid, const char *dest,
 	/* Fill in cgroup details.  */
 	cgroup_dbg("Will move pid %d to cgroup '%s'\n", pid, dest);
 
-	strncpy(cgroup->name, dest, FILENAME_MAX);
-	cgroup->name[FILENAME_MAX-1] = '\0';
+	strncpy(cgrp->name, dest, FILENAME_MAX);
+	cgrp->name[FILENAME_MAX-1] = '\0';
 
 	/* Scan all the controllers */
 	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
@@ -4000,12 +3988,12 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid, const char *dest,
 			for (j = 0; j < CG_CONTROLLER_MAX &&
 				cg_mount_table[j].name[0] != '\0'; j++) {
 				cgroup_dbg("Adding controller %s\n", cg_mount_table[j].name);
-				cptr = cgroup_add_controller(cgroup, cg_mount_table[j].name);
+				cptr = cgroup_add_controller(cgrp, cg_mount_table[j].name);
 				if (!cptr) {
 					cgroup_warn("adding controller '%s' failed\n",
 						    cg_mount_table[j].name);
 					pthread_rwlock_unlock(&cg_mount_table_lock);
-					cgroup_free_controllers(cgroup);
+					cgroup_free_controllers(cgrp);
 					return ECGROUPNOTALLOWED;
 				}
 			}
@@ -4015,10 +4003,10 @@ static int cg_prepare_cgroup(struct cgroup *cgroup, pid_t pid, const char *dest,
 
 		/* It is individual controller names and not "*" */
 		cgroup_dbg("Adding controller %s\n", controller);
-		cptr = cgroup_add_controller(cgroup, controller);
+		cptr = cgroup_add_controller(cgrp, controller);
 		if (!cptr) {
 			cgroup_warn("adding controller '%s' failed\n", controller);
-			cgroup_free_controllers(cgroup);
+			cgroup_free_controllers(cgrp);
 			return ECGROUPNOTALLOWED;
 		}
 	}
@@ -4053,7 +4041,7 @@ STATIC bool cgroup_compare_wildcard_procname(const char * const rule_procname,
 	return true;
 }
 
-static int cgroup_find_matching_destination(char *cgroup_list[], const char * const rule_dest,
+static int cgroup_find_matching_destination(char *cgrp_list[], const char * const rule_dest,
 					    int *matching_index)
 {
 	size_t rule_strlen = strlen(rule_dest);
@@ -4061,7 +4049,7 @@ static int cgroup_find_matching_destination(char *cgroup_list[], const char * co
 	int i;
 
 	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
-		if (cgroup_list[i] == NULL)
+		if (cgrp_list[i] == NULL)
 			break;
 
 		if (rule_dest[rule_strlen - 1] == '/') {
@@ -4069,20 +4057,19 @@ static int cgroup_find_matching_destination(char *cgroup_list[], const char * co
 			 * Avoid a weird corner case where given a rule dest
 			 * like 'folder/', we _don't_ want to match 'folder1'
 			 */
-			if (strlen(cgroup_list[i]) >= rule_strlen &&
-			    cgroup_list[i][rule_strlen - 1] != '/')
+			if (strlen(cgrp_list[i]) >= rule_strlen &&
+			    cgrp_list[i][rule_strlen - 1] != '/')
 				continue;
 
 			/*
 			 * Strip off the '/' at the end of the rule, as
-			 * the destination from the cgroup_list will not
+			 * the destination from the cgrp_list will not
 			 * have a trailing '/'
 			 */
 			rule_strlen--;
 		}
 
-		if (strncmp(rule_dest, cgroup_list[i],
-			    rule_strlen) == 0) {
+		if (strncmp(rule_dest, cgrp_list[i], rule_strlen) == 0) {
 			*matching_index = i;
 			ret = 0;
 			break;
@@ -4153,9 +4140,9 @@ STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pi
 				       const char * const procname)
 {
 	char *controller_list[MAX_MNT_ELEMENTS] = { '\0' };
-	char *cgroup_list[MAX_MNT_ELEMENTS] = { '\0' };
+	char *cgrp_list[MAX_MNT_ELEMENTS] = { '\0' };
 	int rule_matching_controller_idx;
-	int cgroup_list_matching_idx = 0;
+	int cgrp_list_matching_idx = 0;
 	bool found_match = false;
 	char *token, *saveptr;
 	int ret, i;
@@ -4173,20 +4160,20 @@ STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pi
 
 	/* If the rule is "ignore" and "ignore_rt", move all tasks */
 
-	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list, controller_list,
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgrp_list, controller_list,
 					       MAX_MNT_ELEMENTS);
 	if (ret < 0)
 		goto out;
 
 	if (strcmp(rule->destination, "*")) {
-		ret = cgroup_find_matching_destination(cgroup_list, rule->destination,
-						       &cgroup_list_matching_idx);
+		ret = cgroup_find_matching_destination(cgrp_list, rule->destination,
+						       &cgrp_list_matching_idx);
 		if (ret < 0)
 			/* No cgroups matched */
 			goto out;
 	}
 
-	token = strtok_r(controller_list[cgroup_list_matching_idx], ",", &saveptr);
+	token = strtok_r(controller_list[cgrp_list_matching_idx], ",", &saveptr);
 	while (token != NULL) {
 
 		ret = cgroup_find_matching_controller(rule->controllers, token,
@@ -4219,8 +4206,8 @@ out:
 	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
 		if (controller_list[i])
 			free(controller_list[i]);
-		if (cgroup_list[i])
-			free(cgroup_list[i]);
+		if (cgrp_list[i])
+			free(cgrp_list[i]);
 	}
 
 	return found_match;
@@ -4414,26 +4401,26 @@ char *cgroup_copy_with_slash(char *input)
 }
 
 /* Add controller to a group if it is not exists create it */
-static int add_controller(struct cgroup **pgroup, char *group_name,
+static int add_controller(struct cgroup **pcgrp, char *cgrp_name,
 			  char controller_name[FILENAME_MAX])
 {
 	struct cgroup_controller *controller = NULL;
-	struct cgroup *group = pgroup[0];
+	struct cgroup *cgrp = pcgrp[0];
 	int ret = 0;
 
-	if  (group == NULL) {
-		/* It is the first controller the group have to be created */
-		group = cgroup_new_cgroup(group_name);
-		if (group == NULL) {
+	if  (cgrp == NULL) {
+		/* It is the first controller the cgrp have to be created */
+		cgrp = cgroup_new_cgroup(cgrp_name);
+		if (cgrp == NULL) {
 			ret = ECGFAIL;
 			goto end;
 		}
-		pgroup[0] = group;
+		pcgrp[0] = cgrp;
 	}
 
-	controller = cgroup_add_controller(group, controller_name);
+	controller = cgroup_add_controller(cgrp, controller_name);
 	if (controller == NULL) {
-		cgroup_free(&group);
+		cgroup_free(&cgrp);
 		ret = ECGFAIL;
 	}
 end:
@@ -4578,7 +4565,6 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t
 	if ((flags & CGFLAG_USECACHE) && (rl.head == NULL)) {
 		cgroup_warn("no cached rules found, trying to reload from %s.\n",
 			    CGRULES_CONF_FILE);
-
 		ret = cgroup_reload_cached_rules();
 		if (ret != 0)
 			goto finished;
@@ -4775,7 +4761,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 {
 	struct dirent *task_dir = NULL;
 	char path[FILENAME_MAX];
-	struct cgroup cgroup;
+	struct cgroup cgrp;
 	int nr, ret;
 	pid_t tid;
 	DIR *dir;
@@ -4784,7 +4770,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 		cgroup_warn("libcgroup is not initialized\n");
 		return ECGROUPNOTINITIALIZED;
 	}
-	memset(&cgroup, 0, sizeof(struct cgroup));
+	memset(&cgrp, 0, sizeof(struct cgroup));
 
 
 	if (is_cgroup_mode_unified() && !controllers) {
@@ -4793,19 +4779,19 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 		 * cgroup v2 systems.  The hierarchy will be the same regardless of
 		 * whether controllers are provided or not.
 		 */
-		strncpy(cgroup.name, dest, FILENAME_MAX);
-		cgroup.name[FILENAME_MAX-1] = '\0';
+		strncpy(cgrp.name, dest, FILENAME_MAX);
+		cgrp.name[FILENAME_MAX-1] = '\0';
 	} else {
 		if (!controllers)
 			return ECGINVAL;
 
-		ret = cg_prepare_cgroup(&cgroup, pid, dest, controllers);
+		ret = cg_prepare_cgroup(&cgrp, pid, dest, controllers);
 		if (ret)
 			return ret;
 	}
 
 	/* Add process to cgroup */
-	ret = cgroup_attach_task_pid(&cgroup, pid);
+	ret = cgroup_attach_task_pid(&cgrp, pid);
 	if (ret) {
 		cgroup_warn("cgroup_attach_task_pid failed: %d\n", ret);
 		goto finished;
@@ -4828,7 +4814,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 		if (tid == pid)
 			continue;
 
-		ret = cgroup_attach_task_pid(&cgroup, tid);
+		ret = cgroup_attach_task_pid(&cgrp, tid);
 		if (ret) {
 			cgroup_warn("cgroup_attach_task_pid failed: %d\n", ret);
 			break;
@@ -4838,7 +4824,7 @@ int cgroup_change_cgroup_path(const char *dest, pid_t pid, const char *const con
 	closedir(dir);
 
 finished:
-	cgroup_free_controllers(&cgroup);
+	cgroup_free_controllers(&cgrp);
 
 	return ret;
 }
@@ -5002,9 +4988,9 @@ int cgroup_init_rules_cache(void)
  */
 int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path)
 {
-	FILE *pid_cgroup_fd = NULL;
 	enum cg_version_t version;
 	enum cg_setup_mode_t mode;
+	FILE *pid_cgrp_fd = NULL;
 	bool unified = false;
 	char *path = NULL;
 	int ret;
@@ -5044,8 +5030,8 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 	}
 
 	ret = ECGROUPNOTEXIST;
-	pid_cgroup_fd = fopen(path, "re");
-	if (!pid_cgroup_fd)
+	pid_cgrp_fd = fopen(path, "re");
+	if (!pid_cgrp_fd)
 		goto cleanup_path;
 
 	/*
@@ -5056,9 +5042,9 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 	 * the lock in the while loop, but that will be more expensive.
 	 */
 	pthread_rwlock_rdlock(&cg_mount_table_lock);
-	while (!feof(pid_cgroup_fd)) {
+	while (!feof(pid_cgrp_fd)) {
 		char controllers[FILENAME_MAX];
-		char cgroup_path[FILENAME_MAX];
+		char cgrp_path[FILENAME_MAX];
 		char *savedptr;
 		char *token;
 		int num;
@@ -5073,14 +5059,14 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		 * - controller-list is empty
 		 */
 		if (mode == CGROUP_MODE_UNIFIED || unified) {
-			ret = fscanf(pid_cgroup_fd, "%d::%4096s\n", &num, cgroup_path);
+			ret = fscanf(pid_cgrp_fd, "%d::%4096s\n", &num, cgrp_path);
 			if (ret != 2) {
 				/*
 				 * we are interested only in unified format
 				 * line, skip this line.
 				 */
 				if (unified) {
-					ret = fscanf(pid_cgroup_fd, "%*[^\n]\n");
+					ret = fscanf(pid_cgrp_fd, "%*[^\n]\n");
 					if (ret == 0)
 						continue;
 
@@ -5099,12 +5085,12 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 
 			/* check if the controller is enabled in cgroup v2 */
 			if (controller) {
-				ret = cgroupv2_controller_enabled(cgroup_path, controller);
+				ret = cgroupv2_controller_enabled(cgrp_path, controller);
 				if (ret)
 					goto done;
 			}
 
-			*current_path = strdup(cgroup_path);
+			*current_path = strdup(cgrp_path);
 			if (!*current_path) {
 				last_errno = errno;
 				ret = ECGOTHER;
@@ -5116,15 +5102,15 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 
 		/*
 		 * 4096 == FILENAME_MAX, keeping the coverity happy with precision
-		 * for the cgroup_path.
+		 * for the cgrp_path.
 		 */
-		ret = fscanf(pid_cgroup_fd, "%d:%[^:]:%4096s\n", &num, controllers, cgroup_path);
+		ret = fscanf(pid_cgrp_fd, "%d:%[^:]:%4096s\n", &num, controllers, cgrp_path);
 		/*
 		 * Magic numbers like "3" seem to be integrating into my daily
 		 * life, I need some magic to help make them disappear :)
 		 */
 		if (ret != 3) {
-			cgroup_warn("read failed for pid_cgroup_fd ret %d\n", ret);
+			cgroup_warn("read failed for pid_cgrp_fd ret %d\n", ret);
 			last_errno = errno;
 			ret = ECGOTHER;
 			goto done;
@@ -5133,7 +5119,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		token = strtok_r(controllers, ",", &savedptr);
 		while (token) {
 			if (strncmp(controller, token, strlen(controller) + 1) == 0) {
-				*current_path = strdup(cgroup_path);
+				*current_path = strdup(cgrp_path);
 				if (!*current_path) {
 					last_errno = errno;
 					ret = ECGOTHER;
@@ -5148,7 +5134,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 
 done:
 	pthread_rwlock_unlock(&cg_mount_table_lock);
-	fclose(pid_cgroup_fd);
+	fclose(pid_cgrp_fd);
 cleanup_path:
 	free(path);
 
@@ -5359,7 +5345,7 @@ int cgroup_walk_tree_set_flags(void **handle, int flags)
  * This parses a stat line which is in the form of (name value) pair
  * separated by a space.
  */
-static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
+static int cg_read_stat(FILE *fp, struct cgroup_stat *cgrp_stat)
 {
 	char *saveptr = NULL;
 	ssize_t read_bytes;
@@ -5379,14 +5365,14 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgroup_stat)
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(cgroup_stat->name, token, FILENAME_MAX - 1);
+	strncpy(cgrp_stat->name, token, FILENAME_MAX - 1);
 
 	token = strtok_r(NULL, " ", &saveptr);
 	if (!token) {
 		ret = ECGINVAL;
 		goto out_free;
 	}
-	strncpy(cgroup_stat->value, token, CG_VALUE_MAX - 1);
+	strncpy(cgrp_stat->value, token, CG_VALUE_MAX - 1);
 
 out_free:
 	free(line);
@@ -5449,8 +5435,7 @@ int cgroup_read_value_begin(const char * const controller, const char *path,
 	if (!cg_build_path(path, stat_path, controller))
 		return ECGOTHER;
 
-	snprintf(stat_file, sizeof(stat_file), "%s/%s", stat_path,
-		 name);
+	snprintf(stat_file, sizeof(stat_file), "%s/%s", stat_path, name);
 	fp = fopen(stat_file, "re");
 	if (!fp) {
 		cgroup_warn("fopen failed\n");
@@ -5487,7 +5472,7 @@ int cgroup_read_stats_end(void **handle)
 	return 0;
 }
 
-int cgroup_read_stats_next(void **handle, struct cgroup_stat *cgroup_stat)
+int cgroup_read_stats_next(void **handle, struct cgroup_stat *cgrp_stat)
 {
 	FILE *fp;
 	int ret = 0;
@@ -5495,11 +5480,11 @@ int cgroup_read_stats_next(void **handle, struct cgroup_stat *cgroup_stat)
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!handle || !cgroup_stat)
+	if (!handle || !cgrp_stat)
 		return ECGINVAL;
 
 	fp = (FILE *)*handle;
-	ret = cg_read_stat(fp, cgroup_stat);
+	ret = cg_read_stat(fp, cgrp_stat);
 	*handle = fp;
 
 	return ret;
@@ -5507,7 +5492,7 @@ int cgroup_read_stats_next(void **handle, struct cgroup_stat *cgroup_stat)
 
 /* TODO: Need to decide a better place to put this function. */
 int cgroup_read_stats_begin(const char *controller, const char *path, void **handle,
-			    struct cgroup_stat *cgroup_stat)
+			    struct cgroup_stat *cgrp_stat)
 {
 	char stat_file[FILENAME_MAX + sizeof(".stat")];
 	char stat_path[FILENAME_MAX];
@@ -5517,7 +5502,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path, void **han
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!cgroup_stat || !handle)
+	if (!cgrp_stat || !handle)
 		return ECGINVAL;
 
 	if (!cg_build_path(path, stat_path, controller))
@@ -5531,7 +5516,7 @@ int cgroup_read_stats_begin(const char *controller, const char *path, void **han
 		return ECGINVAL;
 	}
 
-	ret = cg_read_stat(fp, cgroup_stat);
+	ret = cg_read_stat(fp, cgrp_stat);
 	*handle = fp;
 
 	return ret;
@@ -5573,7 +5558,7 @@ int cgroup_get_task_next(void **handle, pid_t *pid)
 	return 0;
 }
 
-int cgroup_get_task_begin(const char *cgroup, const char *controller, void **handle, pid_t *pid)
+int cgroup_get_task_begin(const char *cgrp, const char *controller, void **handle, pid_t *pid)
 {
 	char path[FILENAME_MAX];
 	char *fullpath = NULL;
@@ -5582,7 +5567,7 @@ int cgroup_get_task_begin(const char *cgroup, const char *controller, void **han
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
 
-	if (!cg_build_path(cgroup, path, controller))
+	if (!cg_build_path(cgrp, path, controller))
 		return ECGOTHER;
 
 	ret = asprintf(&fullpath, "%s/tasks", path);
@@ -5641,7 +5626,7 @@ int cgroup_get_controller_next(void **handle, struct cgroup_mount_point *info)
 		goto out_unlock;
 	}
 
-	if (strncmp(cg_mount_table[*pos].name, CGROUP_FILE_PREFIX, CONTROL_NAMELEN_MAX) == 0)
+	if (strncmp(cg_mount_table[*pos].name, CGRP_FILE_PREFIX, CONTROL_NAMELEN_MAX) == 0)
 		/*
 		 * For now, hide the "cgroup" pseudo-controller from the user.  This may be
 		 * worth revisiting in the future.
@@ -5734,6 +5719,7 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
 			break;
 	}
 	fclose(f);
+
 	if (!found_euid || !found_egid) {
 		/*
 		 * This method doesn't match the file format of
@@ -5754,12 +5740,12 @@ int cgroup_get_uid_gid_from_procfs(pid_t pid, uid_t *euid, gid_t *egid)
  * string within the arrays.
  *
  *	@param pid The process id
- *	@param cgroup_list[] An array of char pointers to hold the cgroups
+ *	@param cgrp_list[] An array of char pointers to hold the cgroups
  *	@param controller_list[] An array of char pointers to hold the list
  *	       of controllers
  *	@param list_len The size of the arrays
  */
-STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
+STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgrp_list[],
 					    char *controller_list[], int list_len)
 {
 	char path[FILENAME_MAX];
@@ -5825,17 +5811,17 @@ STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[],
 		/* Read in the cgroup name */
 		if (buff_len > 1) {
 			/* Strip off the leading '/' for every cgroup but the root cgroup */
-			cgroup_list[idx] = malloc(buff_len);
-			snprintf(cgroup_list[idx], buff_len, "%s", &stok_buff[1]);
+			cgrp_list[idx] = malloc(buff_len);
+			snprintf(cgrp_list[idx], buff_len, "%s", &stok_buff[1]);
 		} else {
 			/* Retain the leading '/' since we're in the root cgroup */
-			cgroup_list[idx] = strndup(stok_buff, buff_len);
+			cgrp_list[idx] = strndup(stok_buff, buff_len);
 		}
 
 		idx++;
 		if (idx >= list_len) {
 			cgroup_warn("Maximum mount elements reached. Consider increasing ");
-			cgroup_warn("MAX_MNT_ELEMENTS\n");
+			cgroup_cont("MAX_MNT_ELEMENTS\n");
 			break;
 		}
 	}
@@ -6127,12 +6113,12 @@ out_exit:
 
 int cgroup_get_all_controller_end(void **handle)
 {
-	FILE *proc_cgroup = (FILE *) *handle;
+	FILE *proc_cgrp = (FILE *) *handle;
 
-	if (!proc_cgroup)
+	if (!proc_cgrp)
 		return ECGINVAL;
 
-	fclose(proc_cgroup);
+	fclose(proc_cgrp);
 	*handle = NULL;
 
 	return 0;
@@ -6140,12 +6126,12 @@ int cgroup_get_all_controller_end(void **handle)
 
 int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
 {
-	FILE *proc_cgroup = (FILE *) *handle;
-	int hierarchy, num_cgroups, enabled;
+	FILE *proc_cgrp = (FILE *) *handle;
+	int hierarchy, num_cgrps, enabled;
 	char subsys_name[FILENAME_MAX];
 	int err = 0;
 
-	if (!proc_cgroup)
+	if (!proc_cgrp)
 		return ECGINVAL;
 
 	if (!info)
@@ -6155,7 +6141,7 @@ int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
 	 * check Linux Kernel sources/kernel/cgroup/cgroup.c cgroup_init_early(),
 	 * MAX_CGROUP_TYPE_NAMELEN check for details on why 32 is used.
 	 */
-	err = fscanf(proc_cgroup, "%32s %d %d %d\n", subsys_name, &hierarchy, &num_cgroups,
+	err = fscanf(proc_cgrp, "%32s %d %d %d\n", subsys_name, &hierarchy, &num_cgrps,
 		     &enabled);
 
 	if (err != 4)
@@ -6164,7 +6150,7 @@ int cgroup_get_all_controller_next(void **handle, struct controller_data *info)
 	strncpy(info->name, subsys_name, FILENAME_MAX);
 	info->name[FILENAME_MAX-1] = '\0';
 	info->hierarchy = hierarchy;
-	info->num_cgroups = num_cgroups;
+	info->num_cgroups = num_cgrps;
 	info->enabled = enabled;
 
 	return 0;
@@ -6455,6 +6441,7 @@ int cgroup_get_subsys_mount_point_next(void **handle, char *path)
 
 	if (!cgroup_initialized)
 		return ECGROUPNOTINITIALIZED;
+
 	if (!handle || !path)
 		return ECGINVAL;
 
@@ -6698,23 +6685,23 @@ out:
 	return setup_mode;
 }
 
-int cgroup_get_controller_count(struct cgroup *cgroup)
+int cgroup_get_controller_count(struct cgroup *cgrp)
 {
-	if (!cgroup)
+	if (!cgrp)
 		return -1;
 
-	return cgroup->index;
+	return cgrp->index;
 }
 
-struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgroup, int index)
+struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgrp, int index)
 {
-	if (!cgroup)
+	if (!cgrp)
 		return NULL;
 
-	if (index >= cgroup->index)
+	if (index >= cgrp->index)
 		return NULL;
 
-	return cgroup->controller[index];
+	return cgrp->controller[index];
 }
 
 char *cgroup_get_controller_name(struct cgroup_controller *controller)
