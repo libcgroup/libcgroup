@@ -74,7 +74,7 @@ int cgroup_parse_log_level_str(const char *levelstr)
 	if (strcasecmp(levelstr, "DEBUG") == 0)
 		return CGROUP_LOG_DEBUG;
 
-	return CGROUP_DEFAULT_LOGLEVEL;
+	return CGRP_DEFAULT_LOGLEVEL;
 }
 
 void cgroup_set_loglevel(int loglevel)
@@ -87,6 +87,6 @@ void cgroup_set_loglevel(int loglevel)
 		if (level_str != NULL)
 			cgroup_loglevel = cgroup_parse_log_level_str(level_str);
 		else
-			cgroup_loglevel = CGROUP_DEFAULT_LOGLEVEL;
+			cgroup_loglevel = CGRP_DEFAULT_LOGLEVEL;
 	}
 }

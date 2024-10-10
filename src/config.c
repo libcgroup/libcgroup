@@ -67,12 +67,12 @@ static int config_table_index;
 static int namespace_table_index;
 static pthread_rwlock_t config_table_lock = PTHREAD_RWLOCK_INITIALIZER;
 static pthread_rwlock_t namespace_table_lock = PTHREAD_RWLOCK_INITIALIZER;
-static struct cgroup *config_cgroup_table;
+static struct cgroup *config_cgrp_table;
 static int cgroup_table_index;
 
 /*
  * template structures filled by cgroup_parse_config when the configuration
- * file is parsing (analogous to config_cgroup_table and cgroup_table_index
+ * file is parsing (analogous to config_cgrp_table and cgroup_table_index
  * for cgroups)
  */
 static struct cgroup *config_template_table;
@@ -125,15 +125,15 @@ static int config_create_slice_scope(char * const tmp_systemd_default_cgroup);
 int config_insert_cgroup(char *cg_name, int flag)
 {
 
-	struct cgroup *config_cgroup;
 	struct cgroup *config_table;
+	struct cgroup *config_cgrp;
 	unsigned int *max;
 	int *table_index;
 
 	switch (flag) {
 	case CGROUP:
 		table_index = &cgroup_table_index;
-		config_table = config_cgroup_table;
+		config_table = config_cgrp_table;
 		max = &MAX_CGROUPS;
 		break;
 	case TEMPLATE:
@@ -167,7 +167,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 		config_table = newblk;
 		switch (flag) {
 		case CGROUP:
-			config_cgroup_table = config_table;
+			config_cgrp_table = config_table;
 			break;
 		case TEMPLATE:
 			config_template_table = config_table;
@@ -179,8 +179,8 @@ int config_insert_cgroup(char *cg_name, int flag)
 		cgroup_dbg("reallocated config_table to %p\n", config_table);
 	}
 
-	config_cgroup = &config_table[*table_index];
-	strncpy(config_cgroup->name, cg_name, FILENAME_MAX - 1);
+	config_cgrp = &config_table[*table_index];
+	strncpy(config_cgrp->name, cg_name, FILENAME_MAX - 1);
 
 	/* Since this will be the last part to be parsed. */
 	*table_index = *table_index + 1;
@@ -225,7 +225,7 @@ int template_config_insert_cgroup(char *cg_name)
 int config_parse_controller_options(char *controller, struct cgroup_dictionary *values, int flag)
 {
 	struct cgroup_controller *cgc;
-	struct cgroup *config_cgroup;
+	struct cgroup *config_cgrp;
 	const char *name, *value;
 	void *iter = NULL;
 	int *table_index;
@@ -234,18 +234,18 @@ int config_parse_controller_options(char *controller, struct cgroup_dictionary *
 	switch (flag) {
 	case CGROUP:
 		table_index = &cgroup_table_index;
-		config_cgroup =	&config_cgroup_table[*table_index];
+		config_cgrp =	&config_cgrp_table[*table_index];
 		break;
 	case TEMPLATE:
 		table_index = &config_template_table_index;
-		config_cgroup =	&config_template_table[*table_index];
+		config_cgrp =	&config_template_table[*table_index];
 		break;
 	default:
 		return 0;
 	}
 
 	cgroup_dbg("Adding controller %s\n", controller);
-	cgc = cgroup_add_controller(config_cgroup, controller);
+	cgc = cgroup_add_controller(config_cgrp, controller);
 	if (!cgc)
 		goto parse_error;
 
@@ -280,7 +280,7 @@ done:
 parse_error:
 	free(controller);
 	cgroup_dictionary_iterator_end(&iter);
-	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_delete_cgroup(config_cgrp, 1);
 	*table_index = *table_index - 1;
 
 	return 0;
@@ -325,19 +325,19 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 {
 	struct group *group, *group_buffer;
 	struct passwd *pw, *pw_buffer;
-	char buffer[CGROUP_BUFFER_LEN];
-	struct cgroup *config_cgroup;
+	char buffer[CGRP_BUFFER_LEN];
+	struct cgroup *config_cgrp;
 	long val = atoi(value);
 	int table_index;
 
 	switch (flag) {
 	case CGROUP:
 		table_index = cgroup_table_index;
-		config_cgroup = &config_cgroup_table[table_index];
+		config_cgrp = &config_cgrp_table[table_index];
 		break;
 	case TEMPLATE:
 		table_index = config_template_table_index;
-		config_cgroup = &config_template_table[table_index];
+		config_cgrp = &config_template_table[table_index];
 		break;
 	default:
 		return 0;
@@ -349,7 +349,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 			if (!pw)
 				goto group_task_error;
 
-			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN, &pw_buffer);
+			getpwnam_r(value, pw, buffer, CGRP_BUFFER_LEN, &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto group_task_error;
@@ -358,7 +358,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 			val = pw->pw_uid;
 			free(pw);
 		}
-		config_cgroup->tasks_uid = val;
+		config_cgrp->tasks_uid = val;
 	}
 
 	if (!strcmp(perm_type, "gid")) {
@@ -369,7 +369,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 				goto group_task_error;
 
 			if (getgrnam_r(value, group, buffer,
-				       CGROUP_BUFFER_LEN, &group_buffer) != 0) {
+				       CGRP_BUFFER_LEN, &group_buffer) != 0) {
 				free(group);
 				goto group_task_error;
 			}
@@ -377,7 +377,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 			val = group->gr_gid;
 			free(group);
 		}
-		config_cgroup->tasks_gid = val;
+		config_cgrp->tasks_gid = val;
 	}
 
 	if (!strcmp(perm_type, "fperm")) {
@@ -386,7 +386,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto group_task_error;
-		config_cgroup->task_fperm = val;
+		config_cgrp->task_fperm = val;
 	}
 
 	free(perm_type);
@@ -397,7 +397,7 @@ int config_group_task_perm(char *perm_type, char *value, int flag)
 group_task_error:
 	free(perm_type);
 	free(value);
-	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_delete_cgroup(config_cgrp, 1);
 	table_index--;
 
 	return 0;
@@ -435,19 +435,19 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 {
 	struct group *group, *group_buffer;
 	struct passwd *pw, *pw_buffer;
-	char buffer[CGROUP_BUFFER_LEN];
-	struct cgroup *config_cgroup;
+	char buffer[CGRP_BUFFER_LEN];
+	struct cgroup *config_cgrp;
 	long val = atoi(value);
 	int table_index;
 
 	switch (flag) {
 	case CGROUP:
 		table_index = cgroup_table_index;
-		config_cgroup = &config_cgroup_table[table_index];
+		config_cgrp = &config_cgrp_table[table_index];
 		break;
 	case TEMPLATE:
 		table_index = config_template_table_index;
-		config_cgroup = &config_template_table[table_index];
+		config_cgrp = &config_template_table[table_index];
 		break;
 	default:
 		return 0;
@@ -459,7 +459,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			if (!pw)
 				goto admin_error;
 
-			getpwnam_r(value, pw, buffer, CGROUP_BUFFER_LEN, &pw_buffer);
+			getpwnam_r(value, pw, buffer, CGRP_BUFFER_LEN, &pw_buffer);
 			if (pw_buffer == NULL) {
 				free(pw);
 				goto admin_error;
@@ -468,7 +468,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			val = pw->pw_uid;
 			free(pw);
 		}
-		config_cgroup->control_uid = val;
+		config_cgrp->control_uid = val;
 	}
 
 	if (!strcmp(perm_type, "gid")) {
@@ -477,7 +477,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			if (!group)
 				goto admin_error;
 
-			if (getgrnam_r(value, group, buffer, CGROUP_BUFFER_LEN,
+			if (getgrnam_r(value, group, buffer, CGRP_BUFFER_LEN,
 				       &group_buffer) != 0) {
 				free(group);
 				goto admin_error;
@@ -486,7 +486,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 			val = group->gr_gid;
 			free(group);
 		}
-		config_cgroup->control_gid = val;
+		config_cgrp->control_gid = val;
 	}
 
 	if (!strcmp(perm_type, "fperm")) {
@@ -495,7 +495,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto admin_error;
-		config_cgroup->control_fperm = val;
+		config_cgrp->control_fperm = val;
 	}
 
 	if (!strcmp(perm_type, "dperm")) {
@@ -504,7 +504,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 		val = strtol(value, &endptr, 8);
 		if (*endptr)
 			goto admin_error;
-		config_cgroup->control_dperm = val;
+		config_cgrp->control_dperm = val;
 	}
 
 	free(perm_type);
@@ -515,7 +515,7 @@ int config_group_admin_perm(char *perm_type, char *value, int flag)
 admin_error:
 	free(perm_type);
 	free(value);
-	cgroup_delete_cgroup(config_cgroup, 1);
+	cgroup_delete_cgroup(config_cgrp, 1);
 	table_index--;
 
 	return 0;
@@ -868,7 +868,7 @@ static int cgroup_config_create_groups(void)
 	int i;
 
 	for (i = 0; i < cgroup_table_index; i++) {
-		struct cgroup *cgroup = &config_cgroup_table[i];
+		struct cgroup *cgroup = &config_cgrp_table[i];
 
 		error = cgroup_create_cgroup(cgroup, 0);
 		cgroup_dbg("creating group %s, error %d\n", cgroup->name, error);
@@ -895,7 +895,7 @@ static int cgroup_config_destroy_groups(void)
 	int i;
 
 	for (i = 0; i < cgroup_table_index; i++) {
-		struct cgroup *cgroup = &config_cgroup_table[i];
+		struct cgroup *cgroup = &config_cgrp_table[i];
 
 		error = cgroup_delete_cgroup_ext(cgroup, CGFLAG_DELETE_RECURSIVE |
 							 CGFLAG_DELETE_IGNORE_MIGRATION);
@@ -1082,17 +1082,17 @@ error_out:
 
 /**
  * Free all memory allocated during cgroup_parse_config(), namely
- * config_cgroup_table and config_template_table.
+ * config_cgrp_table and config_template_table.
  */
 static void cgroup_free_config(void)
 {
 	int i;
 
-	if (config_cgroup_table) {
+	if (config_cgrp_table) {
 		for (i = 0; i < cgroup_table_index; i++)
-			cgroup_free_controllers(&config_cgroup_table[i]);
-		free(config_cgroup_table);
-		config_cgroup_table = NULL;
+			cgroup_free_controllers(&config_cgrp_table[i]);
+		free(config_cgrp_table);
+		config_cgrp_table = NULL;
 	}
 
 	config_table_index = 0;
@@ -1115,9 +1115,9 @@ static void cgroup_config_apply_default(void)
 {
 	int i;
 
-	if (config_cgroup_table) {
+	if (config_cgrp_table) {
 		for (i = 0; i < cgroup_table_index; i++) {
-			struct cgroup *c = &config_cgroup_table[i];
+			struct cgroup *c = &config_cgrp_table[i];
 
 			if (c->control_dperm == NO_PERMS)
 				c->control_dperm = default_group.control_dperm;
@@ -1149,8 +1149,8 @@ static int cgroup_parse_config(const char *pathname)
 		return ECGOTHER;
 	}
 
-	config_cgroup_table = calloc(MAX_CGROUPS, sizeof(struct cgroup));
-	if (!config_cgroup_table) {
+	config_cgrp_table = calloc(MAX_CGROUPS, sizeof(struct cgroup));
+	if (!config_cgrp_table) {
 		ret = ECGFAIL;
 		goto err;
 	}
@@ -1162,7 +1162,7 @@ static int cgroup_parse_config(const char *pathname)
 	}
 
 	/* Clear all internal variables so this function can be called twice. */
-	init_cgroup_table(config_cgroup_table, MAX_CGROUPS);
+	init_cgroup_table(config_cgrp_table, MAX_CGROUPS);
 	init_cgroup_table(config_template_table, MAX_TEMPLATES);
 	memset(config_namespace_table, 0, sizeof(config_namespace_table));
 	memset(config_mount_table, 0, sizeof(config_mount_table));
@@ -1206,7 +1206,7 @@ int _cgroup_config_compare_groups(const void *p1, const void *p2)
 
 static void cgroup_config_sort_groups(void)
 {
-	qsort(config_cgroup_table, cgroup_table_index, sizeof(struct cgroup),
+	qsort(config_cgrp_table, cgroup_table_index, sizeof(struct cgroup),
 	      _cgroup_config_compare_groups);
 }
 
@@ -1235,7 +1235,7 @@ int cgroup_config_load_config(const char *pathname)
 
 	/* The configuration should have namespace or mount, not both. */
 	if (namespace_enabled && mount_enabled) {
-		free(config_cgroup_table);
+		free(config_cgrp_table);
 		return ECGMOUNTNAMESPACE;
 	}
 
@@ -1394,7 +1394,7 @@ int cgroup_config_unload_config(const char *pathname, int flags)
 	mount_enabled = (config_mount_table[0].name[0] != '\0');
 	/* The configuration should have namespace or mount, not both. */
 	if (namespace_enabled && mount_enabled) {
-		free(config_cgroup_table);
+		free(config_cgrp_table);
 		return ECGMOUNTNAMESPACE;
 	}
 
@@ -1409,7 +1409,7 @@ int cgroup_config_unload_config(const char *pathname, int flags)
 	/* Delete the groups in reverse order, i.e. subgroups first, then parents. */
 	cgroup_config_sort_groups();
 	for (i = cgroup_table_index-1; i >= 0; i--) {
-		struct cgroup *cgroup = &config_cgroup_table[i];
+		struct cgroup *cgroup = &config_cgrp_table[i];
 
 		cgroup_dbg("removing %s\n", pathname);
 		error = cgroup_delete_cgroup_ext(cgroup, flags);
@@ -1555,34 +1555,34 @@ out_errno:
 
 /**
  * Defines the default group. The parser puts content of 'default { }' to
- * topmost group in config_cgroup_table.
+ * topmost group in config_cgrp_table.
  * This function copies the permissions from it to our default cgroup.
  */
 int cgroup_config_define_default(void)
 {
-	struct cgroup *config_cgroup = &config_cgroup_table[cgroup_table_index];
+	struct cgroup *config_cgrp = &config_cgrp_table[cgroup_table_index];
 
 	init_cgroup_table(&default_group, 1);
-	if (config_cgroup->control_dperm != NO_PERMS)
-		default_group.control_dperm = config_cgroup->control_dperm;
-	if (config_cgroup->control_fperm != NO_PERMS)
-		default_group.control_fperm = config_cgroup->control_fperm;
-	if (config_cgroup->control_gid != NO_UID_GID)
-		default_group.control_gid = config_cgroup->control_gid;
-	if (config_cgroup->control_uid != NO_UID_GID)
-		default_group.control_uid = config_cgroup->control_uid;
-	if (config_cgroup->task_fperm != NO_PERMS)
-		default_group.task_fperm = config_cgroup->task_fperm;
-	if (config_cgroup->tasks_gid != NO_UID_GID)
-		default_group.tasks_gid = config_cgroup->tasks_gid;
-	if (config_cgroup->tasks_uid != NO_UID_GID)
-		default_group.tasks_uid = config_cgroup->tasks_uid;
+	if (config_cgrp->control_dperm != NO_PERMS)
+		default_group.control_dperm = config_cgrp->control_dperm;
+	if (config_cgrp->control_fperm != NO_PERMS)
+		default_group.control_fperm = config_cgrp->control_fperm;
+	if (config_cgrp->control_gid != NO_UID_GID)
+		default_group.control_gid = config_cgrp->control_gid;
+	if (config_cgrp->control_uid != NO_UID_GID)
+		default_group.control_uid = config_cgrp->control_uid;
+	if (config_cgrp->task_fperm != NO_PERMS)
+		default_group.task_fperm = config_cgrp->task_fperm;
+	if (config_cgrp->tasks_gid != NO_UID_GID)
+		default_group.tasks_gid = config_cgrp->tasks_gid;
+	if (config_cgrp->tasks_uid != NO_UID_GID)
+		default_group.tasks_uid = config_cgrp->tasks_uid;
 
 	/*
 	 * Reset all changes made by 'default { }' to the topmost group so
 	 * it can be used by following 'group { }'.
 	 */
-	init_cgroup_table(config_cgroup, 1);
+	init_cgroup_table(config_cgrp, 1);
 
 	return 0;
 }
