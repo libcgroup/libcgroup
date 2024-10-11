@@ -174,11 +174,11 @@ void flog(int level, const char *format, ...)
  * Libcgroup logging callback. It must translate libcgroup log levels
  * to cgrulesengd native (=syslog).
  */
-void flog_cgroup(void *userdata, int cgroup_level, const char *format, va_list ap)
+void flog_cgroup(void *userdata, int cgrp_level, const char *format, va_list ap)
 {
 	int level = 0;
 
-	switch (cgroup_level) {
+	switch (cgrp_level) {
 	case CGROUP_LOG_ERROR:
 		level = LOG_ERR;
 		break;
