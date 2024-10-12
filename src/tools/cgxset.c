@@ -43,29 +43,29 @@ static char *program_name;
 /* cgroup.subtree_control -r name, value */
 static struct control_value *cgrp_subtree_ctrl_val;
 
-static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
+static struct cgroup *copy_name_value_from_cgroup(char src_cgrp_path[FILENAME_MAX])
 {
-	struct cgroup *src_cgroup;
+	struct cgroup *src_cgrp;
 	int ret = 0;
 
 	/* create source cgroup */
-	src_cgroup = cgroup_new_cgroup(src_cg_path);
-	if (!src_cgroup) {
+	src_cgrp = cgroup_new_cgroup(src_cgrp_path);
+	if (!src_cgrp) {
 		err("can't create cgroup: %s\n", cgroup_strerror(ECGFAIL));
-		goto scgroup_err;
+		goto scgrp_err;
 	}
 
 	/* copy the name-version values to the cgroup structure */
-	ret = cgroup_get_cgroup(src_cgroup);
+	ret = cgroup_get_cgroup(src_cgrp);
 	if (ret != 0) {
-		err("cgroup %s error: %s\n", src_cg_path, cgroup_strerror(ret));
-		goto scgroup_err;
+		err("cgroup %s error: %s\n", src_cgrp_path, cgroup_strerror(ret));
+		goto scgrp_err;
 	}
 
-	return src_cgroup;
+	return src_cgrp;
 
-scgroup_err:
-	cgroup_free(&src_cgroup);
+scgrp_err:
+	cgroup_free(&src_cgrp);
 
 	return NULL;
 }
@@ -119,7 +119,7 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 
 	/*
 	 * If a failure occurs between this comment and the "End of above comment"
-	 * below, then we need to manually free converted_src_cgroup.
+	 * below, then we need to manually free converted_src_cgrp.
 	 */
 
 	ret = cgroup_convert_cgroup(converted_src_cgrp, CGROUP_DISK, src_cgrp, src_version);
@@ -135,7 +135,7 @@ static int cgroup_set_cgroup_values(struct cgroup *src_cgrp, const char * const 
 	}
 
 	/*
-	 * End of above comment about converted_src_cgroup needing to be manually freed.
+	 * End of above comment about converted_src_cgrp needing to be manually freed.
 	 */
 	cgroup_free(&cgrp);
 	cgrp = converted_src_cgrp;
@@ -506,9 +506,9 @@ int main(int argc, char *argv[])
 	int recursive = 0;
 	int nv_max = 0;
 
-	char src_cg_path[FILENAME_MAX] = "\0";
+	char src_cgrp_path[FILENAME_MAX] = "\0";
 	struct cgroup *subtree_cgrp = NULL;
-	struct cgroup *src_cgroup = NULL;
+	struct cgroup *src_cgrp = NULL;
 
 	enum cg_version_t src_version = CGROUP_UNK;
 	bool ignore_unmappable = false;
@@ -587,8 +587,8 @@ int main(int argc, char *argv[])
 				goto err;
 			}
 			flags |= FL_COPY;
-			strncpy(src_cg_path, optarg, FILENAME_MAX);
-			src_cg_path[FILENAME_MAX-1] = '\0';
+			strncpy(src_cgrp_path, optarg, FILENAME_MAX);
+			src_cgrp_path[FILENAME_MAX-1] = '\0';
 			break;
 		case '1':
 			src_version = CGROUP_V1;
@@ -637,8 +637,8 @@ int main(int argc, char *argv[])
 
 	/* copy the name-value pairs from -r options */
 	if ((flags & FL_RULES) != 0) {
-		src_cgroup = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
-		if (src_cgroup == NULL)
+		src_cgrp = create_cgroup_from_name_value_pairs("tmp", name_value, nv_number);
+		if (src_cgrp == NULL)
 			goto err;
 
 		if (cgrp_subtree_ctrl_val && !recursive) {
@@ -651,22 +651,22 @@ int main(int argc, char *argv[])
 
 	/* copy the name-value from the given group */
 	if ((flags & FL_COPY) != 0) {
-		src_cgroup = copy_name_value_from_cgroup(src_cg_path);
-		if (src_cgroup == NULL)
+		src_cgrp = copy_name_value_from_cgroup(src_cgrp_path);
+		if (src_cgrp == NULL)
 			goto err;
 	}
 
 	while (optind < argc) {
 
 		if (recursive) {
-			ret = cgroup_set_cgroup_values_r(src_cgroup, argv[optind],
+			ret = cgroup_set_cgroup_values_r(src_cgrp, argv[optind],
 							 ignore_unmappable, src_version);
 		} else {
 			ret = cgroup_set_cgroup_values(subtree_cgrp, argv[optind],
 						       ignore_unmappable, src_version);
 			if (ret)
 				goto err;
-			ret = cgroup_set_cgroup_values(src_cgroup, argv[optind],
+			ret = cgroup_set_cgroup_values(src_cgrp, argv[optind],
 						       ignore_unmappable, src_version);
 		}
 		if (ret)
@@ -676,7 +676,7 @@ int main(int argc, char *argv[])
 	}
 
 err:
-	cgroup_free(&src_cgroup);
+	cgroup_free(&src_cgrp);
 	cgroup_free(&subtree_cgrp);
 	free(name_value);
 

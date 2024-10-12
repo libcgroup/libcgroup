@@ -69,7 +69,7 @@ static void usage(int status, const char *program_name)
 
 int main(int argc, char *argv[])
 {
-	struct cgroup_group_spec *cgroup_list[CG_HIER_MAX];
+	struct cgroup_group_spec *cgrp_list[CG_HIER_MAX];
 #ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
 #endif
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	pid_t pid;
 	int c;
 
-	memset(cgroup_list, 0, sizeof(cgroup_list));
+	memset(cgrp_list, 0, sizeof(cgrp_list));
 #ifdef WITH_SYSTEMD
 	while ((c = getopt_long(argc, argv, "+g:shbr", longopts, NULL)) > 0) {
 		switch (c) {
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 		switch (c) {
 #endif
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg, CG_HIER_MAX);
+			ret = parse_cgroup_spec(cgrp_list, optarg, CG_HIER_MAX);
 			if (ret) {
 				err("cgroup controller and path parsing failed\n");
 				exit(EXIT_BADARGS);
@@ -173,11 +173,11 @@ int main(int argc, char *argv[])
 		 * and controllers
 		 */
 		for (i = 0; i < CG_HIER_MAX; i++) {
-			if (!cgroup_list[i])
+			if (!cgrp_list[i])
 				break;
 
-			ret = cgroup_change_cgroup_path(cgroup_list[i]->path, pid,
-				(const char *const*) cgroup_list[i]->controllers);
+			ret = cgroup_change_cgroup_path(cgrp_list[i]->path, pid,
+				(const char *const*) cgrp_list[i]->controllers);
 			if (ret) {
 				err("cgroup change of group failed\n");
 				return ret;
@@ -265,8 +265,8 @@ static pid_t find_scope_pid(pid_t pid)
 {
 	pid_t _scope_pid = -1, scope_pid = -1;
 	char ctrl_name[CONTROL_NAMELEN_MAX];
-	char cgroup_name[FILENAME_MAX];
 	char scope_name[FILENAME_MAX];
+	char cgrp_name[FILENAME_MAX];
 	int found_systemd_cgrp = 0;
 	int found_unified_cgrp = 0;
 	char buffer[FILENAME_MAX];
@@ -291,9 +291,9 @@ static pid_t find_scope_pid(pid_t pid)
 
 		/* read according to the cgroup mode */
 		if (strstr(buffer, "::"))
-			ret = sscanf(buffer, "%d::%4096s\n", &idx, cgroup_name);
+			ret = sscanf(buffer, "%d::%4096s\n", &idx, cgrp_name);
 		else
-			ret = sscanf(buffer, "%d:%[^:]:%4096s\n", &idx, ctrl_name, cgroup_name);
+			ret = sscanf(buffer, "%d:%[^:]:%4096s\n", &idx, ctrl_name, cgrp_name);
 
 		if (ret != 2 && ret != 3) {
 			err("Unrecognized cgroup file format: %s\n", buffer);
@@ -311,12 +311,12 @@ static pid_t find_scope_pid(pid_t pid)
 		}
 
 		/* skip if the cgroup path doesn't have systemd scope format */
-		if (strstr(cgroup_name, ".scope") == NULL ||
-		    strstr(cgroup_name, ".slice") == NULL)
+		if (strstr(cgrp_name, ".scope") == NULL ||
+		    strstr(cgrp_name, ".slice") == NULL)
 			continue;
 
 		/* skip if we have already searched cgroup for idle_thread */
-		if (is_scope_parsed(cgroup_name))
+		if (is_scope_parsed(cgrp_name))
 			continue;
 
 		/* cgroup v1 might have shared mount points cpu,cpuacct */
@@ -327,11 +327,11 @@ static pid_t find_scope_pid(pid_t pid)
 		}
 
 		if (ret == 2)
-			ret = cgroup_get_procs(cgroup_name, NULL, &pids, &size);
+			ret = cgroup_get_procs(cgrp_name, NULL, &pids, &size);
 		else
-			ret = cgroup_get_procs(cgroup_name, ctrl_name, &pids, &size);
+			ret = cgroup_get_procs(cgrp_name, ctrl_name, &pids, &size);
 		if (ret) {
-			err("Failed to read cgroup.procs of cgroup: %s\n", cgroup_name + 1);
+			err("Failed to read cgroup.procs of cgroup: %s\n", cgrp_name + 1);
 			goto out;
 		}
 
@@ -351,7 +351,7 @@ static pid_t find_scope_pid(pid_t pid)
 			 * ../systemd/<slice>/<scope>/cgroup.procs (legacy/hybrid)
 			 * ../unified/<slice>/<scope>/cgroup.procs (hybrid)
 			 */
-			snprintf(scope_name, FILENAME_MAX, "%s", cgroup_name);
+			snprintf(scope_name, FILENAME_MAX, "%s", cgrp_name);
 			scope_pid = _scope_pid;
 			continue;
 		}
@@ -402,8 +402,8 @@ out:
 static void find_mnt_point(const char * const controller, char **mnt_point)
 {
 	char proc_mount[] = "/proc/mounts";
-	char cgroup_path[FILENAME_MAX];
 	char buffer[FILENAME_MAX * 2];
+	char cgrp_path[FILENAME_MAX];
 	FILE *proc_mount_f = NULL;
 	int ret;
 
@@ -420,15 +420,15 @@ static void find_mnt_point(const char * const controller, char **mnt_point)
 		if (!strstr(buffer, controller))
 			continue;
 
-		ret = sscanf(buffer, "%*s %4096s\n", cgroup_path);
+		ret = sscanf(buffer, "%*s %4096s\n", cgrp_path);
 		if (ret != 1) {
 			err("Failed during read of %s:%s\n", proc_mount, strerror(errno));
 			goto out;
 		}
 
-		*mnt_point = strdup(cgroup_path);
+		*mnt_point = strdup(cgrp_path);
 		if (!*mnt_point)
-			err("strdup of %s failed\n", cgroup_path);
+			err("strdup of %s failed\n", cgrp_path);
 		break;
 	}
 
@@ -439,26 +439,26 @@ out:
 
 static int write_systemd_unified(const char * const scope_name)
 {
-	char cgroup_procs_path[FILENAME_MAX * 2 + 25];
-	FILE *cgroup_systemd_path_f = NULL;
-	FILE *cgroup_unified_path_f = NULL;
-	char *cgroup_name = NULL;
+	char cgrp_procs_path[FILENAME_MAX * 2 + 25];
+	FILE *cgrp_systemd_path_f = NULL;
+	FILE *cgrp_unified_path_f = NULL;
+	char *cgrp_name = NULL;
 	pid_t pid;
 
 	/* construct the systemd cgroup path, by parsing /proc/mounts */
-	find_mnt_point("name=systemd ", &cgroup_name);
-	if (!cgroup_name) {
+	find_mnt_point("name=systemd ", &cgrp_name);
+	if (!cgrp_name) {
 		err("Unable find name=systemd cgroup path\n");
 		return -1;
 	}
 
-	snprintf(cgroup_procs_path, sizeof(cgroup_procs_path), "%s/%s/cgroup.procs",
-		 cgroup_name, scope_name);
-	free(cgroup_name);
+	snprintf(cgrp_procs_path, sizeof(cgrp_procs_path), "%s/%s/cgroup.procs",
+		 cgrp_name, scope_name);
+	free(cgrp_name);
 
-	cgroup_systemd_path_f = fopen(cgroup_procs_path, "we");
-	if (!cgroup_systemd_path_f) {
-		err("Failed to open %s\n", cgroup_procs_path);
+	cgrp_systemd_path_f = fopen(cgrp_procs_path, "we");
+	if (!cgrp_systemd_path_f) {
+		err("Failed to open %s\n", cgrp_procs_path);
 		return -1;
 	}
 
@@ -467,37 +467,37 @@ static int write_systemd_unified(const char * const scope_name)
 		 * construct the unified cgroup path, by parsing
 		 * /proc/mounts
 		 */
-		find_mnt_point("unified cgroup2", &cgroup_name);
-		if (!cgroup_name) {
+		find_mnt_point("unified cgroup2", &cgrp_name);
+		if (!cgrp_name) {
 			err("Unable find unified cgroup path\n");
-			fclose(cgroup_systemd_path_f);
+			fclose(cgrp_systemd_path_f);
 			return -1;
 		}
 
-		snprintf(cgroup_procs_path, sizeof(cgroup_procs_path), "%s/%s/cgroup.procs",
-				cgroup_name, scope_name);
-		free(cgroup_name);
+		snprintf(cgrp_procs_path, sizeof(cgrp_procs_path), "%s/%s/cgroup.procs",
+				cgrp_name, scope_name);
+		free(cgrp_name);
 
-		cgroup_unified_path_f = fopen(cgroup_procs_path, "we");
-		if (!cgroup_unified_path_f) {
-			err("Failed to open %s\n", cgroup_procs_path);
-			fclose(cgroup_systemd_path_f);
+		cgrp_unified_path_f = fopen(cgrp_procs_path, "we");
+		if (!cgrp_unified_path_f) {
+			err("Failed to open %s\n", cgrp_procs_path);
+			fclose(cgrp_systemd_path_f);
 			return -1;
 		}
 	}
 
 	pid = getpid();
 
-	fprintf(cgroup_systemd_path_f, "%d", pid);
-	fflush(cgroup_systemd_path_f);
-	fclose(cgroup_systemd_path_f);
+	fprintf(cgrp_systemd_path_f, "%d", pid);
+	fflush(cgrp_systemd_path_f);
+	fclose(cgrp_systemd_path_f);
 
 	if (!is_cgroup_mode_hybrid())
 		return 0;
 
-	fprintf(cgroup_unified_path_f, "%d", pid);
-	fflush(cgroup_unified_path_f);
-	fclose(cgroup_unified_path_f);
+	fprintf(cgrp_unified_path_f, "%d", pid);
+	fflush(cgrp_unified_path_f);
+	fclose(cgrp_unified_path_f);
 
 	return 0;
 }
