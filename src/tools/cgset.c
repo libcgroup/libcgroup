@@ -33,29 +33,29 @@ static char *program_name;
 /* cgroup.subtree_control -r name, value */
 static struct control_value *cgrp_subtree_ctrl_val;
 
-static struct cgroup *copy_name_value_from_cgroup(char src_cg_path[FILENAME_MAX])
+static struct cgroup *copy_name_value_from_cgroup(char src_cgrp_path[FILENAME_MAX])
 {
-	struct cgroup *src_cgroup;
+	struct cgroup *src_cgrp;
 	int ret = 0;
 
 	/* create source cgroup */
-	src_cgroup = cgroup_new_cgroup(src_cg_path);
-	if (!src_cgroup) {
+	src_cgrp = cgroup_new_cgroup(src_cgrp_path);
+	if (!src_cgrp) {
 		err("can't create cgroup: %s\n", cgroup_strerror(ECGFAIL));
-		goto scgroup_err;
+		goto scgrp_err;
 	}
 
 	/* copy the name-version values to the cgroup structure */
-	ret = cgroup_get_cgroup(src_cgroup);
+	ret = cgroup_get_cgroup(src_cgrp);
 	if (ret != 0) {
-		err("cgroup %s error: %s\n", src_cg_path, cgroup_strerror(ret));
-		goto scgroup_err;
+		err("cgroup %s error: %s\n", src_cgrp_path, cgroup_strerror(ret));
+		goto scgrp_err;
 	}
 
-	return src_cgroup;
+	return src_cgrp;
 
-scgroup_err:
-	cgroup_free(&src_cgroup);
+scgrp_err:
+	cgroup_free(&src_cgrp);
 
 	return NULL;
 }
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 	int recursive = 0;
 	int nv_max = 0;
 
-	char src_cg_path[FILENAME_MAX] = "\0";
+	char src_cgrp_path[FILENAME_MAX] = "\0";
 	struct cgroup *subtree_cgrp = NULL;
 	struct cgroup *src_cgroup = NULL;
 
@@ -532,8 +532,8 @@ int main(int argc, char *argv[])
 				goto err;
 			}
 			flags |= FL_COPY;
-			strncpy(src_cg_path, optarg, FILENAME_MAX);
-			src_cg_path[FILENAME_MAX-1] = '\0';
+			strncpy(src_cgrp_path, optarg, FILENAME_MAX);
+			src_cgrp_path[FILENAME_MAX-1] = '\0';
 			break;
 		case 'R':
 			recursive = 1;
@@ -587,7 +587,7 @@ int main(int argc, char *argv[])
 
 	/* copy the name-value from the given group */
 	if ((flags & FL_COPY) != 0) {
-		src_cgroup = copy_name_value_from_cgroup(src_cg_path);
+		src_cgroup = copy_name_value_from_cgroup(src_cgrp_path);
 		if (src_cgroup == NULL)
 			goto err;
 	}

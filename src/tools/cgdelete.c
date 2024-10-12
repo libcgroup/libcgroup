@@ -116,10 +116,10 @@ int main(int argc, char *argv[])
 #ifdef WITH_SYSTEMD
 	int ignore_default_systemd_delegate_slice = 0;
 #endif
-	struct cgroup_group_spec **cgroup_list = NULL;
+	struct cgroup_group_spec **cgrp_list = NULL;
 	struct ext_cgroup_record *ecg_list = NULL;
 	struct cgroup_controller *cgc;
-	struct cgroup *cgroup;
+	struct cgroup *cgrp;
 
 	int final_ret = 0;
 	int counter = 0;
@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
 		goto err;
 	}
 
-	cgroup_list = calloc(argc, sizeof(struct cgroup_group_spec *));
-	if (cgroup_list == NULL) {
+	cgrp_list = calloc(argc, sizeof(struct cgroup_group_spec *));
+	if (cgrp_list == NULL) {
 		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 			flags |= CGFLAG_DELETE_RECURSIVE;
 			break;
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg, argc);
+			ret = parse_cgroup_spec(cgrp_list, optarg, argc);
 			if (ret != 0) {
 				err("%s: error parsing cgroup '%s'", argv[0], optarg);
 				ret = EXIT_BADARGS;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 
 	/* parse groups on command line */
 	for (i = optind; i < argc; i++) {
-		ret = parse_cgroup_spec(cgroup_list, argv[i], argc);
+		ret = parse_cgroup_spec(cgrp_list, argv[i], argc);
 		if (ret != 0) {
 			err("%s: error parsing cgroup '%s'\n", argv[0], argv[i]);
 			ret = EXIT_BADARGS;
@@ -205,12 +205,12 @@ int main(int argc, char *argv[])
 
 	/* for each cgroup to be deleted */
 	for (i = 0; i < argc; i++) {
-		if (!cgroup_list[i])
+		if (!cgrp_list[i])
 			break;
 
 		/* create the new cgroup structure */
-		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
-		if (!cgroup) {
+		cgrp = cgroup_new_cgroup(cgrp_list[i]->path);
+		if (!cgrp) {
 			ret = ECGFAIL;
 			err("%s: can't create new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 
 		/* add controllers to the cgroup */
 		j = 0;
-		while (cgroup_list[i]->controllers[j]) {
+		while (cgrp_list[i]->controllers[j]) {
 			skip = 0;
 			/*
 			 * save controller name, cg name and hierarchy
@@ -241,11 +241,10 @@ int main(int argc, char *argv[])
 			}
 
 			strncpy(ecg_list[counter].controller,
-				cgroup_list[i]->controllers[j], FILENAME_MAX);
+				cgrp_list[i]->controllers[j], FILENAME_MAX);
 			ecg_list[counter].controller[FILENAME_MAX - 1] = '\0';
 
-			strncpy(ecg_list[counter].name,
-				cgroup_list[i]->path, FILENAME_MAX);
+			strncpy(ecg_list[counter].name,	cgrp_list[i]->path, FILENAME_MAX);
 			ecg_list[counter].name[FILENAME_MAX - 1] = '\0';
 
 			ret = skip_add_controller(counter, &skip, ecg_list);
@@ -257,12 +256,12 @@ int main(int argc, char *argv[])
 				goto next;
 			}
 
-			cgc = cgroup_add_controller(cgroup, cgroup_list[i]->controllers[j]);
+			cgc = cgroup_add_controller(cgrp, cgrp_list[i]->controllers[j]);
 			if (!cgc) {
 				ret = ECGFAIL;
 				err("%s: controller %s can't be added\n", argv[0],
-				    cgroup_list[i]->controllers[j]);
-				cgroup_free(&cgroup);
+				    cgrp_list[i]->controllers[j]);
+				cgroup_free(&cgrp);
 				goto err;
 			}
 next:
@@ -270,14 +269,14 @@ next:
 			j++;
 		}
 
-		ret = cgroup_delete_cgroup_ext(cgroup, flags);
+		ret = cgroup_delete_cgroup_ext(cgrp, flags);
 		/* Remember the errors and continue, try to remove all groups. */
 		if (ret != 0) {
-			err("%s: cannot remove group '%s': %s\n", argv[0], cgroup->name,
+			err("%s: cannot remove group '%s': %s\n", argv[0], cgrp->name,
 			    cgroup_strerror(ret));
 			final_ret = ret;
 		}
-		cgroup_free(&cgroup);
+		cgroup_free(&cgrp);
 	}
 
 	ret = final_ret;
@@ -286,12 +285,12 @@ err:
 	if (ecg_list)
 		free(ecg_list);
 
-	if (cgroup_list) {
+	if (cgrp_list) {
 		for (i = 0; i < argc; i++) {
-			if (cgroup_list[i])
-				cgroup_free_group_spec(cgroup_list[i]);
+			if (cgrp_list[i])
+				cgroup_free_group_spec(cgrp_list[i]);
 		}
-		free(cgroup_list);
+		free(cgrp_list);
 	}
 
 	return ret;
