@@ -159,46 +159,44 @@ struct cgroup *cgroup_new_cgroup(const char *name);
  * Attach new controller to cgroup. This function just modifies internal
  * libcgroup structure, not the kernel control group.
  *
- * @param cgroup
+ * @param cgrp
  * @param name The name of the controller, e.g. "freezer".
  * @return Created controller or NULL on error.
  */
-struct cgroup_controller *cgroup_add_controller(struct cgroup *cgroup,
-						const char *name);
+struct cgroup_controller *cgroup_add_controller(struct cgroup *cgrp, const char *name);
 
 /**
  * Attach all mounted controllers to given cgroup. This function just modifies
  * internal libcgroup structure, not the kernel control group.
  *
- * @param cgroup
+ * @param cgrp
  * @return zero or error number
  */
-int cgroup_add_all_controllers(struct cgroup *cgroup);
+int cgroup_add_all_controllers(struct cgroup *cgrp);
 
 
 /**
  * Return appropriate controller from given group.
  * The controller must be added before using cgroup_add_controller() or loaded
  * from kernel using cgroup_get_cgroup().
- * @param cgroup
+ * @param cgrp
  * @param name The name of the controller, e.g. "freezer".
  */
-struct cgroup_controller *cgroup_get_controller(struct cgroup *cgroup,
-						const char *name);
+struct cgroup_controller *cgroup_get_controller(struct cgroup *cgrp, const char *name);
 
 /**
  * Free internal @c cgroup structure. This function frees also all controllers
  * attached to the @c cgroup, including all parameters and their values.
- * @param cgroup
+ * @param cgrp
  */
-void cgroup_free(struct cgroup **cgroup);
+void cgroup_free(struct cgroup **cgrp);
 
 /**
  * Free internal list of controllers from the group.
  * @todo should this function be public???
- * @param cgroup
+ * @param cgrp
  */
-void cgroup_free_controllers(struct cgroup *cgroup);
+void cgroup_free_controllers(struct cgroup *cgrp);
 
 /**
  * @}
@@ -216,14 +214,14 @@ void cgroup_free_controllers(struct cgroup *cgroup);
  * All parameters set by cgroup_add_value_* functions are written.
  * The created groups has owner which was set by cgroup_set_uid_gid() and
  * permissions set by cgroup_set_permissions.
- * @param cgroup
+ * @param cgrp
  * @param ignore_ownership When nozero, all errors are ignored when setting
  *	owner of the group and/or its tasks file.
  *	@todo what is ignore_ownership good for?
  * @retval #ECGROUPNOTEQUAL if not all specified controller parameters
  *      were successfully set.
  */
-int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
+int cgroup_create_cgroup(struct cgroup *cgrp, int ignore_ownership);
 
 /**
  * Physically create new control group in kernel, with all parameters and values
@@ -238,7 +236,7 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
  * cgroup_add_controller() is not used, like in cgroup_create_cgroup()? I can't
  * create subgroup of root group in just one hierarchy with this function!
  *
- * @param cgroup The cgroup to create. Only it's name is used, everything else
+ * @param cgrp The cgroup to create. Only it's name is used, everything else
  *	is discarded.
  * @param ignore_ownership When nozero, all errors are ignored when setting
  *	owner of the group and/or its tasks file.
@@ -246,17 +244,16 @@ int cgroup_create_cgroup(struct cgroup *cgroup, int ignore_ownership);
  * @retval #ECGROUPNOTEQUAL if not all inherited controller parameters
  *      were successfully set (this is expected).
  */
-int cgroup_create_cgroup_from_parent(struct cgroup *cgroup,
-				     int ignore_ownership);
+int cgroup_create_cgroup_from_parent(struct cgroup *cgrp, int ignore_ownership);
 
 /**
  * Physically modify a control group in kernel. All parameters added by
  * cgroup_add_value_ or cgroup_set_value_ are written.
  * Currently it's not possible to change and owner of a group.
  *
- * @param cgroup
+ * @param cgrp
  */
-int cgroup_modify_cgroup(struct cgroup *cgroup);
+int cgroup_modify_cgroup(struct cgroup *cgrp);
 
 /**
  * Physically remove a control group from kernel. The group is removed from
@@ -267,12 +264,12 @@ int cgroup_modify_cgroup(struct cgroup *cgroup);
  * The group being removed must be empty, i.e. without subgroups. Use
  * cgroup_delete_cgroup_ext() for recursive delete.
  *
- * @param cgroup
+ * @param cgrp
  * @param ignore_migration When nozero, all errors are ignored when migrating
  *	tasks from the group to the parent group.
  *	@todo what is ignore_migration good for? rmdir() will fail if tasks were not moved.
  */
-int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
+int cgroup_delete_cgroup(struct cgroup *cgrp, int ignore_migration);
 
 /**
  * Physically remove a control group from kernel.
@@ -284,11 +281,11 @@ int cgroup_delete_cgroup(struct cgroup *cgroup, int ignore_migration);
  * are removed but the root group itself is left undeleted.
  * @see cgroup_delete_flag.
  *
- * @param cgroup
+ * @param cgrp
  * @param flags Combination of CGFLAG_DELETE_* flags, which indicate what and
  *	how to delete.
  */
-int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
+int cgroup_delete_cgroup_ext(struct cgroup *cgrp, int flags);
 
 /**
  * @}
@@ -314,10 +311,10 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgroup, int flags);
  * cgroup_get_uid_gid() if the group is in multiple hierarchies, each with
  * different owner of tasks file?
  *
- * @param cgroup The cgroup to load. Only it's name is used, everything else
+ * @param cgrp The cgroup to load. Only it's name is used, everything else
  *	is replaced.
  */
-int cgroup_get_cgroup(struct cgroup *cgroup);
+int cgroup_get_cgroup(struct cgroup *cgrp);
 
 /**
  * Copy all controllers, their parameters and values. Group name, permissions
@@ -332,15 +329,15 @@ int cgroup_copy_cgroup(struct cgroup *dst, struct cgroup *src);
 /**
  * Compare names, owners, controllers, parameters and values of two groups.
  *
- * @param cgroup_a
- * @param cgroup_b
+ * @param cgrp_a
+ * @param cgrp_b
  *
  * @retval 0  if the groups are the same.
  * @retval #ECGROUPNOTEQUAL if the groups are not the same.
  * @retval #ECGCONTROLLERNOTEQUAL if the only difference are controllers,
  *	parameters or their values.
  */
-int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
+int cgroup_compare_cgroup(struct cgroup *cgrp_a, struct cgroup *cgrp_b);
 
 
 /**
@@ -352,15 +349,14 @@ int cgroup_compare_cgroup(struct cgroup *cgroup_a, struct cgroup *cgroup_b);
  * @retval 0  if the controllers are the same.
  * @retval #ECGCONTROLLERNOTEQUAL if the controllers are not equal.
  */
-int cgroup_compare_controllers(struct cgroup_controller *cgca,
-			       struct cgroup_controller *cgcb);
+int cgroup_compare_controllers(struct cgroup_controller *cgca, struct cgroup_controller *cgcb);
 
 /**
  * Set owner of the group control files and the @c tasks file. This function
  * modifies only @c libcgroup internal @c cgroup structure, use
  * cgroup_create_cgroup() afterwards to create the group with given owners.
  *
- * @param cgroup
+ * @param cgrp
  * @param tasks_uid UID of the owner of group's @c tasks file.
  * @param tasks_gid GID of the owner of group's @c tasks file.
  * @param control_uid UID of the owner of group's control files (i.e.
@@ -368,7 +364,7 @@ int cgroup_compare_controllers(struct cgroup_controller *cgca,
  * @param control_gid GID of the owner of group's control files (i.e.
  *	parameters).
  */
-int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
+int cgroup_set_uid_gid(struct cgroup *cgrp, uid_t tasks_uid, gid_t tasks_gid,
 		       uid_t control_uid, gid_t control_gid);
 
 /**
@@ -376,7 +372,7 @@ int cgroup_set_uid_gid(struct cgroup *cgroup, uid_t tasks_uid, gid_t tasks_gid,
  * The data is read from @c libcgroup internal @c cgroup structure, use
  * cgroup_set_uid_gid() or cgroup_get_cgroup() to fill it.
  */
-int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
+int cgroup_get_uid_gid(struct cgroup *cgrp, uid_t *tasks_uid,
 		       gid_t *tasks_gid, uid_t *control_uid,
 		       gid_t *control_gid);
 
@@ -387,12 +383,12 @@ int cgroup_get_uid_gid(struct cgroup *cgroup, uid_t *tasks_uid,
  * the given permissions are masked with the file owner's permissions.
  * For example if a control file has permissions 640 and control_fperm is
  * 471 the result will be 460.
- * @param cgroup
+ * @param cgrp
  * @param control_dperm Directory permission for the group.
  * @param control_fperm File permission for the control files.
  * @param task_fperm File permissions for task file.
  */
-void cgroup_set_permissions(struct cgroup *cgroup,
+void cgroup_set_permissions(struct cgroup *cgrp,
 			    mode_t control_dperm, mode_t control_fperm,
 			    mode_t task_fperm);
 
@@ -430,8 +426,7 @@ int cgroup_add_value_string(struct cgroup_controller *controller,
  * @param value
  *
  */
-int cgroup_add_value_int64(struct cgroup_controller *controller,
-			   const char *name, int64_t value);
+int cgroup_add_value_int64(struct cgroup_controller *controller, const char *name, int64_t value);
 
 /**
  * Add parameter and its value to internal @c libcgroup structures.
@@ -454,8 +449,7 @@ int cgroup_add_value_uint64(struct cgroup_controller *controller,
  * @param value
  *
  */
-int cgroup_add_value_bool(struct cgroup_controller *controller,
-			  const char *name, bool value);
+int cgroup_add_value_bool(struct cgroup_controller *controller, const char *name, bool value);
 
 /**
  * Read a parameter value from @c libcgroup internal structures.
@@ -472,8 +466,7 @@ int cgroup_add_value_bool(struct cgroup_controller *controller,
  * @param name The name of the parameter.
  * @param value
  */
-int cgroup_get_value_string(struct cgroup_controller *controller,
-			    const char *name, char **value);
+int cgroup_get_value_string(struct cgroup_controller *controller, const char *name, char **value);
 /**
  * Read a parameter value from @c libcgroup internal structures.
  * Use @c cgroup_get_cgroup() to fill these structures with data from kernel.
@@ -482,8 +475,7 @@ int cgroup_get_value_string(struct cgroup_controller *controller,
  * @param name The name of the parameter.
  * @param value
  */
-int cgroup_get_value_int64(struct cgroup_controller *controller,
-			   const char *name, int64_t *value);
+int cgroup_get_value_int64(struct cgroup_controller *controller, const char *name, int64_t *value);
 
 /**
  * Read a parameter value from @c libcgroup internal structures.
@@ -504,8 +496,7 @@ int cgroup_get_value_uint64(struct cgroup_controller *controller,
  * @param name The name of the parameter.
  * @param value
  */
-int cgroup_get_value_bool(struct cgroup_controller *controller,
-			  const char *name, bool *value);
+int cgroup_get_value_bool(struct cgroup_controller *controller, const char *name, bool *value);
 
 /**
  * Set a parameter value in @c libcgroup internal structures.
@@ -549,8 +540,7 @@ int cgroup_set_value_uint64(struct cgroup_controller *controller,
  * @param name The name of the parameter.
  * @param value
  */
-int cgroup_set_value_bool(struct cgroup_controller *controller,
-			  const char *name, bool value);
+int cgroup_set_value_bool(struct cgroup_controller *controller, const char *name, bool value);
 
 /**
  * Return the number of variables for the specified controller in @c libcgroup
@@ -601,20 +591,20 @@ int cgroup_get_threads(const char *name, const char *controller, pid_t **pids, i
 
 /**
  * Change permission of files and directories of given group
- * @param cgroup The cgroup which permissions should be changed
+ * @param cgrp The cgroup which permissions should be changed
  * @param dir_mode The permission mode of group directory
  * @param dirm_change Denotes whether the directory change should be done
  * @param file_mode The permission mode of group files
  * @param filem_change Denotes whether the directory change should be done
  */
-int cg_chmod_recursive(struct cgroup *cgroup, mode_t dir_mode,
+int cg_chmod_recursive(struct cgroup *cgrp, mode_t dir_mode,
 		       int dirm_change, mode_t file_mode, int filem_change);
 
 /**
  *  Get the name of the cgroup from a given cgroup
- *  @param cgroup The cgroup whose name is needed
+ *  @param cgrp The cgroup whose name is needed
  */
-char *cgroup_get_cgroup_name(struct cgroup *cgroup);
+char *cgroup_get_cgroup_name(struct cgroup *cgrp);
 
 /*
  * Convert from one cgroup version to another version
@@ -628,9 +618,9 @@ char *cgroup_get_cgroup_name(struct cgroup *cgroup);
  *         ECGFAIL conversion failed
  *         ECGCONTROLLERNOTEQUAL incorrect controller version provided
  */
-int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
+int cgroup_convert_cgroup(struct cgroup * const out_cgrp,
 			  enum cg_version_t out_version,
-			  const struct cgroup * const in_cgroup,
+			  const struct cgroup * const in_cgrp,
 			  enum cg_version_t in_version);
 
 /**
@@ -641,8 +631,7 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup,
  *	@return 0 success and list of mounts paths in mount_paths
  *		ECGOTHER on failure and mount_paths is NULL.
  */
-int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
-			     char ***mount_paths);
+int cgroup_list_mount_points(const enum cg_version_t cgrp_version, char ***mount_paths);
 
 /**
  * Get the cgroup version of a controller.  Version is set to CGROUP_UNK
@@ -651,8 +640,7 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version,
  * @param controller The controller of interest
  * @param version The version of the controller
  */
-int cgroup_get_controller_version(const char * const controller,
-				  enum cg_version_t * const version);
+int cgroup_get_controller_version(const char * const controller, enum cg_version_t * const version);
 
 /**
  * Get the current group setup mode (legacy/unified/hybrid)
@@ -665,18 +653,18 @@ enum cg_setup_mode_t cgroup_setup_mode(void);
  * Return the number of controllers for the specified cgroup in libcgroup
  * internal structures.
  *
- * @param cgroup
+ * @param cgrp
  * @return Count of the controllers or -1 on error.
  */
-int cgroup_get_controller_count(struct cgroup *cgroup);
+int cgroup_get_controller_count(struct cgroup *cgrp);
 
 /**
  * Return requested controller from given group
  *
- * @param cgroup
+ * @param cgrp
  * @param index The index into the cgroup controller list
  */
-struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgroup, int index);
+struct cgroup_controller *cgroup_get_controller_by_index(struct cgroup *cgrp, int index);
 
 /**
  * Given a controller pointer, get the name of the controller
