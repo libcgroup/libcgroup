@@ -47,16 +47,16 @@ enum cgroup_daemon_type {
 
 /**
  * Move current task (=thread) to given control group.
- * @param cgroup Destination control group.
+ * @param cgrp Destination control group.
  */
-int cgroup_attach_task(struct cgroup *cgroup);
+int cgroup_attach_task(struct cgroup *cgrp);
 
 /**
  * Move given task (=thread) to given control group.
- * @param cgroup Destination control group.
+ * @param cgrp Destination control group.
  * @param tid The task to move.
  */
-int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
+int cgroup_attach_task_pid(struct cgroup *cgrp, pid_t tid);
 
 /**
  * Changes the cgroup of a task based on the path provided.  In this case,
@@ -69,8 +69,7 @@ int cgroup_attach_task_pid(struct cgroup *cgroup, pid_t tid);
  *
  * @todo should this function be really public?
  */
-int cgroup_change_cgroup_path(const char *path, pid_t pid,
-			      const char * const controllers[]);
+int cgroup_change_cgroup_path(const char *path, pid_t pid, const char * const controllers[]);
 
 /**
  * Get the current control group path where the given task is.
@@ -80,8 +79,7 @@ int cgroup_change_cgroup_path(const char *path, pid_t pid,
  *	The patch is relative to the root of the hierarchy. The caller must
  *	free this memory.
  */
-int cgroup_get_current_controller_path(pid_t pid, const char *controller,
-				       char **current_path);
+int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path);
 
 /**
  * @}
@@ -153,8 +151,7 @@ int cgroup_change_all_cgroups(void);
  * @param flags Bit flags to change the behavior, as defined in enum #cgflags.
  * @todo Determine thread-safeness and fix of not safe.
  */
-int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
-			       const char *procname, pid_t pid, int flags);
+int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t pid, int flags);
 
 /**
  * Changes the cgroup of a program based on the rules in the config file.  If a
@@ -169,8 +166,7 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid,
  * @param flags Bit flags to change the behavior, as defined in enum #cgflags.
  * @todo Determine thread-safeness and fix if not safe.
  */
-int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid,
-				       pid_t pid, int flags);
+int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid, pid_t pid, int flags);
 
 /**
  * Provides backwards-compatibility with older versions of the API.  This

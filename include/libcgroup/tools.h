@@ -30,7 +30,7 @@ extern "C" {
  * requested version.  If successful, cg will be populated with
  * the setting-value pairs.
  *
- * @param cg Input/Output cgroup. Must be initialized and freed by the caller
+ * @param cgrp Input/Output cgroup. Must be initialized and freed by the caller
  * @param version Cgroup version of cg  If set to CGROUP_UNK, the versions
  *		  stored within each controller will be used.  Otherwise this
  *		  value will be used to override the cg param's controller
@@ -38,20 +38,19 @@ extern "C" {
  * @param ignore_unmappable Ignore failures due to settings that cannot be
  *			    converted from one cgroup version to another
  */
-int cgroup_cgxget(struct cgroup **cg,
-		  enum cg_version_t version, bool ignore_unmappable);
+int cgroup_cgxget(struct cgroup **cgrp, enum cg_version_t version, bool ignore_unmappable);
 
 /**
  * Write the setting-value pairs in *cg to the cgroup sysfs.
  * cgroup_cgxset() will perform the necessary conversions to match the
  * "on-disk" format prior to writing to the cgroup sysfs.
  *
- * @param cg cgroup instance that will be written to the cgroup sysfs
- * @param version Cgroup version of *cg
+ * @param cgrp cgroup instance that will be written to the cgroup sysfs
+ * @param version Cgroup version of *cgrp
  * @param ignore_unmappable Ignore failures due to settings that cannot be
  *                          converted from one cgroup version to another
  */
-int cgroup_cgxset(const struct cgroup * const cg,
+int cgroup_cgxset(const struct cgroup * const cgrp,
 		  enum cg_version_t version, bool ignore_unmappable);
 
 #ifdef __cplusplus
