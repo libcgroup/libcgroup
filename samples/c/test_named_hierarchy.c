@@ -12,32 +12,30 @@
 int main(void)
 {
 	struct cgroup_controller *cgc;
-	struct cgroup *cgroup;
+	struct cgroup *cgrp;
 	int ret;
 
 	ret = cgroup_init();
 	if (ret) {
-		printf("FAIL: cgroup_init failed with %s\n",
-		       cgroup_strerror(ret));
+		printf("FAIL: cgroup_init failed with %s\n", cgroup_strerror(ret));
 		exit(3);
 	}
 
-	cgroup = cgroup_new_cgroup("test");
-	if (!cgroup) {
+	cgrp = cgroup_new_cgroup("test");
+	if (!cgrp) {
 		printf("FAIL: cgroup_new_cgroup failed\n");
 		exit(3);
 	}
 
-	cgc = cgroup_add_controller(cgroup, "name=test");
+	cgc = cgroup_add_controller(cgrp, "name=test");
 	if (!cgc) {
 		printf("FAIL: cgroup_add_controller failed\n");
 		exit(3);
 	}
 
-	ret = cgroup_create_cgroup(cgroup, 1);
+	ret = cgroup_create_cgroup(cgrp, 1);
 	if (ret) {
-		printf("FAIL: cgroup_create_cgroup failed with %s\n",
-		       cgroup_strerror(ret));
+		printf("FAIL: cgroup_create_cgroup failed with %s\n", cgroup_strerror(ret));
 		exit(3);
 	}
 
