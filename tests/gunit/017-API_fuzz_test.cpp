@@ -31,7 +31,7 @@ class APIArgsTest: public :: testing:: Test {
 TEST_F(APIArgsTest, API_cgroup_set_permissions)
 {
 	mode_t dir_mode, ctrl_mode, task_mode;
-	struct cgroup * cgroup = NULL;
+	struct cgroup * cgrp = NULL;
 
 	dir_mode = (S_IRWXU | S_IXGRP | S_IXOTH);
 	ctrl_mode = (S_IRUSR | S_IWUSR | S_IRGRP);
@@ -39,7 +39,7 @@ TEST_F(APIArgsTest, API_cgroup_set_permissions)
 
 	testing::internal::CaptureStdout();
 
-	cgroup_set_permissions(cgroup, dir_mode, ctrl_mode, task_mode);
+	cgroup_set_permissions(cgrp, dir_mode, ctrl_mode, task_mode);
 
 	std::string result = testing::internal::GetCapturedStdout();
 	ASSERT_EQ(result, "Error: Cgroup, operation not allowed\n");
@@ -55,11 +55,11 @@ TEST_F(APIArgsTest, API_cgroup_set_permissions)
  */
 TEST_F(APIArgsTest, API_cgroup_new_cgroup)
 {
-	struct cgroup *cgroup = NULL;
+	struct cgroup *cgrp = NULL;
 	char *name = NULL;
 
-	cgroup = cgroup_new_cgroup(name);
-	ASSERT_EQ(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(name);
+	ASSERT_EQ(cgrp, nullptr);
 }
 
 /**
@@ -73,11 +73,11 @@ TEST_F(APIArgsTest, API_cgroup_new_cgroup)
  */
 TEST_F(APIArgsTest, API_cgroup_set_value_string)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
+	const char * const cgrp_ctrl = "cpu";
 	char * name = NULL, *value = NULL;
-	struct cgroup *cgroup = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret;
 
 	// case 1
@@ -85,11 +85,11 @@ TEST_F(APIArgsTest, API_cgroup_set_value_string)
 	ret = cgroup_set_value_string(cgc, name, value);
 	ASSERT_EQ(ret, 50011);
 
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
@@ -129,11 +129,11 @@ TEST_F(APIArgsTest, API_cgroup_set_value_string)
  */
 TEST_F(APIArgsTest, API_cgroup_get_value_string)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
+	const char * const cgrp_ctrl = "cpu";
 	char *name = NULL, *value = NULL;
-	struct cgroup *cgroup = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret;
 
 	// case 1
@@ -141,11 +141,11 @@ TEST_F(APIArgsTest, API_cgroup_get_value_string)
 	ret = cgroup_get_value_string(cgc, name, NULL);
 	ASSERT_EQ(ret, 50011);
 
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
@@ -182,31 +182,31 @@ TEST_F(APIArgsTest, API_cgroup_get_value_string)
  */
 TEST_F(APIArgsTest, API_cgroup_add_controller)
 {
-	const char * const cg_name = "FuzzerCgroup";
-	const char * const cg_ctrl = "cpu";
-	const char * const new_cg_ctrl = NULL;
+	const char * const cgrp_name = "FuzzerCgroup";
+	const char * const cgrp_ctrl = "cpu";
+	const char * const new_cgrp_ctrl = NULL;
 	struct cgroup_controller *cgc = NULL;
 	struct cgroup *cgroup = NULL;
 
 	// case 1
 	// cgrp = NULL, name = NULL
-	cgc = cgroup_add_controller(cgroup, new_cg_ctrl);
+	cgc = cgroup_add_controller(cgroup, new_cgrp_ctrl);
 	ASSERT_EQ(cgroup, nullptr);
 
 	// case 2
 	// cgrp = NULL, name = valid
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
 	ASSERT_EQ(cgroup, nullptr);
 
-	cgroup = cgroup_new_cgroup(cg_name);
+	cgroup = cgroup_new_cgroup(cgrp_name);
 	ASSERT_NE(cgroup, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
+	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
 	ASSERT_NE(cgroup, nullptr);
 
 	// case 3
 	// cgrp = valid, name = NULL
-	cgc = cgroup_add_controller(cgroup, new_cg_ctrl);
+	cgc = cgroup_add_controller(cgroup, new_cgrp_ctrl);
 	ASSERT_EQ(cgc, nullptr);
 }
 
@@ -221,10 +221,10 @@ TEST_F(APIArgsTest, API_cgroup_add_controller)
  */
 TEST_F(APIArgsTest, API_cgroup_add_value_string)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller *cgc = NULL;
-	const char * const cg_ctrl = "cpu";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpu";
+	struct cgroup *cgrp = NULL;
 	char * ctrl_value = NULL;
 	char * ctrl_name = NULL;
 	int ret;
@@ -236,11 +236,11 @@ TEST_F(APIArgsTest, API_cgroup_add_value_string)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
 	ASSERT_EQ(ret, 50011);
@@ -269,49 +269,49 @@ TEST_F(APIArgsTest, API_cgroup_add_value_string)
 
 TEST_F(APIArgsTest, API_cgroup_get_uid_gid)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	uid_t tasks_uid, control_uid;
 	gid_t tasks_gid, control_gid;
 
-	struct cgroup *cgroup = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret;
 	// case 1
 	// cgroup = NULL, tasks_uid = NULL, tasks_gid = NULL, control_uid = NULL,
 	// control_uid = NULL
-	ret = cgroup_get_uid_gid(cgroup, NULL, NULL, NULL, NULL);
+	ret = cgroup_get_uid_gid(cgrp, NULL, NULL, NULL, NULL);
 	ASSERT_EQ(ret, 50011);
 
 	// case 2
 	// cgroup = valid, tasks_uid = NULL, tasks_gid = NULL, control_uid = NULL,
 	// control_uid = NULL
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	ret = cgroup_get_uid_gid(cgroup, NULL, NULL, NULL, NULL);
+	ret = cgroup_get_uid_gid(cgrp, NULL, NULL, NULL, NULL);
 	ASSERT_EQ(ret, 50011);
 
 	// case 3
 	// cgroup = valid, tasks_uid = valid, tasks_gid = NULL, control_uid = NULL,
 	// control_uid = NULL
-	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, NULL, NULL, NULL);
+	ret = cgroup_get_uid_gid(cgrp, &tasks_uid, NULL, NULL, NULL);
 	ASSERT_EQ(ret, 50011);
 
 	// case 4
 	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = NULL,
 	// control_uid = NULL
-	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, NULL, NULL);
+	ret = cgroup_get_uid_gid(cgrp, &tasks_uid, &tasks_gid, NULL, NULL);
 	ASSERT_EQ(ret, 50011);
 
 	// case 5
 	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = valid,
 	// control_uid = NULL
-	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, &control_uid, NULL);
+	ret = cgroup_get_uid_gid(cgrp, &tasks_uid, &tasks_gid, &control_uid, NULL);
 	ASSERT_EQ(ret, 50011);
 
 	// case 6
 	// cgroup = valid, tasks_uid = valid, tasks_gid = valid, control_uid = valid,
 	// control_uid = valid
-	ret = cgroup_get_uid_gid(cgroup, &tasks_uid, &tasks_gid, &control_uid, &control_gid);
+	ret = cgroup_get_uid_gid(cgrp, &tasks_uid, &tasks_gid, &control_uid, &control_gid);
 	ASSERT_EQ(ret, 0);
 }
 
@@ -326,10 +326,10 @@ TEST_F(APIArgsTest, API_cgroup_get_uid_gid)
  */
 TEST_F(APIArgsTest, API_cgroup_set_value_int64)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpu";
+	struct cgroup *cgrp = NULL;
 	int64_t value = 1024;
 	char * name = NULL;
 	int ret;
@@ -341,11 +341,11 @@ TEST_F(APIArgsTest, API_cgroup_set_value_int64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_int64(cgc, "cpu.shares", 1024);
@@ -381,10 +381,10 @@ TEST_F(APIArgsTest, API_cgroup_set_value_int64)
  */
 TEST_F(APIArgsTest, API_cgroup_get_value_int64)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpu";
+	struct cgroup *cgrp = NULL;
 	char * name = NULL;
 	int64_t value;
 	int ret;
@@ -396,11 +396,11 @@ TEST_F(APIArgsTest, API_cgroup_get_value_int64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_int64(cgc, "cpu.shares", 1024);
@@ -437,10 +437,10 @@ TEST_F(APIArgsTest, API_cgroup_get_value_int64)
  */
 TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpu";
+	struct cgroup *cgrp = NULL;
 	u_int64_t value = 1024;
 	char * name = NULL;
 	int ret;
@@ -452,11 +452,11 @@ TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_uint64(cgc, "cpu.shares", 1024);
@@ -492,10 +492,10 @@ TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
  */
 TEST_F(APIArgsTest, API_cgroup_get_value_uint64)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpu";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpu";
+	struct cgroup *cgrp = NULL;
 	char * name = NULL;
 	u_int64_t value;
 	int ret;
@@ -507,11 +507,11 @@ TEST_F(APIArgsTest, API_cgroup_get_value_uint64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_uint64(cgc, "cpu.shares", 1024);
@@ -548,10 +548,10 @@ TEST_F(APIArgsTest, API_cgroup_get_value_uint64)
  */
 TEST_F(APIArgsTest, API_cgroup_set_value_bool)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpuset";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpuset";
+	struct cgroup *cgrp = NULL;
 	char * name = NULL;
 	bool value = 1;
 	int ret;
@@ -563,11 +563,11 @@ TEST_F(APIArgsTest, API_cgroup_set_value_bool)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpuset.cpu_exclusive, so that cgc->index > 0
 	ret = cgroup_set_value_bool(cgc, "cpuset.cpu_exclusive", 0);
@@ -603,10 +603,10 @@ TEST_F(APIArgsTest, API_cgroup_set_value_bool)
  */
 TEST_F(APIArgsTest, API_cgroup_get_value_bool)
 {
-	const char * const cg_name = "FuzzerCgroup";
+	const char * const cgrp_name = "FuzzerCgroup";
 	struct cgroup_controller * cgc = NULL;
-	const char * const cg_ctrl = "cpuset";
-	struct cgroup *cgroup = NULL;
+	const char * const cgrp_ctrl = "cpuset";
+	struct cgroup *cgrp = NULL;
 	char * name = NULL;
 	bool value;
 	int ret;
@@ -618,11 +618,11 @@ TEST_F(APIArgsTest, API_cgroup_get_value_bool)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgroup = cgroup_new_cgroup(cg_name);
-	ASSERT_NE(cgroup, nullptr);
+	cgrp = cgroup_new_cgroup(cgrp_name);
+	ASSERT_NE(cgrp, nullptr);
 
-	cgc = cgroup_add_controller(cgroup, cg_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
+	ASSERT_NE(cgrp, nullptr);
 
 	// set cpuset.cpu_exclusive, so that cgc->index > 0
 	ret = cgroup_set_value_bool(cgc, "cpuset.cpu_exclusive", 0);
