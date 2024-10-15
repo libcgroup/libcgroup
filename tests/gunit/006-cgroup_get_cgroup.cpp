@@ -113,8 +113,7 @@ class CgroupGetCgroupTest : public ::testing::Test {
 		memset(&cg_namespace_table, 0, sizeof(cg_namespace_table));
 
 		for (i = 0; i < CONTROLLERS_CNT; i++) {
-			snprintf(cg_mount_table[i].name, CONTROL_NAMELEN_MAX,
-				 "%s", CONTROLLERS[i]);
+			snprintf(cg_mount_table[i].name, CONTROL_NAMELEN_MAX, "%s", CONTROLLERS[i]);
 			snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
 				 "%s/%s", PARENT_DIR, CONTROLLERS[i]);
 			cg_mount_table[i].version = CGROUP_V1;
@@ -162,29 +161,29 @@ class CgroupGetCgroupTest : public ::testing::Test {
 	}
 };
 
-static void vectorize_cg(const struct cgroup * const cg,
-			 vector<string>& cg_vec)
+static void vectorize_cgrp(const struct cgroup * const cgrp,
+			 vector<string>& cgrp_vec)
 {
 	int i, j;
 
-	for (i = 0; i < cg->index; i++) {
-		for (j = 0; j < cg->controller[i]->index; j++) {
-			string cgname(cg->name);
-			string cgcname(cg->controller[i]->name);
-			string name(cg->controller[i]->values[j]->name);
-			string value(cg->controller[i]->values[j]->value);
+	for (i = 0; i < cgrp->index; i++) {
+		for (j = 0; j < cgrp->controller[i]->index; j++) {
+			string cgrp_name(cgrp->name);
+			string cgrp_cname(cgrp->controller[i]->name);
+			string name(cgrp->controller[i]->values[j]->name);
+			string value(cgrp->controller[i]->values[j]->value);
 
-			cg_vec.push_back(cgcname + "+" + cgname + "+" +
+			cgrp_vec.push_back(cgrp_cname + "+" + cgrp_name + "+" +
 					 name + "+" + value);
 		}
 	}
 
-	sort(cg_vec.begin(), cg_vec.end());
+	sort(cgrp_vec.begin(), cgrp_vec.end());
 }
 
 static void vectorize_testdata(vector<string>& test_vec)
 {
-	string cgname(CG_NAME);
+	string cgrp_name(CG_NAME);
 	int i, j;
 
 	for (i = 0; i < CTRL_CNT; i++) {
@@ -199,12 +198,11 @@ static void vectorize_testdata(vector<string>& test_vec)
 				 */
 				continue;
 
-			string cgcname(CONTROLLERS[i]);
+			string cgrp_cname(CONTROLLERS[i]);
 			string name(NAMES[i][j]);
 			string value(VALUES[i][j]);
 
-			test_vec.push_back(cgcname + "+" + cgname + "+" +
-					   name + "+" + value);
+			test_vec.push_back(cgrp_cname + "+" + cgrp_name + "+" + name + "+" + value);
 		}
 	}
 
@@ -213,23 +211,23 @@ static void vectorize_testdata(vector<string>& test_vec)
 
 TEST_F(CgroupGetCgroupTest, CgroupGetCgroup1)
 {
-	vector<string> cg_vec, test_vec;
-	struct cgroup *cg = NULL;
+	vector<string> cgrp_vec, test_vec;
+	struct cgroup *cgrp = NULL;
 	int ret;
 
-	cg = cgroup_new_cgroup(CG_NAME);
-	ASSERT_NE(cg, nullptr);
+	cgrp = cgroup_new_cgroup(CG_NAME);
+	ASSERT_NE(cgrp, nullptr);
 
-	ret = cgroup_get_cgroup(cg);
+	ret = cgroup_get_cgroup(cgrp);
 	ASSERT_EQ(ret, 0);
 
-	vectorize_cg(cg, cg_vec);
+	vectorize_cgrp(cgrp, cgrp_vec);
 	vectorize_testdata(test_vec);
 
-	ASSERT_EQ(cg_vec, test_vec);
+	ASSERT_EQ(cgrp_vec, test_vec);
 
-	if (cg)
-		free(cg);
+	if (cgrp)
+		free(cgrp);
 }
 
 /*
@@ -238,7 +236,7 @@ TEST_F(CgroupGetCgroupTest, CgroupGetCgroup1)
 TEST_F(CgroupGetCgroupTest, CgroupGetCgroup_NoTasksFile)
 {
 	char tmp_path[FILENAME_MAX];
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret;
 
 	snprintf(tmp_path, FILENAME_MAX - 1, "%s/%s/%s/tasks",
@@ -246,12 +244,12 @@ TEST_F(CgroupGetCgroupTest, CgroupGetCgroup_NoTasksFile)
 	ret = rmrf(tmp_path);
 	ASSERT_EQ(ret, 0);
 
-	cg = cgroup_new_cgroup(CG_NAME);
-	ASSERT_NE(cg, nullptr);
+	cgrp = cgroup_new_cgroup(CG_NAME);
+	ASSERT_NE(cgrp, nullptr);
 
-	ret = cgroup_get_cgroup(cg);
+	ret = cgroup_get_cgroup(cgrp);
 	ASSERT_EQ(ret, ECGOTHER);
 
-	if (cg)
-		free(cg);
+	if (cgrp)
+		free(cgrp);
 }

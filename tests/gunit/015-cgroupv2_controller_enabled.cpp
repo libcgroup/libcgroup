@@ -55,8 +55,7 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 		int ret;
 
 		/* create the directory */
-		snprintf(tmp_path, FILENAME_MAX - 1, "%s/%s",
-			 PARENT_DIR, dirname);
+		snprintf(tmp_path, FILENAME_MAX - 1, "%s/%s", PARENT_DIR, dirname);
 		ret = mkdir(tmp_path, MODE);
 		ASSERT_EQ(ret, 0);
 	}
@@ -69,8 +68,7 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 
 		ASSERT_EQ(VERSIONS_CNT, CONTROLLERS_CNT);
 
-		snprintf(tmp_path, FILENAME_MAX - 1,
-			 "%s/cgroup.subtree_control", PARENT_DIR);
+		snprintf(tmp_path, FILENAME_MAX - 1, "%s/cgroup.subtree_control", PARENT_DIR);
 
 		f = fopen(tmp_path, "w");
 		ASSERT_NE(f, nullptr);
@@ -85,10 +83,8 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 		memset(&cg_namespace_table, 0, sizeof(cg_namespace_table));
 
 		for (i = 0; i < CONTROLLERS_CNT; i++) {
-			snprintf(cg_mount_table[i].name, CONTROL_NAMELEN_MAX,
-				 "%s", CONTROLLERS[i]);
-			snprintf(cg_mount_table[i].mount.path, FILENAME_MAX,
-				 "%s", PARENT_DIR);
+			snprintf(cg_mount_table[i].name, CONTROL_NAMELEN_MAX, "%s", CONTROLLERS[i]);
+			snprintf(cg_mount_table[i].mount.path, FILENAME_MAX, "%s", PARENT_DIR);
 			cg_mount_table[i].version = VERSIONS[i];
 		}
 	}
@@ -132,30 +128,30 @@ class CgroupV2ControllerEnabled : public ::testing::Test {
 TEST_F(CgroupV2ControllerEnabled, CgroupV1Controller)
 {
 	char ctrlr_name[] = "cpuset";
-	char cg_name[] = "foo";
+	char cgrp_name[] = "foo";
 	int ret;
 
-	ret = cgroupv2_controller_enabled(cg_name, ctrlr_name);
+	ret = cgroupv2_controller_enabled(cgrp_name, ctrlr_name);
 	ASSERT_EQ(ret, 0);
 }
 
 TEST_F(CgroupV2ControllerEnabled, RootCgroup)
 {
 	char ctrlr_name[] = "cpu";
-	char cg_name[] = "/";
+	char cgrp_name[] = "/";
 	int ret;
 
-	ret = cgroupv2_controller_enabled(cg_name, ctrlr_name);
+	ret = cgroupv2_controller_enabled(cgrp_name, ctrlr_name);
 	ASSERT_EQ(ret, 0);
 }
 
 TEST_F(CgroupV2ControllerEnabled, ControllerEnabled)
 {
 	char ctrlr_name[] = "pids";
-	char cg_name[] = "test3-ctrlrenabled";
+	char cgrp_name[] = "test3-ctrlrenabled";
 	int ret;
 
-	ret = cgroupv2_controller_enabled(cg_name, ctrlr_name);
+	ret = cgroupv2_controller_enabled(cgrp_name, ctrlr_name);
 	ASSERT_EQ(ret, 0);
 }
 
