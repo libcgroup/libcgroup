@@ -25,14 +25,14 @@ static const char * const CPU_MAX = "cpu.max";
 static const char * const CFS_QUOTA_US = "cpu.cfs_quota_us";
 static const char * const CFS_PERIOD_US = "cpu.cfs_period_us";
 
-static int read_setting(const char * const cgroup_name, const char * const controller_name,
+static int read_setting(const char * const cgrp_name, const char * const controller_name,
 			const char * const setting_name, char ** const value)
 {
 	char tmp_line[LL_MAX];
 	void *handle;
 	int ret;
 
-	ret = cgroup_read_value_begin(controller_name, cgroup_name, setting_name, &handle,
+	ret = cgroup_read_value_begin(controller_name, cgrp_name, setting_name, &handle,
 				      tmp_line, LL_MAX);
 	if (ret == ECGEOF)
 		goto read_end;

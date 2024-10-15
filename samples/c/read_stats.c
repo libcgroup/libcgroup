@@ -23,10 +23,8 @@ int read_stats(char *path, char *controller)
 	printf("Stats for %s:\n", path);
 	printf("%s: %s", stat.name, stat.value);
 
-	while ((ret = cgroup_read_stats_next(&handle, &stat)) !=
-			ECGEOF) {
+	while ((ret = cgroup_read_stats_next(&handle, &stat)) != ECGEOF)
 		printf("%s: %s", stat.name, stat.value);
-	}
 
 	cgroup_read_stats_end(&handle);
 	printf("\n");
@@ -36,7 +34,7 @@ int read_stats(char *path, char *controller)
 int main(int argc, char *argv[])
 {
 	struct cgroup_file_info info;
-	char cgroup_path[FILENAME_MAX];
+	char cgrp_path[FILENAME_MAX];
 	char *controller;
 	int root_len;
 	void *handle;
@@ -44,8 +42,7 @@ int main(int argc, char *argv[])
 	int ret;
 
 	if (argc < 2) {
-		fprintf(stderr, "Usage %s: <controller name>\n",
-			argv[0]);
+		fprintf(stderr, "Usage %s: <controller name>\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -65,8 +62,8 @@ int main(int argc, char *argv[])
 	}
 
 	root_len = strlen(info.full_path) - 1;
-	strncpy(cgroup_path, info.path, FILENAME_MAX - 1);
-	ret = read_stats(cgroup_path, controller);
+	strncpy(cgrp_path, info.path, FILENAME_MAX - 1);
+	ret = read_stats(cgrp_path, controller);
 	if (ret < 0)
 		exit(EXIT_FAILURE);
 
@@ -74,9 +71,9 @@ int main(int argc, char *argv[])
 			ECGEOF) {
 		if (info.type != CGROUP_FILE_TYPE_DIR)
 			continue;
-		strncpy(cgroup_path, info.full_path + root_len, FILENAME_MAX - 1);
-		strcat(cgroup_path, "/");
-		ret = read_stats(cgroup_path, controller);
+		strncpy(cgrp_path, info.full_path + root_len, FILENAME_MAX - 1);
+		strcat(cgrp_path, "/");
+		ret = read_stats(cgrp_path, controller);
 		if (ret < 0)
 			exit(EXIT_FAILURE);
 	}

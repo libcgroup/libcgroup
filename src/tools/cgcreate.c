@@ -53,7 +53,7 @@ static void usage(int status, const char *program_name)
 }
 
 #ifdef WITH_SYSTEMD
-static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
+static int create_systemd_scope(struct cgroup * const cgrp, const char * const prog_name,
 				int set_default, pid_t pid)
 {
 	struct cgroup_systemd_scope_opts opts;
@@ -68,17 +68,17 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 
 	opts.pid = pid;
 
-	ret = cgroup_create_scope2(cg, 0, &opts);
+	ret = cgroup_create_scope2(cgrp, 0, &opts);
 	if (!ret && set_default) {
-		scope = strstr(cg->name, "/");
+		scope = strstr(cgrp->name, "/");
 		if (!scope) {
 			err("%s: Invalid scope name %s, expected <slice>/<scope>\n",
-			    prog_name, cg->name);
+			    prog_name, cgrp->name);
 			ret = ECGINVAL;
 			goto err;
 		}
-		len = strlen(cg->name) - strlen(scope);
-		strncpy(slice, cg->name, FILENAME_MAX - 1);
+		len = strlen(cgrp->name) - strlen(scope);
+		strncpy(slice, cgrp->name, FILENAME_MAX - 1);
 		slice[len] = '\0';
 		scope++;
 
@@ -87,9 +87,8 @@ static int create_systemd_scope(struct cgroup * const cg, const char * const pro
 		 * cgroup_write_systemd_default_cgroup() returns 0 on failure
 		 */
 		if (ret == 0) {
-			err("%s: failed to write default %s/%s to ",
+			err("%s: failed to write default %s/%s to /var/run/libcgroup/systemd\n",
 			    prog_name, slice, scope);
-			err("/var/run/libcgroup/systemd\n");
 			ret = ECGINVAL;
 			goto err;
 		}
@@ -105,7 +104,7 @@ err:
 	return ret;
 }
 #else
-static int create_systemd_scope(struct cgroup * const cg, const char * const prog_name,
+static int create_systemd_scope(struct cgroup * const cgrp, const char * const prog_name,
 				int set_default, pid_t pid)
 {
 	return ECGINVAL;
@@ -140,9 +139,9 @@ int main(int argc, char *argv[])
 	int create_scope = 0;
 	pid_t scope_pid = -1;
 
-	struct cgroup_group_spec **cgroup_list;
+	struct cgroup_group_spec **cgrp_list;
 	struct cgroup_controller *cgc;
-	struct cgroup *cgroup;
+	struct cgroup *cgrp;
 
 	/* approximation of max. numbers of groups that will be created */
 	int capacity = argc;
@@ -164,8 +163,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_BADARGS);
 	}
 
-	cgroup_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
-	if (cgroup_list == NULL) {
+	cgrp_list = calloc(capacity, sizeof(struct cgroup_group_spec *));
+	if (cgrp_list == NULL) {
 		err("%s: out of memory\n", argv[0]);
 		ret = -1;
 		goto err;
@@ -211,7 +210,7 @@ int main(int argc, char *argv[])
 				goto err;
 			break;
 		case 'g':
-			ret = parse_cgroup_spec(cgroup_list, optarg, capacity);
+			ret = parse_cgroup_spec(cgrp_list, optarg, capacity);
 			if (ret) {
 				err("%s: cgroup controller and path parsing failed (%s)\n",
 				    argv[0], argv[optind]);
@@ -285,42 +284,42 @@ int main(int argc, char *argv[])
 
 	/* for each new cgroup */
 	for (i = 0; i < capacity; i++) {
-		if (!cgroup_list[i])
+		if (!cgrp_list[i])
 			break;
 
 		/* create the new cgroup structure */
-		cgroup = cgroup_new_cgroup(cgroup_list[i]->path);
-		if (!cgroup) {
+		cgrp = cgroup_new_cgroup(cgrp_list[i]->path);
+		if (!cgrp) {
 			ret = ECGFAIL;
 			err("%s: can't add new cgroup: %s\n", argv[0], cgroup_strerror(ret));
 			goto err;
 		}
 
 		/* set uid and gid for the new cgroup based on input options */
-		ret = cgroup_set_uid_gid(cgroup, tuid, tgid, auid, agid);
+		ret = cgroup_set_uid_gid(cgrp, tuid, tgid, auid, agid);
 		if (ret)
 			goto err;
 
 		/* add controllers to the new cgroup */
 		j = 0;
-		while (cgroup_list[i]->controllers[j]) {
-			if (strcmp(cgroup_list[i]->controllers[j], "*") == 0) {
+		while (cgrp_list[i]->controllers[j]) {
+			if (strcmp(cgrp_list[i]->controllers[j], "*") == 0) {
 				/* it is meta character, add all controllers */
-				ret = cgroup_add_all_controllers(cgroup);
+				ret = cgroup_add_all_controllers(cgrp);
 				if (ret != 0) {
 					ret = ECGINVAL;
 					err("%s: can't add all controllers\n", argv[0]);
-					cgroup_free(&cgroup);
+					cgroup_free(&cgrp);
 					goto err;
 				}
 			} else {
-				cgc = cgroup_add_controller(cgroup,
-					cgroup_list[i]->controllers[j]);
+				cgc = cgroup_add_controller(cgrp,
+					cgrp_list[i]->controllers[j]);
 				if (!cgc) {
 					ret = ECGINVAL;
 					err("%s: controller %s can't be add\n", argv[0],
-					    cgroup_list[i]->controllers[j]);
-					cgroup_free(&cgroup);
+					    cgrp_list[i]->controllers[j]);
+					cgroup_free(&cgrp);
 					goto err;
 				}
 			}
@@ -329,28 +328,28 @@ int main(int argc, char *argv[])
 
 		/* all variables set so create cgroup */
 		if (dirm_change | filem_change)
-			cgroup_set_permissions(cgroup, dir_mode, file_mode, tasks_mode);
+			cgroup_set_permissions(cgrp, dir_mode, file_mode, tasks_mode);
 
 		if (create_scope)
-			ret = create_systemd_scope(cgroup, argv[0], set_default_scope, scope_pid);
+			ret = create_systemd_scope(cgrp, argv[0], set_default_scope, scope_pid);
 		else
-			ret = cgroup_create_cgroup(cgroup, 0);
+			ret = cgroup_create_cgroup(cgrp, 0);
 		if (ret) {
-			err("%s: can't create cgroup %s: %s\n", argv[0], cgroup->name,
+			err("%s: can't create cgroup %s: %s\n", argv[0], cgrp->name,
 			    cgroup_strerror(ret));
-			cgroup_free(&cgroup);
+			cgroup_free(&cgrp);
 			goto err;
 		}
-		cgroup_free(&cgroup);
+		cgroup_free(&cgrp);
 	}
 
 err:
-	if (cgroup_list) {
+	if (cgrp_list) {
 		for (i = 0; i < capacity; i++) {
-			if (cgroup_list[i])
-				cgroup_free_group_spec(cgroup_list[i]);
+			if (cgrp_list[i])
+				cgroup_free_group_spec(cgrp_list[i]);
 		}
-		free(cgroup_list);
+		free(cgrp_list);
 	}
 
 	return ret;

@@ -53,13 +53,13 @@ void test_cgroup_init(int retcode, int i)
  * Tests the cgroup_attach_cgroup() api under different scenarios
  * @param retcode error code in case any error is expected from api
  * @param cgrp the group to assign the task to
- * @param group1 the name of the group under first (single) mountpoint
- * @param group2 the name of the group under 2nd moutpoint for multimount
+ * @param cgrp1 the name of the group under first (single) mountpoint
+ * @param cgrp2 the name of the group under 2nd moutpoint for multimount
  * @param i the test number
  * @param k the message enum number to print the useful message
  */
 void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
-			     const char *group1, const char *group2, pid_t pid,
+			     const char *cgrp1, const char *cgrp2, pid_t pid,
 			     int k, int i)
 {
 	char tasksfile[FILENAME_MAX], tasksfile2[FILENAME_MAX];
@@ -88,13 +88,13 @@ void test_cgroup_attach_task(int retcode, struct cgroup *cgrp,
 
 	/* API returned success, so perform check */
 	if (retval == 0) {
-		build_path(tasksfile, mountpoint, group1, "tasks");
+		build_path(tasksfile, mountpoint, cgrp1, "tasks");
 
 		if (check_task(tasksfile, 0)) {
 			if (fs_mounted == 2) {
 				/* multiple mounts */
 				build_path(tasksfile2, mountpoint2,
-					   group2, "tasks");
+					   cgrp2, "tasks");
 				if (check_task(tasksfile2, 0)) {
 					message(i, PASS, "attach_task()",
 						retval, info[TASKINGRP]);
@@ -716,7 +716,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	char controller_name[FILENAME_MAX], control_file[FILENAME_MAX];
 	char wr[SIZE], extra[] = "in cgroup_compare_cgroup";
-	struct cgroup *cgroup1 = NULL, *cgroup2 = NULL;
+	struct cgroup *cgrp1 = NULL, *cgrp2 = NULL;
 	struct cgroup_controller *controller = NULL;
 
 	struct cntl_val_t cval;
@@ -733,14 +733,14 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 	else
 		message(i++, FAIL, "compare_cgroup()", retval, info[NULLGRP]);
 
-	cgroup1 = cgroup_new_cgroup("testgroup");
-	cgroup2 = cgroup_new_cgroup("testgroup");
-	cgroup_set_uid_gid(cgroup1, 0, 0, 0, 0);
-	cgroup_set_uid_gid(cgroup2, 0, 0, 0, 0);
+	cgrp1 = cgroup_new_cgroup("testgroup");
+	cgrp2 = cgroup_new_cgroup("testgroup");
+	cgroup_set_uid_gid(cgrp1, 0, 0, 0, 0);
+	cgroup_set_uid_gid(cgrp2, 0, 0, 0, 0);
 
 	retval = set_controller(ctl1, controller_name, control_file);
 
-	controller = cgroup_add_controller(cgroup1, controller_name);
+	controller = cgroup_add_controller(cgrp1, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
 					    control_file, wr, STRING, cval);
@@ -748,7 +748,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 			message(i++, FAIL, wr, retval, extra);
 	}
 
-	controller = cgroup_add_controller(cgroup2, controller_name);
+	controller = cgroup_add_controller(cgrp2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
 					    control_file, wr, STRING, cval);
@@ -756,7 +756,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 			message(i++, FAIL, wr, retval, extra);
 	}
 
-	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
+	retval = cgroup_compare_cgroup(cgrp1, cgrp2);
 	if (retval)
 		message(i++, FAIL, "compare_cgroup()", retval, info[NOMESSAGE]);
 	else
@@ -764,7 +764,7 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 
 	/* Test the api by putting diff number of controllers in cgroups */
 	retval = set_controller(ctl2, controller_name, control_file);
-	controller = cgroup_add_controller(cgroup2, controller_name);
+	controller = cgroup_add_controller(cgrp2, controller_name);
 	if (controller) {
 		retval =  add_control_value(controller,
 					    control_file, wr, STRING, cval);
@@ -772,14 +772,14 @@ void test_cgroup_compare_cgroup(int ctl1, int ctl2, int i)
 			message(i++, FAIL, wr, retval, extra);
 	}
 
-	retval = cgroup_compare_cgroup(cgroup1, cgroup2);
+	retval = cgroup_compare_cgroup(cgrp1, cgrp2);
 	if (retval == ECGROUPNOTEQUAL)
 		message(i++, PASS, "compare_cgroup()", retval, info[NOMESSAGE]);
 	else
 		message(i++, FAIL, "compare_cgroup()", retval, info[NOMESSAGE]);
 
-	cgroup_free(&cgroup1);
-	cgroup_free(&cgroup2);
+	cgroup_free(&cgrp1);
+	cgroup_free(&cgrp2);
 }
 
 /**
@@ -825,10 +825,10 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
 		cgroup_free(&cgroup_filled);
 
 		/* 3.
-		 * Test with name filled cgroup. Ensure the group group1 exists
+		 * Test with name filled cgroup. Ensure the group cgrp1 exists
 		 * in the filesystem before calling this test function
 		 */
-		cgroup_filled = cgroup_new_cgroup("group1");
+		cgroup_filled = cgroup_new_cgroup("cgrp1");
 		if (!cgroup_filled)
 			message(i++, FAIL, "new_cgroup()", 0, info[NOMESSAGE]);
 
@@ -893,31 +893,31 @@ void test_cgroup_get_cgroup(int ctl1, int ctl2, struct uid_gid_t ids, int i)
  */
 void test_cgroup_add_free_controller(int i)
 {
-	struct cgroup *cgroup1 = NULL, *cgroup2 = NULL;
+	struct cgroup *cgrp1 = NULL, *cgrp2 = NULL;
 	struct cgroup_controller *cgctl1, *cgctl2;
 
 	/* Test with a Null cgroup */
-	cgctl1 = cgroup_add_controller(cgroup1, "cpu");
+	cgctl1 = cgroup_add_controller(cgrp1, "cpu");
 	if (!cgctl1)
 		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
 	else
 		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
 
-	cgroup1 = cgroup_new_cgroup("testgroup");
-	cgctl1 = cgroup_add_controller(cgroup1, "cpuset");
+	cgrp1 = cgroup_new_cgroup("testgroup");
+	cgctl1 = cgroup_add_controller(cgrp1, "cpuset");
 	if (cgctl1)
 		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
 	else
 		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
 
-	cgctl2 = cgroup_add_controller(cgroup1, "cpu");
+	cgctl2 = cgroup_add_controller(cgrp1, "cpu");
 	if (cgctl2)
 		message(i++, PASS, "add_controller()", 0, info[NOMESSAGE]);
 	else
 		message(i++, FAIL, "add_controller()", -1, info[NOMESSAGE]);
 
-	cgroup_free(&cgroup1);
-	cgroup_free_controllers(cgroup2);
+	cgroup_free(&cgrp1);
+	cgroup_free_controllers(cgrp2);
 }
 
 /**

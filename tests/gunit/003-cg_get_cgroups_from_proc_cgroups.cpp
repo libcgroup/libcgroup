@@ -32,73 +32,67 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine)
 	char contents[] =
 		"5:pids:/user.slice/user-1000.slice/session-1.scope\n";
 	char *controller_list[LIST_LEN];
-	char *cgroup_list[LIST_LEN];
+	char *cgrp_list[LIST_LEN];
 	pid_t pid = 1234;
 	int ret, i;
 
 	for (i = 0; i < LIST_LEN; i++) {
 		controller_list[i] = NULL;
-		cgroup_list[i] = NULL;
+		cgrp_list[i] = NULL;
 	}
 
 	CreateCgroupProcFile(contents);
 
-	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list,
-			controller_list, LIST_LEN);
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgrp_list, controller_list, LIST_LEN);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(controller_list[0], "pids");
-	ASSERT_STREQ(cgroup_list[0],
-		     "user.slice/user-1000.slice/session-1.scope");
+	ASSERT_STREQ(cgrp_list[0], "user.slice/user-1000.slice/session-1.scope");
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine2)
 {
 #undef LIST_LEN
 #define LIST_LEN 1
-	char contents[] =
-		"5:cpu,cpuacct:/\n";
+	char contents[] = "5:cpu,cpuacct:/\n";
 	char *controller_list[LIST_LEN];
-	char *cgroup_list[LIST_LEN];
+	char *cgrp_list[LIST_LEN];
 	pid_t pid = 1234;
 	int ret, i;
 
 	for (i = 0; i < LIST_LEN; i++) {
 		controller_list[i] = NULL;
-		cgroup_list[i] = NULL;
+		cgrp_list[i] = NULL;
 	}
 
 	CreateCgroupProcFile(contents);
 
-	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list,
-			controller_list, LIST_LEN);
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgrp_list, controller_list, LIST_LEN);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(controller_list[0], "cpu,cpuacct");
-	ASSERT_STREQ(cgroup_list[0], "/");
+	ASSERT_STREQ(cgrp_list[0], "/");
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadEmptyController)
 {
 #undef LIST_LEN
 #define LIST_LEN 1
-	char contents[] =
-		"0::/user.slice/user-1000.slice/session-1.scope\n";
+	char contents[] = "0::/user.slice/user-1000.slice/session-1.scope\n";
 	char *controller_list[LIST_LEN];
-	char *cgroup_list[LIST_LEN];
+	char *cgrp_list[LIST_LEN];
 	pid_t pid = 1234;
 	int ret, i;
 
 	for (i = 0; i < LIST_LEN; i++) {
 		controller_list[i] = NULL;
-		cgroup_list[i] = NULL;
+		cgrp_list[i] = NULL;
 	}
 
 	CreateCgroupProcFile(contents);
 
-	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list,
-			controller_list, LIST_LEN);
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgrp_list, controller_list, LIST_LEN);
 	ASSERT_EQ(ret, 0);
 	ASSERT_EQ(controller_list[0], nullptr);
-	ASSERT_EQ(cgroup_list[0], nullptr);
+	ASSERT_EQ(cgrp_list[0], nullptr);
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadExampleFile)
@@ -118,45 +112,44 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadExampleFile)
 		"1:name=systemd:/user.slice/user-1000.slice/session-1.scope\n"
 		"0::/user.slice/user-1000.slice/session-1.scope\n";
 	char *controller_list[MAX_MNT_ELEMENTS];
-	char *cgroup_list[MAX_MNT_ELEMENTS];
+	char *cgrp_list[MAX_MNT_ELEMENTS];
 	pid_t pid = 5678;
 	int ret, i;
 
 	for (i = 0; i < MAX_MNT_ELEMENTS; i++) {
 		controller_list[i] = NULL;
-		cgroup_list[i] = NULL;
+		cgrp_list[i] = NULL;
 	}
 
 	CreateCgroupProcFile(contents);
 
-	ret = cg_get_cgroups_from_proc_cgroups(pid, cgroup_list,
-			controller_list, MAX_MNT_ELEMENTS);
+	ret = cg_get_cgroups_from_proc_cgroups(pid, cgrp_list, controller_list, MAX_MNT_ELEMENTS);
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(controller_list[0], "memory");
-	ASSERT_STREQ(cgroup_list[0], "user/johndoe/0");
+	ASSERT_STREQ(cgrp_list[0], "user/johndoe/0");
 	ASSERT_STREQ(controller_list[1], "perf_event");
-	ASSERT_STREQ(cgroup_list[1], "/");
+	ASSERT_STREQ(cgrp_list[1], "/");
 	ASSERT_STREQ(controller_list[2], "rdma");
-	ASSERT_STREQ(cgroup_list[2], "/");
+	ASSERT_STREQ(cgrp_list[2], "/");
 	ASSERT_STREQ(controller_list[3], "blkio");
-	ASSERT_STREQ(cgroup_list[3], "user.slice");
+	ASSERT_STREQ(cgrp_list[3], "user.slice");
 	ASSERT_STREQ(controller_list[4], "cpu,cpuacct");
-	ASSERT_STREQ(cgroup_list[4], "myCgroup");
+	ASSERT_STREQ(cgrp_list[4], "myCgroup");
 	ASSERT_STREQ(controller_list[5], "freezer");
-	ASSERT_STREQ(cgroup_list[5], "user/johndoe/0");
+	ASSERT_STREQ(cgrp_list[5], "user/johndoe/0");
 	ASSERT_STREQ(controller_list[6], "net_cls,net_prio");
-	ASSERT_STREQ(cgroup_list[6], "/");
+	ASSERT_STREQ(cgrp_list[6], "/");
 	ASSERT_STREQ(controller_list[7], "pids");
-	ASSERT_STREQ(cgroup_list[7], "user.slice/user-1000.slice/session-1.scope");
+	ASSERT_STREQ(cgrp_list[7], "user.slice/user-1000.slice/session-1.scope");
 	ASSERT_STREQ(controller_list[8], "devices");
-	ASSERT_STREQ(cgroup_list[8], "user.slice");
+	ASSERT_STREQ(cgrp_list[8], "user.slice");
 	ASSERT_STREQ(controller_list[9], "cpuset");
-	ASSERT_STREQ(cgroup_list[9], "/");
+	ASSERT_STREQ(cgrp_list[9], "/");
 	ASSERT_STREQ(controller_list[10], "hugetlb");
-	ASSERT_STREQ(cgroup_list[10], "/");
+	ASSERT_STREQ(cgrp_list[10], "/");
 	ASSERT_STREQ(controller_list[11], "name=systemd");
-	ASSERT_STREQ(cgroup_list[11], "user.slice/user-1000.slice/session-1.scope");
+	ASSERT_STREQ(cgrp_list[11], "user.slice/user-1000.slice/session-1.scope");
 
 	ASSERT_EQ(controller_list[12], nullptr);
-	ASSERT_EQ(cgroup_list[12], nullptr);
+	ASSERT_EQ(cgrp_list[12], nullptr);
 }

@@ -64,15 +64,15 @@ extern "C" {
 #define CGRULES_CONF_DIR		"/etc/cgrules.d"
 #define CGRULES_MAX_FIELDS_PER_LINE	3
 
-#define CGROUP_BUFFER_LEN	(5 * FILENAME_MAX)
+#define CGRP_BUFFER_LEN	(5 * FILENAME_MAX)
 
 /* Maximum length of a key(<user>:<process name>) in the daemon config file */
-#define CGROUP_RULE_MAXKEY	(LOGIN_NAME_MAX + FILENAME_MAX + 1)
+#define CGRP_RULE_MAXKEY	(LOGIN_NAME_MAX + FILENAME_MAX + 1)
 
 /* Maximum length of a line in the daemon config file */
-#define CGROUP_RULE_MAXLINE	(FILENAME_MAX + CGROUP_RULE_MAXKEY + CG_CONTROLLER_MAX + 3)
+#define CGRP_RULE_MAXLINE	(FILENAME_MAX + CGRP_RULE_MAXKEY + CG_CONTROLLER_MAX + 3)
 
-#define CGROUP_FILE_PREFIX	"cgroup"
+#define CGRP_FILE_PREFIX	"cgroup"
 
 /* cgroup v2 files */
 #define CGV2_CONTROLLERS_FILE   "cgroup.controllers"
@@ -87,7 +87,7 @@ extern "C" {
 #define cgroup_dbg(x...)	cgroup_log(CGROUP_LOG_DEBUG, x)
 #define cgroup_cont(x...)	cgroup_log(CGROUP_LOG_CONT, x)
 
-#define CGROUP_DEFAULT_LOGLEVEL CGROUP_LOG_ERROR
+#define CGRP_DEFAULT_LOGLEVEL	CGROUP_LOG_ERROR
 
 #define max(x, y) ((y) < (x)?(x):(y))
 #define min(x, y) ((y) > (x)?(x):(y))
@@ -239,7 +239,7 @@ int cgroup_get_procname_from_procfs(pid_t pid, char **procname);
 int cg_mkdir_p(const char *path);
 struct cgroup *create_cgroup_from_name_value_pairs(const char *name,
 						struct control_value *name_value, int nv_number);
-void init_cgroup_table(struct cgroup *cgroups, size_t count);
+void init_cgroup_table(struct cgroup *cgrps, size_t count);
 
 /*
  * Main mounting structures
@@ -353,13 +353,13 @@ char *cg_build_path_locked(const char *setting, char *path, const char *controll
  * Given a cgroup controller and a setting within it, populate the setting's value
  *
  * @param ctrl_dir dirent representation of the setting, e.g. memory.stat
- * @param cgroup current cgroup
+ * @param cgrp current cgroup
  * @param cgc current cgroup controller
  * @param cg_index Index into the cg_mount_table of the cgroup
  *
  * @note The cg_mount_table_lock must be held prior to calling this function
  */
-int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgroup, struct cgroup_controller *cgc,
+int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgrp, struct cgroup_controller *cgc,
 		    int cg_index);
 
 /**
@@ -408,7 +408,7 @@ void cgroup_free_controller(struct cgroup_controller *ctrl);
 #define TEST_PROC_PID_CGROUP_FILE "test-procpidcgroup"
 
 int cgroup_parse_rules_options(char *options, struct cgroup_rule * const rule);
-int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgroup_list[], char *controller_list[],
+int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgrp_list[], char *controller_list[],
 				     int list_len);
 bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pid_t pid,
 				const char * const procname);

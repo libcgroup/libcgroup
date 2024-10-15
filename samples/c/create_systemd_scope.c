@@ -184,16 +184,16 @@ error:
 
 static int create_tmp_cgroup(const struct example_opts * const opts)
 {
-	struct cgroup *cg;
+	struct cgroup *cgrp;
 	int ret = 0;
 
-	cg = cgroup_new_cgroup(TMP_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(TMP_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		goto error;
 	}
 
-	ret = cgroup_create_cgroup(cg, 1);
+	ret = cgroup_create_cgroup(cgrp, 1);
 	if (ret) {
 		printf("Failed to write the cgroup to /sys/fs/cgroup: %d: %s\n",
 		       ret, cgroup_strerror(ret));
@@ -201,15 +201,15 @@ static int create_tmp_cgroup(const struct example_opts * const opts)
 	}
 
 error:
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	return ret;
 }
 
 static int move_pids_to_tmp_cgroup(const struct example_opts * const opts)
 {
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret, pid_cnt, i;
 	pid_t *pids = NULL;
 	int saved_ret = 0;
@@ -227,14 +227,14 @@ static int move_pids_to_tmp_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	cg = cgroup_new_cgroup(TMP_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(TMP_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		goto error;
 	}
 
 	for (i = 0; i < pid_cnt; i++) {
-		ret = cgroup_attach_task_pid(cg, pids[i]);
+		ret = cgroup_attach_task_pid(cgrp, pids[i]);
 		if (ret) {
 			printf("Failed to attach pid %d to %s\n", pids[i], TMP_CGNAME);
 			/*
@@ -251,8 +251,8 @@ error:
 	if (pids)
 		free(pids);
 
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	if (ret == 0 && saved_ret)
 		ret = saved_ret;
@@ -263,20 +263,19 @@ error:
 static int create_high_priority_cgroup(const struct example_opts * const opts)
 {
 	struct cgroup_controller *ctrl;
-	struct cgroup *cg;
+	struct cgroup *cgrp;
 	int ret = 0;
 
-	cg = cgroup_new_cgroup(HIGH_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(HIGH_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		ret = ECGFAIL;
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "cpu");
+	ctrl = cgroup_add_controller(cgrp, "cpu");
 	if (!ctrl) {
-		printf("Failed to add the cpu controller to the %s cgroup struct\n",
-		       HIGH_CGNAME);
+		printf("Failed to add the cpu controller to the %s cgroup struct\n", HIGH_CGNAME);
 		ret = ECGFAIL;
 		goto error;
 	}
@@ -288,7 +287,7 @@ static int create_high_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "memory");
+	ctrl = cgroup_add_controller(cgrp, "memory");
 	if (!ctrl) {
 		printf("Failed to add the memory controller to the %s cgroup struct\n",
 		       HIGH_CGNAME);
@@ -303,7 +302,7 @@ static int create_high_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ret = cgroup_create_cgroup(cg, 0);
+	ret = cgroup_create_cgroup(cgrp, 0);
 	if (ret) {
 		printf("Failed to write the %s cgroup to /sys/fs/cgroup: %d: %s\n",
 		       HIGH_CGNAME, ret, cgroup_strerror(ret));
@@ -311,8 +310,8 @@ static int create_high_priority_cgroup(const struct example_opts * const opts)
 	}
 
 error:
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	return ret;
 }
@@ -320,20 +319,19 @@ error:
 static int create_medium_priority_cgroup(const struct example_opts * const opts)
 {
 	struct cgroup_controller *ctrl;
-	struct cgroup *cg;
+	struct cgroup *cgrp;
 	int ret = 0;
 
-	cg = cgroup_new_cgroup(MED_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(MED_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		ret = ECGFAIL;
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "cpu");
+	ctrl = cgroup_add_controller(cgrp, "cpu");
 	if (!ctrl) {
-		printf("Failed to add the cpu controller to the %s cgroup struct\n",
-		       MED_CGNAME);
+		printf("Failed to add the cpu controller to the %s cgroup struct\n", MED_CGNAME);
 		ret = ECGFAIL;
 		goto error;
 	}
@@ -345,7 +343,7 @@ static int create_medium_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "memory");
+	ctrl = cgroup_add_controller(cgrp, "memory");
 	if (!ctrl) {
 		printf("Failed to add the memory controller to the %s cgroup struct\n",
 		       MED_CGNAME);
@@ -360,7 +358,7 @@ static int create_medium_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ret = cgroup_create_cgroup(cg, 0);
+	ret = cgroup_create_cgroup(cgrp, 0);
 	if (ret) {
 		printf("Failed to write the %s cgroup to /sys/fs/cgroup: %d: %s\n",
 		       MED_CGNAME, ret, cgroup_strerror(ret));
@@ -368,8 +366,8 @@ static int create_medium_priority_cgroup(const struct example_opts * const opts)
 	}
 
 error:
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	return ret;
 }
@@ -377,20 +375,19 @@ error:
 static int create_low_priority_cgroup(const struct example_opts * const opts)
 {
 	struct cgroup_controller *ctrl;
-	struct cgroup *cg;
+	struct cgroup *cgrp;
 	int ret = 0;
 
-	cg = cgroup_new_cgroup(LOW_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(LOW_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		ret = ECGFAIL;
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "cpu");
+	ctrl = cgroup_add_controller(cgrp, "cpu");
 	if (!ctrl) {
-		printf("Failed to add the cpu controller to the %s cgroup struct\n",
-		       LOW_CGNAME);
+		printf("Failed to add the cpu controller to the %s cgroup struct\n", LOW_CGNAME);
 		ret = ECGFAIL;
 		goto error;
 	}
@@ -402,7 +399,7 @@ static int create_low_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ctrl = cgroup_add_controller(cg, "memory");
+	ctrl = cgroup_add_controller(cgrp, "memory");
 	if (!ctrl) {
 		printf("Failed to add the memory controller to the %s cgroup struct\n",
 		       LOW_CGNAME);
@@ -417,7 +414,7 @@ static int create_low_priority_cgroup(const struct example_opts * const opts)
 		goto error;
 	}
 
-	ret = cgroup_create_cgroup(cg, 0);
+	ret = cgroup_create_cgroup(cgrp, 0);
 	if (ret) {
 		printf("Failed to write the %s cgroup to /sys/fs/cgroup: %d: %s\n",
 		       LOW_CGNAME, ret, cgroup_strerror(ret));
@@ -425,13 +422,13 @@ static int create_low_priority_cgroup(const struct example_opts * const opts)
 	}
 
 error:
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	return ret;
 }
 
-static int create_process(pid_t * const pid, const char * const cgname)
+static int create_process(pid_t * const pid, const char * const cgrp_name)
 {
 	int ret = 0;
 
@@ -444,7 +441,7 @@ static int create_process(pid_t * const pid, const char * const cgname)
 		/*
 		 * This is the child process.  Move it to the requested cgroup
 		 */
-		ret = cgroup_change_cgroup_path(cgname, getpid(), NULL);
+		ret = cgroup_change_cgroup_path(cgrp_name, getpid(), NULL);
 		if (ret)
 			exit(0);
 
@@ -461,7 +458,7 @@ error:
 
 static int delete_tmp_cgroup(void)
 {
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret, pid_cnt, i;
 	int saved_errno = 0;
 	pid_t *pids = NULL;
@@ -484,13 +481,13 @@ static int delete_tmp_cgroup(void)
 		}
 	}
 
-	cg = cgroup_new_cgroup(TMP_CGNAME);
-	if (!cg) {
+	cgrp = cgroup_new_cgroup(TMP_CGNAME);
+	if (!cgrp) {
 		printf("Failed to allocate the cgroup struct.  Are we out of memory?\n");
 		goto error;
 	}
 
-	ret = cgroup_delete_cgroup(cg, 1);
+	ret = cgroup_delete_cgroup(cgrp, 1);
 	if (ret)
 		printf("Failed to delete the %s cgroup: %d: %s\n", TMP_CGNAME, ret,
 		       cgroup_strerror(ret));
@@ -499,8 +496,8 @@ error:
 	if (pids)
 		free(pids);
 
-	if (cg)
-		cgroup_free(&cg);
+	if (cgrp)
+		cgroup_free(&cgrp);
 
 	if (ret == 0 && saved_errno)
 		ret = ECGFAIL;

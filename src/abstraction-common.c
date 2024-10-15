@@ -219,16 +219,16 @@ out:
 	return ret;
 }
 
-int cgroup_convert_cgroup(struct cgroup * const out_cgroup, enum cg_version_t out_version,
-			  const struct cgroup * const in_cgroup, enum cg_version_t in_version)
+int cgroup_convert_cgroup(struct cgroup * const out_cgrp, enum cg_version_t out_version,
+			  const struct cgroup * const in_cgrp, enum cg_version_t in_version)
 {
 	struct cgroup_controller *cgc;
 	bool unmappable = false;
 	int ret = 0;
 	int i;
 
-	for (i = 0; i < in_cgroup->index; i++) {
-		cgc = cgroup_add_controller(out_cgroup, in_cgroup->controller[i]->name);
+	for (i = 0; i < in_cgrp->index; i++) {
+		cgc = cgroup_add_controller(out_cgrp, in_cgrp->controller[i]->name);
 		if (cgc == NULL) {
 			ret = ECGFAIL;
 			goto out;
@@ -236,9 +236,9 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup, enum cg_version_t ou
 
 		/* the user has overridden the version */
 		if (in_version == CGROUP_V1 || in_version == CGROUP_V2)
-			in_cgroup->controller[i]->version = in_version;
+			in_cgrp->controller[i]->version = in_version;
 
-		if (strcmp(CGROUP_FILE_PREFIX, cgc->name) == 0)
+		if (strcmp(CGRP_FILE_PREFIX, cgc->name) == 0)
 			/*
 			 * libcgroup only supports accessing cgroup.* files
 			 * on cgroup v2 filesystems.
@@ -253,7 +253,7 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup, enum cg_version_t ou
 				goto out;
 		}
 
-		ret = convert_controller(&cgc, in_cgroup->controller[i]);
+		ret = convert_controller(&cgc, in_cgrp->controller[i]);
 		if (ret == ECGNOVERSIONCONVERT) {
 			/*
 			 * Ignore unmappable errors while they happen, as
@@ -267,7 +267,7 @@ int cgroup_convert_cgroup(struct cgroup * const out_cgroup, enum cg_version_t ou
 				 * and was removed.  It's up to us to manage
 				 * the controller count
 				 */
-				out_cgroup->index--;
+				out_cgrp->index--;
 		} else if (ret) {
 			/* immediately fail on all other errors */
 			goto out;

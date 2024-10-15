@@ -292,12 +292,12 @@ static int display_permissions(const char *path, const char * const cg_name,
  *   controllers records
  * tail
  */
-static int display_cgroup_data(struct cgroup *group,
+static int display_cgroup_data(struct cgroup *cgrp,
 			       char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
-			       const char *group_path, int root_path_len, int first,
+			       const char *cgrp_path, int root_path_len, int first,
 			       const char *program_name)
 {
-	struct cgroup_controller *group_controller = NULL;
+	struct cgroup_controller *cgrp_controller = NULL;
 	char var_path[FILENAME_MAX];
 	char *value = NULL;
 	char *output_name;
@@ -309,19 +309,19 @@ static int display_cgroup_data(struct cgroup *group,
 	char *name;
 
 	/* print the  group definition header */
-	fprintf(output_f, "group %s {\n", group->name);
+	fprintf(output_f, "group %s {\n", cgrp->name);
 
 	/* for all wanted controllers display controllers tag */
 	while (controller[i][0] != '\0') {
 		/* display the permission tags */
-		ret = display_permissions(group_path, group->name, controller[i]);
+		ret = display_permissions(cgrp_path, cgrp->name, controller[i]);
 		if (ret)
 			return ret;
 
-		group_controller = cgroup_get_controller(group, controller[i]);
-		if (group_controller == NULL) {
+		cgrp_controller = cgroup_get_controller(cgrp, controller[i]);
+		if (cgrp_controller == NULL) {
 			info("cannot find controller '%s' in group '%s'\n", controller[i],
-			     group->name);
+			     cgrp->name);
 			i++;
 			ret = -1;
 			continue;
@@ -333,22 +333,22 @@ static int display_cgroup_data(struct cgroup *group,
 		else
 			fprintf(output_f, "\t%s {\n", controller[i]);
 		i++;
-		nr_var = cgroup_get_value_name_count(group_controller);
+		nr_var = cgroup_get_value_name_count(cgrp_controller);
 
 		for (j = 0; j < nr_var; j++) {
-			name = cgroup_get_value_name(group_controller, j);
+			name = cgroup_get_value_name(cgrp_controller, j);
 
 			/*
 			 * For the non-root groups cgconfigparser set
 			 * permissions of variable files to 777. Thus it
 			 * is necessary to test the permissions of variable
-			 * files in the root group to find out whether the
+			 * files in the root cgroup to find out whether the
 			 * variable is writable.
 			 */
 			if (root_path_len >= FILENAME_MAX)
 				root_path_len = FILENAME_MAX - 1;
 
-			strncpy(var_path, group_path, root_path_len);
+			strncpy(var_path, cgrp_path, root_path_len);
 			var_path[root_path_len] = '\0';
 
 			strncat(var_path, "/", FILENAME_MAX - strlen(var_path) - 1);
@@ -416,7 +416,7 @@ static int display_cgroup_data(struct cgroup *group,
 				fprintf(output_f, "\t\tdevices.deny=\"a *:* rwm\";\n");
 			}
 
-			ret = cgroup_get_value_string(group_controller, name, &value);
+			ret = cgroup_get_value_string(cgrp_controller, name, &value);
 
 			/* variable can not be read */
 			if (ret != 0) {
@@ -444,9 +444,9 @@ err:
 static int display_controller_data(char controller[CG_CONTROLLER_MAX][FILENAME_MAX],
 				   const char *program_name)
 {
-	char cgroup_name[FILENAME_MAX];
+	char cgrp_name[FILENAME_MAX];
 	struct cgroup_file_info info;
-	struct cgroup *group = NULL;
+	struct cgroup *cgrp = NULL;
 	int prefix_len;
 	void *handle;
 	int first = 1;
@@ -468,18 +468,18 @@ static int display_controller_data(char controller[CG_CONTROLLER_MAX][FILENAME_M
 		/* some group starts here */
 		if (info.type == CGROUP_FILE_TYPE_DIR) {
 			/* parse the group name from full_path*/
-			strncpy(cgroup_name, &info.full_path[prefix_len], FILENAME_MAX);
-			cgroup_name[FILENAME_MAX-1] = '\0';
+			strncpy(cgrp_name, &info.full_path[prefix_len], FILENAME_MAX);
+			cgrp_name[FILENAME_MAX-1] = '\0';
 
 			/* start to grab data about the new group */
-			group = cgroup_new_cgroup(cgroup_name);
-			if (group == NULL) {
-				info("cannot create group '%s'\n", cgroup_name);
+			cgrp = cgroup_new_cgroup(cgrp_name);
+			if (cgrp == NULL) {
+				info("cannot create cgrp '%s'\n", cgrp_name);
 				ret = ECGFAIL;
 				goto err;
 			}
 
-			ret = cgroup_get_cgroup(group);
+			ret = cgroup_get_cgroup(cgrp);
 			if (ret != 0) {
 				/*
 				 * We know for sure that the cgroup exists
@@ -488,17 +488,17 @@ static int display_controller_data(char controller[CG_CONTROLLER_MAX][FILENAME_M
 				 * file.
 				 */
 				if (ret != ECGROUPNOTEXIST) {
-					info("cannot read group '%s': %s %d\n", cgroup_name,
+					info("cannot read group '%s': %s %d\n", cgrp_name,
 					     cgroup_strerror(ret), ret);
 					goto err;
 				}
 			}
 
 			if (ret == 0)
-				display_cgroup_data(group, controller, info.full_path, prefix_len,
+				display_cgroup_data(cgrp, controller, info.full_path, prefix_len,
 						    first, program_name);
 			first = 0;
-			cgroup_free(&group);
+			cgroup_free(&cgrp);
 		}
 	}
 

@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	mode_t file_mode = NO_PERMS;
 	mode_t dir_mode = NO_PERMS;
 
-	struct cgroup *default_group = NULL;
+	struct cgroup *default_cgrp = NULL;
 	int filem_change = 0;
 	int dirm_change = 0;
 	int ret, error = 0;
@@ -153,23 +153,23 @@ int main(int argc, char *argv[])
 	}
 
 	/* set default permissions */
-	default_group = cgroup_new_cgroup("default");
-	if (!default_group) {
+	default_cgrp = cgroup_new_cgroup("default");
+	if (!default_cgrp) {
 		error = -1;
 		err("%s: cannot create default cgroup\n", argv[0]);
 		goto err;
 	}
 
-	error = cgroup_set_uid_gid(default_group, tuid, tgid, auid, agid);
+	error = cgroup_set_uid_gid(default_cgrp, tuid, tgid, auid, agid);
 	if (error) {
 		err("%s: cannot set default UID and GID: %s\n", argv[0], cgroup_strerror(error));
 		goto free_cgroup;
 	}
 
 	if (dirm_change | filem_change)
-		cgroup_set_permissions(default_group, dir_mode, file_mode, tasks_mode);
+		cgroup_set_permissions(default_cgrp, dir_mode, file_mode, tasks_mode);
 
-	error = cgroup_config_set_default(default_group);
+	error = cgroup_config_set_default(default_cgrp);
 	if (error) {
 		err("%s: cannot set config parser defaults: %s\n", argv[0],
 		    cgroup_strerror(error));
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 	}
 
 free_cgroup:
-	cgroup_free(&default_group);
+	cgroup_free(&default_cgrp);
 err:
 	cgroup_string_list_free(&cfg_files);
 

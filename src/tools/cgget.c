@@ -71,33 +71,33 @@ static int get_controller_from_name(const char * const name, char **controller)
 	return 0;
 }
 
-static int create_cg(struct cgroup **cg_list[], int * const cg_list_len)
+static int create_cgrp(struct cgroup **cgrp_list[], int * const cgrp_list_len)
 {
-	*cg_list = realloc(*cg_list, ((*cg_list_len) + 1) * sizeof(struct cgroup *));
-	if ((*cg_list) == NULL)
+	*cgrp_list = realloc(*cgrp_list, ((*cgrp_list_len) + 1) * sizeof(struct cgroup *));
+	if ((*cgrp_list) == NULL)
 		return ECGCONTROLLERCREATEFAILED;
 
-	memset(&(*cg_list)[*cg_list_len], 0, sizeof(struct cgroup *));
+	memset(&(*cgrp_list)[*cgrp_list_len], 0, sizeof(struct cgroup *));
 
-	(*cg_list)[*cg_list_len] = cgroup_new_cgroup("");
-	if ((*cg_list)[*cg_list_len] == NULL)
+	(*cgrp_list)[*cgrp_list_len] = cgroup_new_cgroup("");
+	if ((*cgrp_list)[*cgrp_list_len] == NULL)
 		return ECGCONTROLLERCREATEFAILED;
 
-	(*cg_list_len)++;
+	(*cgrp_list_len)++;
 
 	return 0;
 }
 
-static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
+static int parse_a_flag(struct cgroup **cgrp_list[], int * const cgrp_list_len)
 {
 	struct cgroup_mount_point controller;
 	struct cgroup_controller *cgc;
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	void *handle;
 	int ret = 0;
 
-	if ((*cg_list_len) == 0) {
-		ret = create_cg(cg_list, cg_list_len);
+	if ((*cgrp_list_len) == 0) {
+		ret = create_cgrp(cgrp_list, cgrp_list_len);
 		if (ret)
 			goto out;
 	}
@@ -107,13 +107,13 @@ static int parse_a_flag(struct cgroup **cg_list[], int * const cg_list_len)
 	 * an optarg at the end with no flag.  Let's temporarily populate
 	 * the first cgroup with the requested control values.
 	 */
-	cg = (*cg_list)[0];
+	cgrp = (*cgrp_list)[0];
 
 	ret = cgroup_get_controller_begin(&handle, &controller);
 	while (ret == 0) {
-		cgc = cgroup_get_controller(cg, controller.name);
+		cgc = cgroup_get_controller(cgrp, controller.name);
 		if (!cgc) {
-			cgc = cgroup_add_controller(cg, controller.name);
+			cgc = cgroup_add_controller(cgrp, controller.name);
 			if (!cgc) {
 				err("cgget: cannot find controller '%s'\n", controller.name);
 				ret = ECGOTHER;
@@ -139,16 +139,16 @@ out:
 	return ret;
 }
 
-static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
+static int parse_r_flag(struct cgroup **cgrp_list[], int * const cgrp_list_len,
 			const char * const cntl_value)
 {
 	char *cntl_value_controller = NULL;
 	struct cgroup_controller *cgc;
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret = 0;
 
-	if ((*cg_list_len) == 0) {
-		ret = create_cg(cg_list, cg_list_len);
+	if ((*cgrp_list_len) == 0) {
+		ret = create_cgrp(cgrp_list, cgrp_list_len);
 		if (ret)
 			goto out;
 	}
@@ -158,15 +158,15 @@ static int parse_r_flag(struct cgroup **cg_list[], int * const cg_list_len,
 	 * an optarg at the end with no flag.  Let's temporarily populate
 	 * the first cgroup with the requested control values.
 	 */
-	cg = (*cg_list)[0];
+	cgrp = (*cgrp_list)[0];
 
 	ret = get_controller_from_name(cntl_value, &cntl_value_controller);
 	if (ret)
 		goto out;
 
-	cgc = cgroup_get_controller(cg, cntl_value_controller);
+	cgc = cgroup_get_controller(cgrp, cntl_value_controller);
 	if (!cgc) {
-		cgc = cgroup_add_controller(cg, cntl_value_controller);
+		cgc = cgroup_add_controller(cgrp, cntl_value_controller);
 		if (!cgc) {
 			err("cgget: cannot find controller '%s'\n", cntl_value_controller);
 			ret = ECGOTHER;
@@ -183,20 +183,20 @@ out:
 	return ret;
 }
 
-static int parse_g_flag_no_colon(struct cgroup **cg_list[], int * const cg_list_len,
+static int parse_g_flag_no_colon(struct cgroup **cgrp_list[], int * const cgrp_list_len,
 				 const char * const ctrl_str)
 {
 	struct cgroup_controller *cgc;
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret = 0;
 
-	if ((*cg_list_len) > 1) {
+	if ((*cgrp_list_len) > 1) {
 		ret = ECGMAXVALUESEXCEEDED;
 		goto out;
 	}
 
-	if ((*cg_list_len) == 0) {
-		ret = create_cg(cg_list, cg_list_len);
+	if ((*cgrp_list_len) == 0) {
+		ret = create_cgrp(cgrp_list, cgrp_list_len);
 		if (ret)
 			goto out;
 	}
@@ -206,11 +206,11 @@ static int parse_g_flag_no_colon(struct cgroup **cg_list[], int * const cg_list_
 	 * will be an optarg at the end with no flag.  Let's temporarily
 	 * populate the first cgroup with the requested control values.
 	 */
-	cg = *cg_list[0];
+	cgrp = *cgrp_list[0];
 
-	cgc = cgroup_get_controller(cg, ctrl_str);
+	cgc = cgroup_get_controller(cgrp, ctrl_str);
 	if (!cgc) {
-		cgc = cgroup_add_controller(cg, ctrl_str);
+		cgc = cgroup_add_controller(cgrp, ctrl_str);
 		if (!cgc) {
 			err("cgget: cannot find controller '%s'\n", ctrl_str);
 			ret = ECGOTHER;
@@ -222,18 +222,18 @@ out:
 	return ret;
 }
 
-static int split_cgroup_name(const char * const ctrl_str, char *cg_name)
+static int split_cgroup_name(const char * const ctrl_str, char *cgrp_name)
 {
 	char *colon;
 
 	colon = strchr(ctrl_str, ':');
 	if (colon == NULL) {
 		/* ctrl_str doesn't contain a ":" */
-		cg_name[0] = '\0';
+		cgrp_name[0] = '\0';
 		return ECGINVAL;
 	}
 
-	strncpy(cg_name, &colon[1], FILENAME_MAX - 1);
+	strncpy(cgrp_name, &colon[1], FILENAME_MAX - 1);
 
 	return 0;
 }
@@ -277,22 +277,22 @@ out:
 	return ret;
 }
 
-static int parse_g_flag_with_colon(struct cgroup **cg_list[], int * const cg_list_len,
+static int parse_g_flag_with_colon(struct cgroup **cgrp_list[], int * const cgrp_list_len,
 				   const char * const ctrl_str)
 {
 	struct cgroup_controller *cgc;
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	char **controllers = NULL;
 	int controllers_len = 0;
 	int i, ret = 0;
 
-	ret = create_cg(cg_list, cg_list_len);
+	ret = create_cgrp(cgrp_list, cgrp_list_len);
 	if (ret)
 		goto out;
 
-	cg = (*cg_list)[(*cg_list_len) - 1];
+	cgrp = (*cgrp_list)[(*cgrp_list_len) - 1];
 
-	ret = split_cgroup_name(ctrl_str, cg->name);
+	ret = split_cgroup_name(ctrl_str, cgrp->name);
 	if (ret)
 		goto out;
 
@@ -301,9 +301,9 @@ static int parse_g_flag_with_colon(struct cgroup **cg_list[], int * const cg_lis
 		goto out;
 
 	for (i = 0; i < controllers_len; i++) {
-		cgc = cgroup_get_controller(cg, controllers[i]);
+		cgc = cgroup_get_controller(cgrp, controllers[i]);
 		if (!cgc) {
-			cgc = cgroup_add_controller(cg, controllers[i]);
+			cgc = cgroup_add_controller(cgrp, controllers[i]);
 			if (!cgc) {
 				err("cgget: cannot find controller '%s'\n", controllers[i]);
 				ret = ECGOTHER;
@@ -319,17 +319,17 @@ out:
 	return ret;
 }
 
-static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
-			  int * const cg_list_len, bool first_cg_is_dummy)
+static int parse_opt_args(int argc, char *argv[], struct cgroup **cgrp_list[],
+			  int * const cgrp_list_len, bool first_cgrp_is_dummy)
 {
-	struct cgroup *cg = NULL;
+	struct cgroup *cgrp = NULL;
 	int ret = 0;
 
 	/*
 	 * The first cgroup was temporarily populated and requires the
 	 * user to provide a cgroup name as an opt
 	 */
-	if (argv[optind] == NULL && first_cg_is_dummy) {
+	if (argv[optind] == NULL && first_cgrp_is_dummy) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
 	}
@@ -343,50 +343,50 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cg_list[],
 	 * Example of a command that will hit this code:
 	 *	$ cgget -g cpu:mycgroup mycgroup
 	 */
-	if (argv[optind] != NULL && (*cg_list_len) > 0 &&
-	    strcmp((*cg_list)[0]->name, "") != 0) {
+	if (argv[optind] != NULL && (*cgrp_list_len) > 0 &&
+	    strcmp((*cgrp_list)[0]->name, "") != 0) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
 	}
 
 	while (argv[optind] != NULL) {
-		if ((*cg_list_len) > 0)
-			cg = (*cg_list)[(*cg_list_len) - 1];
+		if ((*cgrp_list_len) > 0)
+			cgrp = (*cgrp_list)[(*cgrp_list_len) - 1];
 		else
-			cg = NULL;
+			cgrp = NULL;
 
-		if ((*cg_list_len) == 0) {
+		if ((*cgrp_list_len) == 0) {
 			/*
 			 * The user didn't provide a '-r' or '-g' flag.
 			 * The parse_a_flag() function can be reused here
 			 * because we both have the same use case - gather
 			 * all the data about this particular cgroup.
 			 */
-			ret = parse_a_flag(cg_list, cg_list_len);
+			ret = parse_a_flag(cgrp_list, cgrp_list_len);
 			if (ret)
 				goto out;
 
-			strncpy((*cg_list)[(*cg_list_len) - 1]->name, argv[optind],
-				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
-		} else if (cg != NULL && strlen(cg->name) == 0) {
+			strncpy((*cgrp_list)[(*cgrp_list_len) - 1]->name, argv[optind],
+				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1);
+		} else if (cgrp != NULL && strlen(cgrp->name) == 0) {
 			/*
 			 * this cgroup was created based upon control/value
 			 * pairs or with a -g <controller> option.  we'll
 			 * populate it with the parameter provided by the user
 			 */
-			strncpy(cg->name, argv[optind], sizeof(cg->name) - 1);
+			strncpy(cgrp->name, argv[optind], sizeof(cgrp->name) - 1);
 		} else {
-			ret = create_cg(cg_list, cg_list_len);
+			ret = create_cgrp(cgrp_list, cgrp_list_len);
 			if (ret)
 				goto out;
 
-			ret = cgroup_copy_cgroup((*cg_list)[(*cg_list_len) - 1],
-						 (*cg_list)[(*cg_list_len) - 2]);
+			ret = cgroup_copy_cgroup((*cgrp_list)[(*cgrp_list_len) - 1],
+						 (*cgrp_list)[(*cgrp_list_len) - 2]);
 			if (ret)
 				goto out;
 
-			strncpy((*cg_list)[(*cg_list_len) - 1]->name, argv[optind],
-				sizeof((*cg_list)[(*cg_list_len) - 1]->name) - 1);
+			strncpy((*cgrp_list)[(*cgrp_list_len) - 1]->name, argv[optind],
+				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1);
 		}
 		optind++;
 	}
@@ -395,12 +395,12 @@ out:
 	return ret;
 }
 
-static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * const cg_list_len,
-		      int * const mode)
+static int parse_opts(int argc, char *argv[], struct cgroup **cgrp_list[],
+		      int * const cgrp_list_len, int * const mode)
 {
 	bool do_not_fill_controller = false;
-	bool first_cgroup_is_dummy = false;
-	bool cgroup_mount_type = false;
+	bool first_cgrp_is_dummy = false;
+	bool cgrp_mount_type = false;
 	bool fill_controller = false;
 	bool print_ctrl_ver = false;
 	int ret = 0;
@@ -430,32 +430,32 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 			break;
 		case 'r':
 			do_not_fill_controller = true;
-			first_cgroup_is_dummy = true;
-			ret = parse_r_flag(cg_list, cg_list_len, optarg);
+			first_cgrp_is_dummy = true;
+			ret = parse_r_flag(cgrp_list, cgrp_list_len, optarg);
 			if (ret)
 				goto err;
 			break;
 		case 'g':
 			fill_controller = true;
 			if (strchr(optarg, ':') == NULL) {
-				first_cgroup_is_dummy = true;
-				ret = parse_g_flag_no_colon(cg_list, cg_list_len, optarg);
+				first_cgrp_is_dummy = true;
+				ret = parse_g_flag_no_colon(cgrp_list, cgrp_list_len, optarg);
 				if (ret)
 					goto err;
 			} else {
-				ret = parse_g_flag_with_colon(cg_list, cg_list_len, optarg);
+				ret = parse_g_flag_with_colon(cgrp_list, cgrp_list_len, optarg);
 				if (ret)
 					goto err;
 			}
 			break;
 		case 'a':
 			fill_controller = true;
-			ret = parse_a_flag(cg_list, cg_list_len);
+			ret = parse_a_flag(cgrp_list, cgrp_list_len);
 			if (ret)
 				goto err;
 			break;
 		case 'm':
-			cgroup_mount_type = true;
+			cgrp_mount_type = true;
 			break;
 		case 'c':
 			print_ctrl_ver = true;
@@ -473,13 +473,13 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 	}
 
 	/* '-m' and '-c' should not used with other options */
-	if ((cgroup_mount_type || print_ctrl_ver) &&
+	if ((cgrp_mount_type || print_ctrl_ver) &&
 	    (fill_controller || do_not_fill_controller)) {
 		usage(1, argv[0]);
 		exit(EXIT_BADARGS);
 	}
 
-	if (cgroup_mount_type) {
+	if (cgrp_mount_type) {
 		ret = find_cgroup_mount_type();
 		if (ret)
 			goto err;
@@ -491,7 +491,7 @@ static int parse_opts(int argc, char *argv[], struct cgroup **cg_list[], int * c
 			goto err;
 	}
 
-	ret = parse_opt_args(argc, argv, cg_list, cg_list_len, first_cgroup_is_dummy);
+	ret = parse_opt_args(argc, argv, cgrp_list, cgrp_list_len, first_cgrp_is_dummy);
 	if (ret)
 		goto err;
 
@@ -499,7 +499,7 @@ err:
 	return ret;
 }
 
-static int get_cv_value(struct control_value * const cv, const char * const cg_name,
+static int get_cv_value(struct control_value * const cv, const char * const cgrp_name,
 			const char * const controller_name)
 {
 	bool is_multiline = false;
@@ -507,7 +507,7 @@ static int get_cv_value(struct control_value * const cv, const char * const cg_n
 	char tmp_line[LL_MAX];
 	int ret;
 
-	ret = cgroup_read_value_begin(controller_name, cg_name, cv->name, &handle, tmp_line,
+	ret = cgroup_read_value_begin(controller_name, cgrp_name, cv->name, &handle, tmp_line,
 				      LL_MAX);
 	if (ret == ECGEOF)
 		goto read_end;
@@ -523,7 +523,7 @@ static int get_cv_value(struct control_value * const cv, const char * const cg_n
 			tmp_ret = cgroup_test_subsys_mounted(controller_name);
 			if (tmp_ret == 0) {
 				err("cgget: cannot find controller '%s' in group '%s'\n",
-				    controller_name, cg_name);
+				    controller_name, cgrp_name);
 			} else {
 				err("variable file read failed %s\n", cgroup_strerror(ret));
 			}
@@ -595,7 +595,7 @@ static int indent_multiline_value(struct control_value * const cv)
 	return 0;
 }
 
-static int fill_empty_controller(struct cgroup * const cg, struct cgroup_controller * const cgc)
+static int fill_empty_controller(struct cgroup * const cgrp, struct cgroup_controller * const cgc)
 {
 	char cgrp_ctrl_path[FILENAME_MAX] = { '\0' };
 	char mnt_path[FILENAME_MAX] = { '\0' };
@@ -635,7 +635,7 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 	 * line:
 	 * cgget -g cpu:/foo
 	 */
-	if (cg->name[0] == '/' && cg->name[1] != '\0' &&
+	if (cgrp->name[0] == '/' && cgrp->name[1] != '\0' &&
 	    strncmp(mnt_path + (mnt_path_len - 7), ".scope/", 7) == 0) {
 		snprintf(tmp, FILENAME_MAX, "%s", dirname(mnt_path));
 		strncpy(mnt_path, tmp, FILENAME_MAX - 1);
@@ -653,13 +653,13 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 		}
 	}
 #endif
-	strncat(mnt_path, cg->name, FILENAME_MAX - mnt_path_len - 1);
+	strncat(mnt_path, cgrp->name, FILENAME_MAX - mnt_path_len - 1);
 	mnt_path[sizeof(mnt_path) - 1] = '\0';
 
 	if (access(mnt_path, F_OK))
 		goto out;
 
-	if (!cg_build_path_locked(cg->name, cgrp_ctrl_path, cg_mount_table[i].name))
+	if (!cg_build_path_locked(cgrp->name, cgrp_ctrl_path, cg_mount_table[i].name))
 		goto out;
 
 	dir = opendir(cgrp_ctrl_path);
@@ -673,7 +673,7 @@ static int fill_empty_controller(struct cgroup * const cg, struct cgroup_control
 		if (ctrl_dir->d_type != DT_REG)
 			continue;
 
-		ret = cgroup_fill_cgc(ctrl_dir, cg, cgc, i);
+		ret = cgroup_fill_cgc(ctrl_dir, cgrp, cgc, i);
 		if (ret == ECGFAIL)
 			goto out;
 
@@ -702,20 +702,20 @@ out:
 	return ret;
 }
 
-static int get_controller_values(struct cgroup * const cg, struct cgroup_controller * const cgc)
+static int get_controller_values(struct cgroup * const cgrp, struct cgroup_controller * const cgc)
 {
 	int ret = 0;
 	int i;
 
 	for (i = 0; i < cgc->index; i++) {
-		ret = get_cv_value(cgc->values[i], cg->name, cgc->name);
+		ret = get_cv_value(cgc->values[i], cgrp->name, cgc->name);
 		if (ret)
 			goto out;
 	}
 
 	if (cgc->index == 0) {
 		/* fill the entire controller since no values were provided */
-		ret = fill_empty_controller(cg, cgc);
+		ret = fill_empty_controller(cgrp, cgc);
 		if (ret)
 			goto out;
 	}
@@ -724,13 +724,13 @@ out:
 	return ret;
 }
 
-static int get_cgroup_values(struct cgroup * const cg)
+static int get_cgroup_values(struct cgroup * const cgrp)
 {
 	int ret = 0;
 	int i;
 
-	for (i = 0; i < cg->index; i++) {
-		ret = get_controller_values(cg, cg->controller[i]);
+	for (i = 0; i < cgrp->index; i++) {
+		ret = get_controller_values(cgrp, cgrp->controller[i]);
 		if (ret)
 			break;
 	}
@@ -738,13 +738,13 @@ static int get_cgroup_values(struct cgroup * const cg)
 	return ret;
 }
 
-static int get_values(struct cgroup *cg_list[], int cg_list_len)
+static int get_values(struct cgroup *cgrp_list[], int cgrp_list_len)
 {
 	int ret = 0;
 	int i;
 
-	for (i = 0; i < cg_list_len; i++) {
-		ret = get_cgroup_values(cg_list[i]);
+	for (i = 0; i < cgrp_list_len; i++) {
+		ret = get_cgroup_values(cgrp_list[i]);
 		if (ret)
 			break;
 	}
@@ -796,8 +796,8 @@ static void print_cgroups(struct cgroup *cg_list[], int cg_list_len, int mode)
 int main(int argc, char *argv[])
 {
 	int mode = MODE_SHOW_NAMES | MODE_SHOW_HEADERS;
-	struct cgroup **cg_list = NULL;
-	int cg_list_len = 0;
+	struct cgroup **cgrp_list = NULL;
+	int cgrp_list_len = 0;
 	int ret = 0, i;
 
 	/* No parameter on input? */
@@ -816,7 +816,7 @@ int main(int argc, char *argv[])
 	mode |= MODE_SYSTEMD_DELEGATE;
 #endif
 
-	ret = parse_opts(argc, argv, &cg_list, &cg_list_len, &mode);
+	ret = parse_opts(argc, argv, &cgrp_list, &cgrp_list_len, &mode);
 	if (ret)
 		goto err;
 
@@ -824,15 +824,15 @@ int main(int argc, char *argv[])
 	if (mode & MODE_SYSTEMD_DELEGATE)
 		cgroup_set_default_systemd_cgroup();
 
-	ret = get_values(cg_list, cg_list_len);
+	ret = get_values(cgrp_list, cgrp_list_len);
 	if (ret)
 		goto err;
 
-	print_cgroups(cg_list, cg_list_len, mode);
+	print_cgroups(cgrp_list, cgrp_list_len, mode);
 
 err:
-	for (i = 0; i < cg_list_len; i++)
-		cgroup_free(&(cg_list[i]));
+	for (i = 0; i < cgrp_list_len; i++)
+		cgroup_free(&(cgrp_list[i]));
 
 	return ret;
 }

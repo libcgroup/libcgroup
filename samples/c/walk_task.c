@@ -8,12 +8,12 @@
 
 int main(int argc, char *argv[])
 {
-	char *group = NULL;
+	char *cgrp = NULL;
 	void *handle;
 	int ret, i;
 
 	if (argc < 2) {
-		printf("No list of groups provided\n");
+		printf("No list of cgroups provided\n");
 		return -1;
 	}
 
@@ -26,10 +26,10 @@ int main(int argc, char *argv[])
 	for (i = 1; i < argc; i++) {
 		pid_t pid;
 
-		group = strdup(argv[i]);
-		printf("Printing the details of groups %s\n", group);
+		cgrp = strdup(argv[i]);
+		printf("Printing the details of cgroups %s\n", cgrp);
 
-		ret = cgroup_get_task_begin(group, "cpu", &handle, &pid);
+		ret = cgroup_get_task_begin(cgrp, "cpu", &handle, &pid);
 		while (!ret) {
 			printf("Pid is %u\n", pid);
 			ret = cgroup_get_task_next(&handle, &pid);
@@ -37,13 +37,12 @@ int main(int argc, char *argv[])
 				printf("cgroup_get_task_next failed with %s\n",
 				       cgroup_strerror(ret));
 				if (ret == ECGOTHER)
-					printf("failure with %s\n",
-					       strerror(errno));
+					printf("failure with %s\n", strerror(errno));
 				return -1;
 			}
 		}
-		free(group);
-		group = NULL;
+		free(cgrp);
+		cgrp = NULL;
 		ret = cgroup_get_task_end(&handle);
 	}
 
