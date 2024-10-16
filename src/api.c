@@ -2427,8 +2427,11 @@ STATIC int cgroup_set_values_recursive(const char * const base,
 		}
 
 		/* 0200 == S_IWUSR */
-		if (!(path_stat.st_mode & 0200))
+		if (!(path_stat.st_mode & 0200)) {
+			free(path);
+			path = NULL;
 			continue;
+		}
 
 		cgroup_dbg("setting %s to \"%s\", pathlen %d\n", path, cv->value, ret);
 
