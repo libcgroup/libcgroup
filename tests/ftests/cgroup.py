@@ -43,7 +43,7 @@ class CgroupMount(object):
                 # cgroup v1 will append mount points with favordynmods,
                 # remove it.
                 if self.controller == 'favordynmods':
-                    self.controller == entries[3].split(',')[-2]
+                    self.controller = entries[3].split(',')[-2]
 
                 if self.controller == 'clone_children':
                     # the cpuset controller may append this option to the end
