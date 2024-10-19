@@ -35,7 +35,7 @@ if [ -d  "${PYTHON_LIBRARY_PATH[0]}" ]; then
 fi
 
 # If other runners are running then the file exists
-# let's wait for 5 minutes
+# let's wait for 50 minutes, before aborting.
 time_waited=0
 pretty_time=0
 while [ -f "$RUNNER_LOCK_FILE" ]; do
