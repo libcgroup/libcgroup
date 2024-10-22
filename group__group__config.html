@@ -93,13 +93,13 @@ $(function() {
 <tr class="separator:ga924860998c37da53cababe24163fc89b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacb09024dc469a1a1ff8cdebd8d0ab422" id="r_gacb09024dc469a1a1ff8cdebd8d0ab422"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__config.html#gacb09024dc469a1a1ff8cdebd8d0ab422">cgroup_templates_cache_set_source_files</a> (struct <a class="el" href="structcgroup__string__list.html">cgroup_string_list</a> *tmpl_files)</td></tr>
 <tr class="separator:gacb09024dc469a1a1ff8cdebd8d0ab422"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga72066260cd31ceed7ecc1a648eba37f2" id="r_ga72066260cd31ceed7ecc1a648eba37f2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__config.html#ga72066260cd31ceed7ecc1a648eba37f2">cgroup_config_create_template_group</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, char *template_name, int flags)</td></tr>
-<tr class="separator:ga72066260cd31ceed7ecc1a648eba37f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga37d49cceb927c44292e3137bceeeb5eb" id="r_ga37d49cceb927c44292e3137bceeeb5eb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__config.html#ga37d49cceb927c44292e3137bceeeb5eb">cgroup_config_create_template_group</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, char *template_name, int flags)</td></tr>
+<tr class="separator:ga37d49cceb927c44292e3137bceeeb5eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="ga72066260cd31ceed7ecc1a648eba37f2" name="ga72066260cd31ceed7ecc1a648eba37f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga72066260cd31ceed7ecc1a648eba37f2">&#9670;&#160;</a></span>cgroup_config_create_template_group()</h2>
+<a id="ga37d49cceb927c44292e3137bceeeb5eb" name="ga37d49cceb927c44292e3137bceeeb5eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga37d49cceb927c44292e3137bceeeb5eb">&#9670;&#160;</a></span>cgroup_config_create_template_group()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -108,7 +108,7 @@ $(function() {
           <td class="memname">int cgroup_config_create_template_group </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -129,7 +129,7 @@ $(function() {
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Physically create a new control group in kernel, based on given control group template and configuration file. If given template is not set in configuration file, then the procedure works create the control group using <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> function</p>
+<p>Physically create a new control group in kernel, based on given control group template and configuration file. If given template is not set in configuration file, then the procedure works create the control group using <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> function</p>
 <p>Templates are loaded using cgroup_load_templates_cache_from_files function, which must be preceded by cgroup_templates_cache_set_source_files call.</p>
 <p>The flags can alter the behavior of this function: CGFLAG_USE_TEMPLATE_CACHE: Use cached templates instead of parsing the config file</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -184,7 +184,7 @@ $(function() {
       </table>
 </div><div class="memdoc">
 <p>Sets default permissions of groups created by subsequent <a class="el" href="group__group__config.html#ga8adfaca013333acf922a167f55b84140">cgroup_config_load_config()</a> calls. If a config file contains a 'default {}' section, the default permissions from the config file is then used.</p>
-<p>Use <a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup()</a> to create a dummy group and <a class="el" href="group__group__groups.html#ga53b9e13e30660c805ab5773d69397a43">cgroup_set_uid_gid()</a> and <a class="el" href="group__group__groups.html#gaa0400f1ff2fba7fbb6db82d97039d92b">cgroup_set_permissions()</a> to set its permissions. Use NO_UID_GID instead of GID/UID and NO_PERMS instead of file/directory permissions to let kernel decide the default permissions where you don't want specific user and/or permissions. Kernel then uses current user/group and permissions from umask then.</p>
+<p>Use <a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup()</a> to create a dummy group and <a class="el" href="group__group__groups.html#ga51f539b526d2a4939f03f0b4d4ed9040">cgroup_set_uid_gid()</a> and <a class="el" href="group__group__groups.html#gae8c8f601680e79150608073a55afcac0">cgroup_set_permissions()</a> to set its permissions. Use NO_UID_GID instead of GID/UID and NO_PERMS instead of file/directory permissions to let kernel decide the default permissions where you don't want specific user and/or permissions. Kernel then uses current user/group and permissions from umask then.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">new_default</td><td>New default permissions from this group are copied to libcgroup internal structures. I.e., this group can be freed immediately after this function returns. </td></tr>

@@ -128,8 +128,8 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader">List all tasks in a group</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p>Use following functions to read <code>tasks</code> file of a group. </p>
 </td></tr>
-<tr class="memitem:gad7218154192f733120e1025cc19d0a36" id="r_gad7218154192f733120e1025cc19d0a36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gad7218154192f733120e1025cc19d0a36">cgroup_get_task_begin</a> (const char *<a class="el" href="structcgroup.html">cgroup</a>, const char *controller, void **handle, pid_t *pid)</td></tr>
-<tr class="separator:gad7218154192f733120e1025cc19d0a36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad194c8c62288dd37349ed947c91217d6" id="r_gad194c8c62288dd37349ed947c91217d6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gad194c8c62288dd37349ed947c91217d6">cgroup_get_task_begin</a> (const char *cgrp, const char *controller, void **handle, pid_t *pid)</td></tr>
+<tr class="separator:gad194c8c62288dd37349ed947c91217d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf3a0364682b7449ddccfb0862bbb565e" id="r_gaf3a0364682b7449ddccfb0862bbb565e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gaf3a0364682b7449ddccfb0862bbb565e">cgroup_get_task_next</a> (void **handle, pid_t *pid)</td></tr>
 <tr class="separator:gaf3a0364682b7449ddccfb0862bbb565e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaeb955e5f4da551268380b1271d478816" id="r_gaeb955e5f4da551268380b1271d478816"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__iterators.html#gaeb955e5f4da551268380b1271d478816">cgroup_get_task_end</a> (void **handle)</td></tr>
@@ -548,8 +548,8 @@ Data Structures</h2></td></tr>
 
 </div>
 </div>
-<a id="gad7218154192f733120e1025cc19d0a36" name="gad7218154192f733120e1025cc19d0a36"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad7218154192f733120e1025cc19d0a36">&#9670;&#160;</a></span>cgroup_get_task_begin()</h2>
+<a id="gad194c8c62288dd37349ed947c91217d6" name="gad194c8c62288dd37349ed947c91217d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad194c8c62288dd37349ed947c91217d6">&#9670;&#160;</a></span>cgroup_get_task_begin()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -558,7 +558,7 @@ Data Structures</h2></td></tr>
           <td class="memname">int cgroup_get_task_begin </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -587,7 +587,7 @@ Data Structures</h2></td></tr>
 </div><div class="memdoc">
 <p>Read the tasks file to get the list of tasks in a cgroup. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>Name of the cgroup. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>Name of the cgroup. </td></tr>
     <tr><td class="paramname">controller</td><td>Name of the cgroup subsystem. </td></tr>
     <tr><td class="paramname">handle</td><td>The handle to be used in the iteration. </td></tr>
     <tr><td class="paramname">pid</td><td>The pid read from the tasks file. </td></tr>

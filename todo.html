@@ -79,20 +79,20 @@ $(function() {
 <dd><a class="anchor" id="_todo000014"></a>should this function be really public?  </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#gae472183a7c9a37826ef15c77014c47fb">cgroup_change_cgroup_uid_gid_flags</a>  (uid_t uid, gid_t gid, pid_t pid, int flags)</dt>
 <dd><a class="anchor" id="_todo000017"></a>Determine thread-safeness and fix if not safe.  </dd>
-<dt>Global <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
+<dt>Global <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup</a>  (struct cgroup *cgrp, int ignore_ownership)</dt>
 <dd><a class="anchor" id="_todo000005"></a>what is ignore_ownership good for?  </dd>
-<dt>Global <a class="el" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>  (struct cgroup *cgroup, int ignore_ownership)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</p>
+<dt>Global <a class="el" href="group__group__groups.html#ga4d1f015f3fe8bad80fec2abb69e69841">cgroup_create_cgroup_from_parent</a>  (struct cgroup *cgrp, int ignore_ownership)</dt>
+<dd><p class="startdd"><a class="anchor" id="_todo000006"></a>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</p>
 <p class="enddd"><a class="anchor" id="_todo000007"></a>what is ignore_ownership good for?  </p>
 </dd>
-<dt>Global <a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup</a>  (struct cgroup *cgroup, int ignore_migration)</dt>
+<dt>Global <a class="el" href="group__group__groups.html#ga4e21815cc612604cdf3d58fa2b34db16">cgroup_delete_cgroup</a>  (struct cgroup *cgrp, int ignore_migration)</dt>
 <dd><a class="anchor" id="_todo000008"></a>what is ignore_migration good for? rmdir() will fail if tasks were not moved.  </dd>
 <dt>Global <a class="el" href="group__group__iterators.html#gga608b4aa32e2db58fed34771a6a272444a24e202c59f318e63ad8cafcc1b4b102b">CGROUP_FILE_TYPE_OTHER</a>  </dt>
 <dd><a class="anchor" id="_todo000013"></a>really?  </dd>
-<dt>Global <a class="el" href="group__group__groups.html#ga92d27c9ff0d655838642a7aa68497596">cgroup_free_controllers</a>  (struct cgroup *cgroup)</dt>
+<dt>Global <a class="el" href="group__group__groups.html#ga4104e108e85a8576c878822f353b4e39">cgroup_free_controllers</a>  (struct cgroup *cgrp)</dt>
 <dd><a class="anchor" id="_todo000004"></a>should this function be public???  </dd>
-<dt>Global <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a>  (struct cgroup *cgroup)</dt>
-<dd><a class="anchor" id="_todo000009"></a>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a>? What owners will return <a class="el" href="group__group__groups.html#ga007d21c304d9cc6e948dc0ae51ecfa86">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file? </dd>
+<dt>Global <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup</a>  (struct cgroup *cgrp)</dt>
+<dd><a class="anchor" id="_todo000009"></a>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>? What owners will return <a class="el" href="group__group__groups.html#ga3b560f12d9d50c177cc48d5016c93412">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file? </dd>
 <dt>Global <a class="el" href="group__group__groups.html#gafaa51e5ffe09f8ad05585a1d3b6f7fa9">cgroup_get_value_string</a>  (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller, const char *name, char **value)</dt>
 <dd><a class="anchor" id="_todo000010"></a>rephrase, it's too vague... How big is the buffer actually? </dd>
 <dt>Global <a class="el" href="group__group__tasks.html#gad7fa5a2c4db08d31da5bfbecaf482d3d">cgroup_init_rules_cache</a>  (void)</dt>

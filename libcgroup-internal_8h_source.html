@@ -141,15 +141,15 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="preprocessor">#define CGRULES_CONF_DIR        &quot;/etc/cgrules.d&quot;</span></div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="preprocessor">#define CGRULES_MAX_FIELDS_PER_LINE 3</span></div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="preprocessor">#define CGROUP_BUFFER_LEN   (5 * FILENAME_MAX)</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="preprocessor">#define CGRP_BUFFER_LEN (5 * FILENAME_MAX)</span></div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment">/* Maximum length of a key(&lt;user&gt;:&lt;process name&gt;) in the daemon config file */</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#define CGROUP_RULE_MAXKEY  (LOGIN_NAME_MAX + FILENAME_MAX + 1)</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="preprocessor">#define CGRP_RULE_MAXKEY    (LOGIN_NAME_MAX + FILENAME_MAX + 1)</span></div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="comment">/* Maximum length of a line in the daemon config file */</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#define CGROUP_RULE_MAXLINE (FILENAME_MAX + CGROUP_RULE_MAXKEY + CG_CONTROLLER_MAX + 3)</span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="preprocessor">#define CGRP_RULE_MAXLINE   (FILENAME_MAX + CGRP_RULE_MAXKEY + CG_CONTROLLER_MAX + 3)</span></div>
 <div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="preprocessor">#define CGROUP_FILE_PREFIX  &quot;cgroup&quot;</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="preprocessor">#define CGRP_FILE_PREFIX    &quot;cgroup&quot;</span></div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">/* cgroup v2 files */</span></div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="preprocessor">#define CGV2_CONTROLLERS_FILE   &quot;cgroup.controllers&quot;</span></div>
@@ -164,7 +164,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="preprocessor">#define cgroup_dbg(x...)    cgroup_log(CGROUP_LOG_DEBUG, x)</span></div>
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="preprocessor">#define cgroup_cont(x...)   cgroup_log(CGROUP_LOG_CONT, x)</span></div>
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span> </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="preprocessor">#define CGROUP_DEFAULT_LOGLEVEL CGROUP_LOG_ERROR</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="preprocessor">#define CGRP_DEFAULT_LOGLEVEL   CGROUP_LOG_ERROR</span></div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span> </div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="preprocessor">#define max(x, y) ((y) &lt; (x)?(x):(y))</span></div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="preprocessor">#define min(x, y) ((y) &gt; (x)?(x):(y))</span></div>
@@ -309,7 +309,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span><span class="keywordtype">int</span> cg_mkdir_p(<span class="keyword">const</span> <span class="keywordtype">char</span> *path);</div>
 <div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *create_cgroup_from_name_value_pairs(<span class="keyword">const</span> <span class="keywordtype">char</span> *name,</div>
 <div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>                        <span class="keyword">struct</span> <a class="code hl_struct" href="structcontrol__value.html">control_value</a> *name_value, <span class="keywordtype">int</span> nv_number);</div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordtype">void</span> init_cgroup_table(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *cgroups, <span class="keywordtype">size_t</span> count);</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="keywordtype">void</span> init_cgroup_table(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *cgrps, <span class="keywordtype">size_t</span> count);</div>
 <div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span> </div>
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment">/*</span></div>
 <div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="comment"> * Main mounting structures</span></div>
@@ -369,7 +369,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span> </div>
 <div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span><span class="keywordtype">char</span> *cg_build_path_locked(<span class="keyword">const</span> <span class="keywordtype">char</span> *setting, <span class="keywordtype">char</span> *path, <span class="keyword">const</span> <span class="keywordtype">char</span> *controller);</div>
 <div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span> </div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="keywordtype">int</span> cgroup_fill_cgc(<span class="keyword">struct</span> dirent *ctrl_dir, <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *<a class="code hl_struct" href="structcgroup.html">cgroup</a>, <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__controller.html">cgroup_controller</a> *cgc,</div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span><span class="keywordtype">int</span> cgroup_fill_cgc(<span class="keyword">struct</span> dirent *ctrl_dir, <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> *cgrp, <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__controller.html">cgroup_controller</a> *cgc,</div>
 <div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>            <span class="keywordtype">int</span> cg_index);</div>
 <div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span> </div>
 <div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="keywordtype">int</span> cgroup_test_subsys_mounted(<span class="keyword">const</span> <span class="keywordtype">char</span> *ctrl_name);</div>
@@ -386,7 +386,7 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span><span class="preprocessor">#define TEST_PROC_PID_CGROUP_FILE &quot;test-procpidcgroup&quot;</span></div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span> </div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span><span class="keywordtype">int</span> cgroup_parse_rules_options(<span class="keywordtype">char</span> *options, <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__rule.html">cgroup_rule</a> * <span class="keyword">const</span> rule);</div>
-<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="keywordtype">int</span> cg_get_cgroups_from_proc_cgroups(pid_t pid, <span class="keywordtype">char</span> *cgroup_list[], <span class="keywordtype">char</span> *controller_list[],</div>
+<div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span><span class="keywordtype">int</span> cg_get_cgroups_from_proc_cgroups(pid_t pid, <span class="keywordtype">char</span> *cgrp_list[], <span class="keywordtype">char</span> *controller_list[],</div>
 <div class="line"><a id="l00412" name="l00412"></a><span class="lineno">  412</span>                     <span class="keywordtype">int</span> list_len);</div>
 <div class="line"><a id="l00413" name="l00413"></a><span class="lineno">  413</span><span class="keywordtype">bool</span> cgroup_compare_ignore_rule(<span class="keyword">const</span> <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup__rule.html">cgroup_rule</a> * <span class="keyword">const</span> rule, pid_t pid,</div>
 <div class="line"><a id="l00414" name="l00414"></a><span class="lineno">  414</span>                <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> procname);</div>

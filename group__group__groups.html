@@ -84,7 +84,7 @@ Data Structures</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Basic infrastructure</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p><code>struct cgroup*</code> is the heart of <code>libcgroup</code> API. The structure is opaque to applications, all access to the structure is through appropriate functions.</p>
-<p>The most important information is that <b> one <code>struct cgroup*</code> can represent zero, one or more real control groups in kernel</b>. The <code>struct cgroup*</code> is identified by name of the group, which must be set by <a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup()</a>. Multiple controllers (aka subsystems) can be attached to one <code>struct cgroup*</code> using <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a>. These controllers <b>can belong to different hierarchies</b>.</p>
+<p>The most important information is that <b> one <code>struct cgroup*</code> can represent zero, one or more real control groups in kernel</b>. The <code>struct cgroup*</code> is identified by name of the group, which must be set by <a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup()</a>. Multiple controllers (aka subsystems) can be attached to one <code>struct cgroup*</code> using <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>. These controllers <b>can belong to different hierarchies</b>.</p>
 <p>This approach is different to the one in the Linux kernel - a control group must be part of exactly one hierarchy there. In <code>libcgroup</code>, a group can be part of multiple hierarchies, as long as the group name is the same.</p>
 <dl class="section user"><dt>Example:</dt><dd>Let there be following control groups: <div class="fragment"><div class="line">cpu,cpuacct:/</div>
 <div class="line">cpu,cpuacct:/foo</div>
@@ -93,30 +93,30 @@ Data Structures</h2></td></tr>
 <div class="line">freezer:/foo</div>
 </div><!-- fragment --> I.e. there is <code>cpu</code> and <code>cpuacct</code> controller mounted together in one hierarchy, with <code>foo</code> and <code>bar</code> groups. In addition, <code>freezer</code> is mounted as separate hierarchy, with only one <code>foo</code> group.</dd></dl>
 <dl class="section user"><dt></dt><dd>Following code creates <code>struct cgroup*</code> structure, which represents one group <code>cpu,cpuacct:/foo</code>: <div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *foo = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;foo&quot;</span>);</div>
-<div class="line"><a class="code hl_function" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;cpu&quot;</span>);</div>
-<div class="ttc" id="agroup__group__groups_html_ga3929afd6ced9fe877613286b5f06cf8d"><div class="ttname"><a href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller</a></div><div class="ttdeci">struct cgroup_controller * cgroup_add_controller(struct cgroup *cgroup, const char *name)</div><div class="ttdef"><b>Definition</b> wrapper.c:61</div></div>
+<div class="line"><a class="code hl_function" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;cpu&quot;</span>);</div>
+<div class="ttc" id="agroup__group__groups_html_ga86b514fe6f99ded356eb5e799787f3f5"><div class="ttname"><a href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller</a></div><div class="ttdeci">struct cgroup_controller * cgroup_add_controller(struct cgroup *cgrp, const char *name)</div><div class="ttdef"><b>Definition</b> wrapper.c:61</div></div>
 <div class="ttc" id="agroup__group__groups_html_gad34c82ead174988d418f3dcb003aaca7"><div class="ttname"><a href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a></div><div class="ttdeci">struct cgroup * cgroup_new_cgroup(const char *name)</div><div class="ttdef"><b>Definition</b> wrapper.c:43</div></div>
 <div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition</b> libcgroup-internal.h:121</div></div>
-</div><!-- fragment --> Now, you can call e.g. <a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup()</a> and the group is deleted from the hierarchy. You can note that it's enough to add only one controller to the group to fully identify a group in <code>cpu,cpuacct</code> hierarchy.</dd></dl>
+</div><!-- fragment --> Now, you can call e.g. <a class="el" href="group__group__groups.html#ga4e21815cc612604cdf3d58fa2b34db16">cgroup_delete_cgroup()</a> and the group is deleted from the hierarchy. You can note that it's enough to add only one controller to the group to fully identify a group in <code>cpu,cpuacct</code> hierarchy.</dd></dl>
 <dl class="section user"><dt></dt><dd>Following code creates <code>struct cgroup*</code> structure, which represents <b>two</b> groups, <code>cpu,cpuacct:/foo</code> and <code>freezer:/foo</code>: <div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *foo = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;foo&quot;</span>);</div>
-<div class="line"><a class="code hl_function" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;cpu&quot;</span>);</div>
-<div class="line"><a class="code hl_function" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;freezer&quot;</span>);</div>
-</div><!-- fragment --> Now, if you call e.g. <a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup()</a>, the group gets deleted from <b>both</b> hierarchies.</dd></dl>
+<div class="line"><a class="code hl_function" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;cpu&quot;</span>);</div>
+<div class="line"><a class="code hl_function" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller</a>(foo, <span class="stringliteral">&quot;freezer&quot;</span>);</div>
+</div><!-- fragment --> Now, if you call e.g. <a class="el" href="group__group__groups.html#ga4e21815cc612604cdf3d58fa2b34db16">cgroup_delete_cgroup()</a>, the group gets deleted from <b>both</b> hierarchies.</dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>add some propaganda what's so great on this approach... I personally think it is broken and confusing (see TODOs below).</dd></dl>
 <p>Following functions are provided to create/destroy various libcgroup structures. Please note that none of these functions actually create or delete a cgroup in kernel! </p>
 </td></tr>
 <tr class="memitem:gad34c82ead174988d418f3dcb003aaca7" id="r_gad34c82ead174988d418f3dcb003aaca7"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a> (const char *name)</td></tr>
 <tr class="separator:gad34c82ead174988d418f3dcb003aaca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3929afd6ced9fe877613286b5f06cf8d" id="r_ga3929afd6ced9fe877613286b5f06cf8d"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, const char *name)</td></tr>
-<tr class="separator:ga3929afd6ced9fe877613286b5f06cf8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae870d271b789b5c54c2e3d35de3cd6f9" id="r_gae870d271b789b5c54c2e3d35de3cd6f9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gae870d271b789b5c54c2e3d35de3cd6f9">cgroup_add_all_controllers</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:gae870d271b789b5c54c2e3d35de3cd6f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga6b60ab9187a883a2ae114f8d87191e27" id="r_ga6b60ab9187a883a2ae114f8d87191e27"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga6b60ab9187a883a2ae114f8d87191e27">cgroup_get_controller</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, const char *name)</td></tr>
-<tr class="separator:ga6b60ab9187a883a2ae114f8d87191e27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab20fdb1ae479f8baac482336abf73900" id="r_gab20fdb1ae479f8baac482336abf73900"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gab20fdb1ae479f8baac482336abf73900">cgroup_free</a> (struct <a class="el" href="structcgroup.html">cgroup</a> **<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:gab20fdb1ae479f8baac482336abf73900"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga92d27c9ff0d655838642a7aa68497596" id="r_ga92d27c9ff0d655838642a7aa68497596"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga92d27c9ff0d655838642a7aa68497596">cgroup_free_controllers</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:ga92d27c9ff0d655838642a7aa68497596"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga86b514fe6f99ded356eb5e799787f3f5" id="r_ga86b514fe6f99ded356eb5e799787f3f5"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, const char *name)</td></tr>
+<tr class="separator:ga86b514fe6f99ded356eb5e799787f3f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga68f90377f6183dc8b326876cd1ecf4b1" id="r_ga68f90377f6183dc8b326876cd1ecf4b1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga68f90377f6183dc8b326876cd1ecf4b1">cgroup_add_all_controllers</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga68f90377f6183dc8b326876cd1ecf4b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafbc8bd483ee6fbd3b1ccbbd159beccf6" id="r_gafbc8bd483ee6fbd3b1ccbbd159beccf6"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gafbc8bd483ee6fbd3b1ccbbd159beccf6">cgroup_get_controller</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, const char *name)</td></tr>
+<tr class="separator:gafbc8bd483ee6fbd3b1ccbbd159beccf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7e719c74424040d0d8d3a13d66080a80" id="r_ga7e719c74424040d0d8d3a13d66080a80"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga7e719c74424040d0d8d3a13d66080a80">cgroup_free</a> (struct <a class="el" href="structcgroup.html">cgroup</a> **cgrp)</td></tr>
+<tr class="separator:ga7e719c74424040d0d8d3a13d66080a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4104e108e85a8576c878822f353b4e39" id="r_ga4104e108e85a8576c878822f353b4e39"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga4104e108e85a8576c878822f353b4e39">cgroup_free_controllers</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga4104e108e85a8576c878822f353b4e39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad4ffad2eccf9fcbfa8a551e269e0ad58" id="r_gad4ffad2eccf9fcbfa8a551e269e0ad58"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gad4ffad2eccf9fcbfa8a551e269e0ad58">NO_PERMS</a>&#160;&#160;&#160;(-1U)</td></tr>
 <tr class="separator:gad4ffad2eccf9fcbfa8a551e269e0ad58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2a7954a987e3fbf8eabcc94cf381353e" id="r_ga2a7954a987e3fbf8eabcc94cf381353e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga2a7954a987e3fbf8eabcc94cf381353e">NO_UID_GID</a>&#160;&#160;&#160;(-1U)</td></tr>
@@ -125,37 +125,37 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Group manipulation API</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p>Using following functions you can create and remove control groups and change their parameters. </p><dl class="section note"><dt>Note</dt><dd>All access to kernel is through previously mounted cgroup filesystems. <code>libcgroup</code> does not mount/unmount anything for you. </dd></dl>
 </td></tr>
-<tr class="memitem:gadb8e13df6064841d3c9707960f782fa7" id="r_gadb8e13df6064841d3c9707960f782fa7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int ignore_ownership)</td></tr>
-<tr class="separator:gadb8e13df6064841d3c9707960f782fa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga90e1ce96f3cb540f7e82d076dd938f62" id="r_ga90e1ce96f3cb540f7e82d076dd938f62"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int ignore_ownership)</td></tr>
-<tr class="separator:ga90e1ce96f3cb540f7e82d076dd938f62"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga31ba5e865ae8d58b4453c0ef06d2c071" id="r_ga31ba5e865ae8d58b4453c0ef06d2c071"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:ga31ba5e865ae8d58b4453c0ef06d2c071"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1dca18434e5d6be30c28c556da94f565" id="r_ga1dca18434e5d6be30c28c556da94f565"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga1dca18434e5d6be30c28c556da94f565">cgroup_delete_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int ignore_migration)</td></tr>
-<tr class="separator:ga1dca18434e5d6be30c28c556da94f565"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga860c1ec70189c969b2c8373fc1e96d36" id="r_ga860c1ec70189c969b2c8373fc1e96d36"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga860c1ec70189c969b2c8373fc1e96d36">cgroup_delete_cgroup_ext</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int flags)</td></tr>
-<tr class="separator:ga860c1ec70189c969b2c8373fc1e96d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga74c5b4a1d3bc7729af1383c131254fbd" id="r_ga74c5b4a1d3bc7729af1383c131254fbd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, int ignore_ownership)</td></tr>
+<tr class="separator:ga74c5b4a1d3bc7729af1383c131254fbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4d1f015f3fe8bad80fec2abb69e69841" id="r_ga4d1f015f3fe8bad80fec2abb69e69841"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga4d1f015f3fe8bad80fec2abb69e69841">cgroup_create_cgroup_from_parent</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, int ignore_ownership)</td></tr>
+<tr class="separator:ga4d1f015f3fe8bad80fec2abb69e69841"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadadc95782f82d1e4265ece226ee0a9ed" id="r_gadadc95782f82d1e4265ece226ee0a9ed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:gadadc95782f82d1e4265ece226ee0a9ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4e21815cc612604cdf3d58fa2b34db16" id="r_ga4e21815cc612604cdf3d58fa2b34db16"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga4e21815cc612604cdf3d58fa2b34db16">cgroup_delete_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, int ignore_migration)</td></tr>
+<tr class="separator:ga4e21815cc612604cdf3d58fa2b34db16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab70ff2b86d261411262c4be31e3140e8" id="r_gab70ff2b86d261411262c4be31e3140e8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gab70ff2b86d261411262c4be31e3140e8">cgroup_delete_cgroup_ext</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, int flags)</td></tr>
+<tr class="separator:gab70ff2b86d261411262c4be31e3140e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Other functions</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p>Helper functions to manipulate with control groups. </p>
 </td></tr>
-<tr class="memitem:gad4ba31fe5a8bba63b33b1ea339b849e6" id="r_gad4ba31fe5a8bba63b33b1ea339b849e6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:gad4ba31fe5a8bba63b33b1ea339b849e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga25ef7e1c839c682e4bb6bab4bd24c37f" id="r_ga25ef7e1c839c682e4bb6bab4bd24c37f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga25ef7e1c839c682e4bb6bab4bd24c37f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa981a95e0917d3167601a4c1b392336a" id="r_gaa981a95e0917d3167601a4c1b392336a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaa981a95e0917d3167601a4c1b392336a">cgroup_copy_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *dst, struct <a class="el" href="structcgroup.html">cgroup</a> *src)</td></tr>
 <tr class="separator:gaa981a95e0917d3167601a4c1b392336a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga86898b59e50335f99fe84a11fa38d3fc" id="r_ga86898b59e50335f99fe84a11fa38d3fc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga86898b59e50335f99fe84a11fa38d3fc">cgroup_compare_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgroup_a, struct <a class="el" href="structcgroup.html">cgroup</a> *cgroup_b)</td></tr>
-<tr class="separator:ga86898b59e50335f99fe84a11fa38d3fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf066e538ebf4aa1f32a654f302a8c353" id="r_gaf066e538ebf4aa1f32a654f302a8c353"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaf066e538ebf4aa1f32a654f302a8c353">cgroup_compare_cgroup</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp_a, struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp_b)</td></tr>
+<tr class="separator:gaf066e538ebf4aa1f32a654f302a8c353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab1725c50c49cec4b0bdad1f26b150ca7" id="r_gab1725c50c49cec4b0bdad1f26b150ca7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gab1725c50c49cec4b0bdad1f26b150ca7">cgroup_compare_controllers</a> (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *cgca, struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *cgcb)</td></tr>
 <tr class="separator:gab1725c50c49cec4b0bdad1f26b150ca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga53b9e13e30660c805ab5773d69397a43" id="r_ga53b9e13e30660c805ab5773d69397a43"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga53b9e13e30660c805ab5773d69397a43">cgroup_set_uid_gid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, uid_t tasks_uid, gid_t tasks_gid, uid_t control_uid, gid_t control_gid)</td></tr>
-<tr class="separator:ga53b9e13e30660c805ab5773d69397a43"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga007d21c304d9cc6e948dc0ae51ecfa86" id="r_ga007d21c304d9cc6e948dc0ae51ecfa86"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga007d21c304d9cc6e948dc0ae51ecfa86">cgroup_get_uid_gid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, uid_t *tasks_uid, gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid)</td></tr>
-<tr class="separator:ga007d21c304d9cc6e948dc0ae51ecfa86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa0400f1ff2fba7fbb6db82d97039d92b" id="r_gaa0400f1ff2fba7fbb6db82d97039d92b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaa0400f1ff2fba7fbb6db82d97039d92b">cgroup_set_permissions</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, mode_t control_dperm, mode_t control_fperm, mode_t task_fperm)</td></tr>
-<tr class="separator:gaa0400f1ff2fba7fbb6db82d97039d92b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga51f539b526d2a4939f03f0b4d4ed9040" id="r_ga51f539b526d2a4939f03f0b4d4ed9040"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga51f539b526d2a4939f03f0b4d4ed9040">cgroup_set_uid_gid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, uid_t tasks_uid, gid_t tasks_gid, uid_t control_uid, gid_t control_gid)</td></tr>
+<tr class="separator:ga51f539b526d2a4939f03f0b4d4ed9040"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3b560f12d9d50c177cc48d5016c93412" id="r_ga3b560f12d9d50c177cc48d5016c93412"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga3b560f12d9d50c177cc48d5016c93412">cgroup_get_uid_gid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, uid_t *tasks_uid, gid_t *tasks_gid, uid_t *control_uid, gid_t *control_gid)</td></tr>
+<tr class="separator:ga3b560f12d9d50c177cc48d5016c93412"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae8c8f601680e79150608073a55afcac0" id="r_gae8c8f601680e79150608073a55afcac0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gae8c8f601680e79150608073a55afcac0">cgroup_set_permissions</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, mode_t control_dperm, mode_t control_fperm, mode_t task_fperm)</td></tr>
+<tr class="separator:gae8c8f601680e79150608073a55afcac0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Group parameters</h2></td></tr>
-<tr><td class="ititle" colspan="2"><p>These are functions can read or modify parameter of a group. </p><dl class="section note"><dt>Note</dt><dd>All these functions read/write parameters to <code>libcgorup</code> internal structures. Use <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a> to load parameters from kernel to these internal structures and <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write changes to kernel. </dd></dl>
+<tr><td class="ititle" colspan="2"><p>These are functions can read or modify parameter of a group. </p><dl class="section note"><dt>Note</dt><dd>All these functions read/write parameters to <code>libcgorup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a> to load parameters from kernel to these internal structures and <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write changes to kernel. </dd></dl>
 </td></tr>
 <tr class="memitem:ga4817c68ab791c09c07b663c29b3fb029" id="r_ga4817c68ab791c09c07b663c29b3fb029"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga4817c68ab791c09c07b663c29b3fb029">cgroup_add_value_string</a> (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller, const char *name, const char *value)</td></tr>
 <tr class="separator:ga4817c68ab791c09c07b663c29b3fb029"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -189,23 +189,23 @@ Data Structures</h2></td></tr>
 <tr class="separator:ga65ece0f619100492d758fbeb3788358a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5a9cb81b0a1e0f3bd08599084d4ae300" id="r_ga5a9cb81b0a1e0f3bd08599084d4ae300"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga5a9cb81b0a1e0f3bd08599084d4ae300">cgroup_get_threads</a> (const char *name, const char *controller, pid_t **pids, int *size)</td></tr>
 <tr class="separator:ga5a9cb81b0a1e0f3bd08599084d4ae300"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaef0bf6cd480f2dcb5e964de151a27dd1" id="r_gaef0bf6cd480f2dcb5e964de151a27dd1"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaef0bf6cd480f2dcb5e964de151a27dd1">cg_chmod_recursive</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, mode_t dir_mode, int dirm_change, mode_t file_mode, int filem_change)</td></tr>
-<tr class="separator:gaef0bf6cd480f2dcb5e964de151a27dd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab60b1f528fbfb17d69a88f499c7071aa" id="r_gab60b1f528fbfb17d69a88f499c7071aa"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gab60b1f528fbfb17d69a88f499c7071aa">cgroup_get_cgroup_name</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:gab60b1f528fbfb17d69a88f499c7071aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1a54be8341476951bd5bce94f521db6e" id="r_ga1a54be8341476951bd5bce94f521db6e"><td class="memItemLeft" align="right" valign="top"><a id="ga1a54be8341476951bd5bce94f521db6e" name="ga1a54be8341476951bd5bce94f521db6e"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup</b> (struct <a class="el" href="structcgroup.html">cgroup</a> *const out_cgroup, enum cg_version_t out_version, const struct <a class="el" href="structcgroup.html">cgroup</a> *const in_cgroup, enum cg_version_t in_version)</td></tr>
-<tr class="separator:ga1a54be8341476951bd5bce94f521db6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac9e669d8e0994bfbbdef630b6fe41c76" id="r_gac9e669d8e0994bfbbdef630b6fe41c76"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gac9e669d8e0994bfbbdef630b6fe41c76">cg_chmod_recursive</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, mode_t dir_mode, int dirm_change, mode_t file_mode, int filem_change)</td></tr>
+<tr class="separator:gac9e669d8e0994bfbbdef630b6fe41c76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7d759f21861ed546c12094cabc0b7054" id="r_ga7d759f21861ed546c12094cabc0b7054"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga7d759f21861ed546c12094cabc0b7054">cgroup_get_cgroup_name</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga7d759f21861ed546c12094cabc0b7054"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9b3eab74e8f65212790f434fce931fd9" id="r_ga9b3eab74e8f65212790f434fce931fd9"><td class="memItemLeft" align="right" valign="top"><a id="ga9b3eab74e8f65212790f434fce931fd9" name="ga9b3eab74e8f65212790f434fce931fd9"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup</b> (struct <a class="el" href="structcgroup.html">cgroup</a> *const out_cgrp, enum cg_version_t out_version, const struct <a class="el" href="structcgroup.html">cgroup</a> *const in_cgrp, enum cg_version_t in_version)</td></tr>
+<tr class="separator:ga9b3eab74e8f65212790f434fce931fd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0fd537a3ba09c497378dc494fa405f82" id="r_ga0fd537a3ba09c497378dc494fa405f82"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga0fd537a3ba09c497378dc494fa405f82">cgroup_list_mount_points</a> (const enum cg_version_t cgrp_version, char ***mount_paths)</td></tr>
 <tr class="separator:ga0fd537a3ba09c497378dc494fa405f82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga452d8c5e95c8d694e26e7efda045360f" id="r_ga452d8c5e95c8d694e26e7efda045360f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga452d8c5e95c8d694e26e7efda045360f">cgroup_get_controller_version</a> (const char *const controller, enum cg_version_t *const version)</td></tr>
 <tr class="separator:ga452d8c5e95c8d694e26e7efda045360f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaebf0c15818fa8201b8a458f3e3e044da" id="r_gaebf0c15818fa8201b8a458f3e3e044da"><td class="memItemLeft" align="right" valign="top">enum cg_setup_mode_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaebf0c15818fa8201b8a458f3e3e044da">cgroup_setup_mode</a> (void)</td></tr>
 <tr class="separator:gaebf0c15818fa8201b8a458f3e3e044da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabc512c3f20d1f18a0f0f3ca9e2fb136f" id="r_gabc512c3f20d1f18a0f0f3ca9e2fb136f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gabc512c3f20d1f18a0f0f3ca9e2fb136f">cgroup_get_controller_count</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:gabc512c3f20d1f18a0f0f3ca9e2fb136f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf5439bb5f149655f682a6438b17877db" id="r_gaf5439bb5f149655f682a6438b17877db"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaf5439bb5f149655f682a6438b17877db">cgroup_get_controller_by_index</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, int index)</td></tr>
-<tr class="separator:gaf5439bb5f149655f682a6438b17877db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga42d5c13ecb8d9d7e625bb473034a26c3" id="r_ga42d5c13ecb8d9d7e625bb473034a26c3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga42d5c13ecb8d9d7e625bb473034a26c3">cgroup_get_controller_count</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga42d5c13ecb8d9d7e625bb473034a26c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaba11ac0b3b74400501a1b030dfd7be9a" id="r_gaba11ac0b3b74400501a1b030dfd7be9a"><td class="memItemLeft" align="right" valign="top">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gaba11ac0b3b74400501a1b030dfd7be9a">cgroup_get_controller_by_index</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, int index)</td></tr>
+<tr class="separator:gaba11ac0b3b74400501a1b030dfd7be9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac13c5570894e6581bd1ebbdcbb73c74e" id="r_gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#gac13c5570894e6581bd1ebbdcbb73c74e">cgroup_get_controller_name</a> (struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> *controller)</td></tr>
 <tr class="separator:gac13c5570894e6581bd1ebbdcbb73c74e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga5103da236354f658697c730cc6834f07" id="r_ga5103da236354f658697c730cc6834f07"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__groups.html#ga5103da236354f658697c730cc6834f07">is_cgroup_mode_legacy</a> (void)</td></tr>
@@ -248,8 +248,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="gaef0bf6cd480f2dcb5e964de151a27dd1" name="gaef0bf6cd480f2dcb5e964de151a27dd1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaef0bf6cd480f2dcb5e964de151a27dd1">&#9670;&#160;</a></span>cg_chmod_recursive()</h2>
+<a id="gac9e669d8e0994bfbbdef630b6fe41c76" name="gac9e669d8e0994bfbbdef630b6fe41c76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac9e669d8e0994bfbbdef630b6fe41c76">&#9670;&#160;</a></span>cg_chmod_recursive()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -258,7 +258,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cg_chmod_recursive </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -293,7 +293,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><div class="memdoc">
 <p>Change permission of files and directories of given group </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>The cgroup which permissions should be changed </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup which permissions should be changed </td></tr>
     <tr><td class="paramname">dir_mode</td><td>The permission mode of group directory </td></tr>
     <tr><td class="paramname">dirm_change</td><td>Denotes whether the directory change should be done </td></tr>
     <tr><td class="paramname">file_mode</td><td>The permission mode of group files </td></tr>
@@ -304,8 +304,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gae870d271b789b5c54c2e3d35de3cd6f9" name="gae870d271b789b5c54c2e3d35de3cd6f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gae870d271b789b5c54c2e3d35de3cd6f9">&#9670;&#160;</a></span>cgroup_add_all_controllers()</h2>
+<a id="ga68f90377f6183dc8b326876cd1ecf4b1" name="ga68f90377f6183dc8b326876cd1ecf4b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga68f90377f6183dc8b326876cd1ecf4b1">&#9670;&#160;</a></span>cgroup_add_all_controllers()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -314,7 +314,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_add_all_controllers </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -322,7 +322,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Attach all mounted controllers to given cgroup. This function just modifies internal libcgroup structure, not the kernel control group.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -330,8 +330,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="ga3929afd6ced9fe877613286b5f06cf8d" name="ga3929afd6ced9fe877613286b5f06cf8d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga3929afd6ced9fe877613286b5f06cf8d">&#9670;&#160;</a></span>cgroup_add_controller()</h2>
+<a id="ga86b514fe6f99ded356eb5e799787f3f5" name="ga86b514fe6f99ded356eb5e799787f3f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga86b514fe6f99ded356eb5e799787f3f5">&#9670;&#160;</a></span>cgroup_add_controller()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -340,7 +340,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> * cgroup_add_controller </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -358,7 +358,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Attach new controller to cgroup. This function just modifies internal libcgroup structure, not the kernel control group.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">name</td><td>The name of the controller, e.g. "freezer". </td></tr>
   </table>
   </dd>
@@ -398,7 +398,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -441,7 +441,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel. Content of the value is copied to internal structures and is not needed after return from the function.</p>
+<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel. Content of the value is copied to internal structures and is not needed after return from the function.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -484,7 +484,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -527,7 +527,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Add parameter and its value to internal <code>libcgroup</code> structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -539,8 +539,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="ga86898b59e50335f99fe84a11fa38d3fc" name="ga86898b59e50335f99fe84a11fa38d3fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga86898b59e50335f99fe84a11fa38d3fc">&#9670;&#160;</a></span>cgroup_compare_cgroup()</h2>
+<a id="gaf066e538ebf4aa1f32a654f302a8c353" name="gaf066e538ebf4aa1f32a654f302a8c353"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaf066e538ebf4aa1f32a654f302a8c353">&#9670;&#160;</a></span>cgroup_compare_cgroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -549,13 +549,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_compare_cgroup </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup_a</em>, </td>
+          <td class="paramname"><em>cgrp_a</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup_b</em>&#160;</td>
+          <td class="paramname"><em>cgrp_b</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -567,8 +567,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Compare names, owners, controllers, parameters and values of two groups.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup_a</td><td></td></tr>
-    <tr><td class="paramname">cgroup_b</td><td></td></tr>
+    <tr><td class="paramname">cgrp_a</td><td></td></tr>
+    <tr><td class="paramname">cgrp_b</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -664,8 +664,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gadb8e13df6064841d3c9707960f782fa7" name="gadb8e13df6064841d3c9707960f782fa7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gadb8e13df6064841d3c9707960f782fa7">&#9670;&#160;</a></span>cgroup_create_cgroup()</h2>
+<a id="ga74c5b4a1d3bc7729af1383c131254fbd" name="ga74c5b4a1d3bc7729af1383c131254fbd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga74c5b4a1d3bc7729af1383c131254fbd">&#9670;&#160;</a></span>cgroup_create_cgroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -674,7 +674,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_create_cgroup </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -689,9 +689,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Physically create a control group in kernel. The group is created in all hierarchies, which cover controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a>. All parameters set by cgroup_add_value_* functions are written. The created groups has owner which was set by <a class="el" href="group__group__groups.html#ga53b9e13e30660c805ab5773d69397a43">cgroup_set_uid_gid()</a> and permissions set by cgroup_set_permissions. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Physically create a control group in kernel. The group is created in all hierarchies, which cover controllers added by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>. All parameters set by cgroup_add_value_* functions are written. The created groups has owner which was set by <a class="el" href="group__group__groups.html#ga51f539b526d2a4939f03f0b4d4ed9040">cgroup_set_uid_gid()</a> and permissions set by cgroup_set_permissions. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">ignore_ownership</td><td>When nozero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
   </table>
   </dd>
@@ -703,13 +703,13 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
   </table>
   </dd>
 </dl>
-<p>cgroup_create_cgroup creates a new control group. struct cgroup *cgroup: The control group to be created</p>
+<p>cgroup_create_cgroup creates a new control group. struct cgroup *cgrp: The control group to be created</p>
 <p>returns 0 on success. We recommend calling cg_delete_cgroup if this routine fails. That should do the cleanup operation. If ECGCANTSETVALUE is returned, the group was created successfully but not all controller parameters were successfully set. </p>
 
 </div>
 </div>
-<a id="ga90e1ce96f3cb540f7e82d076dd938f62" name="ga90e1ce96f3cb540f7e82d076dd938f62"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga90e1ce96f3cb540f7e82d076dd938f62">&#9670;&#160;</a></span>cgroup_create_cgroup_from_parent()</h2>
+<a id="ga4d1f015f3fe8bad80fec2abb69e69841" name="ga4d1f015f3fe8bad80fec2abb69e69841"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4d1f015f3fe8bad80fec2abb69e69841">&#9670;&#160;</a></span>cgroup_create_cgroup_from_parent()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -718,7 +718,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_create_cgroup_from_parent </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -734,12 +734,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
       </table>
 </div><div class="memdoc">
 <p>Physically create new control group in kernel, with all parameters and values copied from its parent group. The group is created in all hierarchies, where the parent group exists. I.e. following code creates subgroup in all hierarchies, because all of them have root (=parent) group. </p><div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *foo = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;foo&quot;</span>);</div>
-<div class="line"><a class="code hl_function" href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a>(foo, 0);</div>
-<div class="ttc" id="agroup__group__groups_html_ga90e1ce96f3cb540f7e82d076dd938f62"><div class="ttname"><a href="group__group__groups.html#ga90e1ce96f3cb540f7e82d076dd938f62">cgroup_create_cgroup_from_parent</a></div><div class="ttdeci">int cgroup_create_cgroup_from_parent(struct cgroup *cgroup, int ignore_ownership)</div><div class="ttdef"><b>Definition</b> api.c:3239</div></div>
-</div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</dd></dl>
+<div class="line"><a class="code hl_function" href="group__group__groups.html#ga4d1f015f3fe8bad80fec2abb69e69841">cgroup_create_cgroup_from_parent</a>(foo, 0);</div>
+<div class="ttc" id="agroup__group__groups_html_ga4d1f015f3fe8bad80fec2abb69e69841"><div class="ttname"><a href="group__group__groups.html#ga4d1f015f3fe8bad80fec2abb69e69841">cgroup_create_cgroup_from_parent</a></div><div class="ttdeci">int cgroup_create_cgroup_from_parent(struct cgroup *cgrp, int ignore_ownership)</div><div class="ttdef"><b>Definition</b> api.c:3233</div></div>
+</div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a> is not used, like in <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>The cgroup to create. Only it's name is used, everything else is discarded. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup to create. Only it's name is used, everything else is discarded. </td></tr>
     <tr><td class="paramname">ignore_ownership</td><td>When nozero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
   </table>
   </dd>
@@ -751,12 +751,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
   </table>
   </dd>
 </dl>
-<p>@cgroup: cgroup data structure to be filled with parent values and then passed down for creation @ignore_ownership: Ignore doing a chown on the newly created cgroup </p><dl class="section return"><dt>Returns</dt><dd>0 on success, &gt; 0 on failure. If ECGCANTSETVALUE is returned, the group was created successfully, but not all controller parameters were copied from the parent successfully; unfortunately, this is expected... </dd></dl>
+<p>@cgrp: cgroup data structure to be filled with parent values and then passed down for creation @ignore_ownership: Ignore doing a chown on the newly created cgroup </p><dl class="section return"><dt>Returns</dt><dd>0 on success, &gt; 0 on failure. If ECGCANTSETVALUE is returned, the group was created successfully, but not all controller parameters were copied from the parent successfully; unfortunately, this is expected... </dd></dl>
 
 </div>
 </div>
-<a id="ga1dca18434e5d6be30c28c556da94f565" name="ga1dca18434e5d6be30c28c556da94f565"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga1dca18434e5d6be30c28c556da94f565">&#9670;&#160;</a></span>cgroup_delete_cgroup()</h2>
+<a id="ga4e21815cc612604cdf3d58fa2b34db16" name="ga4e21815cc612604cdf3d58fa2b34db16"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4e21815cc612604cdf3d58fa2b34db16">&#9670;&#160;</a></span>cgroup_delete_cgroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -765,7 +765,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_delete_cgroup </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -780,23 +780,23 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Physically remove a control group from kernel. The group is removed from all hierarchies, which cover controllers added by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> or <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a>. All tasks inside the group are automatically moved to parent group.</p>
-<p>The group being removed must be empty, i.e. without subgroups. Use <a class="el" href="group__group__groups.html#ga860c1ec70189c969b2c8373fc1e96d36">cgroup_delete_cgroup_ext()</a> for recursive delete.</p>
+<p>Physically remove a control group from kernel. The group is removed from all hierarchies, which cover controllers added by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a> or <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a>. All tasks inside the group are automatically moved to parent group.</p>
+<p>The group being removed must be empty, i.e. without subgroups. Use <a class="el" href="group__group__groups.html#gab70ff2b86d261411262c4be31e3140e8">cgroup_delete_cgroup_ext()</a> for recursive delete.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">ignore_migration</td><td>When nozero, all errors are ignored when migrating tasks from the group to the parent group. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>what is ignore_migration good for? rmdir() will fail if tasks were not moved. </dd></dl>
-<p>cgroup_delete cgroup deletes a control group. struct cgroup *cgroup takes the group which is to be deleted.</p>
+<p>cgroup_delete cgroup deletes a control group. struct cgroup *cgrp takes the group which is to be deleted.</p>
 <p>returns 0 on success. </p>
 
 </div>
 </div>
-<a id="ga860c1ec70189c969b2c8373fc1e96d36" name="ga860c1ec70189c969b2c8373fc1e96d36"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga860c1ec70189c969b2c8373fc1e96d36">&#9670;&#160;</a></span>cgroup_delete_cgroup_ext()</h2>
+<a id="gab70ff2b86d261411262c4be31e3140e8" name="gab70ff2b86d261411262c4be31e3140e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab70ff2b86d261411262c4be31e3140e8">&#9670;&#160;</a></span>cgroup_delete_cgroup_ext()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -805,7 +805,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_delete_cgroup_ext </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -823,7 +823,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Physically remove a control group from kernel. All tasks are automatically moved to parent group. If CGFLAG_DELETE_IGNORE_MIGRATION flag is used, the errors that occurred during the task movement are ignored. CGFLAG_DELETE_RECURSIVE flag specifies that all subgroups should be removed too. If root group is being removed with this flag specified, all subgroups are removed but the root group itself is left undeleted. </p><dl class="section see"><dt>See also</dt><dd>cgroup_delete_flag.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">flags</td><td>Combination of CGFLAG_DELETE_* flags, which indicate what and how to delete. </td></tr>
   </table>
   </dd>
@@ -831,8 +831,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gab20fdb1ae479f8baac482336abf73900" name="gab20fdb1ae479f8baac482336abf73900"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gab20fdb1ae479f8baac482336abf73900">&#9670;&#160;</a></span>cgroup_free()</h2>
+<a id="ga7e719c74424040d0d8d3a13d66080a80" name="ga7e719c74424040d0d8d3a13d66080a80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7e719c74424040d0d8d3a13d66080a80">&#9670;&#160;</a></span>cgroup_free()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -841,22 +841,22 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">void cgroup_free </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> **&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Free internal <code>cgroup</code> structure. This function frees also all controllers attached to the <code>cgroup</code>, including all parameters and their values. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="ga92d27c9ff0d655838642a7aa68497596" name="ga92d27c9ff0d655838642a7aa68497596"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga92d27c9ff0d655838642a7aa68497596">&#9670;&#160;</a></span>cgroup_free_controllers()</h2>
+<a id="ga4104e108e85a8576c878822f353b4e39" name="ga4104e108e85a8576c878822f353b4e39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga4104e108e85a8576c878822f353b4e39">&#9670;&#160;</a></span>cgroup_free_controllers()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -865,7 +865,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">void cgroup_free_controllers </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -873,15 +873,15 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Free internal list of controllers from the group. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>should this function be public??? </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="gad4ba31fe5a8bba63b33b1ea339b849e6" name="gad4ba31fe5a8bba63b33b1ea339b849e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad4ba31fe5a8bba63b33b1ea339b849e6">&#9670;&#160;</a></span>cgroup_get_cgroup()</h2>
+<a id="ga25ef7e1c839c682e4bb6bab4bd24c37f" name="ga25ef7e1c839c682e4bb6bab4bd24c37f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga25ef7e1c839c682e4bb6bab4bd24c37f">&#9670;&#160;</a></span>cgroup_get_cgroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -890,26 +890,26 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_get_cgroup </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Read all information regarding the group from kernel. Based on name of the group, list of controllers and all parameters and their values are read from all hierarchies, where a group with given name exists. All existing controllers are replaced. I.e. following code will fill <code>root</code> with controllers from all hierarchies, because the root group is available in all of them. </p><div class="fragment"><div class="line"><span class="keyword">struct </span><a class="code hl_struct" href="structcgroup.html">cgroup</a> *root = <a class="code hl_function" href="group__group__groups.html#gad34c82ead174988d418f3dcb003aaca7">cgroup_new_cgroup</a>(<span class="stringliteral">&quot;/&quot;</span>);</div>
-<div class="line"><a class="code hl_function" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a>(root);</div>
-<div class="ttc" id="agroup__group__groups_html_gad4ba31fe5a8bba63b33b1ea339b849e6"><div class="ttname"><a href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup</a></div><div class="ttdeci">int cgroup_get_cgroup(struct cgroup *cgroup)</div><div class="ttdef"><b>Definition</b> api.c:3779</div></div>
-</div><!-- fragment --><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a>? What owners will return <a class="el" href="group__group__groups.html#ga007d21c304d9cc6e948dc0ae51ecfa86">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file?</dd></dl>
+<div class="line"><a class="code hl_function" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup</a>(root);</div>
+<div class="ttc" id="agroup__group__groups_html_ga25ef7e1c839c682e4bb6bab4bd24c37f"><div class="ttname"><a href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup</a></div><div class="ttdeci">int cgroup_get_cgroup(struct cgroup *cgrp)</div><div class="ttdef"><b>Definition</b> api.c:3767</div></div>
+</div><!-- fragment --><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>? What owners will return <a class="el" href="group__group__groups.html#ga3b560f12d9d50c177cc48d5016c93412">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file?</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>The cgroup to load. Only it's name is used, everything else is replaced. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup to load. Only it's name is used, everything else is replaced. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="gab60b1f528fbfb17d69a88f499c7071aa" name="gab60b1f528fbfb17d69a88f499c7071aa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gab60b1f528fbfb17d69a88f499c7071aa">&#9670;&#160;</a></span>cgroup_get_cgroup_name()</h2>
+<a id="ga7d759f21861ed546c12094cabc0b7054" name="ga7d759f21861ed546c12094cabc0b7054"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7d759f21861ed546c12094cabc0b7054">&#9670;&#160;</a></span>cgroup_get_cgroup_name()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -918,22 +918,22 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">char * cgroup_get_cgroup_name </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Get the name of the cgroup from a given cgroup </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>The cgroup whose name is needed </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup whose name is needed </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="ga6b60ab9187a883a2ae114f8d87191e27" name="ga6b60ab9187a883a2ae114f8d87191e27"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga6b60ab9187a883a2ae114f8d87191e27">&#9670;&#160;</a></span>cgroup_get_controller()</h2>
+<a id="gafbc8bd483ee6fbd3b1ccbbd159beccf6" name="gafbc8bd483ee6fbd3b1ccbbd159beccf6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gafbc8bd483ee6fbd3b1ccbbd159beccf6">&#9670;&#160;</a></span>cgroup_get_controller()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -942,7 +942,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> * cgroup_get_controller </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -957,9 +957,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return appropriate controller from given group. The controller must be added before using <a class="el" href="group__group__groups.html#ga3929afd6ced9fe877613286b5f06cf8d">cgroup_add_controller()</a> or loaded from kernel using <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Return appropriate controller from given group. The controller must be added before using <a class="el" href="group__group__groups.html#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a> or loaded from kernel using <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a>. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">name</td><td>The name of the controller, e.g. "freezer". </td></tr>
   </table>
   </dd>
@@ -967,8 +967,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gaf5439bb5f149655f682a6438b17877db" name="gaf5439bb5f149655f682a6438b17877db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaf5439bb5f149655f682a6438b17877db">&#9670;&#160;</a></span>cgroup_get_controller_by_index()</h2>
+<a id="gaba11ac0b3b74400501a1b030dfd7be9a" name="gaba11ac0b3b74400501a1b030dfd7be9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaba11ac0b3b74400501a1b030dfd7be9a">&#9670;&#160;</a></span>cgroup_get_controller_by_index()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -977,7 +977,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">struct <a class="el" href="structcgroup__controller.html">cgroup_controller</a> * cgroup_get_controller_by_index </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -995,7 +995,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Return requested controller from given group</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">index</td><td>The index into the cgroup controller list </td></tr>
   </table>
   </dd>
@@ -1003,8 +1003,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gabc512c3f20d1f18a0f0f3ca9e2fb136f" name="gabc512c3f20d1f18a0f0f3ca9e2fb136f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gabc512c3f20d1f18a0f0f3ca9e2fb136f">&#9670;&#160;</a></span>cgroup_get_controller_count()</h2>
+<a id="ga42d5c13ecb8d9d7e625bb473034a26c3" name="ga42d5c13ecb8d9d7e625bb473034a26c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga42d5c13ecb8d9d7e625bb473034a26c3">&#9670;&#160;</a></span>cgroup_get_controller_count()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1013,7 +1013,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_get_controller_count </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1021,7 +1021,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Return the number of controllers for the specified cgroup in libcgroup internal structures.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
   </table>
   </dd>
 </dl>
@@ -1189,8 +1189,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="ga007d21c304d9cc6e948dc0ae51ecfa86" name="ga007d21c304d9cc6e948dc0ae51ecfa86"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga007d21c304d9cc6e948dc0ae51ecfa86">&#9670;&#160;</a></span>cgroup_get_uid_gid()</h2>
+<a id="ga3b560f12d9d50c177cc48d5016c93412" name="ga3b560f12d9d50c177cc48d5016c93412"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3b560f12d9d50c177cc48d5016c93412">&#9670;&#160;</a></span>cgroup_get_uid_gid()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1199,7 +1199,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_get_uid_gid </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1232,7 +1232,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return owners of the group's <code>tasks</code> file and control files. The data is read from <code>libcgroup</code> internal <code>cgroup</code> structure, use <a class="el" href="group__group__groups.html#ga53b9e13e30660c805ab5773d69397a43">cgroup_set_uid_gid()</a> or <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a> to fill it. </p>
+<p>Return owners of the group's <code>tasks</code> file and control files. The data is read from <code>libcgroup</code> internal <code>cgroup</code> structure, use <a class="el" href="group__group__groups.html#ga51f539b526d2a4939f03f0b4d4ed9040">cgroup_set_uid_gid()</a> or <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a> to fill it. </p>
 
 </div>
 </div>
@@ -1267,7 +1267,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
+<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1310,7 +1310,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
+<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1375,7 +1375,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Return the number of variables for the specified controller in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a> to fill these structures with data from kernel. Use this function together with <a class="el" href="group__group__groups.html#ga9d01743fd3f97014e08fc67149ec5f0b">cgroup_get_value_name()</a> to list all parameters of a group.</p>
+<p>Return the number of variables for the specified controller in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a> to fill these structures with data from kernel. Use this function together with <a class="el" href="group__group__groups.html#ga9d01743fd3f97014e08fc67149ec5f0b">cgroup_get_value_name()</a> to list all parameters of a group.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1417,7 +1417,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel. It's up to the caller to free returned value.</p>
+<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel. It's up to the caller to free returned value.</p>
 <p>This function works only for 'short' parameters. Use <a class="el" href="group__group__iterators.html#ga1138e47f124f0f634586db5e0c4ae5de">cgroup_read_stats_begin()</a>, <a class="el" href="group__group__iterators.html#gaf95587508fc15d74fd5ed0df58024be7">cgroup_read_stats_next()</a> and <a class="el" href="group__group__iterators.html#gaba386d9db6cadc6ad85c2552f63447bb">cgroup_read_stats_end()</a> to read <code>stats</code> parameter, which can be longer than libcgroup's internal buffers. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>rephrase, it's too vague... How big is the buffer actually?</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -1461,7 +1461,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#gad4ba31fe5a8bba63b33b1ea339b849e6">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
+<p>Read a parameter value from <code>libcgroup</code> internal structures. Use <code><a class="el" href="group__group__groups.html#ga25ef7e1c839c682e4bb6bab4bd24c37f">cgroup_get_cgroup()</a></code> to fill these structures with data from kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1510,8 +1510,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="ga31ba5e865ae8d58b4453c0ef06d2c071" name="ga31ba5e865ae8d58b4453c0ef06d2c071"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga31ba5e865ae8d58b4453c0ef06d2c071">&#9670;&#160;</a></span>cgroup_modify_cgroup()</h2>
+<a id="gadadc95782f82d1e4265ece226ee0a9ed" name="gadadc95782f82d1e4265ece226ee0a9ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gadadc95782f82d1e4265ece226ee0a9ed">&#9670;&#160;</a></span>cgroup_modify_cgroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1520,7 +1520,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_modify_cgroup </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em></td><td>)</td>
+          <td class="paramname"><em>cgrp</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1528,11 +1528,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Physically modify a control group in kernel. All parameters added by cgroup_add_value_ or cgroup_set_value_ are written. Currently it's not possible to change and owner of a group.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
   </table>
   </dd>
 </dl>
-<p>cgroup_modify_cgroup modifies the cgroup control files. struct cgroup *cgroup: The name will be the cgroup to be modified. The values will be the values to be modified, those not mentioned in the structure will not be modified.</p>
+<p>cgroup_modify_cgroup modifies the cgroup control files. struct cgroup *cgrp: The name will be the cgroup to be modified. The values will be the values to be modified, those not mentioned in the structure will not be modified.</p>
 <p>The uids cannot be modified yet.</p>
 <p>returns 0 on success. </p>
 
@@ -1565,8 +1565,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="gaa0400f1ff2fba7fbb6db82d97039d92b" name="gaa0400f1ff2fba7fbb6db82d97039d92b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaa0400f1ff2fba7fbb6db82d97039d92b">&#9670;&#160;</a></span>cgroup_set_permissions()</h2>
+<a id="gae8c8f601680e79150608073a55afcac0" name="gae8c8f601680e79150608073a55afcac0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae8c8f601680e79150608073a55afcac0">&#9670;&#160;</a></span>cgroup_set_permissions()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1575,7 +1575,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">void cgroup_set_permissions </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1604,7 +1604,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><div class="memdoc">
 <p>Stores given file permissions of the group's control and tasks files into the <code>cgroup</code> data structure. Use NO_PERMS if permissions shouldn't be changed or a value which applicable to chmod(2). Please note that the given permissions are masked with the file owner's permissions. For example if a control file has permissions 640 and control_fperm is 471 the result will be 460. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">control_dperm</td><td>Directory permission for the group. </td></tr>
     <tr><td class="paramname">control_fperm</td><td>File permission for the control files. </td></tr>
     <tr><td class="paramname">task_fperm</td><td>File permissions for task file. </td></tr>
@@ -1614,8 +1614,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 
 </div>
 </div>
-<a id="ga53b9e13e30660c805ab5773d69397a43" name="ga53b9e13e30660c805ab5773d69397a43"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga53b9e13e30660c805ab5773d69397a43">&#9670;&#160;</a></span>cgroup_set_uid_gid()</h2>
+<a id="ga51f539b526d2a4939f03f0b4d4ed9040" name="ga51f539b526d2a4939f03f0b4d4ed9040"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga51f539b526d2a4939f03f0b4d4ed9040">&#9670;&#160;</a></span>cgroup_set_uid_gid()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1624,7 +1624,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
           <td class="memname">int cgroup_set_uid_gid </td>
           <td>(</td>
           <td class="paramtype">struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td>
-          <td class="paramname"><em>cgroup</em>, </td>
+          <td class="paramname"><em>cgrp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1657,10 +1657,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set owner of the group control files and the <code>tasks</code> file. This function modifies only <code>libcgroup</code> internal <code>cgroup</code> structure, use <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> afterwards to create the group with given owners.</p>
+<p>Set owner of the group control files and the <code>tasks</code> file. This function modifies only <code>libcgroup</code> internal <code>cgroup</code> structure, use <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> afterwards to create the group with given owners.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td></td></tr>
+    <tr><td class="paramname">cgrp</td><td></td></tr>
     <tr><td class="paramname">tasks_uid</td><td>UID of the owner of group's <code>tasks</code> file. </td></tr>
     <tr><td class="paramname">tasks_gid</td><td>GID of the owner of group's <code>tasks</code> file. </td></tr>
     <tr><td class="paramname">control_uid</td><td>UID of the owner of group's control files (i.e. parameters). </td></tr>
@@ -1702,7 +1702,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1745,7 +1745,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel. Content of the value is copied to internal structures and is not needed after return from the function.</p>
+<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel. Content of the value is copied to internal structures and is not needed after return from the function.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1788,7 +1788,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>
@@ -1831,7 +1831,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#ga31ba5e865ae8d58b4453c0ef06d2c071">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#gadb8e13df6064841d3c9707960f782fa7">cgroup_create_cgroup()</a> to write it to kernel.</p>
+<p>Set a parameter value in <code>libcgroup</code> internal structures. Use <a class="el" href="group__group__groups.html#gadadc95782f82d1e4265ece226ee0a9ed">cgroup_modify_cgroup()</a> or <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> to write it to kernel.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">controller</td><td></td></tr>

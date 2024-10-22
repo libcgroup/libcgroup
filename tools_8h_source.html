@@ -99,17 +99,16 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#endif</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keywordtype">int</span> cgroup_cgxget(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> **cg,</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>          <span class="keyword">enum</span> cg_version_t version, <span class="keywordtype">bool</span> ignore_unmappable);</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="keywordtype">int</span> cgroup_cgxset(<span class="keyword">const</span> <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> * <span class="keyword">const</span> cg,</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>          <span class="keyword">enum</span> cg_version_t version, <span class="keywordtype">bool</span> ignore_unmappable);</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_TOOLS_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="keywordtype">int</span> cgroup_cgxget(<span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> **cgrp, <span class="keyword">enum</span> cg_version_t version, <span class="keywordtype">bool</span> ignore_unmappable);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="keywordtype">int</span> cgroup_cgxset(<span class="keyword">const</span> <span class="keyword">struct</span> <a class="code hl_struct" href="structcgroup.html">cgroup</a> * <span class="keyword">const</span> cgrp,</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>          <span class="keyword">enum</span> cg_version_t version, <span class="keywordtype">bool</span> ignore_unmappable);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="preprocessor">#endif </span><span class="comment">/* _LIBCGROUP_TOOLS_H */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="astructcgroup_html"><div class="ttname"><a href="structcgroup.html">cgroup</a></div><div class="ttdef"><b>Definition</b> libcgroup-internal.h:121</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

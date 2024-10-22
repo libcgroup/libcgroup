@@ -76,10 +76,10 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Simple task assignment</h2></td></tr>
 <tr><td class="ititle" colspan="2"><p>Applications can use following functions to simply put a task into given control group and find a groups where given tasks is. </p>
 </td></tr>
-<tr class="memitem:ga43414ac2b1fc73bbb46b6278c7500188" id="r_ga43414ac2b1fc73bbb46b6278c7500188"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga43414ac2b1fc73bbb46b6278c7500188">cgroup_attach_task</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>)</td></tr>
-<tr class="separator:ga43414ac2b1fc73bbb46b6278c7500188"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9c7532681986d156ac3f6bac1fcf6aab" id="r_ga9c7532681986d156ac3f6bac1fcf6aab"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga9c7532681986d156ac3f6bac1fcf6aab">cgroup_attach_task_pid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *<a class="el" href="structcgroup.html">cgroup</a>, pid_t tid)</td></tr>
-<tr class="separator:ga9c7532681986d156ac3f6bac1fcf6aab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga221ec5280a475ef096b3604a2e4a32e7" id="r_ga221ec5280a475ef096b3604a2e4a32e7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga221ec5280a475ef096b3604a2e4a32e7">cgroup_attach_task</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
+<tr class="separator:ga221ec5280a475ef096b3604a2e4a32e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1fcd62dd6fcfb7b6c9361702d374a96d" id="r_ga1fcd62dd6fcfb7b6c9361702d374a96d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga1fcd62dd6fcfb7b6c9361702d374a96d">cgroup_attach_task_pid</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp, pid_t tid)</td></tr>
+<tr class="separator:ga1fcd62dd6fcfb7b6c9361702d374a96d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2d4677baef780c003fc6fba6b5dc78f2" id="r_ga2d4677baef780c003fc6fba6b5dc78f2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga2d4677baef780c003fc6fba6b5dc78f2">cgroup_change_cgroup_path</a> (const char *path, pid_t pid, const char *const controllers[])</td></tr>
 <tr class="separator:ga2d4677baef780c003fc6fba6b5dc78f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6f2c17b99cf2526cb46df4769eb3f46e" id="r_ga6f2c17b99cf2526cb46df4769eb3f46e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__group__tasks.html#ga6f2c17b99cf2526cb46df4769eb3f46e">cgroup_get_current_controller_path</a> (pid_t pid, const char *controller, char **current_path)</td></tr>
@@ -117,8 +117,8 @@ $(function() {
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="ga43414ac2b1fc73bbb46b6278c7500188" name="ga43414ac2b1fc73bbb46b6278c7500188"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga43414ac2b1fc73bbb46b6278c7500188">&#9670;&#160;</a></span>cgroup_attach_task()</h2>
+<a id="ga221ec5280a475ef096b3604a2e4a32e7" name="ga221ec5280a475ef096b3604a2e4a32e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga221ec5280a475ef096b3604a2e4a32e7">&#9670;&#160;</a></span>cgroup_attach_task()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -134,7 +134,7 @@ $(function() {
 </div><div class="memdoc">
 <p>Move current task (=thread) to given control group. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>Destination control group.</td></tr>
+    <tr><td class="paramname">cgrp</td><td>Destination control group.</td></tr>
   </table>
   </dd>
 </dl>
@@ -143,8 +143,8 @@ $(function() {
 
 </div>
 </div>
-<a id="ga9c7532681986d156ac3f6bac1fcf6aab" name="ga9c7532681986d156ac3f6bac1fcf6aab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga9c7532681986d156ac3f6bac1fcf6aab">&#9670;&#160;</a></span>cgroup_attach_task_pid()</h2>
+<a id="ga1fcd62dd6fcfb7b6c9361702d374a96d" name="ga1fcd62dd6fcfb7b6c9361702d374a96d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1fcd62dd6fcfb7b6c9361702d374a96d">&#9670;&#160;</a></span>cgroup_attach_task_pid()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -170,7 +170,7 @@ $(function() {
 </div><div class="memdoc">
 <p>Move given task (=thread) to given control group. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgroup</td><td>Destination control group. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>Destination control group. </td></tr>
     <tr><td class="paramname">tid</td><td>The task to move.</td></tr>
   </table>
   </dd>
