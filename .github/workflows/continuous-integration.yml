@@ -149,6 +149,27 @@ jobs:
       run: |
         cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
 
+  distcheckv2:
+    name: Cgroup v2 Dist Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install container dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install lxc lxd-installer
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run make distcheck
+      run: make distcheck
+    - name: Display test logs
+      if: ${{ failure() }}
+      run: |
+        cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
+
   buildtests:
     name: Build tests
     runs-on: ubuntu-20.04
@@ -351,11 +372,15 @@ jobs:
         name: Cgroup v1v2 Code Coverage
         path: lcov.*
 
-  functionaltestsv2_legacy:
-    name: Cgroup v2 Functional Tests - legacy
-    runs-on: cgroup-legacy
+  functionaltestsv2:
+    name: Cgroup v2 Functional Tests
+    runs-on: ubuntu-latest
 
     steps:
+    - name: Install container dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install lxc lxd-installer
     - uses: actions/checkout@v4
       with:
         submodules: false
@@ -367,18 +392,15 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         popd
         pushd tests/ftests
-        make check
+        ./ftests.py -l 10 -L ftests.log
+        ./ftests.py -l 10 -L ftests-nocontainer.log --no-container
         popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: |
-        cat tests/ftests/ftests-wrapper.sh.log
     - name: Archive test logs
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
-        name: Cgroup v2 test logs - legacy
-        path: tests/ftests/*.log
+        name: Cgroup v2 test logs
+        path: ./*.log
     - name: Collate code coverage results
       uses: ./.github/actions/code-coverage
     - name: Upload code coverage results
@@ -386,108 +408,20 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v2 Functional Tests - legacy"
+        flag-name: "Cgroup v2 Functional Tests"
         parallel: True
     - name: Archive code coverage results
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
-        name: Cgroup v2 Code Coverage - legacy
-        path: lcov.*
-
-  functionaltestsv2_hybrid:
-    name: Cgroup v2 Functional Tests - hybrid
-    runs-on: cgroup-hybrid
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run functional tests
-      run: |
-        pushd src/python/build/lib.*
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        popd
-        pushd tests/ftests
-        make check
-        popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: |
-        cat tests/ftests/ftests-wrapper.sh.log
-    - name: Archive test logs
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 test logs - hybrid
-        path: tests/ftests/*.log
-    - name: Collate code coverage results
-      uses: ./.github/actions/code-coverage
-    - name: Upload code coverage results
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v2 Functional Tests - hybrid"
-        parallel: True
-    - name: Archive code coverage results
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 Code Coverage - hybrid
-        path: lcov.*
-
-  functionaltestsv2_unified:
-    name: Cgroup v2 Functional Tests - unified
-    runs-on: cgroup-unified
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run functional tests
-      run: |
-        pushd src/python/build/lib.*
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        popd
-        pushd tests/ftests
-        make check
-        popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: |
-        cat tests/ftests/ftests-wrapper.sh.log
-    - name: Archive test logs
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 test logs - unified
-        path: tests/ftests/*.log
-    - name: Collate code coverage results
-      uses: ./.github/actions/code-coverage
-    - name: Upload code coverage results
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v2 Functional Tests - unified"
-        parallel: True
-    - name: Archive code coverage results
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 Code Coverage - unified
+        name: Cgroup v2 Code Coverage
         path: lcov.*
 
   finalize:
     name: Finalize the test run
     if: ${{ always() }}
-    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2_legacy,
-            functionaltestsv2_hybrid, functionaltestsv2_unified, nosystemd]
+    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2,
+            nosystemd]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results
