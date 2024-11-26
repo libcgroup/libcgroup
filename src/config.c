@@ -629,6 +629,22 @@ void cgroup_config_cleanup_namespace_table(void)
 	memset(&config_namespace_table, 0, sizeof(struct cg_mount_table_s) * CG_CONTROLLER_MAX);
 }
 
+static int is_valid_controller(char *ctrl)
+{
+	int i;
+
+	static const char *ctrl_list[] = { "blkio", "cpu", "cpuacct", "cpuset", "devices",
+					"freezer", "hugetlb", "memory", "misc", "net_cls",
+					"net_prio", "perf_event", "pids", "rdma", NULL };
+
+	for (i = 0; ctrl_list[i]; i++) {
+		if (strncmp(ctrl, ctrl_list[i], strlen(ctrl_list[i])) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
 /**
  * Add necessary options for mount. Currently only 'none' option is added
  * for mounts with only 'name=xxx' and without real controller.
@@ -657,6 +673,9 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount, un
 
 				strncpy(mount->name, controller, sizeof(mount->name));
 				mount->name[sizeof(mount->name)-1] = '\0';
+				free(controller);
+				token = strtok_r(NULL, ",", &save);
+				continue;
 			}
 
 			if (strncmp(token, "nodev", strlen("nodev")) == 0)
@@ -667,6 +686,15 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount, un
 
 			if (strncmp(token, "nosuid", strlen("nosuid")) == 0)
 				*flags |= MS_NOSUID;
+
+			if (is_valid_controller(token)) {
+				controller = strdup(token);
+				if (controller == NULL)
+					break;
+				strncat(mount->name, ",", FILENAME_MAX - strlen(mount->name)-1);
+				strncat(mount->name, controller, FILENAME_MAX - strlen(mount->name) - 1);
+				free(controller);
+		}
 
 		} else if (!name_only) {
 			/*
@@ -679,7 +707,6 @@ static int cgroup_config_ajdust_mount_options(struct cg_mount_table_s *mount, un
 		token = strtok_r(NULL, ",", &save);
 	}
 
-	free(controller);
 	free(opts);
 
 	if (name_only) {
