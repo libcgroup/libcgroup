@@ -87,6 +87,8 @@ extern "C" {
 #define cgroup_dbg(x...)	cgroup_log(CGROUP_LOG_DEBUG, x)
 #define cgroup_cont(x...)	cgroup_log(CGROUP_LOG_CONT, x)
 
+#define cgrp_is_loglvl_dbg	cgroup_test_loglevel(CGROUP_LOG_DEBUG)
+
 #define CGRP_DEFAULT_LOGLEVEL	CGROUP_LOG_ERROR
 
 #define max(x, y) ((y) < (x)?(x):(y))

@@ -24,6 +24,11 @@ static void cgroup_default_logger(void *userdata, int level, const char *fmt,
 	vfprintf(stdout, fmt, ap);
 }
 
+bool cgroup_test_loglevel(int loglevel)
+{
+	return cgroup_logger && loglevel == cgroup_loglevel;
+}
+
 void cgroup_log(int level, const char *fmt, ...)
 {
 	va_list ap;

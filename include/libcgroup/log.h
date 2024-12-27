@@ -133,6 +133,13 @@ extern void cgroup_set_default_logger(int loglevel);
 extern void cgroup_set_loglevel(int loglevel);
 
 /**
+ * Test the current loglevel.
+ * Verify if the specified loglevel matches the current loglevel.
+ * @param loglevel The log level.
+ */
+extern bool cgroup_test_loglevel(int loglevel);
+
+/**
  * Libcgroup log function. This is for applications which are too lazy to set
  * up their own complex logging and miss-use libcgroup for that purpose.
  * I.e. this function should be used only by simple command-line tools.
