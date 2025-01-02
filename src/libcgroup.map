@@ -124,6 +124,7 @@ CGROUP_0.40 {
 } CGROUP_0.39;
 
 CGROUP_0.41 {
+	cgroup_get_cgroup_name;
 } CGROUP_0.40;
 
 CGROUP_0.42 {
