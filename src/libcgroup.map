@@ -168,4 +168,5 @@ CGROUP_3.0 {
 
 CGROUP_3.2 {
 	cgroup_get_threads;
+	cgroup_get_loglevel;
 } CGROUP_3.0;

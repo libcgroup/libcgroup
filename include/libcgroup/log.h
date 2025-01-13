@@ -133,6 +133,12 @@ extern void cgroup_set_default_logger(int loglevel);
 extern void cgroup_set_loglevel(int loglevel);
 
 /**
+ * Retrieve the current loglevel.
+ * @return the current loglevel from with libcgroup
+ */
+extern int cgroup_get_loglevel(void);
+
+/**
  * Libcgroup log function. This is for applications which are too lazy to set
  * up their own complex logging and miss-use libcgroup for that purpose.
  * I.e. this function should be used only by simple command-line tools.

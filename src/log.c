@@ -90,3 +90,8 @@ void cgroup_set_loglevel(int loglevel)
 			cgroup_loglevel = CGRP_DEFAULT_LOGLEVEL;
 	}
 }
+
+int cgroup_get_loglevel(void)
+{
+	return cgroup_loglevel;
+}
