@@ -151,7 +151,7 @@ jobs:
 
   distcheckv2:
     name: Cgroup v2 Dist Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Install container dependencies
@@ -374,7 +374,7 @@ jobs:
 
   functionaltestsv2:
     name: Cgroup v2 Functional Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Install container dependencies
