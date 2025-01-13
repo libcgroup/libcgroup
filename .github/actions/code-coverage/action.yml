@@ -19,7 +19,8 @@ runs:
                          "$(pwd)/src/python/libcgroup.c" \
                          "$(pwd)/src/parse.c" \
                          "$(pwd)/src/lex.c" \
-                         -o lcov.tests
+                         -o lcov.tests \
+                         --ignore-errors unused
     shell: bash
   - run: |
       lcov -r lcov.base "/usr/include/python3.8/objimpl.h" \
@@ -27,7 +28,8 @@ runs:
                         "$(pwd)/src/python/libcgroup.c" \
                          "$(pwd)/src/parse.c" \
                          "$(pwd)/src/lex.c" \
-                        -o lcov.base
+                        -o lcov.base \
+                        --ignore-errors unused
     shell: bash
   - run: lcov -a lcov.base -a lcov.tests -o lcov.total
     shell: bash
