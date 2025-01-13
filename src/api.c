@@ -4230,6 +4230,10 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid, gid_t gi
 
 	/* Loop variable */
 	int i = 0;
+	int loglevel;
+	bool match_found = false;
+
+	loglevel = cgroup_get_loglevel();
 
 	while (rule) {
 		/* Skip "%" which indicates continuation of previous rule. */
@@ -4266,11 +4270,28 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid, gid_t gi
 				continue;
 			}
 
+			cgroup_dbg("User name: %s UID: %d Group name: %s GID: %d\n",
+				   usr->pw_name, uid, grp->gr_name, grp->gr_gid);
+			if (grp->gr_mem[0])
+				cgroup_dbg("Group member(s):\n");
+
 			/* If UID is a member of group, we matched. */
 			for (i = 0; grp->gr_mem[i]; i++) {
 				if (!(strcmp(usr->pw_name, grp->gr_mem[i])))
-					return rule;
+					match_found = true;
+
+				if (match_found && loglevel < CGROUP_LOG_DEBUG)
+					/*
+					 * Only continue to run through the loop if debugging is
+					 * enabled so that we can see all of the group members
+					 */
+					break;
+
+				cgroup_dbg("\t%s\n", grp->gr_mem[i]);
 			}
+
+			if (match_found)
+				return rule;
 		}
 
 		/* If we haven't matched, try the next rule. */
