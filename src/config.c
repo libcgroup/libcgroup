@@ -551,10 +551,12 @@ int cgroup_config_insert_into_mount_table(char *name, char *mount_point)
 {
 	int i;
 
-	if (config_table_index >= CG_CONTROLLER_MAX)
-		return 0;
-
 	pthread_rwlock_wrlock(&config_table_lock);
+
+	if (config_table_index >= CG_CONTROLLER_MAX) {
+		pthread_rwlock_unlock(&config_table_lock);
+		return 0;
+	}
 
 	/* Merge controller names with the same mount point */
 	for (i = 0; i < config_table_index; i++) {
