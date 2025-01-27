@@ -7,5 +7,5 @@ var searchData=
   ['with_20tasks_4',['4. Manipulation with tasks',['../group__group__tasks.html',1,'']]],
   ['with_20the_20community_5',['Interacting with the Community',['../md_CONTRIBUTING.html#autotoc_md0',1,'']]],
   ['without_20error_6',['3. Verify that the bundled test suite runs without error',['../md_doc_2internal_2release-github.html#autotoc_md11',1,'']]],
-  ['work_7',['work',['../md_CONTRIBUTING.html#autotoc_md3',1,'Explain Your Work'],['../md_CONTRIBUTING.html#autotoc_md4',1,'Sign Your Work']]]
+  ['work_7',['Work',['../md_CONTRIBUTING.html#autotoc_md3',1,'Explain Your Work'],['../md_CONTRIBUTING.html#autotoc_md4',1,'Sign Your Work']]]
 ];

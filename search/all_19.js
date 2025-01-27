@@ -8,7 +8,7 @@ var searchData=
   ['separate_20directory_5',['12. Verify the release tarball in a separate directory',['../md_doc_2internal_2release-github.html#autotoc_md20',1,'']]],
   ['set_6',['set',['../classftests_1_1cgroup_1_1Cgroup.html#aafa420c27460164b65f904ec531ae2b1',1,'ftests::cgroup::Cgroup']]],
   ['set_5fand_5fvalidate_7',['set_and_validate',['../classftests_1_1cgroup_1_1Cgroup.html#a6e776be252ad6a2fa0609d48ce71abd8',1,'ftests::cgroup::Cgroup']]],
-  ['setup_8',['setup',['../classBuildPathV1Test.html#ae2d0708d4c36d3f8d1e24b311afe8fc3',1,'BuildPathV1Test::SetUp()'],['../classBuildTasksProcPathTest.html#aba31e09a4df0a3cdb94d81985f2e86b7',1,'BuildTasksProcPathTest::SetUp()']]],
+  ['setup_8',['SetUp',['../classBuildPathV1Test.html#ae2d0708d4c36d3f8d1e24b311afe8fc3',1,'BuildPathV1Test::SetUp()'],['../classBuildTasksProcPathTest.html#aba31e09a4df0a3cdb94d81985f2e86b7',1,'BuildTasksProcPathTest::SetUp()']]],
   ['setvaluesrecursivetest_9',['SetValuesRecursiveTest',['../classSetValuesRecursiveTest.html',1,'']]],
   ['sign_20the_20release_20tarball_20and_20checksum_20using_20the_20maintainer_20s_20key_10',['14. GPG sign the release tarball and checksum using the maintainer&apos;s key',['../md_doc_2internal_2release-github.html#autotoc_md22',1,'']]],
   ['sign_20your_20work_11',['Sign Your Work',['../md_CONTRIBUTING.html#autotoc_md4',1,'']]],
