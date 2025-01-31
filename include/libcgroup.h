@@ -18,7 +18,10 @@
 #include <libcgroup/config.h>
 #include <libcgroup/log.h>
 #include <libcgroup/tools.h>
+
+#ifdef WITH_SYSTEMD
 #include <libcgroup/systemd.h>
+#endif
 
 #undef _LIBCGROUP_H_INSIDE
 
