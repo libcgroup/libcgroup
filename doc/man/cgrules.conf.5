@@ -43,6 +43,7 @@ is optional and it can be:
 .nf
     - a process name
     - a full command path of a process
+    - use quotes '"' for names with spaces
 .fi
 
 .I controllers
@@ -65,8 +66,10 @@ can be:
           %p     process name, pid if name not available
           %P     pid
 
-          '\\' can be used to escape '%'
+    - '\\' can be used to escape '%'
+    - quotation marks '"' can be used for names and/or paths with spaces
 .fi
+
 First rule which matches the criteria will be executed.
 
 Any text starting with '#' is considered as a start of comment line and is
