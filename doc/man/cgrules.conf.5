@@ -43,6 +43,7 @@ is optional and it can be:
 .nf
     - a process name
     - a full command path of a process
+    - use quotes '"' for names with spaces
 .fi
 
 .I controllers
@@ -65,8 +66,10 @@ can be:
           %p     process name, pid if name not available
           %P     pid
 
-          '\\' can be used to escape '%'
+    - '\\' can be used to escape '%'
+    - quotation marks '"' can be used for names and/or paths with spaces
 .fi
+
 First rule which matches the criteria will be executed.
 
 Any text starting with '#' is considered as a start of comment line and is
@@ -129,7 +132,13 @@ Processes in cpu and cpuacct subsystems started by anybody from students group
 belong to group students/name. Where "name" is user name of owner of the
 process.
 
-
+.nf
+@students:"Web Browser"       cpu         "/usergroup/students/Internet Apps"
+.fi
+When anyone from the students group launches the "Web Browser" application,
+the processes in the 'cpu' subsystem belong to the control group
+"/usergroup/students/Internet Apps". Spaces are permitted in process names and
+control cgroup paths when enclosed within quotes.
 
 .SH FILES
 .LP
