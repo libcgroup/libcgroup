@@ -411,14 +411,15 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00423" name="l00423"></a><span class="lineno">  423</span><span class="keywordtype">int</span> cgroupv2_subtree_control(<span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keyword">const</span> <span class="keywordtype">char</span> *ctrl_name, <span class="keywordtype">bool</span> enable);</div>
 <div class="line"><a id="l00424" name="l00424"></a><span class="lineno">  424</span><span class="keywordtype">int</span> cgroupv2_get_subtree_control(<span class="keyword">const</span> <span class="keywordtype">char</span> *path,  <span class="keyword">const</span> <span class="keywordtype">char</span> *ctrl_name, <span class="keywordtype">bool</span> * <span class="keyword">const</span> enabled);</div>
 <div class="line"><a id="l00425" name="l00425"></a><span class="lineno">  425</span><span class="keywordtype">int</span> cgroupv2_controller_enabled(<span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> cg_name, <span class="keyword">const</span> <span class="keywordtype">char</span> * <span class="keyword">const</span> ctrl_name);</div>
-<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span> </div>
-<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span><span class="preprocessor">#endif </span><span class="comment">/* UNIT_TEST */</span><span class="preprocessor"></span></div>
-<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span> </div>
-<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
-<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span> </div>
-<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00426" name="l00426"></a><span class="lineno">  426</span><span class="keywordtype">int</span> get_next_rule_field(<span class="keywordtype">char</span> *rule, <span class="keywordtype">char</span> *field, <span class="keywordtype">size_t</span> field_len, <span class="keywordtype">bool</span> expect_quotes);</div>
+<div class="line"><a id="l00427" name="l00427"></a><span class="lineno">  427</span> </div>
+<div class="line"><a id="l00428" name="l00428"></a><span class="lineno">  428</span><span class="preprocessor">#endif </span><span class="comment">/* UNIT_TEST */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00429" name="l00429"></a><span class="lineno">  429</span> </div>
+<div class="line"><a id="l00430" name="l00430"></a><span class="lineno">  430</span><span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a id="l00431" name="l00431"></a><span class="lineno">  431</span>} <span class="comment">/* extern &quot;C&quot; */</span></div>
+<div class="line"><a id="l00432" name="l00432"></a><span class="lineno">  432</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00433" name="l00433"></a><span class="lineno">  433</span> </div>
+<div class="line"><a id="l00434" name="l00434"></a><span class="lineno">  434</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="astructcg__mount__point_html"><div class="ttname"><a href="structcg__mount__point.html">cg_mount_point</a></div><div class="ttdef"><b>Definition</b> libcgroup-internal.h:134</div></div>
 <div class="ttc" id="astructcg__mount__table__s_html"><div class="ttname"><a href="structcg__mount__table__s.html">cg_mount_table_s</a></div><div class="ttdef"><b>Definition</b> libcgroup-internal.h:139</div></div>
 <div class="ttc" id="astructcg__mount__table__s_html_a9704fa3ec3674f6d433345ea52b6aeef"><div class="ttname"><a href="structcg__mount__table__s.html#a9704fa3ec3674f6d433345ea52b6aeef">cg_mount_table_s::mount</a></div><div class="ttdeci">struct cg_mount_point mount</div><div class="ttdef"><b>Definition</b> libcgroup-internal.h:145</div></div>
