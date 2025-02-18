@@ -3,7 +3,8 @@ ACLOCAL_AMFLAGS= -I m4
 DIST_SUBDIRS = dist doc include scripts src tests samples
 SUBDIRS = $(DIST_SUBDIRS)
 
-EXTRA_DIST = README_daemon libcgroup.doxyfile README_systemd CONTRIBUTING.md
+EXTRA_DIST = README_daemon libcgroup.doxyfile README_systemd CONTRIBUTING.md \
+	     THIRD_PARTY_LICENSES.txt
 
 AM_DISTCHECK_CONFIGURE_FLAGS = --sysconfdir=/etc --localstatedir=/var \
 			       --enable-opaque-hierarchy="name=systemd" \
