@@ -31,6 +31,7 @@ lib_LTLIBRARIES = libcgroup.la
 libcgroup_la_SOURCES = parse.h parse.y lex.l api.c config.c libcgroup-internal.h libcgroup.map \
 		       wrapper.c log.c abstraction-common.c abstraction-common.h \
 		       abstraction-map.c abstraction-map.h abstraction-cpu.c abstraction-cpuset.c \
+		       abstraction-memory.c \
 		       systemd.c tools/cgxget.c tools/cgxset.c
 
 libcgroup_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)
@@ -47,7 +48,8 @@ noinst_LTLIBRARIES = libcgroupfortesting.la
 libcgroupfortesting_la_SOURCES = parse.h parse.y lex.l api.c config.c libcgroup-internal.h \
 				 libcgroup.map wrapper.c log.c abstraction-common.c \
 				 abstraction-common.h abstraction-map.c abstraction-map.h \
-				 abstraction-cpu.c abstraction-cpuset.c systemd.c
+				 abstraction-cpu.c abstraction-cpuset.c abstraction-memory.c \
+				 systemd.c
 
 libcgroupfortesting_la_LIBADD = -lpthread $(CODE_COVERAGE_LIBS)
 libcgroupfortesting_la_CFLAGS = $(CODE_COVERAGE_CFLAGS) -DSTATIC= -DUNIT_TEST
