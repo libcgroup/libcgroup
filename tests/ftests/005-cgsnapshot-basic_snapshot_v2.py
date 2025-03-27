@@ -25,6 +25,14 @@ CGSNAPSHOT = [
     }""",
     """group 005cgsnapshot {
             cpuset {
+                    cpuset.cpus.exclusive="";
+                    cpuset.cpus.partition="member";
+                    cpuset.mems="";
+                    cpuset.cpus="";
+            }
+    }""",
+    """group 005cgsnapshot {
+            cpuset {
                     cpuset.cpus.exclusive.effective="";
                     cpuset.cpus.exclusive="";
                     cpuset.cpus.partition="member";
@@ -56,12 +64,15 @@ def test(config):
 
     expected_1 = Cgroup.snapshot_to_dict(CGSNAPSHOT[0])
     expected_2 = Cgroup.snapshot_to_dict(CGSNAPSHOT[1])
+    expected_sudo = Cgroup.snapshot_to_dict(CGSNAPSHOT[2])
     actual = Cgroup.snapshot(config, controller=CONTROLLER)
 
     if (
             expected_1[CGNAME].controllers[CONTROLLER] !=
             actual[CGNAME].controllers[CONTROLLER] and
             expected_2[CGNAME].controllers[CONTROLLER] !=
+            actual[CGNAME].controllers[CONTROLLER] and
+            expected_sudo[CGNAME].controllers[CONTROLLER] !=
             actual[CGNAME].controllers[CONTROLLER]
        ):
         result = consts.TEST_FAILED
