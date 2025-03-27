@@ -18,10 +18,10 @@ Rules have two formats:
 
 .in +4n
 .nf
-<user>               	<controllers>		<destination>
+<user>               	<controllers>	<destination>	<options>
 .fi
 .nf
-<user>:<process name>	<controllers>		<destination>
+<user>:<process name>	<controllers>	<destination>	<options>
 .fi
 .in
 
@@ -68,6 +68,18 @@ can be:
 
     - '\\' can be used to escape '%'
     - quotation marks '"' can be used for names and/or paths with spaces
+.fi
+
+.I options
+is optional and it can be:
+.nf
+    - "ignore" - if a process matches a rule with the "ignore" option, then
+      it will be ignored by cgrulesengd and will not be moved.  cgrulesengd
+      processing will stop for this process, and all rules below this rule
+      will not affect this process.
+    - "ignore_rt" - if a process is scheduled as SCHED_RR or SCHED_FF and
+      matches this rule, it will be ignored by cgrulesengd and will not be
+      moved.
 .fi
 
 First rule which matches the criteria will be executed.
