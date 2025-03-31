@@ -743,8 +743,8 @@ int main(int argc, char *argv[])
 	};
 
 	cont_name_t wanted_cont[CG_CONTROLLER_MAX];
-	char bl_file[FILENAME_MAX];  /* denylist file name */
-	char wl_file[FILENAME_MAX];  /* allowlist file name */
+	char bl_file[FILENAME_MAX] = { "\0" };  /* denylist file name */
+	char wl_file[FILENAME_MAX] = { "\0" };  /* allowlist file name */
 	int ret = 0, err;
 	int c_number = 0;
 	int c, i;
