@@ -18,8 +18,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
 LDADD = $(top_builddir)/src/.libs/libcgroupfortesting.la \
 	$(top_builddir)/src/tools/.libs/libcgset.la
 
-EXTRA_DIST = $(top_srcdir)/googletest/googletest/libgtest.so \
-	     $(top_srcdir)/googletest/googletest/libgtest_main.so \
+EXTRA_DIST = $(top_srcdir)/googletest/build/lib/libgtest.a \
+	     $(top_srcdir)/googletest/build/lib/libgtest_main.a \
 	     $(top_srcdir)/googletest/googletest/include \
 	     libcgroup_unittest.map
 
@@ -46,7 +46,7 @@ gtest_SOURCES = gtest.cpp \
 		017-API_fuzz_test.cpp \
 		018-get_next_rule_field.cpp
 
-gtest_LDFLAGS = -L$(top_srcdir)/googletest/googletest -l:libgtest.so \
+gtest_LDFLAGS = -L$(top_srcdir)/googletest/build/lib -l:libgtest.a \
 		-rpath $(abs_top_srcdir)/googletest/googletest
 
 clean-local:

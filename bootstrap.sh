@@ -13,9 +13,11 @@ fi
 git submodule update --init --recursive
 
 # configure googletest
-pushd googletest/googletest
-git checkout release-1.8.0
-cmake -DBUILD_SHARED_LIBS=ON .
+pushd googletest
+git checkout v1.12.0
+mkdir -p build
+cd build
+cmake .. -DBUILD_GMOCK=OFF
 make
 popd
 
