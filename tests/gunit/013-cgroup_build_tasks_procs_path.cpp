@@ -10,6 +10,9 @@
 
 #include "libcgroup-internal.h"
 
+char * const NAMESPACE1 = "ns1";
+char * const NAMESPACE4 = "ns4";
+
 class BuildTasksProcPathTest : public ::testing::Test {
 	protected:
 
@@ -33,8 +36,6 @@ class BuildTasksProcPathTest : public ::testing::Test {
 	 * Note that controllers 1 and 4 are also given namespaces
 	 */
 	void SetUp() override {
-		char NAMESPACE1[] = "ns1";
-		char NAMESPACE4[] = "ns4";
 		const int ENTRY_CNT = 6;
 		int i, ret;
 
