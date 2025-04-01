@@ -37,7 +37,14 @@ DEFAULT_VALUE_V1_V2 = '0-1'
 
 
 def prereqs(config):
-    pass
+    result = consts.TEST_PASSED
+    cause = None
+
+    if config.args.container:
+        result = consts.TEST_SKIPPED
+        cause = 'This test cannot be run within a container'
+
+    return result, cause
 
 
 def is_hybrid_with_ctrl(config):
@@ -160,7 +167,9 @@ def teardown(config):
 
 
 def main(config):
-    prereqs(config)
+    [result, cause] = prereqs(config)
+    if result != consts.TEST_PASSED:
+        return [result, cause]
 
     setup(config)
     [result, cause] = test(config)
