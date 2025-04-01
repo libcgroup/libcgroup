@@ -15,7 +15,7 @@ git submodule update --init --recursive
 # configure googletest
 pushd googletest/googletest
 git checkout release-1.8.0
-cmake -DBUILD_SHARED_LIBS=ON .
+cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .
 make
 popd
 
