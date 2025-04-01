@@ -73,17 +73,25 @@ class Process(object):
                 ''.format(sleep_time)
               )
 
-        if config.args.container:
-            pid = config.container.run(cmd, shell_bool=True)
-        else:
-            pid = Run.run(cmd, shell_bool=True)
+        for i in range(3):
+            try:
+                if config.args.container:
+                    pid = config.container.run(cmd, shell_bool=True)
+                    break
+                else:
+                    pid = Run.run(cmd, shell_bool=True)
+                    break
+            except RunError:
+                # On some setups, lxc will throw Signal 21 (TTIN) caught by ps (3.3.17).
+                # Retrying the request usually works.
+                pass
 
-            for _pid in pid.splitlines():
-                self.children_pids.append(int(_pid))
+        for _pid in pid.splitlines():
+            self.children_pids.append(int(_pid))
 
-            if pid.find('\n') >= 0:
-                # The second pid in the list contains the actual perl process
-                pid = pid.splitlines()[1]
+        if pid.find('\n') >= 0:
+            # The second pid in the list contains the actual perl process
+            pid = pid.splitlines()[1]
 
         if pid == '' or int(pid) <= 0:
             raise ValueError(
