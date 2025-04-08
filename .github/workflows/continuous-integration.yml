@@ -94,7 +94,7 @@ jobs:
         publish_dir: ./doc/html
         publish_branch: doxygen/${{ github.ref_name }}
 
-  unittests:
+  unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
 
@@ -126,6 +126,99 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Unit Test Code Coverage
+        path: lcov.*
+
+  container-tests:
+    name: Container Tests
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run container tests
+      run: |
+        pushd tests/ftests
+        ./ftests-container.sh
+        popd
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "Container Tests"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: Container Tests Code Coverage
+        path: lcov.*
+
+  nocontainer-tests:
+    name: No Container Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run container tests
+      run: |
+        pushd tests/ftests
+        ./ftests-nocontainer.sh
+        popd
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "No Container Tests"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: No Container Tests Code Coverage
+        path: lcov.*
+
+  sudo-tests:
+    name: Sudo Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+    - name: Initialize the directory
+      uses: ./.github/actions/setup-libcgroup
+    - name: Run sudo tests
+      run: |
+        pushd tests/ftests
+        ./ftests-sudo.sh
+        popd
+    - name: Collate code coverage results
+      uses: ./.github/actions/code-coverage
+    - name: Upload code coverage results
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.total
+        flag-name: "Sudo Tests"
+        parallel: True
+    - name: Archive code coverage results
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: Sudo Tests Code Coverage
         path: lcov.*
 
   distcheckv2:
@@ -223,8 +316,9 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         popd
         pushd tests/ftests
-        ./ftests.py -l 10 -L ftests.log
-        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38,77,80,81 --no-container
+        ./ftests.py -l 10 -L ftests.log --skip 80
+        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38,72,73,77,80,81,82 \
+            --no-container
         popd
     - name: Archive test logs
       if: ${{ always() }}
@@ -248,55 +342,10 @@ jobs:
         name: No systemd Code Coverage
         path: lcov.*
 
-  functionaltestsv2:
-    name: Cgroup v2 Functional Tests
-    runs-on: ubuntu-22.04
-
-    steps:
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run functional tests
-      run: |
-        pushd src/python/build/lib.*
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        popd
-        pushd tests/ftests
-        ./ftests.py -l 10 -L ftests.log
-        ./ftests.py -l 10 -L ftests-nocontainer.log --no-container
-        popd
-    - name: Archive test logs
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 test logs
-        path: ./*.log
-    - name: Collate code coverage results
-      uses: ./.github/actions/code-coverage
-    - name: Upload code coverage results
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v2 Functional Tests"
-        parallel: True
-    - name: Archive code coverage results
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v2 Code Coverage
-        path: lcov.*
-
   finalize:
     name: Finalize the test run
     if: ${{ always() }}
-    needs: [unittests, functionaltestsv2, nosystemd]
+    needs: [unit-tests, container-tests, nocontainer-tests, sudo-tests, nosystemd]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results

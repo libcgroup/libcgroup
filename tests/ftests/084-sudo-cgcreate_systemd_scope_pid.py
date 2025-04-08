@@ -59,7 +59,7 @@ def test(config):
         Cgroup.create_and_validate(config, CONTROLLERS, CGNAME1, create_scope=True,
                                    scope_pid=1000000)
     except RunError as re:
-        if 'Process with ID 1000000 does not exist' not in str(re):
+        if 'Failed to set unit properties: No such process' not in str(re):
             raise re
 
     #

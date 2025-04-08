@@ -2,11 +2,11 @@
 #
 # libcgroup functional tests Makefile.am
 #
-# Copyright (c) 2019-2021 Oracle and/or its affiliates.
+# Copyright (c) 2019-2025 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-TESTS = ftests-wrapper.sh
+TESTS =
 
 EXTRA_DIST_PYTHON_UTILS = \
 			  cgroup.py \
@@ -113,8 +113,12 @@ EXTRA_DIST_PYTHON_TESTS = \
 # Intentionally omit the stress test from the extra dist
 # 999-stress-cgroup_init.py
 
-EXTRA_DIST = README.md ftests-wrapper.sh \
-	     ${EXTRA_DIST_PYTHON_UTILS} ${EXTRA_DIST_PYTHON_TESTS}
+EXTRA_DIST = README.md \
+	     ftests-container.sh \
+	     ftests-nocontainer.sh \
+	     ftests-sudo.sh \
+	     ${EXTRA_DIST_PYTHON_UTILS} \
+	     ${EXTRA_DIST_PYTHON_TESTS}
 
 clean-local: clean-local-check
 .PHONY: clean-local-check
