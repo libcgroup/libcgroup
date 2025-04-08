@@ -104,14 +104,13 @@ jobs:
         submodules: false
     - name: Initialize the directory
       uses: ./.github/actions/setup-libcgroup
+    - name: Reconfigure libcgroup with unit tests enabled
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-code-coverage --enable-opaque-hierarchy="name=systemd" --enable-python --enable-unittests
     - name: Run unit tests
       run: |
         pushd tests/gunit
         make check
         popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: cat tests/gunit/test-suite.log
     - name: Collate code coverage results
       uses: ./.github/actions/code-coverage
     - name: Upload code coverage results

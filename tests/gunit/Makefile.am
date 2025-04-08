@@ -2,9 +2,11 @@
 #
 # libcgroup googletests Makefile.am
 #
-# Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2019-2025 Oracle and/or its affiliates.
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
+
+if WITH_UNITTESTS
 
 AM_CPPFLAGS = -I$(top_srcdir)/include \
 	      -I$(top_srcdir)/src \
@@ -51,3 +53,5 @@ gtest_LDFLAGS = -L$(top_srcdir)/googletest/build/lib -l:libgtest.a \
 
 clean-local:
 	${RM} test-procpidcgroup
+
+endif
