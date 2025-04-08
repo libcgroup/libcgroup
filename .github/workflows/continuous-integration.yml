@@ -128,27 +128,6 @@ jobs:
         name: Unit Test Code Coverage
         path: lcov.*
 
-  distcheckv1:
-    name: Cgroup v1 Dist Check
-    runs-on: ubuntu-20.04
-
-    steps:
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run make distcheck
-      run: make distcheck
-    - name: Display test logs
-      if: ${{ failure() }}
-      run: |
-        cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
-
   distcheckv2:
     name: Cgroup v2 Dist Check
     runs-on: ubuntu-22.04
@@ -170,9 +149,9 @@ jobs:
       run: |
         cat libcgroup-*/_build/sub/tests/ftests/ftests-wrapper.sh.log
 
-  buildtests:
-    name: Build tests
-    runs-on: ubuntu-20.04
+  build-options:
+    name: Build with various options enabled/disabled
+    runs-on: ubuntu-latest
 
     steps:
     - name: Install dependencies
@@ -198,7 +177,7 @@ jobs:
 
   nosystemd:
     name: Build without systemd enabled
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Update the system
@@ -245,7 +224,7 @@ jobs:
         popd
         pushd tests/ftests
         ./ftests.py -l 10 -L ftests.log
-        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38,77,81 --no-container
+        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38,77,80,81 --no-container
         popd
     - name: Archive test logs
       if: ${{ always() }}
@@ -267,111 +246,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: No systemd Code Coverage
-        path: lcov.*
-
-  functionaltestsv1:
-    name: Cgroup v1 Functional Tests
-    runs-on: ubuntu-20.04
-
-    steps:
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run functional tests
-      run: |
-        # The cgroup v1 runner hosted by Github Actions doesn't allow
-        # for exclusive cpusets.  Thus, skip the cpuset automated test
-        pushd src/python/build/lib.*
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        popd
-        pushd tests/ftests
-        ./ftests.py -l 10 -L ftests.log
-        ./ftests.py -l 10 -L ftests-nocontainer.log --skip 38 --no-container
-        popd
-    - name: Archive test logs
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v1 test logs
-        path: ./*.log
-    - name: Collate code coverage results
-      uses: ./.github/actions/code-coverage
-    - name: Upload code coverage results
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v1 Functional Tests"
-        parallel: True
-    - name: Archive code coverage results
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v1 Code Coverage
-        path: lcov.*
-
-  functionaltestsv1v2:
-    name: Cgroup v1/v2 Functional Tests
-    runs-on: ubuntu-20.04
-
-    steps:
-    - name: Mount cpuset cgroup v2 controller
-      run: |
-        # unmount the cpuset v1 controller.  This should make it available
-        # in the v2 hierarchy after all references have been freed
-        sudo umount /sys/fs/cgroup/cpuset
-        # wait for the references to the cpuset controller to go away
-        sleep 30
-        cat /sys/fs/cgroup/unified/cgroup.controllers
-        sudo su -c "echo +cpuset > /sys/fs/cgroup/unified/cgroup.subtree_control"
-        cat /sys/fs/cgroup/unified/cgroup.subtree_control
-    - name: Install container dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install lxc lxd-installer
-    - uses: actions/checkout@v4
-      with:
-        submodules: false
-    - name: Initialize the directory
-      uses: ./.github/actions/setup-libcgroup
-    - name: Run functional tests
-      run: |
-        pushd src/python/build/lib.*
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        popd
-        pushd tests/ftests
-        make check
-        popd
-    - name: Display test logs
-      if: ${{ always() }}
-      run: |
-        cat tests/ftests/ftests-wrapper.sh.log
-    - name: Archive test logs
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v1v2 test logs
-        path: tests/ftests/*.log
-    - name: Collate code coverage results
-      uses: ./.github/actions/code-coverage
-    - name: Upload code coverage results
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lcov.total
-        flag-name: "Cgroup v1/v2 Functional Tests"
-        parallel: True
-    - name: Archive code coverage results
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: Cgroup v1v2 Code Coverage
         path: lcov.*
 
   functionaltestsv2:
@@ -422,8 +296,7 @@ jobs:
   finalize:
     name: Finalize the test run
     if: ${{ always() }}
-    needs: [unittests, functionaltestsv1, functionaltestsv1v2, functionaltestsv2,
-            nosystemd]
+    needs: [unittests, functionaltestsv2, nosystemd]
     runs-on: ubuntu-latest
     steps:
     - name: Finalize code coverage results
