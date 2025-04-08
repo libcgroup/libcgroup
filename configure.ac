@@ -170,6 +170,18 @@ AC_ARG_ENABLE([samples],
        [with_samples=false])
 AM_CONDITIONAL([WITH_SAMPLES], [test x$with_samples = xtrue])
 
+AC_ARG_ENABLE([unittests],
+      [AS_HELP_STRING([--enable-unittests],[compile libcgroup unit tests [default=no]])],
+      [
+		if test "x$enableval" = xno; then
+			with_unittests=false
+		else
+			with_unittests=true
+		fi
+       ],
+       [with_unittests=false])
+AM_CONDITIONAL([WITH_UNITTESTS], [test x$with_unittests = xtrue])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
