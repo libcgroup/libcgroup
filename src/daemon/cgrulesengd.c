@@ -567,7 +567,7 @@ static int cgre_receive_netlink_msg(int sk_nl)
 	from_nla_len = sizeof(from_nla);
 	recv_len = recvfrom(sk_nl, buff, sizeof(buff), 0, (struct sockaddr *)&from_nla,
 			    &from_nla_len);
-	if (recv_len == ENOBUFS) {
+	if (recv_len == -1 && errno == ENOBUFS) {
 		flog(LOG_ERR, "ERROR: NETLINK BUFFER FULL, MESSAGE DROPPED!\n");
 		return 0;
 	}
