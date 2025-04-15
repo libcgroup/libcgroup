@@ -90,12 +90,12 @@ $(function(){ initResizable(false); });
 <div class="textblock"><p><em>SPDX-License-Identifier: LGPL-2.1-only</em></p>
 <p><em>Copyright (c) 2023 Oracle and/or its affiliates.</em></p>
 <p>_Author: Tom Hromatka &lt;<a href="#" onclick="location.href='mai'+'lto:'+'tom'+'.h'+'rom'+'at'+'ka@'+'or'+'acl'+'e.'+'com'; return false;">tom.h<span class="obfuscator">.nosp@m.</span>roma<span class="obfuscator">.nosp@m.</span>tka@o<span class="obfuscator">.nosp@m.</span>racl<span class="obfuscator">.nosp@m.</span>e.com</a>&gt;_</p>
-<h1><a class="anchor" id="autotoc_md26"></a>
+<h1><a class="anchor" id="autotoc_md27"></a>
 Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line</h1>
 <p>The goal of this document is to outline the steps required to create a systemd scope and a child cgroup hierarchy using the libcgroup command line tools.</p>
 <p>The following steps are encapsulated in a <a href="../c/create_systemd_scope.c">C example</a> using the libcgroup C APIs.</p>
 <p>The following steps are encapsulated in a <a href="../../tests/ftests/086-sudo-systemd_cmdline_example.py">libcgroup automated test</a>.</p>
-<h2><a class="anchor" id="autotoc_md27"></a>
+<h2><a class="anchor" id="autotoc_md28"></a>
 Requirements:</h2>
 <ol type="1">
 <li>Create a cgroup hierarchy that obeys the <a href="https://systemd.io/CGROUP_DELEGATION/">single-writer rule</a></li>
@@ -134,7 +134,7 @@ Requirements:</h2>
 </ol>
 </li>
 </ol>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md29"></a>
 Steps</h2>
 <ol type="1">
 <li><p class="startli">Create a delegated <a href="https://www.freedesktop.org/software/systemd/man/systemd.scope.html">scope</a> cgroup </p><div class="fragment"><div class="line">sudo cgcreate -c -S -g cpu,memory:mycompany.slice/database.scope</div>

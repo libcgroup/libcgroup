@@ -1,7 +1,7 @@
 var searchData=
 [
   ['were_20found_20up_20to_20this_20point_20that_20resulted_20in_20code_20changes_20restart_20the_20process_0',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
-  ['which_20are_20now_20unsupported_1',['17. Update the GitHub release notes for older releases which are now unsupported',['../md_doc_2internal_2release-github.html#autotoc_md25',1,'']]],
+  ['which_20are_20now_20unsupported_1',['18. Update the GitHub release notes for older releases which are now unsupported',['../md_doc_2internal_2release-github.html#autotoc_md26',1,'']]],
   ['with_20a_20signed_20tag_2',['10. Tag the release in the local repository with a signed tag',['../md_doc_2internal_2release-github.html#autotoc_md18',1,'']]],
   ['with_20idle_20process_3',['systemd-with-idle-process',['../md_samples_2cmdline_2systemd-with-idle-process.html',1,'']]],
   ['with_20tasks_4',['4. Manipulation with tasks',['../group__group__tasks.html',1,'']]],

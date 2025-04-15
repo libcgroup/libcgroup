@@ -143,11 +143,11 @@ var searchData=
   ['changes_20restart_20the_20process_140',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
   ['checksum_20for_20the_20release_20tarball_141',['13. Generate a checksum for the release tarball',['../md_doc_2internal_2release-github.html#autotoc_md21',1,'']]],
   ['checksum_20using_20the_20maintainer_20s_20key_142',['14. GPG sign the release tarball and checksum using the maintainer&apos;s key',['../md_doc_2internal_2release-github.html#autotoc_md22',1,'']]],
-  ['child_20hierarchy_20via_20libcgroup_20command_20line_143',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md26',1,'']]],
+  ['child_20hierarchy_20via_20libcgroup_20command_20line_143',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md27',1,'']]],
   ['chownchmodtaskstest_144',['ChownChmodTasksTest',['../classChownChmodTasksTest.html',1,'']]],
   ['code_20changes_20restart_20the_20process_145',['7. If any problems were found up to this point that resulted in code changes, restart the process',['../md_doc_2internal_2release-github.html#autotoc_md15',1,'']]],
   ['code_20using_20existing_20tests_146',['Test Your Code Using Existing Tests',['../md_CONTRIBUTING.html#autotoc_md1',1,'']]],
-  ['command_20line_147',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md26',1,'']]],
+  ['command_20line_147',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md27',1,'']]],
   ['commit_20the_20version_20number_20in_20configure_20ac_20ac_5finit_20macro_20and_20library_20version_20macros_148',['9. Update and commit the version number in configure.ac AC_INIT(...) macro and LIBRARY version macros',['../md_doc_2internal_2release-github.html#autotoc_md17',1,'']]],
   ['community_149',['Interacting with the Community',['../md_CONTRIBUTING.html#autotoc_md0',1,'']]],
   ['config_150',['Config',['../classftests_1_1config_1_1Config.html',1,'ftests::config']]],
@@ -163,7 +163,7 @@ var searchData=
   ['controller_5fdata_160',['controller_data',['../structcontroller__data.html',1,'']]],
   ['correct_161',['4. Verify that the packaging is correct',['../md_doc_2internal_2release-github.html#autotoc_md12',1,'']]],
   ['coverity_162',['5. Verify that there are no outstanding defects from Coverity',['../md_doc_2internal_2release-github.html#autotoc_md13',1,'']]],
-  ['create_20a_20new_20github_20release_20using_20the_20associated_20tag_20and_20upload_20the_20following_20files_163',['16. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md24',1,'']]],
+  ['create_20a_20new_20github_20release_20using_20the_20associated_20tag_20and_20upload_20the_20following_20files_163',['17. Create a new GitHub release using the associated tag and upload the following files',['../md_doc_2internal_2release-github.html#autotoc_md25',1,'']]],
   ['create_20new_20release_20x_20y_20branch_164',['8. If this is a new major/minor release, create new &apos;release-X.Y&apos; branch',['../md_doc_2internal_2release-github.html#autotoc_md16',1,'']]],
-  ['creating_20a_20systemd_20scope_20and_20child_20hierarchy_20via_20libcgroup_20command_20line_165',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md26',1,'']]]
+  ['creating_20a_20systemd_20scope_20and_20child_20hierarchy_20via_20libcgroup_20command_20line_165',['Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line',['../md_samples_2cmdline_2systemd-with-idle-process.html#autotoc_md27',1,'']]]
 ];
