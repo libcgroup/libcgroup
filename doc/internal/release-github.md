@@ -74,14 +74,18 @@ release.
 
 	# git push <repo> vX.Y.Z
 
-#### 16. Create a new GitHub release using the associated tag and upload the following files
+#### 16. If this is a new major/minor release, push the release branch to the main GitHub repository
+
+    # git push <repo> release-X.Y
+
+#### 17. Create a new GitHub release using the associated tag and upload the following files
 
   * libcgroup-X.Y.Z.tar.gz
   * libcgroup-X.Y.Z.tar.gz.asc
   * libcgroup-X.Y.Z.tar.gz.SHA256SUM
   * libcgroup-X.Y.Z.tar.gz.SHA256SUM.asc
 
-#### 17. Update the GitHub release notes for older releases which are now unsupported
+#### 18. Update the GitHub release notes for older releases which are now unsupported
 
 The following Markdown text is suggested at the top of the release note, see old GitHub releases for examples.
 
