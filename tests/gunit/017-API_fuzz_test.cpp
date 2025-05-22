@@ -89,7 +89,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_string)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
@@ -145,7 +145,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_string)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
@@ -196,13 +196,13 @@ TEST_F(APIArgsTest, API_cgroup_add_controller)
 	// case 2
 	// cgrp = NULL, name = valid
 	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
-	ASSERT_EQ(cgroup, nullptr);
+	ASSERT_EQ(cgc, nullptr);
 
 	cgroup = cgroup_new_cgroup(cgrp_name);
 	ASSERT_NE(cgroup, nullptr);
 
 	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
-	ASSERT_NE(cgroup, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// case 3
 	// cgrp = valid, name = NULL
@@ -240,7 +240,7 @@ TEST_F(APIArgsTest, API_cgroup_add_value_string)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	ret = cgroup_add_value_string(cgc, ctrl_name, ctrl_value);
 	ASSERT_EQ(ret, 50011);
@@ -345,7 +345,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_int64)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_int64(cgc, "cpu.shares", 1024);
@@ -400,7 +400,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_int64)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_int64(cgc, "cpu.shares", 1024);
@@ -456,7 +456,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_uint64(cgc, "cpu.shares", 1024);
@@ -511,7 +511,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_uint64)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpu.shares, so that cgc->index > 0
 	ret = cgroup_set_value_uint64(cgc, "cpu.shares", 1024);
@@ -567,7 +567,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_bool)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpuset.cpu_exclusive, so that cgc->index > 0
 	ret = cgroup_set_value_bool(cgc, "cpuset.cpu_exclusive", 0);
@@ -622,7 +622,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_bool)
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
-	ASSERT_NE(cgrp, nullptr);
+	ASSERT_NE(cgc, nullptr);
 
 	// set cpuset.cpu_exclusive, so that cgc->index > 0
 	ret = cgroup_set_value_bool(cgc, "cpuset.cpu_exclusive", 0);
