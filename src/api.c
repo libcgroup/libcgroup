@@ -526,6 +526,11 @@ STATIC int cgroup_parse_rules_options(char *options, struct cgroup_rule * const 
 	size_t cmp_len;
 	int ret = 0;
 
+	if (!options) {
+		cgroup_err("failed to parse options: (NULL)\n");
+		return -EINVAL;
+	}
+
 	stok_buff = strtok(options, ",");
 	if (!stok_buff) {
 		cgroup_err("failed to parse options: %s\n", options);
