@@ -36,7 +36,6 @@ gtest_SOURCES = gtest.cpp \
 		005-cgroup_compare_wildcard_procname.cpp \
 		006-cgroup_get_cgroup.cpp \
 		007-cgroup_process_v1_mount.cpp \
-		008-cgroup_process_v2_mount.cpp \
 		009-cgroup_set_values_recursive.cpp \
 		010-cgroup_chown_chmod_tasks.cpp \
 		011-cgroupv2_subtree_control.cpp \
@@ -46,7 +45,9 @@ gtest_SOURCES = gtest.cpp \
 		015-cgroupv2_controller_enabled.cpp \
 		016-cgset_parse_r_flag.cpp \
 		017-API_fuzz_test.cpp \
-		018-get_next_rule_field.cpp
+		018-get_next_rule_field.cpp \
+		019-cgroup_process_v2_mount1.cpp \
+		020-cgroup_process_v2_mount2.cpp
 
 gtest_LDFLAGS = -L$(top_srcdir)/googletest/build/lib -l:libgtest.a \
 		-rpath $(abs_top_srcdir)/googletest/googletest
