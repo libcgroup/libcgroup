@@ -49,6 +49,9 @@ class Run(object):
                     ret = -1
                 else:
                     ret = 0
+
+                # kill the process, that has exceeded the timeout
+                subproc.kill()
         else:
             out, err = subproc.communicate()
             ret = subproc.returncode
