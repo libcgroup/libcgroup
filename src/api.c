@@ -974,7 +974,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 			   lst->tail->username, lst->tail->uid, lst->tail->gid,
 			   lst->tail->destination);
 
-		for (i = 0; lst->tail->controllers[i]; i++)
+		for (i = 0; i < MAX_MNT_ELEMENTS && lst->tail->controllers[i]; i++)
 			cgroup_dbg(" %s", lst->tail->controllers[i]);
 		cgroup_dbg("\n");
 	}
