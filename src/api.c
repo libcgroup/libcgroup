@@ -974,7 +974,7 @@ static int cgroup_parse_rules_file(char *filename, bool cache, uid_t muid, gid_t
 			   lst->tail->username, lst->tail->uid, lst->tail->gid,
 			   lst->tail->destination);
 
-		for (i = 0; lst->tail->controllers[i]; i++)
+		for (i = 0; i < MAX_MNT_ELEMENTS && lst->tail->controllers[i]; i++)
 			cgroup_dbg(" %s", lst->tail->controllers[i]);
 		cgroup_dbg("\n");
 	}
@@ -4591,7 +4591,7 @@ static int cgroup_create_template_group(char *orig_group_name, struct cgroup_rul
 
 		/* Test for which controllers wanted group does not exist */
 		i = 0;
-		while (tmp->controllers[i] != NULL) {
+		while (i < MAX_MNT_ELEMENTS && tmp->controllers[i] != NULL) {
 			exist = cgroup_exist_in_subsystem(tmp->controllers[i], group_name);
 
 			if (exist != 0) {
