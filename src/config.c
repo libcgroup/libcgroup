@@ -1946,7 +1946,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_na
 			}
 
 			/* template name match */
-			for (k = 0; t_cgroup->controller[k] != NULL; k++) {
+			for (k = 0; k < t_cgroup->index; k++) {
 				if (strcmp((cgroup->controller[i])->name,
 					(t_cgroup->controller[k])->name) != 0) {
 					/* controller name does not match */
