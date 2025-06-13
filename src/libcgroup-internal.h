@@ -27,7 +27,7 @@ extern "C" {
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define MAX_MNT_ELEMENTS	16	/* Maximum number of mount points/controllers */
+#define MAX_MNT_ELEMENTS	17	/* Maximum number of mount points/controllers */
 #define MAX_GROUP_ELEMENTS	128	/* Estimated number of groups created */
 
 #define CG_CONTROL_VALUE_MAX	4096	/* Maximum length of a value */
