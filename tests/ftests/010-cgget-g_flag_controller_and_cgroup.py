@@ -27,7 +27,7 @@ def setup(config):
 
 
 def test(config):
-    result = consts.TEST_PASSED
+    result = consts.TEST_FAILED
     cause = None
 
     out = Cgroup.get(config, controller='{}:{}'.format(CONTROLLER, CGNAME),
