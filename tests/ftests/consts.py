@@ -216,6 +216,13 @@ EXPECTED_PIDS_OUT = [
         pids.events: max 0
         pids.max: max
         pids.peak: 0
+        """,
+        # pids.events.local
+        """pids.current: 0
+        pids.events: max 0
+        pids.max: max
+        pids.events.local: max 0
+        pids.peak: 0
         """
 ]
 
