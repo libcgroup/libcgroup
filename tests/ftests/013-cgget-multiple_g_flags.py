@@ -51,6 +51,9 @@ def test(config):
         # Append pid controller [1] and cpu controller [N, N - 1]
         EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
                             for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
+        # Append pid controller [2] and cpu controller [N, N - 1]
+        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[2] + expected_out
+                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):
