@@ -147,6 +147,8 @@ def test_cgroup_hybrid(config):
 
 
 def test_cgroup_unified(config):
+    Cgroup.xset(config, cgname=PARENT + "/../", setting=SETTING_V2_SUBTREE,
+                value=VALUE_V1_V2_SUBTREE, version=CGRP_VER_V2, recursive=False)
     cgroup_settings_helper(config, SETTING_V1, VALUE_V1, DEFAULT_VALUE_V1, CGRP_VER_V1)
     result, cause = cgroup_subtree_helper(config, SETTING_V2_SUBTREE, VALUE_V2_SUBTREE, CGRP_VER_V2)
 
