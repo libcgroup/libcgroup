@@ -705,7 +705,7 @@ class Cgroup(object):
                                 'supported'
                             )
         else:
-            Run.run(cmd, shell_bool=True)
+            Run.run(cmd, shell_bool=True, timeout=20)
 
     def start_cgrules(self, config):
         Cgroup.init_cgrules(config)
