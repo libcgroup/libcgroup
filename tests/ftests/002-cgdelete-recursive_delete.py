@@ -18,6 +18,9 @@ CONTROLLER = 'cpuset'
 PARENT = '002cgdelete'
 CHILD = 'childcg'
 GRANDCHILD = 'grandchildcg'
+GRANDPARENT = '/'
+CPUSET_SETTING_CPUS = 'cpuset.cpus'
+CPUSET_SETTING_MEMS = 'cpuset.mems'
 
 
 def prereqs(config):
@@ -41,6 +44,18 @@ def setup(config):
 
     version = CgroupVersion.get_version(CONTROLLER)
     if version == CgroupVersion.CGROUP_V1:
+        # Newer versions of systemd that adopt cgroup v2 type inheritance, breaks
+        # the assumption that the cpuset.{cpus,mems} settings value gets inherited
+        # by default. Write the cpuset.{cpus,mems} values explicitly, allowing the
+        # test run on both older/newer systemd versions.
+        cpuset_cpus = Cgroup.get(config, cgname=GRANDPARENT, setting=CPUSET_SETTING_CPUS,
+                                 print_headers=False, values_only=True)
+        cpuset_mems = Cgroup.get(config, cgname=GRANDPARENT, setting=CPUSET_SETTING_MEMS,
+                                 print_headers=False, values_only=True)
+
+        Cgroup.set(config, PARENT, CPUSET_SETTING_CPUS, cpuset_cpus, recursive=True)
+        Cgroup.set(config, PARENT, CPUSET_SETTING_MEMS, cpuset_mems, recursive=True)
+
         # cgdelete in a cgroup v1 controller should be able to move a process
         # from a child cgroup to its parent.
         #
