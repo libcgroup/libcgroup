@@ -14,6 +14,7 @@ from run import RunError
 import threading as tp
 from run import Run
 import time
+import sys
 
 
 class Process(object):
@@ -90,8 +91,12 @@ class Process(object):
             self.children_pids.append(int(_pid))
 
         if pid.find('\n') >= 0:
-            # The second pid in the list contains the actual perl process
-            pid = pid.splitlines()[1]
+            if sys.version_info.major <= 3 and sys.version_info.minor < 8:
+                # The first pid in the list contains the actual perl process
+                pid = pid.splitlines()[0]
+            else:
+                # The second pid in the list contains the actual perl process
+                pid = pid.splitlines()[1]
 
         if pid == '' or int(pid) <= 0:
             raise ValueError(
