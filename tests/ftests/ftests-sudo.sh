@@ -29,8 +29,14 @@ fi
 
 sudo cp "$srcdir../../src/libcgroup_systemd_idle_thread" /bin
 
-sudo PYTHONPATH="$PYTHONPATH" ./ftests.py -l 10 -L "$START_DIR/ftests-sudo.py.log" \
-	-s "sudo" --no-container
+if  grep "Oracle Linux 8" /etc/os-release &> /dev/null
+then
+	sudo PYTHONPATH="$PYTHONPATH" ./ftests.py -l 10 -L \
+		"$START_DIR/ftests-sudo.py.log" -s "sudo" --no-container "-S 92"
+else
+	sudo PYTHONPATH="$PYTHONPATH" ./ftests.py -l 10 -L \
+		"$START_DIR/ftests-sudo.py.log" -s "sudo" --no-container
+fi
 RET=$?
 
 sudo rm /bin/libcgroup_systemd_idle_thread
