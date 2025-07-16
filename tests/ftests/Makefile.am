@@ -23,7 +23,8 @@ EXTRA_DIST_PYTHON_UTILS = \
 			  distro/__init__.py \
 			  distro/consts_abstract.py \
 			  distro/consts_distro.py \
-			  distro/consts_ubuntu.py
+			  distro/consts_ubuntu.py \
+			  distro/consts_oracle.py
 
 EXTRA_DIST_PYTHON_TESTS = \
 			  001-cgget-basic_cgget_v1.py \
