@@ -8,21 +8,29 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
-from distro import consts_ubuntu
+from distro import consts_ubuntu, consts_oracle
 
 
-# get the current linux flavour
-def get_distro(config):
-    with open('/etc/os-release', 'r') as relfile:
-        buf = relfile.read()
-        if "Oracle Linux" in buf:
-            return "oracle"
-        elif "Ubuntu" in buf:
-            return "ubuntu"
-        else:
-            raise NotImplementedError("Unsupported Distro")
+class ConstsDistro:
 
+    # get the current linux flavour
+    def get_distro(config):
+        with open('/etc/os-release', 'r') as relfile:
+            buf = relfile.read()
+            if "Oracle Linux" in buf:
+                return "oracle"
+            elif "Ubuntu" in buf:
+                return "ubuntu"
+            else:
+                raise NotImplementedError("Unsupported Distro")
 
-consts = consts_ubuntu.ConstsUbuntu()
+    @staticmethod
+    def get_consts(config):
+        distro = ConstsDistro.get_distro(config)
+
+        if distro == "ubuntu":
+            return consts_ubuntu.ConstsUbuntu()
+        elif distro == "oracle":
+            return consts_oracle.ConstsOracle()
 
 # vim: set et ts=4 sw=4:
