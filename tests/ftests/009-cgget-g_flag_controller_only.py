@@ -41,17 +41,16 @@ def test(config):
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):
-            if len(out.splitlines()) == len(expected_out.splitlines()):
-                result_, tmp_cause = utils.is_output_same(config, out, expected_out)
-                if result_ is True:
-                    result = consts.TEST_PASSED
-                    cause = None
-                    break
-                else:
-                    if cause is None:
-                        cause = 'Tried Matching:\n==============='
+            result_, tmp_cause = utils.is_output_same(config, out, expected_out)
+            if result_ is True:
+                result = consts.TEST_PASSED
+                cause = None
+                break
+            else:
+                if cause is None:
+                    cause = 'Tried Matching:\n==============='
 
-                    cause = '\n'.join(filter(None, [cause, expected_out]))
+                cause = '\n'.join(filter(None, [cause, expected_out]))
 
     return result, cause
 
