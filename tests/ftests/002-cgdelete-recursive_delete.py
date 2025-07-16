@@ -7,9 +7,9 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup, CgroupVersion
 from libcgroup import Mode
-import consts
 import ftests
 import sys
 import os

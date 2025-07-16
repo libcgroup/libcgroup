@@ -11,7 +11,6 @@ TESTS =
 EXTRA_DIST_PYTHON_UTILS = \
 			  cgroup.py \
 			  config.py \
-			  consts.py \
 			  container.py \
 			  controller.py \
 			  ftests.py \
@@ -20,7 +19,11 @@ EXTRA_DIST_PYTHON_UTILS = \
 			  process.py \
 			  run.py \
 			  systemd.py \
-			  utils.py
+			  utils.py \
+			  distro/__init__.py \
+			  distro/consts_abstract.py \
+			  distro/consts_distro.py \
+			  distro/consts_ubuntu.py
 
 EXTRA_DIST_PYTHON_TESTS = \
 			  001-cgget-basic_cgget_v1.py \

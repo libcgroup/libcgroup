@@ -8,11 +8,11 @@
 #
 
 from multiprocessing import active_children
+from distro import ConstsCommon as consts
 from process import Process
 from systemd import Systemd
 from cgroup import Cgroup
 from run import RunError
-import consts
 import ftests
 import time
 import sys

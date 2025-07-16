@@ -10,13 +10,13 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from systemd import Systemd
 from process import Process
 from libcgroup import Mode
 from run import RunError
 import ftests
-import consts
 import sys
 import os
 
