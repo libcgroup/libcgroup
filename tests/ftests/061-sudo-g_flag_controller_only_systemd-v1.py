@@ -80,7 +80,7 @@ def test(config):
 
     expected_out_len = 10
     kernel_ver = utils.get_kernel_version(config)
-    if int(kernel_ver[0]) <= 5 and int(kernel_ver[1]) <= 4:
+    if int(kernel_ver[0]) <= 5 and int(kernel_ver[1]) <= 25:
         expected_out_len = 8
 
     out = Cgroup.get(config, controller=CONTROLLER, cgname=SYSTEMD_CGNAME)
