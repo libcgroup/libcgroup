@@ -6,11 +6,11 @@
 # Copyright (c) 2023 Oracle and/or its affiliates.
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 
+from distro import ConstsCommon as consts
 from systemd import Systemd
 from process import Process
 from cgroup import Cgroup
 from run import RunError
-import consts
 import ftests
 import time
 import sys

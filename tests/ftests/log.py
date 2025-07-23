@@ -6,8 +6,8 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 import datetime
-import consts
 
 log_level = consts.DEFAULT_LOG_LEVEL
 log_file = consts.DEFAULT_LOG_FILE

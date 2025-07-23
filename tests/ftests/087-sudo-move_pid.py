@@ -8,8 +8,8 @@
 #
 
 from libcgroup import Cgroup, Mode, Version
+from distro import ConstsCommon as consts
 from process import Process
-import consts
 import ftests
 import sys
 import os

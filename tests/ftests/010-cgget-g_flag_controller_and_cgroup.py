@@ -7,8 +7,9 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from cgroup import Cgroup, CgroupVersion
-import consts
+from distro.consts_distro import ConstsDistro
+from distro import ConstsCommon as consts
+from cgroup import Cgroup
 import ftests
 import utils
 import sys
@@ -33,12 +34,7 @@ def test(config):
     out = Cgroup.get(config, controller='{}:{}'.format(CONTROLLER, CGNAME),
                      print_headers=False)
 
-    version = CgroupVersion.get_version(CONTROLLER)
-
-    if version == CgroupVersion.CGROUP_V1:
-        EXPECTED_OUT = consts.EXPECTED_CPU_OUT_V1
-    else:
-        EXPECTED_OUT = consts.EXPECTED_CPU_OUT_V2
+    EXPECTED_OUT = ConstsDistro.get_consts(config).expected_cpu_out_010()
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):
