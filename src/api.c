@@ -3724,7 +3724,7 @@ static int cg_rd_ctrl_file(const char *subsys, const char *cgrp, const char *fil
 	if (!cg_build_path_locked(cgrp, path, subsys))
 		return ECGFAIL;
 
-	strncat(path, file, sizeof(path) - strlen(path));
+	strncat(path, file, sizeof(path) - strlen(path) - 1);
 	ctrl_file = fopen(path, "re");
 	if (!ctrl_file)
 		return ECGROUPVALUENOTEXIST;
