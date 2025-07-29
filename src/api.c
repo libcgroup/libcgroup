@@ -5170,7 +5170,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		 * - controller-list is empty
 		 */
 		if (mode == CGROUP_MODE_UNIFIED || unified) {
-			ret = fscanf(pid_cgrp_fd, "%d::%4096s\n", &num, cgrp_path);
+			ret = fscanf(pid_cgrp_fd, "%d::%4095s\n", &num, cgrp_path);
 			if (ret != 2) {
 				/*
 				 * we are interested only in unified format
@@ -5212,10 +5212,10 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
 		}
 
 		/*
-		 * 4096 == FILENAME_MAX, keeping the coverity happy with precision
+		 * 4095 == FILENAME_MAX - 1, keeping coverity happy with precision
 		 * for the cgrp_path.
 		 */
-		ret = fscanf(pid_cgrp_fd, "%d:%[^:]:%4096s\n", &num, controllers, cgrp_path);
+		ret = fscanf(pid_cgrp_fd, "%d:%[^:]:%4095s\n", &num, controllers, cgrp_path);
 		/*
 		 * Magic numbers like "3" seem to be integrating into my daily
 		 * life, I need some magic to help make them disappear :)
