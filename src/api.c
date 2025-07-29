@@ -4229,8 +4229,8 @@ static bool cgroup_is_rt_task(const pid_t pid)
 STATIC bool cgroup_compare_ignore_rule(const struct cgroup_rule * const rule, pid_t pid,
 				       const char * const procname)
 {
-	char *controller_list[MAX_MNT_ELEMENTS] = { '\0' };
-	char *cgrp_list[MAX_MNT_ELEMENTS] = { '\0' };
+	char *controller_list[MAX_MNT_ELEMENTS] = { NULL };
+	char *cgrp_list[MAX_MNT_ELEMENTS] = { NULL };
 	int rule_matching_controller_idx;
 	int cgrp_list_matching_idx = 0;
 	bool found_match = false;
