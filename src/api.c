@@ -2381,7 +2381,6 @@ static int cg_set_control_value(char *path, const char *val)
 			path_dir_end = strrchr(path, '/');
 			if (path_dir_end == NULL)
 				return ECGROUPVALUENOTEXIST;
-			path_dir_end = '\0';
 
 			/* task_path contain: $path/tasks */
 			tasks_path = (char *)malloc(strlen(path) + 6 + 1);
