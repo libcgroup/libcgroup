@@ -3781,7 +3781,7 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgrp, struct cgroup_
 	 * sort of a flag, but this is fine for now.
 	 */
 	cg_build_path_locked(cgrp->name, path, cg_mount_table[cg_index].name);
-	strncat(path, d_name, sizeof(path) - strlen(path));
+	strncat(path, d_name, sizeof(path) - strlen(path) - 1);
 
 	error = stat(path, &stat_buffer);
 	if (error) {
