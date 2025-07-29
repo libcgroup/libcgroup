@@ -94,6 +94,35 @@ jobs:
         publish_dir: ./doc/html
         publish_branch: doxygen/${{ github.ref_name }}
 
+  build-with-clang:
+    name: Build with Clang
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: false
+    - name: Install dependencies
+      run: |
+        while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do sleep 3; done
+        sudo apt-get update
+        sudo apt-get install libpam-dev python3-pip python3-dev cmake bison flex byacc g++ autoconf automake libtool libsystemd-dev clang -y
+    - name: Install cython
+      run: sudo pip install cython
+    - name: Bootstrap
+      run: ./bootstrap.sh
+    - name: Reconfigure libcgroup with unit tests enabled
+      run: CFLAGS="$CFLAGS -Werror" ./configure --sysconfdir=/etc --localstatedir=/var --enable-opaque-hierarchy="name=systemd" --enable-python --enable-unittests
+    - name: Build libcgroup
+      run: make
+    - name: Run unit tests
+      run: |
+        pushd tests/gunit
+        make check
+        popd
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
