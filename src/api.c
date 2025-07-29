@@ -6718,7 +6718,7 @@ int cgroup_list_mount_points(const enum cg_version_t cgrp_version, char ***mount
 			goto err;
 		}
 	}
-	mnt_paths[i] = '\0';
+	mnt_paths[i] = NULL;
 
 	ret = 0;
 	*mount_paths = mnt_paths;
