@@ -291,9 +291,9 @@ static pid_t find_scope_pid(pid_t pid)
 
 		/* read according to the cgroup mode */
 		if (strstr(buffer, "::"))
-			ret = sscanf(buffer, "%d::%4096s\n", &idx, cgrp_name);
+			ret = sscanf(buffer, "%d::%4095s\n", &idx, cgrp_name);
 		else
-			ret = sscanf(buffer, "%d:%[^:]:%4096s\n", &idx, ctrl_name, cgrp_name);
+			ret = sscanf(buffer, "%d:%[^:]:%4095s\n", &idx, ctrl_name, cgrp_name);
 
 		if (ret != 2 && ret != 3) {
 			err("Unrecognized cgroup file format: %s\n", buffer);
@@ -420,7 +420,7 @@ static void find_mnt_point(const char * const controller, char **mnt_point)
 		if (!strstr(buffer, controller))
 			continue;
 
-		ret = sscanf(buffer, "%*s %4096s\n", cgrp_path);
+		ret = sscanf(buffer, "%*s %4095s\n", cgrp_path);
 		if (ret != 1) {
 			err("Failed during read of %s:%s\n", proc_mount, strerror(errno));
 			goto out;
