@@ -897,7 +897,7 @@ err:
 #ifdef LIBCG_LIB
 int cgroup_cgxget(struct cgroup **cg, enum cg_version_t version, bool ignore_unmappable)
 {
-	struct cgroup *disk_cg, *out_cg;
+	struct cgroup *disk_cg = NULL, *out_cg;
 	int ret;
 
 	if (!cg || !(*cg)) {
