@@ -7,11 +7,11 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from process import Process
 from systemd import Systemd
 from cgroup import Cgroup
 from run import RunError
-import consts
 import ftests
 import time
 import sys

@@ -7,12 +7,12 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
 from cgroup import CgroupVersion
 from process import Process
 import ftests
-import consts
 import sys
 import os
 

@@ -8,9 +8,9 @@
 #
 
 from cgroup import Cgroup as Cgroup, Mode
+from distro import ConstsCommon as consts
 from process import Process
 from run import RunError
-import consts
 import ftests
 import sys
 import os

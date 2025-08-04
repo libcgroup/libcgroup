@@ -8,11 +8,11 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup
 from process import Process
 from libcgroup import Mode
 from run import RunError
-import consts
 import ftests
 import sys
 import os

@@ -103,14 +103,4 @@ def is_output_same(config, out, expected_out):
 
     return result, cause
 
-
-# get the current linux flavour
-def get_distro(config):
-    with open('/etc/os-release', 'r') as relfile:
-        buf = relfile.read()
-        if "Oracle Linux" in buf:
-            return "oracle"
-        elif "Ubuntu" in buf:
-            return "ubuntu"
-
 # vim: set et ts=4 sw=4:
