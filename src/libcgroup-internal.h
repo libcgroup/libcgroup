@@ -70,7 +70,8 @@ extern "C" {
 #define CGRP_RULE_MAXKEY	(LOGIN_NAME_MAX + FILENAME_MAX + 1)
 
 /* Maximum length of a line in the daemon config file */
-#define CGRP_RULE_MAXLINE	(FILENAME_MAX + CGRP_RULE_MAXKEY + CG_CONTROLLER_MAX + 3)
+#define CGRP_RULE_MAXLINE	(FILENAME_MAX + CGRP_RULE_MAXKEY + CG_CONTROLLER_MAX + \
+				 CG_OPTIONS_MAX + 4)
 
 #define CGRP_FILE_PREFIX	"cgroup"
 
