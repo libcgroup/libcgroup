@@ -3772,6 +3772,12 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgrp, struct cgroup_
 
 	d_name = strdup(ctrl_dir->d_name);
 
+	if (!d_name) {
+		error = ECGOTHER;
+		cgroup_err("strdup failed to allocate memory: %s\n", strerror(errno));
+		goto fill_error;
+	}
+
 	if (!strcmp(d_name, ".") || !strcmp(d_name, "..")) {
 		error = ECGINVAL;
 		goto fill_error;
@@ -3841,7 +3847,8 @@ int cgroup_fill_cgc(struct dirent *ctrl_dir, struct cgroup *cgrp, struct cgroup_
 fill_error:
 	if (ctrl_value)
 		free(ctrl_value);
-	free(d_name);
+	if (d_name)
+		free(d_name);
 
 	return error;
 }
