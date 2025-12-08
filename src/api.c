@@ -5930,6 +5930,11 @@ STATIC int cg_get_cgroups_from_proc_cgroups(pid_t pid, char *cgrp_list[],
 		if (buff_len > 1) {
 			/* Strip off the leading '/' for every cgroup but the root cgroup */
 			cgrp_list[idx] = malloc(buff_len);
+			if (!cgrp_list[idx]) {
+				cgroup_err("malloc failed to allocate memory: %s\n", strerror(errno));
+				fclose(f);
+				return ECGOTHER;
+			}
 			snprintf(cgrp_list[idx], buff_len, "%s", &stok_buff[1]);
 		} else {
 			/* Retain the leading '/' since we're in the root cgroup */
