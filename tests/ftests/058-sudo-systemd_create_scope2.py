@@ -124,8 +124,6 @@ def test(config):
 
 
 def teardown(config, result):
-    global pid
-
     Process.kill(config, pid)
 
     if result != consts.TEST_PASSED:
