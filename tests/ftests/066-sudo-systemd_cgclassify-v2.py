@@ -166,8 +166,6 @@ def test(config):
 
 
 def teardown(config):
-    global SYSTEMD_PIDS, OTHER_PIDS
-
     Process.kill(config, SYSTEMD_PIDS)
     Process.kill(config, OTHER_PIDS)
 
