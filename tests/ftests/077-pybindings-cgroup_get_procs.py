@@ -83,8 +83,6 @@ def test(config):
 
 
 def teardown(config):
-    global initial_pid_list
-
     Process.kill(config, initial_pid_list)
     CgroupCli.delete(config, CONTROLLERS, EMPTY_CGNAME)
     CgroupCli.delete(config, CONTROLLERS, os.path.dirname(CGNAME), recursive=True)
