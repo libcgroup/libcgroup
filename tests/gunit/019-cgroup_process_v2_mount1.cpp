@@ -2,7 +2,7 @@
 /**
  * libcgroup googletest for cgroup_process_v2_mnt()
  *
- * Copyright (c) 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2020-2025 Oracle and/or its affiliates.
  * Author: Tom Hromatka <tom.hromatka@oracle.com>
  */
 
@@ -28,7 +28,7 @@ static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 
 static int mnt_tbl_idx = 0;
 
-class CgroupProcessV2MntTest : public ::testing::Test {
+class CgroupProcessV2MntTest1 : public ::testing::Test {
 	protected:
 
 	void CreateHierarchy(const char * const dir)
@@ -87,7 +87,7 @@ class CgroupProcessV2MntTest : public ::testing::Test {
 	}
 };
 
-TEST_F(CgroupProcessV2MntTest, AddV2Mount)
+TEST_F(CgroupProcessV2MntTest1, AddV2Mount)
 {
 	char *mnt_dir = strdup(PARENT_DIR);
 	struct mntent ent = (struct mntent) {
@@ -117,19 +117,8 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount)
 	ASSERT_STREQ(cg_mount_table[4].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[5].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[6].mount.path, ent.mnt_dir);
-}
 
-TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
-{
-	char *mnt_dir = strdup(PARENT2_DIR);
-	struct mntent ent = (struct mntent) {
-		.mnt_fsname = "cgroup2",
-		.mnt_dir = mnt_dir,
-		.mnt_type = "cgroup2",
-		.mnt_opts = "rw,relatime,seclabel",
-	};
-	int ret;
-
+	/* Add it again and verify it doesn't show up as a duplicate */
 	ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
 
 	ASSERT_EQ(ret, 0);
@@ -142,45 +131,11 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 	ASSERT_STREQ(cg_mount_table[5].name, "rdma");
 	ASSERT_STREQ(cg_mount_table[6].name, "cgroup");
 
-	ASSERT_STREQ(cg_mount_table[0].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[1].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[2].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[3].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[4].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[5].mount.next->path, ent.mnt_dir);
-	ASSERT_STREQ(cg_mount_table[6].mount.next->path, ent.mnt_dir);
-}
-
-/*
- * This test must be last because it makes destructive changes to the cgroup hierarchy
- */
-TEST_F(CgroupProcessV2MntTest, EmptyControllersFile)
-{
-	char tmp_path[FILENAME_MAX];
-	char *mnt_dir = strdup(PARENT_DIR);
-	struct mntent ent = (struct mntent) {
-		.mnt_fsname = "cgroup2",
-		.mnt_dir = mnt_dir,
-		.mnt_type = "cgroup2",
-		.mnt_opts = "rw,relatime,seclabel",
-	};
-	FILE *f;
-	int ret;
-
-	memset(tmp_path, 0, sizeof(tmp_path));
-	snprintf(tmp_path, FILENAME_MAX - 1, "%s/cgroup.controllers",
-		 PARENT_DIR);
-
-	/* clear the cgroup.controllers file */
-	f = fopen(tmp_path, "w");
-	ASSERT_NE(f, nullptr);
-	fclose(f);
-
-	/* reset the mount table count */
-	mnt_tbl_idx = 0;
-
-	ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
-
-	ASSERT_EQ(ret, ECGEOF);
-	ASSERT_EQ(mnt_tbl_idx, 0);
+	ASSERT_STREQ(cg_mount_table[0].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[1].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[2].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[3].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[4].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[5].mount.path, ent.mnt_dir);
+	ASSERT_STREQ(cg_mount_table[6].mount.path, ent.mnt_dir);
 }
