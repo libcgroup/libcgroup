@@ -4,6 +4,9 @@
 AUTOMAKE_SKIPPED=77
 AUTOMAKE_HARD_ERROR=99
 
+# Only ubuntu (or ubuntu based distro's with lxc support) currently supported
+grep "Ubuntu" /etc/os-release || exit 0
+
 START_DIR=$PWD
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

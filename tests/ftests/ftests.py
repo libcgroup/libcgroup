@@ -7,11 +7,11 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from config import Config
 from run import Run
 import datetime
 import argparse
-import consts
 import time
 import log
 import sys

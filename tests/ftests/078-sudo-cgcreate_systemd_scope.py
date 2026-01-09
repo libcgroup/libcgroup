@@ -7,13 +7,13 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from process import Process
 from systemd import Systemd
 from libcgroup import Mode
 from cgroup import Cgroup
 from run import RunError
 from log import Log
-import consts
 import ftests
 import sys
 import os

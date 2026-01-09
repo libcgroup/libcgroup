@@ -7,8 +7,8 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from libcgroup import Cgroup, Version
-import consts
 import ftests
 import sys
 import os

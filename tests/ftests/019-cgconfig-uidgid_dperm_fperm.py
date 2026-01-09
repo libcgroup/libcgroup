@@ -7,10 +7,10 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from container import ContainerError
 from run import Run, RunError
 from cgroup import Cgroup
-import consts
 import ftests
 import utils
 import sys

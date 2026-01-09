@@ -7,8 +7,9 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro.consts_distro import ConstsDistro
+from distro import ConstsCommon as consts
 from cgroup import Cgroup, CgroupVersion
-import consts
 import ftests
 import utils
 import sys
@@ -34,26 +35,9 @@ def test(config):
     cause = None
 
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
-                     cgname=CGNAME)
-    version = CgroupVersion.get_version(CONTROLLER1)
+                     cgname=CGNAME, print_headers=False)
 
-    if version == CgroupVersion.CGROUP_V1:
-        # Append pid controller [0] and cpu controller [N - 2]
-        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                        for expected_out in consts.EXPECTED_CPU_OUT_V1[:-2]]
-        # Append pid controller [1] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V1[-2:])
-    else:
-        # Append pid controller [0] and cpu controller [N - 2]
-        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                        for expected_out in consts.EXPECTED_CPU_OUT_V2[:-2]]
-        # Append pid controller [1] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
-        # Append pid controller [2] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[2] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
+    EXPECTED_OUT = ConstsDistro.get_consts(config).expected_cpu_out_013()
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):

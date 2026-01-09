@@ -7,9 +7,9 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup, CgroupVersion
 from run import RunError
-import consts
 import ftests
 import sys
 import os

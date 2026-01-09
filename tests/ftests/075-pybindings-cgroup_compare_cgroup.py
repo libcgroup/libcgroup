@@ -8,8 +8,8 @@
 #
 
 from cgroup import Cgroup as CgroupCli, Mode
+from distro import ConstsCommon as consts
 from libcgroup import Cgroup, Version
-import consts
 import ftests
 import sys
 import os

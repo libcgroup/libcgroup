@@ -6,11 +6,11 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from run import Run, RunError
 from queue import Queue
 import threading as tp
 from log import Log
-import consts
 import time
 import os
 

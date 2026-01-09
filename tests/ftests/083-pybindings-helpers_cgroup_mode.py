@@ -7,9 +7,9 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Mode
-import consts
 import ftests
 import sys
 import os

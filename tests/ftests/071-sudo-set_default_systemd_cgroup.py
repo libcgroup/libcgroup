@@ -9,10 +9,10 @@
 #
 
 from libcgroup import Version, Cgroup, Mode
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from process import Process
 from systemd import Systemd
-import consts
 import ftests
 import time
 import sys
