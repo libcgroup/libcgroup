@@ -364,8 +364,6 @@ def run_tests(config):
              )
     print('-----------------------------------------------------------------')
 
-    global setup_time
-    global teardown_time
     if config.args.verbose:
         print('Timing Results:')
         print(
