@@ -6391,7 +6391,7 @@ int cgroup_get_procs(const char *name, const char *controller, pid_t **pids, int
 	char cgroup_path[FILENAME_MAX];
 
 	cg_build_path(name, cgroup_path, controller);
-	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX-strlen(cgroup_path));
+	strncat(cgroup_path, "/cgroup.procs", FILENAME_MAX - strlen(cgroup_path) - 1);
 
 	return read_pids(cgroup_path, pids, size);
 }
@@ -6401,7 +6401,7 @@ int cgroup_get_threads(const char *name, const char *controller, pid_t **pids, i
 	char cgroup_path[FILENAME_MAX];
 
 	cg_build_path(name, cgroup_path, controller);
-	strncat(cgroup_path, "/cgroup.threads", FILENAME_MAX-strlen(cgroup_path));
+	strncat(cgroup_path, "/cgroup.threads", FILENAME_MAX - strlen(cgroup_path) - 1);
 
 	return read_pids(cgroup_path, pids, size);
 }
