@@ -366,11 +366,71 @@ out:
 	return cgret;
 }
 
+/*
+ * This function mimics systemd’s behavior to build the cgroup path when the slice name contains
+ * one or more '-' characters.
+ * e.g.:
+ *	# systemd-run --scope --slice=t-e-st.slice sleep 100
+ *	# systemd-cgls
+ *	...
+ *	|_t.slice
+ *	| |_t-e.slice
+ *	|   |_t-e-st.slice
+ *	|     |_run-p231318-i231618.scope
+ *	|       |_231318 /usr/bin/sleep 100
+ *	...
+ *
+ * similarly:
+ *	# cgcreate -c -g:t-e-s-t.slice/a.scope
+ *	# systemd-cgls
+ *	...
+ *	|_t.slice
+ *	| |_t-e.slice
+ *	|   |_t-e-st.slice
+ *	|     |_a.scope
+ *	|       |_232479 libcgroup_systemd_idle_thread
+ *	...
+ */
+static int cgroup_exp_slice_hyphen_name(const char *const slice_name, char *exp_slice_name)
+{
+	int len, total_len;
+	char *hyphen;
+
+	hyphen = strstr(slice_name, "-");
+	if (!hyphen)
+		return 1;
+
+	snprintf(exp_slice_name, FILENAME_MAX, "/");
+	total_len = 1;
+
+	/*
+	 * Additional buffer length checks are unnecessary because systemd already verifies lengths
+	 * during slice/scope expansion in cgroup_create_scope(). If this function is called,
+	 * FILENAME_MAX is guaranteed to be sufficient.
+	 */
+	do {
+		len = hyphen - slice_name;
+		total_len += len;
+		strncat(exp_slice_name, slice_name, len);
+
+		total_len += 7;
+		strncat(exp_slice_name, ".slice/", 8);
+
+		hyphen += 1;
+	} while ((hyphen = strstr(hyphen, "-")) != NULL);
+
+	strncat(exp_slice_name, slice_name, FILENAME_MAX - total_len - 1);
+
+	cgroup_dbg("Expanded slice name from %s to %s\n", slice_name, exp_slice_name);
+	return 0;
+}
+
 int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 			 const struct cgroup_systemd_scope_opts * const opts)
 {
 	char *copy1 = NULL, *copy2 = NULL, *slash, *slice_name, *scope_name;
-	int ret = 0;
+	char exp_slice_name[FILENAME_MAX];
+	int len, ret = 0;
 
 	if (!cgroup)
 		return ECGROUPNOTALLOWED;
@@ -408,6 +468,21 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 	ret = cgroup_create_scope(scope_name, slice_name, opts);
 	if (ret)
 		goto err;
+
+	/*
+	 * If the slice name has one or more '-' characters, expand it systemd-style before
+	 * calling cgroup_create_cgroup() for ownership changes.
+	 */
+	ret = cgroup_exp_slice_hyphen_name(slice_name, exp_slice_name);
+	if (!ret) {
+		snprintf(cgroup->name, FILENAME_MAX, "%s", exp_slice_name);
+
+		len = FILENAME_MAX - strlen(exp_slice_name);
+		strncat(cgroup->name, "/", len - 1);
+
+		len += 1;
+		strncat(cgroup->name, scope_name, len - 1);
+	}
 
 	/*
 	 * Utilize cgroup_create_cgroup() to assign the requested owner/group and permissions.
