@@ -18,8 +18,6 @@ class Log(object):
 
     @staticmethod
     def log(msg, msg_level=consts.DEFAULT_LOG_LEVEL):
-        global log_level, log_file, log_fd
-
         if log_level >= msg_level:
             if log_fd is None:
                 Log.open_logfd(log_file)
