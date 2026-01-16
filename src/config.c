@@ -963,6 +963,19 @@ static int cgroup_config_unmount_controllers(void)
 	return 0;
 }
 
+/*
+ * Free namespaces table
+ */
+static void cgroup_config_free_namespaces_table(void)
+{
+	int i;
+
+	for (i = 0; i < CG_CONTROLLER_MAX; i++) {
+		free(cg_namespace_table[i]);
+		cg_namespace_table[i] = NULL;
+	}
+}
+
 static int config_validate_namespaces(void)
 {
 	char *namespace = NULL;
@@ -1050,6 +1063,8 @@ static int config_validate_namespaces(void)
 		i = subsys_count - 1;
 	}
 out_error:
+	if (error)
+		cgroup_config_free_namespaces_table();
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 
 	return error;
@@ -1073,11 +1088,7 @@ static int config_order_namespace_table(void)
 	int i = 0;
 
 	pthread_rwlock_wrlock(&cg_mount_table_lock);
-	/* Set everything to NULL */
-	for (i = 0; i < CG_CONTROLLER_MAX; i++)
-		cg_namespace_table[i] = NULL;
-
-	memset(cg_namespace_table, 0, CG_CONTROLLER_MAX * sizeof(cg_namespace_table[0]));
+	cgroup_config_free_namespaces_table();
 
 	/* Now fill up the namespace table looking at the table we have otherwise. */
 	for (i = 0; i < namespace_table_index; i++) {
@@ -1110,6 +1121,8 @@ static int config_order_namespace_table(void)
 		}
 	}
 error_out:
+	if (error)
+		cgroup_config_free_namespaces_table();
 	pthread_rwlock_unlock(&cg_mount_table_lock);
 
 	return error;
