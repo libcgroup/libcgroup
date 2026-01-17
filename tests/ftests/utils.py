@@ -93,13 +93,17 @@ def is_output_same(config, out, expected_out):
     result = True
     cause = None
 
-    for line_num, line in enumerate(out.splitlines()):
-        if line.strip() != expected_out.splitlines()[line_num].strip():
+    out_lines = out.splitlines()
+    exp_lines = expected_out.splitlines()
+
+    for line_num, (line, exp_line) in enumerate(zip(out_lines, exp_lines)):
+        if line.strip() != exp_line.strip():
             cause = (
                     'Expected line:\n\t{}\nbut received line:\n\t{}'
-                    ''.format(expected_out.splitlines()[line_num].strip(), line.strip())
+                    ''.format(exp_line.strip(), line.strip())
                     )
             result = False
+            break
 
     return result, cause
 
