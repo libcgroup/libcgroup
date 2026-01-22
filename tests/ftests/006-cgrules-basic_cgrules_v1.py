@@ -7,7 +7,7 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup, Mode
 from process import Process
 import consts
 import ftests
@@ -37,9 +37,9 @@ def prereqs(config):
         cause = 'This test cannot be run within a container'
         return result, cause
 
-    if CgroupVersion.get_version('cpu') != CgroupVersion.CGROUP_V1:
+    if Cgroup.get_cgroup_mode(config) == Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
-        cause = 'This test requires the cgroup v1 cpu controller'
+        cause = 'This test requires the legacy/hybrid cgroup hierarchy'
 
     return result, cause
 
