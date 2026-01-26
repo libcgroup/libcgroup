@@ -5484,6 +5484,7 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgrp_stat)
 		goto out_free;
 	}
 	strncpy(cgrp_stat->name, token, FILENAME_MAX - 1);
+	cgrp_stat->name[FILENAME_MAX - 1] = '\0';
 
 	token = strtok_r(NULL, " ", &saveptr);
 	if (!token) {
@@ -5491,6 +5492,7 @@ static int cg_read_stat(FILE *fp, struct cgroup_stat *cgrp_stat)
 		goto out_free;
 	}
 	strncpy(cgrp_stat->value, token, CG_VALUE_MAX - 1);
+	cgrp_stat->value[CG_VALUE_MAX - 1] = '\0';
 
 out_free:
 	free(line);
