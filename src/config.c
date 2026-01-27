@@ -181,6 +181,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 
 	config_cgrp = &config_table[*table_index];
 	strncpy(config_cgrp->name, cg_name, FILENAME_MAX - 1);
+	config_cgrp->name[FILENAME_MAX - 1] = '\0';
 
 	/* Since this will be the last part to be parsed. */
 	*table_index = *table_index + 1;
