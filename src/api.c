@@ -2860,6 +2860,8 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
 		return ECGFAIL;
 
 	strncpy(dst->name, src->name, CONTROL_NAMELEN_MAX);
+	dst->name[CONTROL_NAMELEN_MAX - 1] = '\0';
+
 	for (i = 0; i < src->index; i++, dst->index++) {
 		struct control_value *src_val = src->values[i];
 		struct control_value *dst_val;
@@ -2873,7 +2875,10 @@ int cgroup_copy_controller_values(struct cgroup_controller * const dst,
 
 		dst_val = dst->values[i];
 		strncpy(dst_val->value, src_val->value, CG_CONTROL_VALUE_MAX);
+		dst_val->value[CG_CONTROL_VALUE_MAX - 1] = '\0';
+
 		strncpy(dst_val->name, src_val->name, FILENAME_MAX);
+		dst_val->name[FILENAME_MAX - 1] = '\0';
 
 		if (src_val->multiline_value) {
 			dst_val->multiline_value = strdup(src_val->multiline_value);
