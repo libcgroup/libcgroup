@@ -234,6 +234,7 @@ static int split_cgroup_name(const char * const ctrl_str, char *cgrp_name)
 	}
 
 	strncpy(cgrp_name, &colon[1], FILENAME_MAX - 1);
+	cgrp_name[FILENAME_MAX - 1] = '\0';
 
 	return 0;
 }
@@ -368,6 +369,8 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cgrp_list[],
 
 			strncpy((*cgrp_list)[(*cgrp_list_len) - 1]->name, argv[optind],
 				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1);
+			(*cgrp_list)[(*cgrp_list_len) - 1]->name[
+				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1] = '\0';
 		} else if (cgrp != NULL && strlen(cgrp->name) == 0) {
 			/*
 			 * this cgroup was created based upon control/value
@@ -375,6 +378,7 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cgrp_list[],
 			 * populate it with the parameter provided by the user
 			 */
 			strncpy(cgrp->name, argv[optind], sizeof(cgrp->name) - 1);
+			cgrp->name[sizeof(cgrp->name) - 1] = '\0';
 		} else {
 			ret = create_cgrp(cgrp_list, cgrp_list_len);
 			if (ret)
@@ -387,6 +391,8 @@ static int parse_opt_args(int argc, char *argv[], struct cgroup **cgrp_list[],
 
 			strncpy((*cgrp_list)[(*cgrp_list_len) - 1]->name, argv[optind],
 				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1);
+			(*cgrp_list)[(*cgrp_list_len) - 1]->name[
+				sizeof((*cgrp_list)[(*cgrp_list_len) - 1]->name) - 1] = '\0';
 		}
 		optind++;
 	}
