@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
 	}
 
 	ret = cgroup_walk_tree_begin(controller, "/", 0, &handle, &info, &lvl);
-
 	if (ret != 0) {
 		fprintf(stderr, "Walk failed\n");
 		exit(EXIT_FAILURE);
@@ -63,6 +62,8 @@ int main(int argc, char *argv[])
 
 	root_len = strlen(info.full_path) - 1;
 	strncpy(cgrp_path, info.path, FILENAME_MAX - 1);
+	cgrp_path[FILENAME_MAX - 1] = '\0';
+
 	ret = read_stats(cgrp_path, controller);
 	if (ret < 0)
 		exit(EXIT_FAILURE);
@@ -71,8 +72,11 @@ int main(int argc, char *argv[])
 			ECGEOF) {
 		if (info.type != CGROUP_FILE_TYPE_DIR)
 			continue;
+
 		strncpy(cgrp_path, info.full_path + root_len, FILENAME_MAX - 1);
+		cgrp_path[FILENAME_MAX - 1] = '\0';
 		strcat(cgrp_path, "/");
+
 		ret = read_stats(cgrp_path, controller);
 		if (ret < 0)
 			exit(EXIT_FAILURE);
