@@ -135,6 +135,8 @@ struct cgroup *create_new_cgroup_ds(int ctl, const char *grpname,
 	int retval;
 
 	strncpy(group, grpname, sizeof(group) - 1);
+	group[sizeof(group) - 1] = '\0';
+
 	retval = set_controller(ctl, controller_name, control_file);
 	if (retval) {
 		fprintf(stderr, "Setting controller failed\n");
@@ -691,7 +693,8 @@ build_path(char *target, char *mountpoint, const char *group, const char *file)
 	if (!target)
 		return;
 
-	strncpy(target, mountpoint, FILENAME_MAX);
+	strncpy(target, mountpoint, FILENAME_MAX - 1);
+	target[FILENAME_MAX - 1] = '\0';
 
 	if (group) {
 		strncat(target, "/", FILENAME_MAX - strlen(target));
