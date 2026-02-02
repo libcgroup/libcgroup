@@ -1168,9 +1168,9 @@ class Cgroup(object):
     # path for all three cgroup setup modes, including empty cgroup v2.
     @staticmethod
     def exists(config, ctrl_name, cgroup_name, ignore_systemd=False):
-        if ctrl_name is None or type(ctrl_name) == str:
+        if ctrl_name is None or isinstance(ctrl_name, str):
             return Cgroup.__exists(config, ctrl_name, cgroup_name, ignore_systemd)
-        elif type(ctrl_name) == list:
+        elif isinstance(ctrl_name, list):
             for ctrl in ctrl_name:
                 if not Cgroup.__exists(config, ctrl, cgroup_name, ignore_systemd):
                     # if any of the controllers don't exist, fail the check
