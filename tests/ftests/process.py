@@ -273,9 +273,9 @@ class Process(object):
         if not pids:
             return
 
-        if type(pids) == str:
+        if isinstance(pids, str):
             pids = [int(pid) for pid in pids.splitlines()]
-        elif type(pids) == int:
+        elif isinstance(pids, int):
             pids = [pids]
 
         for pid in pids:
