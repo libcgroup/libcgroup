@@ -36,7 +36,6 @@ def prereqs(config):
 
 
 def setup(config):
-    global initial_pid_list
     CgroupCli.create(config, CONTROLLERS, CGNAME)
     CgroupCli.create(config, CONTROLLERS, EMPTY_CGNAME)
 
@@ -45,11 +44,10 @@ def setup(config):
         initial_pid_list.append(pid)
 
     CgroupCli.classify(config, CONTROLLERS, CGNAME, initial_pid_list, ignore_systemd=True)
-    initial_pid_list = initial_pid_list.sort()
+    initial_pid_list.sort()
 
 
 def test(config):
-    global initial_pid_list
     result = consts.TEST_PASSED
     cause = None
 
@@ -59,7 +57,8 @@ def test(config):
     cg = Cgroup(CGNAME, Version.CGROUP_V2)
     for controller in CONTROLLERS:
         cg.add_controller(controller)
-    pid_list = cg.get_processes().sort()
+    pid_list = cg.get_processes()
+    pid_list.sort()
 
     if pid_list != initial_pid_list:
         result = consts.TEST_FAILED
