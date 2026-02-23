@@ -381,7 +381,7 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 		return ECGINVAL;
 	}
 
-	slash = strstr(slash + 1, "/");
+	slash = strchr(slash + 1, '/');
 	if (slash) {
 		cgroup_err("cgroup name contains more than one slash: %s\n", cgroup->name);
 		return ECGINVAL;

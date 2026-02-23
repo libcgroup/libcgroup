@@ -70,7 +70,7 @@ static int create_systemd_scope(struct cgroup * const cgrp, const char * const p
 
 	ret = cgroup_create_scope2(cgrp, 0, &opts);
 	if (!ret && set_default) {
-		scope = strstr(cgrp->name, "/");
+		scope = strchr(cgrp->name, '/');
 		if (!scope) {
 			err("%s: Invalid scope name %s, expected <slice>/<scope>\n",
 			    prog_name, cgrp->name);
