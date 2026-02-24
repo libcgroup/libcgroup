@@ -124,4 +124,10 @@ TEST_F(SetValuesRecursiveTest, SuccessfulSetValues)
 		ASSERT_STREQ(buf, VALUES[i]);
 		fclose(f);
 	}
+
+	for (i = 0; i < ctrlr.index; i++) {
+		free(ctrlr.values[i]);
+		ctrlr.values[i] = nullptr;
+	}
+	ctrlr.index = 0;
 }
