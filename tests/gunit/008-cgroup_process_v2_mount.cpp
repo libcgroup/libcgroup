@@ -8,6 +8,8 @@
 
 #include <ftw.h>
 #include <mntent.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "gtest/gtest.h"
 #include "libcgroup-internal.h"
@@ -29,6 +31,31 @@ static const int CONTROLLERS_CNT = ARRAY_SIZE(CONTROLLERS);
 static int mnt_tbl_idx = 0;
 
 class CgroupProcessV2MntTest : public ::testing::Test {
+	void ResetMountTable(void)
+	{
+		int i;
+
+		pthread_rwlock_wrlock(&cg_mount_table_lock);
+
+		for (i = 0; cg_mount_table[i].name[0] != '\0'; i++) {
+			struct cg_mount_point *node = cg_mount_table[i].mount.next;
+
+			while (node) {
+				struct cg_mount_point *tmp = node->next;
+				free(node);
+				node = tmp;
+			}
+
+			cg_mount_table[i].mount.next = NULL;
+		}
+
+		memset(cg_mount_table, 0, sizeof(cg_mount_table));
+
+		pthread_rwlock_unlock(&cg_mount_table_lock);
+
+		memset(cg_cgroup_v2_mount_path, 0, sizeof(cg_cgroup_v2_mount_path));
+		mnt_tbl_idx = 0;
+	}
 	protected:
 
 	void CreateHierarchy(const char * const dir)
@@ -55,6 +82,7 @@ class CgroupProcessV2MntTest : public ::testing::Test {
 
 	void SetUp() override
 	{
+		ResetMountTable();
 		CreateHierarchy(PARENT_DIR);
 
 		/* make another directory to test the duplicate logic */
@@ -78,6 +106,8 @@ class CgroupProcessV2MntTest : public ::testing::Test {
 	void TearDown() override
 	{
 		int ret = 0;
+
+		ResetMountTable();
 
 		ret = rmrf(PARENT_DIR);
 		ASSERT_EQ(ret, 0);
@@ -117,11 +147,19 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount)
 	ASSERT_STREQ(cg_mount_table[4].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[5].mount.path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[6].mount.path, ent.mnt_dir);
+	free(mnt_dir);
 }
 
 TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 {
+	char *mnt_dir_base = strdup(PARENT_DIR);
 	char *mnt_dir = strdup(PARENT2_DIR);
+	struct mntent base_ent = (struct mntent) {
+		.mnt_fsname = "cgroup2",
+		.mnt_dir = mnt_dir_base,
+		.mnt_type = "cgroup2",
+		.mnt_opts = "rw,relatime,seclabel",
+	};
 	struct mntent ent = (struct mntent) {
 		.mnt_fsname = "cgroup2",
 		.mnt_dir = mnt_dir,
@@ -129,6 +167,9 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 		.mnt_opts = "rw,relatime,seclabel",
 	};
 	int ret;
+
+	ret = cgroup_process_v2_mnt(&base_ent, &mnt_tbl_idx);
+	ASSERT_EQ(ret, 0);
 
 	ret = cgroup_process_v2_mnt(&ent, &mnt_tbl_idx);
 
@@ -149,6 +190,8 @@ TEST_F(CgroupProcessV2MntTest, AddV2Mount_Duplicate)
 	ASSERT_STREQ(cg_mount_table[4].mount.next->path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[5].mount.next->path, ent.mnt_dir);
 	ASSERT_STREQ(cg_mount_table[6].mount.next->path, ent.mnt_dir);
+	free(mnt_dir_base);
+	free(mnt_dir);
 }
 
 /*
@@ -183,4 +226,5 @@ TEST_F(CgroupProcessV2MntTest, EmptyControllersFile)
 
 	ASSERT_EQ(ret, ECGEOF);
 	ASSERT_EQ(mnt_tbl_idx, 0);
+	free(mnt_dir);
 }
