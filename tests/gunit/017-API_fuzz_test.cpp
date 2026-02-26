@@ -7,16 +7,39 @@
  */
 
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <vector>
 
 #include "gtest/gtest.h"
 
 #include "libcgroup-internal.h"
 
-class APIArgsTest: public :: testing:: Test {
-	protected:
+class APIArgsTest : public ::testing::Test {
+protected:
+	std::vector<struct cgroup *> test_cgroups_;
 
-	void SetUp() override {
+	struct cgroup *NewTestCgroup(const char *name)
+	{
+		struct cgroup *cgrp = cgroup_new_cgroup(name);
+
+		if (cgrp)
+			test_cgroups_.push_back(cgrp);
+
+		return cgrp;
+	}
+
+	void SetUp() override
+	{
 		/* Stub */
+	}
+
+	void TearDown() override
+	{
+		for (struct cgroup *&cgrp : test_cgroups_) {
+			if (cgrp)
+				cgroup_free(&cgrp);
+		}
+		test_cgroups_.clear();
 	}
 };
 
@@ -85,7 +108,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_string)
 	ret = cgroup_set_value_string(cgc, name, value);
 	ASSERT_EQ(ret, 50011);
 
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -141,7 +164,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_string)
 	ret = cgroup_get_value_string(cgc, name, NULL);
 	ASSERT_EQ(ret, 50011);
 
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -198,7 +221,7 @@ TEST_F(APIArgsTest, API_cgroup_add_controller)
 	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
 	ASSERT_EQ(cgc, nullptr);
 
-	cgroup = cgroup_new_cgroup(cgrp_name);
+	cgroup = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgroup, nullptr);
 
 	cgc = cgroup_add_controller(cgroup, cgrp_ctrl);
@@ -236,7 +259,7 @@ TEST_F(APIArgsTest, API_cgroup_add_value_string)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -284,7 +307,7 @@ TEST_F(APIArgsTest, API_cgroup_get_uid_gid)
 	// case 2
 	// cgroup = valid, tasks_uid = NULL, tasks_gid = NULL, control_uid = NULL,
 	// control_uid = NULL
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	ret = cgroup_get_uid_gid(cgrp, NULL, NULL, NULL, NULL);
@@ -341,7 +364,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_int64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -396,7 +419,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_int64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -452,7 +475,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_uint64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -507,7 +530,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_uint64)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -563,7 +586,7 @@ TEST_F(APIArgsTest, API_cgroup_set_value_bool)
 
 	// case 2
 	// cgc = valid, name = NULL, value = valid
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
@@ -618,7 +641,7 @@ TEST_F(APIArgsTest, API_cgroup_get_value_bool)
 
 	// case 2
 	// cgc = valid, name = NULL, value = NULL
-	cgrp = cgroup_new_cgroup(cgrp_name);
+	cgrp = NewTestCgroup(cgrp_name);
 	ASSERT_NE(cgrp, nullptr);
 
 	cgc = cgroup_add_controller(cgrp, cgrp_ctrl);
