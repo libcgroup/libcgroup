@@ -227,7 +227,7 @@ TEST_F(CgroupGetCgroupTest, CgroupGetCgroup1)
 	ASSERT_EQ(cgrp_vec, test_vec);
 
 	if (cgrp)
-		free(cgrp);
+		cgroup_free(&cgrp);
 }
 
 /*
@@ -251,5 +251,5 @@ TEST_F(CgroupGetCgroupTest, CgroupGetCgroup_NoTasksFile)
 	ASSERT_EQ(ret, ECGOTHER);
 
 	if (cgrp)
-		free(cgrp);
+		cgroup_free(&cgrp);
 }
