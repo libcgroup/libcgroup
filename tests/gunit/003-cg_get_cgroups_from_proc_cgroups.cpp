@@ -6,6 +6,8 @@
  * Author: Tom Hromatka <tom.hromatka@oracle.com>
  */
 
+#include <stdlib.h>
+
 #include "gtest/gtest.h"
 
 #include "libcgroup-internal.h"
@@ -24,6 +26,17 @@ static void CreateCgroupProcFile(const char * const contents)
 	fclose(f);
 }
 
+static void FreeLists(char **controller_list, char **cgrp_list, size_t len)
+{
+	size_t i;
+
+	for (i = 0; i < len; i++) {
+		free(controller_list[i]);
+		controller_list[i] = NULL;
+		free(cgrp_list[i]);
+		cgrp_list[i] = NULL;
+	}
+}
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine)
 {
@@ -47,6 +60,8 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine)
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(controller_list[0], "pids");
 	ASSERT_STREQ(cgrp_list[0], "user.slice/user-1000.slice/session-1.scope");
+
+	FreeLists(controller_list, cgrp_list, LIST_LEN);
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine2)
@@ -70,6 +85,8 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadSingleLine2)
 	ASSERT_EQ(ret, 0);
 	ASSERT_STREQ(controller_list[0], "cpu,cpuacct");
 	ASSERT_STREQ(cgrp_list[0], "/");
+
+	FreeLists(controller_list, cgrp_list, LIST_LEN);
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadEmptyController)
@@ -93,6 +110,8 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadEmptyController)
 	ASSERT_EQ(ret, 0);
 	ASSERT_EQ(controller_list[0], nullptr);
 	ASSERT_EQ(cgrp_list[0], nullptr);
+
+	FreeLists(controller_list, cgrp_list, LIST_LEN);
 }
 
 TEST_F(GetCgroupsFromProcCgroupsTest, ReadExampleFile)
@@ -152,4 +171,6 @@ TEST_F(GetCgroupsFromProcCgroupsTest, ReadExampleFile)
 
 	ASSERT_EQ(controller_list[12], nullptr);
 	ASSERT_EQ(cgrp_list[12], nullptr);
+
+	FreeLists(controller_list, cgrp_list, MAX_MNT_ELEMENTS);
 }
