@@ -73,16 +73,21 @@ static int get_controller_from_name(const char * const name, char **controller)
 
 static int create_cgrp(struct cgroup **cgrp_list[], int * const cgrp_list_len)
 {
-	*cgrp_list = realloc(*cgrp_list, ((*cgrp_list_len) + 1) * sizeof(struct cgroup *));
-	if ((*cgrp_list) == NULL)
+	struct cgroup **new_list;
+	struct cgroup *new_cgrp;
+
+	new_cgrp = cgroup_new_cgroup("");
+	if (!new_cgrp)
 		return ECGCONTROLLERCREATEFAILED;
 
-	memset(&(*cgrp_list)[*cgrp_list_len], 0, sizeof(struct cgroup *));
-
-	(*cgrp_list)[*cgrp_list_len] = cgroup_new_cgroup("");
-	if ((*cgrp_list)[*cgrp_list_len] == NULL)
+	new_list = realloc(*cgrp_list, ((*cgrp_list_len) + 1) * sizeof(struct cgroup *));
+	if (new_list == NULL) {
+		cgroup_free(&new_cgrp);
 		return ECGCONTROLLERCREATEFAILED;
+	}
 
+	*cgrp_list = new_list;
+	(*cgrp_list)[*cgrp_list_len] = new_cgrp;
 	(*cgrp_list_len)++;
 
 	return 0;
