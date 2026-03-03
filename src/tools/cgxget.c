@@ -254,7 +254,7 @@ static int split_cgroup_name(const char * const ctrl_str, char *cgrp_name)
 static int split_controllers(const char * const in, char **ctrl[], int * const ctrl_len)
 {
 	char *copy, *tok, *colon, *saveptr = NULL;
-	int ret = 0;
+	int i, ret = 0;
 	char **tmp;
 
 	copy = strdup(in);
@@ -287,6 +287,14 @@ out:
 	if (saveptr)
 		free(saveptr);
 
+	if (ret) {
+		for (i = 0; i < *ctrl_len; i++)
+			free((*ctrl)[i]);
+		free(*ctrl);
+		*ctrl = NULL;
+		*ctrl_len = 0;
+	}
+
 	return ret;
 }
 
@@ -296,8 +304,10 @@ static int parse_g_flag_with_colon(struct cgroup **cgrp_list[], int * const cgrp
 	struct cgroup_controller *cgc;
 	struct cgroup *cg = NULL;
 	char **controllers = NULL;
-	int controllers_len = 0;
+	int orig_len, controllers_len = 0;
 	int i, ret = 0;
+
+	orig_len = *cgrp_list_len;
 
 	ret = create_cg(cgrp_list, cgrp_list_len);
 	if (ret)
@@ -327,6 +337,14 @@ static int parse_g_flag_with_colon(struct cgroup **cgrp_list[], int * const cgrp
 out:
 	for (i = 0; i < controllers_len; i++)
 		free(controllers[i]);
+	free(controllers);
+
+	if (ret && *cgrp_list_len > orig_len) {
+		/* Remove the cgroup we just appended */
+		cgroup_free(&(*cgrp_list)[(*cgrp_list_len) - 1]);
+		(*cgrp_list)[(*cgrp_list_len) - 1] = NULL;
+		(*cgrp_list_len)--;
+	}
 
 	return ret;
 }
