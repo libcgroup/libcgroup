@@ -10,6 +10,7 @@
 #ifdef WITH_SYSTEMD
 #include <systemd/sd-bus.h>
 #include <libcgroup.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -366,10 +367,83 @@ out:
 	return cgret;
 }
 
+/*
+ * This function mimics systemd’s behavior to build the cgroup path when the slice name contains
+ * one or more '-' characters.
+ * e.g.:
+ *	# systemd-run --scope --slice=t-e-st.slice sleep 100
+ *	# systemd-cgls
+ *	...
+ *	|_t.slice
+ *	| |_t-e.slice
+ *	|   |_t-e-st.slice
+ *	|     |_run-p231318-i231618.scope
+ *	|       |_231318 /usr/bin/sleep 100
+ *	...
+ *	"t-e-st.slice" expands to "t.slice/t-e.slice/t-e-st.slice"
+ *
+ * similarly:
+ *	# cgcreate -c -g:t-e-s-t.slice/a.scope
+ *	# systemd-cgls
+ *	...
+ *	|_t.slice
+ *	| |_t-e.slice
+ *	|   |_t-e-s.slice
+ *	|     |_t-e-s-t.slice
+ *	|       |_a.scope
+ *	|         |_232479 libcgroup_systemd_idle_thread
+ *	...
+ *	"t-e-s-t.slice/a.scope" expands to "t.slice/t-e.slice/t-e-s.slice/t-e-s-t.slice/a.scope"
+ */
+static int cgroup_exp_scope_path(const char *const slice_name, const char *const scope_name,
+				 char *exp_scope_path, bool *expanded)
+{
+	size_t exp_slice_len = FILENAME_MAX;
+	size_t len, offset = 0;
+	const char *hyphen;
+	int n;
+
+	*expanded = false;
+	/*
+	 * Additional buffer-length checks are unnecessary because systemd already verifies lengths
+	 * during slice/scope expansion in cgroup_create_scope(). If this function is called,
+	 * FILENAME_MAX is guaranteed to be sufficient. A buffer overrun of exp_scope_path should
+	 * never occur, the checks exists only to keep static analyzers happy.
+	 */
+	hyphen = strchr(slice_name, '-');
+	while (hyphen) {
+		len = hyphen - slice_name;
+
+		n = snprintf(exp_scope_path + offset, exp_slice_len - offset,
+				"%.*s.slice/", (int)len, slice_name);
+		if (n < 0 || (size_t)n >= exp_slice_len - offset) {
+			last_errno = ENAMETOOLONG;
+			return ECGOTHER;
+		}
+
+		offset += n;
+		hyphen = strchr(hyphen + 1, '-');
+		*expanded = true;
+	}
+
+	n = snprintf(exp_scope_path + offset, exp_slice_len - offset,
+			"%s/%s", slice_name, scope_name);
+	if (n < 0 || (size_t)n >= exp_slice_len - offset) {
+		last_errno = ENAMETOOLONG;
+		return ECGOTHER;
+	}
+
+	cgroup_dbg("Expanded slice name from %s to %s\n", slice_name, exp_scope_path);
+
+	return 0;
+}
+
 int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 			 const struct cgroup_systemd_scope_opts * const opts)
 {
 	char *copy1 = NULL, *copy2 = NULL, *slash, *slice_name, *scope_name;
+	char exp_scope_path[FILENAME_MAX];
+	bool expanded = false;
 	int ret = 0;
 
 	if (!cgroup)
@@ -408,6 +482,17 @@ int cgroup_create_scope2(struct cgroup *cgroup, int ignore_ownership,
 	ret = cgroup_create_scope(scope_name, slice_name, opts);
 	if (ret)
 		goto err;
+
+	/*
+	 * If the slice name has one or more '-' characters, expand it systemd-style before
+	 * calling cgroup_create_cgroup() for ownership changes.
+	 */
+	ret = cgroup_exp_scope_path(slice_name, scope_name, exp_scope_path, &expanded);
+	if (ret)
+		goto err;
+
+	if (expanded)
+		snprintf(cgroup->name, sizeof(cgroup->name), "%s", exp_scope_path);
 
 	/*
 	 * Utilize cgroup_create_cgroup() to assign the requested owner/group and permissions.
