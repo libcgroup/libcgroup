@@ -170,6 +170,9 @@ TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV1)
 	ASSERT_EQ(ret, 0);
 
 	verify_cgroup_created(cgrp_name, ctrl_name);
+
+	if (cgrp)
+		cgroup_free(&cgrp);
 }
 
 TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV2)
@@ -191,6 +194,9 @@ TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV2)
 
 	verify_cgroup_created(cgrp_name, NULL);
 	verify_subtree_contents("+freezer");
+
+	if (cgrp)
+		cgroup_free(&cgrp);
 }
 
 TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV1AndV2)
@@ -217,4 +223,7 @@ TEST_F(CgroupCreateCgroupTest, CgroupCreateCgroupV1AndV2)
 	verify_cgroup_created(cgrp_name, NULL);
 	verify_cgroup_created(cgrp_name, ctrl2_name);
 	verify_subtree_contents("+memory");
+
+	if (cgrp)
+		cgroup_free(&cgrp);
 }
