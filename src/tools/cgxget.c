@@ -85,15 +85,21 @@ static int get_controller_from_name(const char * const name, char **controller)
 
 static int create_cg(struct cgroup **cgrp_list[], int * const cgrp_list_len)
 {
-	*cgrp_list = realloc(*cgrp_list, ((*cgrp_list_len) + 1) * sizeof(struct cgroup *));
-	if ((*cgrp_list) == NULL)
+	struct cgroup **new_list;
+	struct cgroup *new_cg;
+
+	new_cg = cgroup_new_cgroup("");
+	if (!new_cg)
 		return ECGCONTROLLERCREATEFAILED;
 
-	memset(&(*cgrp_list)[*cgrp_list_len], 0, sizeof(struct cgroup *));
-
-	(*cgrp_list)[*cgrp_list_len] = cgroup_new_cgroup("");
-	if ((*cgrp_list)[*cgrp_list_len] == NULL)
+	new_list = realloc(*cgrp_list, ((*cgrp_list_len) + 1) * sizeof(struct cgroup *));
+	if (new_list == NULL) {
+		cgroup_free(&new_cg);
 		return ECGCONTROLLERCREATEFAILED;
+	}
+
+	*cgrp_list = new_list;
+	(*cgrp_list)[*cgrp_list_len] = new_cg;
 
 	(*cgrp_list_len)++;
 
