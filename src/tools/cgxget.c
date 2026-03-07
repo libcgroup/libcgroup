@@ -919,6 +919,7 @@ int main(int argc, char *argv[])
 err:
 	for (i = 0; i < cgrp_list_len; i++)
 		cgroup_free(&(cgrp_list[i]));
+	free(cgrp_list);
 
 	return ret;
 }
