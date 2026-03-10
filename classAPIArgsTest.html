@@ -85,7 +85,8 @@ $(function(){ initResizable(false); });
 <div id="doc-content">
 <div class="header">
   <div class="summary">
-<a href="#pro-methods">Protected Member Functions</a>  </div>
+<a href="#pro-methods">Protected Member Functions</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a>  </div>
   <div class="headertitle"><div class="title">APIArgsTest Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -98,9 +99,21 @@ Inheritance diagram for APIArgsTest:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:a62cb1ad33347d88cfc75975b118e191a" id="r_a62cb1ad33347d88cfc75975b118e191a"><td class="memItemLeft" align="right" valign="top"><a id="a62cb1ad33347d88cfc75975b118e191a" name="a62cb1ad33347d88cfc75975b118e191a"></a>
+struct <a class="el" href="structcgroup.html">cgroup</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>NewTestCgroup</b> (const char *name)</td></tr>
+<tr class="separator:a62cb1ad33347d88cfc75975b118e191a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ca47a9756e338b38a91903c91603f91" id="r_a1ca47a9756e338b38a91903c91603f91"><td class="memItemLeft" align="right" valign="top"><a id="a1ca47a9756e338b38a91903c91603f91" name="a1ca47a9756e338b38a91903c91603f91"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>SetUp</b> () override</td></tr>
 <tr class="separator:a1ca47a9756e338b38a91903c91603f91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bc52bb0b44341ca92f112ef4f5b820d" id="r_a1bc52bb0b44341ca92f112ef4f5b820d"><td class="memItemLeft" align="right" valign="top"><a id="a1bc52bb0b44341ca92f112ef4f5b820d" name="a1bc52bb0b44341ca92f112ef4f5b820d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>TearDown</b> () override</td></tr>
+<tr class="separator:a1bc52bb0b44341ca92f112ef4f5b820d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a622495ab04d3428eb81356b56f2b83a5" id="r_a622495ab04d3428eb81356b56f2b83a5"><td class="memItemLeft" align="right" valign="top"><a id="a622495ab04d3428eb81356b56f2b83a5" name="a622495ab04d3428eb81356b56f2b83a5"></a>
+std::vector&lt; struct <a class="el" href="structcgroup.html">cgroup</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>test_cgroups_</b></td></tr>
+<tr class="separator:a622495ab04d3428eb81356b56f2b83a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>libcgroup googletest for fuzz testing APIs with negative values.</p>
