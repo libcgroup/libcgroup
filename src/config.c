@@ -2264,12 +2264,12 @@ static bool systemd_default_cgroup_exists(void)
 		 * check for empty cgroup v2, the most common usage in
 		 * the hybrid case.
 		 */
-		if (cg_build_path("", path, NULL))
+		if (cg_build_path(NULL, path, NULL))
 			break;
 	case CGROUP_MODE_UNIFIED:
 		/* fallthrough */
 	case CGROUP_MODE_LEGACY:
-		cg_build_path("", path, "cpu");
+		cg_build_path(NULL, path, "cpu");
 		/* fallthrough */
 	case CGROUP_MODE_UNK:
 		break;
