@@ -826,8 +826,11 @@ static int convert_cgroups(struct cgroup **cgrp_list[], int cgrp_list_len,
 	int i = 0, j, ret = 0;
 
 	cgrp_converted_list = malloc(cgrp_list_len * sizeof(struct cgroup *));
-	if (cgrp_converted_list == NULL)
+	if (cgrp_converted_list == NULL) {
+		ret = ECGOTHER;
 		goto out;
+	}
+	memset(cgrp_converted_list, 0, cgrp_list_len * sizeof(struct cgroup *));
 
 	for (i = 0; i < cgrp_list_len; i++) {
 		cgrp_converted_list[i] = cgroup_new_cgroup((*cgrp_list)[i]->name);
@@ -843,20 +846,21 @@ static int convert_cgroups(struct cgroup **cgrp_list[], int cgrp_list_len,
 	}
 
 out:
-	if (ret != 0 && ret != ECGNOVERSIONCONVERT) {
-		/* The conversion failed */
-		for (j = 0; j < i; j++)
-			cgroup_free(&(cgrp_converted_list[j]));
-		free(cgrp_converted_list);
-	} else {
-		/*
-		 * The conversion succeeded or was unmappable.
-		 * Free the old list.
-		 */
+	if (ret == 0 || ret == ECGNOVERSIONCONVERT) {
+		struct cgroup **old_list = *cgrp_list;
+
+		/* Conversion succeeded: drop old list and publish the new one. */
 		for (i = 0; i < cgrp_list_len; i++)
-			cgroup_free(&(*cgrp_list)[i]);
+			cgroup_free(&old_list[i]);
+		free(old_list);
 
 		*cgrp_list = cgrp_converted_list;
+	} else if (cgrp_converted_list) {
+		for (j = 0; j < cgrp_list_len; j++) {
+			if (cgrp_converted_list[j])
+				cgroup_free(&(cgrp_converted_list[j]));
+		}
+		free(cgrp_converted_list);
 	}
 
 	return ret;
