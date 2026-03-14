@@ -1990,7 +1990,7 @@ int cgroup_build_tasks_procs_path(char * const path, size_t path_sz, const char 
 
 	switch (version) {
 	case CGROUP_V1:
-		strncat(path, "tasks", path_sz - strlen(path));
+		strncat(path, "tasks", path_sz - strlen(path) - 1);
 		err = 0;
 		break;
 	case CGROUP_V2:
@@ -1998,7 +1998,7 @@ int cgroup_build_tasks_procs_path(char * const path, size_t path_sz, const char 
 		if (err)
 			goto error;
 
-		strncat(path, cg_type, path_sz - strlen(path));
+		strncat(path, cg_type, path_sz - strlen(path) - 1);
 		break;
 	default:
 		err = ECGOTHER;
