@@ -108,4 +108,4 @@ int cgroup_get_last_errno(void);
 } /* extern "C" */
 #endif
 
-#endif /* _LIBCGROUP_INIT_H */
+#endif /* _LIBCGROUP_ERROR_H */
