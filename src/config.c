@@ -146,25 +146,26 @@ int config_insert_cgroup(char *cg_name, int flag)
 	}
 
 	if (*table_index >= *max - 1) {
+		unsigned int oldlen = *max;
 		struct cgroup *newblk;
-		unsigned int oldlen;
+		unsigned int newlen;
 
-		if (*max >= INT_MAX) {
+		if (oldlen >= UINT_MAX / 2) {
 			last_errno = ENOMEM;
 			return 0;
 		}
-		oldlen = *max;
-		*max *= 2;
+		newlen = oldlen * 2;
 
-		newblk = realloc(config_table, (*max * sizeof(struct cgroup)));
+		newblk = realloc(config_table, ((size_t)newlen * sizeof(struct cgroup)));
 		if (!newblk) {
 			last_errno = ENOMEM;
 			return 0;
 		}
 
-		memset(newblk + oldlen, 0, (*max - oldlen) * sizeof(struct cgroup));
-		init_cgroup_table(newblk + oldlen, *max - oldlen);
+		memset(newblk + oldlen, 0, (newlen - oldlen) * sizeof(struct cgroup));
+		init_cgroup_table(newblk + oldlen, newlen - oldlen);
 		config_table = newblk;
+		*max = newlen;
 		switch (flag) {
 		case CGROUP:
 			config_cgrp_table = config_table;
@@ -175,7 +176,7 @@ int config_insert_cgroup(char *cg_name, int flag)
 		default:
 			return 0;
 		}
-		cgroup_dbg("maximum %d\n", *max);
+		cgroup_dbg("maximum %u\n", *max);
 		cgroup_dbg("reallocated config_table to %p\n", config_table);
 	}
 
