@@ -46,7 +46,7 @@ int cgroup_unload_cgroups(void);
  * file.
  *
  * The groups are either removed recursively or only the empty ones, based
- * on given flags. Mount point are always umounted only if they are empty,
+ * on given flags. Mount points are always umounted only if they are empty,
  * regardless of any flags.
  *
  * The groups are sorted before they are removed, so the removal of empty ones
@@ -105,7 +105,7 @@ void cgroup_templates_cache_set_source_files(struct cgroup_string_list *tmpl_fil
 /**
  * Physically create a new control group in kernel, based on given control
  * group template and configuration file. If given template is not set in
- * configuration file, then the procedure works create the control group
+ * configuration file, then the procedure creates the control group
  * using  cgroup_create_cgroup() function
  *
  * Templates are loaded using cgroup_load_templates_cache_from_files
