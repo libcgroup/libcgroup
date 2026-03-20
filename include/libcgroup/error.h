@@ -20,7 +20,7 @@ extern "C" {
  *
  * @name Error handling
  * @{
- * Unless states otherwise in documentation of a function, all functions
+ * Unless stated otherwise in a function's documentation, all functions
  * return @c int, which is zero (0) when the function succeeds, and positive
  * number if the function fails.
  *
@@ -62,7 +62,7 @@ enum {
 	ECGROUPNORULES,			/* 50020 */
 	ECGMOUNTFAIL,			/* 50021 */
 	/**
-	 * Not an real error, it just indicates that iterator has come to end
+	 * Not a real error, it just indicates that the iterator has come to the end
 	 * of sequence and no more items are left.
 	 */
 	ECGEOF = 50023,
