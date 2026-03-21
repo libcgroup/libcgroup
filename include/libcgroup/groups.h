@@ -151,7 +151,7 @@ struct cgroup_controller;
  *	for the root group itself and @c "/foo/bar/baz" or @c "foo/bar/baz" for
  *	subgroups.
  *	@todo suggest one preferred way, either "/foo" or "foo".
- * @returns Created group or NULL on error.
+ * @return Created group or NULL on error.
  */
 struct cgroup *cgroup_new_cgroup(const char *name);
 
@@ -215,7 +215,7 @@ void cgroup_free_controllers(struct cgroup *cgrp);
  * The created groups has owner which was set by cgroup_set_uid_gid() and
  * permissions set by cgroup_set_permissions.
  * @param cgrp
- * @param ignore_ownership When nozero, all errors are ignored when setting
+ * @param ignore_ownership When nonzero, all errors are ignored when setting
  *	owner of the group and/or its tasks file.
  *	@todo what is ignore_ownership good for?
  * @retval #ECGROUPNOTEQUAL if not all specified controller parameters
@@ -236,9 +236,9 @@ int cgroup_create_cgroup(struct cgroup *cgrp, int ignore_ownership);
  * cgroup_add_controller() is not used, like in cgroup_create_cgroup()? I can't
  * create subgroup of root group in just one hierarchy with this function!
  *
- * @param cgrp The cgroup to create. Only it's name is used, everything else
+ * @param cgrp The cgroup to create. Only its name is used, everything else
  *	is discarded.
- * @param ignore_ownership When nozero, all errors are ignored when setting
+ * @param ignore_ownership When nonzero, all errors are ignored when setting
  *	owner of the group and/or its tasks file.
  *	@todo what is ignore_ownership good for?
  * @retval #ECGROUPNOTEQUAL if not all inherited controller parameters
@@ -249,7 +249,7 @@ int cgroup_create_cgroup_from_parent(struct cgroup *cgrp, int ignore_ownership);
 /**
  * Physically modify a control group in kernel. All parameters added by
  * cgroup_add_value_ or cgroup_set_value_ are written.
- * Currently it's not possible to change and owner of a group.
+ * Currently it's not possible to change the owner of a group.
  *
  * @param cgrp
  */
@@ -265,7 +265,7 @@ int cgroup_modify_cgroup(struct cgroup *cgrp);
  * cgroup_delete_cgroup_ext() for recursive delete.
  *
  * @param cgrp
- * @param ignore_migration When nozero, all errors are ignored when migrating
+ * @param ignore_migration When nonzero, all errors are ignored when migrating
  *	tasks from the group to the parent group.
  *	@todo what is ignore_migration good for? rmdir() will fail if tasks were not moved.
  */
@@ -311,7 +311,7 @@ int cgroup_delete_cgroup_ext(struct cgroup *cgrp, int flags);
  * cgroup_get_uid_gid() if the group is in multiple hierarchies, each with
  * different owner of tasks file?
  *
- * @param cgrp The cgroup to load. Only it's name is used, everything else
+ * @param cgrp The cgroup to load. Only its name is used, everything else
  *	is replaced.
  */
 int cgroup_get_cgroup(struct cgroup *cgrp);
