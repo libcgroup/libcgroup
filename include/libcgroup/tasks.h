@@ -29,7 +29,7 @@ enum cgflags {
 enum cgroup_daemon_type {
 	/**
 	 * The daemon must not touch the given task, i.e. it never moves it
-	 * to any controlgroup.
+	 * to any control group.
 	 */
 	CGROUP_DAEMON_UNCHANGE_CHILDREN       = 0x1,
 	CGROUP_DAEMON_CANCEL_UNCHANGE_PROCESS = 0x2,
@@ -41,8 +41,8 @@ enum cgroup_daemon_type {
  *
  * @name Simple task assignment
  * @{
- * Applications can use following functions to simply put a task into given
- * control group and find a groups where given tasks is.
+ * Applications can use the following functions to put a task into a given
+ * control group and find groups where a given task is.
  */
 
 /**
@@ -76,7 +76,7 @@ int cgroup_change_cgroup_path(const char *path, pid_t pid, const char * const co
  * @param pid The task to find.
  * @param controller The controller (hierarchy), where to find the task.
  * @param current_path The path to control group, where the task has been found.
- *	The patch is relative to the root of the hierarchy. The caller must
+ *	The path is relative to the root of the hierarchy. The caller must
  *	free this memory.
  */
 int cgroup_get_current_controller_path(pid_t pid, const char *controller, char **current_path);
@@ -92,7 +92,7 @@ int cgroup_get_current_controller_path(pid_t pid, const char *controller, char *
  */
 
 /**
- * Initializes the rules cache and load it from /etc/cgrules.conf.
+ * Initializes the rules cache and loads it from /etc/cgrules.conf.
  * @todo add parameter with the filename?
  */
 int cgroup_init_rules_cache(void);
@@ -123,7 +123,7 @@ void cgroup_print_rules_config(FILE *fp);
 
 /**
  * Changes the cgroup of all running PIDs based on the rules in the config
- * file. If a rules exists for a PID, then the PID is placed in the correct
+ * file. If a rule exists for a PID, then the PID is placed in the correct
  * group.
  *
  * This function may be called after creating new control groups to move
@@ -149,7 +149,7 @@ int cgroup_change_all_cgroups(void);
  * @param procname The PROCESS NAME to match.
  * @param pid The PID of the process to move.
  * @param flags Bit flags to change the behavior, as defined in enum #cgflags.
- * @todo Determine thread-safeness and fix of not safe.
+ * @todo Determine thread safety and fix if not safe.
  */
 int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t pid, int flags);
 
@@ -164,7 +164,7 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t
  * @param gid The GID to match.
  * @param pid The PID of the process to move.
  * @param flags Bit flags to change the behavior, as defined in enum #cgflags.
- * @todo Determine thread-safeness and fix if not safe.
+ * @todo Determine thread safety and fix if not safe.
  */
 int cgroup_change_cgroup_uid_gid_flags(uid_t uid, gid_t gid, pid_t pid, int flags);
 
@@ -192,7 +192,7 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
 /**
  * Register the unchanged process to a cgrulesengd daemon. This process
  * is never moved to another control group by the daemon.
- * If the daemon does not work, this function returns 0 as success.
+ * If the daemon does not work, this function returns 0 (success).
  * @param pid The task id.
  * @param flags Bit flags to change the behavior, as defined in
  *	#cgroup_daemon_type
@@ -200,7 +200,7 @@ int cgroup_change_cgroup_uid_gid(uid_t uid, gid_t gid, pid_t pid);
 int cgroup_register_unchanged_process(pid_t pid, int flags);
 
 /**
- * Move given threads (=thread) to given control group.
+ * Move a given thread (=task) to the given control group.
  * @param cgroup Destination control group.
  * @param tid The task to move.
  */
