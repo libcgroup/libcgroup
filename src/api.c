@@ -54,13 +54,13 @@ const struct cgroup_library_version library_version = {
 };
 
 /*
- * The errno which happened the last time (have to be thread specific)
+ * The errno that occurred last time (has to be thread-specific)
  */
 __thread int last_errno;
 
 #define MAXLEN 256
 
-/* the value have to be thread specific */
+/* The value has to be thread-specific. */
 static __thread char errtext[MAXLEN];
 
 /* Task command name length */
@@ -998,8 +998,8 @@ finish:
 
 /**
  * Parse CGRULES_CONF_FILE and all files in CGRULES_CONF_FILE_DIR.
- * If CGRULES_CONF_FILE_DIR does not exists or can not be read, parse only
- * CGRULES_CONF_FILE. This way we keep the back compatibility.
+ * If CGRULES_CONF_FILE_DIR does not exist or cannot be read, parse only
+ * CGRULES_CONF_FILE. This way we keep backward compatibility.
  *
  * Original description of this function moved to cgroup_parse_rules_file.
  * Also cloned and all occurrences of file changed to files.
@@ -1016,7 +1016,7 @@ finish:
  * The remaining files are skipped. It will store this rule in trl, as well as
  * any children rules (rules that begin with a %) that it has.
  *
- * Files can be read in an random order so the first match must not be
+ * Files can be read in a random order so the first match must not be
  * dependent on it. Thus construct the rules the way not to break this
  * assumption.
  *
@@ -1053,7 +1053,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid, const char *mp
 
 	pthread_rwlock_wrlock(&rl_lock);
 
-	/* Parse CGRULES_CONF_FILE configuration file (back compatibility). */
+	/* Parse CGRULES_CONF_FILE configuration file (backward compatibility). */
 	ret = cgroup_parse_rules_file(CGRULES_CONF_FILE, cache, muid, mgid, mprocname);
 
 	/*
@@ -1111,7 +1111,7 @@ static int cgroup_parse_rules(bool cache, uid_t muid, gid_t mgid, const char *mp
 			cgroup_warn("cannot read %s: %s\n", dirname, strerror(errno));
 			/*
 			 * Cannot read an item.
-			 * But continue for back compatibility as a success.
+			 * But continue for backward compatibility as a success.
 			 */
 			ret = 0;
 			goto unlock_list;
@@ -3426,7 +3426,7 @@ static int cg_move_task_files(FILE *input_tasks, FILE *output_tasks)
  *	processes should be moved.
  * @param flags Flag indicating whether the errors from task
  *	migration should be ignored (CGROUP_DELETE_IGNORE_MIGRATION) or not (0).
- * @returns 0 on success, >0 on error.
+ * @return 0 on success, >0 on error.
  */
 static int cg_delete_cgrp_controller(char *cgrp_name, char *controller, FILE *target_tasks,
 				     int flags)
@@ -4411,7 +4411,7 @@ static struct cgroup_rule *cgroup_find_matching_rule_uid_gid(uid_t uid, gid_t gi
  *	@param gid The GID to match
  *	@param procname The PROCESS NAME to match
  *	@return Pointer to the first matching rule, or NULL if no match
- * TODO: Determine thread-safeness and fix if not safe.
+ * TODO: Determine thread safety and fix if not safe.
  */
 static struct cgroup_rule *cgroup_find_matching_rule(uid_t uid, gid_t gid, pid_t pid,
 						     const char *procname)
@@ -4680,9 +4680,9 @@ int cgroup_change_cgroup_flags(uid_t uid, gid_t gid, const char *procname, pid_t
 	}
 
 	/*
-	 * User had asked to find the matching rule (if one exist) in the
+	 * The user asked to find the matching rule (if one exists) in the
 	 * cached rules but the list might be empty due to the inactive
-	 * cgrulesengd. Lets emulate its behaviour of caching the rules by
+	 * cgrulesengd. Let's emulate its behavior of caching the rules by
 	 * reloading the rules from the configuration file.
 	 */
 	if ((flags & CGFLAG_USECACHE) && (rl.head == NULL)) {
@@ -4954,7 +4954,7 @@ finished:
 
 /**
  * Changes the cgroup of all running PIDs based on the rules in the config file.
- * If a rules exists for a PID, then the PID is placed in the correct group.
+ * If a rule exists for a PID, then the PID is placed in the correct group.
  *
  * This function may be called after creating new control groups to move
  * running PIDs into the newly created control groups.
@@ -6184,7 +6184,7 @@ int cgroup_register_unchanged_process(pid_t pid, int flags)
 
 	if (connect(sk, (struct sockaddr *)&addr,
 	    sizeof(addr.sun_family) + strlen(CGRULE_CGRED_SOCKET_PATH)) < 0) {
-		/* If the daemon does not work, this function returns 0 as success. */
+		/* If the daemon does not work, this function returns 0 (success). */
 		ret = 0;
 		goto close;
 	}
