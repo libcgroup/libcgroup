@@ -14,6 +14,7 @@
 
 int line_no = 1;
 jmp_buf parser_error_env;
+static char token_buf[FILENAME_MAX];
 
 #define YY_FATAL_ERROR(msg) \
 	do { \
@@ -37,17 +38,26 @@ jmp_buf parser_error_env;
 "namespace"	{return NAMESPACE;}
 "template"	{return TEMPLATE;}
 "systemd"     	{return SYSTEMD;}
-"default"	{yylval.name = strdup(yytext); return DEFAULT;}
-[a-zA-Z0-9_\-\/\.\,\%\@\\]+ {yylval.name = strdup(yytext); return ID;}
-\"[^"]*\"	{
-	if (yytext[0] != '\0' && yytext[1] != '\0') {
-		yylval.name = strdup(yytext+1); 
-		yylval.name[strlen(yylval.name)-1] = '\0';
-	} else {
-		yylval.name = strdup("");
-	} 
-	return ID;
-	} 
+"default"	{   
+    strncpy(token_buf, yytext, sizeof(token_buf)-1);  
+    token_buf[sizeof(token_buf)-1] = '\0';  
+    yylval.name = token_buf;   
+    return DEFAULT;  
+}  
+[a-zA-Z0-9_\-\/\.\,\%\@\\]+ {   
+    strncpy(token_buf, yytext, sizeof(token_buf)-1);  
+    token_buf[sizeof(token_buf)-1] = '\0';  
+    yylval.name = token_buf;   
+    return ID;  
+}   
+\"[^"]*\"	{     
+    int len = strlen(yytext) - 2;  
+    if (len >= sizeof(token_buf)) len = sizeof(token_buf) - 1;  
+    strncpy(token_buf, yytext+1, len);  
+    token_buf[len] = '\0';  
+    yylval.name = token_buf;   
+    return ID;   
+}
 .	{return yytext[0];}
 %%
 
