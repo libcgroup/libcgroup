@@ -3,7 +3,7 @@
  * Libcgroup extended cgxset.  Works with both cgroup v1 and v2
  *
  * Copyright (c) 2021-2022 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 #include "tools-common.h"
 #include "abstraction-common.h"

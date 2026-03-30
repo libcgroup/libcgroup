@@ -5,7 +5,7 @@
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from libcgroup import Version, Cgroup, Mode

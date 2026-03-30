@@ -4,7 +4,7 @@
 # Test to create a default systemd scope using cgcreate
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from process import Process

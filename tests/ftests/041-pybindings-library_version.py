@@ -4,7 +4,7 @@
 # get the library version using the python bindings
 #
 # Copyright (c) 2021-2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from libcgroup import Cgroup

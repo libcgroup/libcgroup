@@ -4,7 +4,7 @@
 # Test to get the cgroup mode
 #
 # Copyright (c) 2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup as CgroupCli

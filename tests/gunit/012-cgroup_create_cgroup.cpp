@@ -3,7 +3,7 @@
  * libcgroup googletest for cgroup_create_cgroup()
  *
  * Copyright (c) 2020 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include <dirent.h>

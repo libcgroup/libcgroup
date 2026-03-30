@@ -2,7 +2,7 @@ _SPDX-License-Identifier: LGPL-2.1-only_
 
 _Copyright (c) 2023 Oracle and/or its affiliates._
 
-_Author: Tom Hromatka <<tom.hromatka@oracle.com>>_
+_Author: Tom Hromatka <<tom.hromatka@gmail.com>>_
 
 
 # Creating a Systemd Scope and Child Hierarchy via Libcgroup Command Line

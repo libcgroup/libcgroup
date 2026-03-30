@@ -3,7 +3,7 @@
  * libcgroup googletest for cgroup_get_cgroup()
  *
  * Copyright (c) 2020 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include <bits/stdc++.h>
