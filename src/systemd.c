@@ -116,8 +116,11 @@ static int validate_scope_slice_name(const char * const scope_name, const char *
 
 	/* get the scope name without the suffix, min length is <n>.scope */
 	len = strlen(scope_name) - 6;
-	if (len < 1)
-		cgroup_warn("Invalid scope name %s\n", scope_name);
+	if (len < 1) {
+		cgroup_err("Invalid scope name %s\n", scope_name);
+		ret = 1;
+		goto out;
+	}
 	else if (strcmp(&scope_name[len], ".scope") != 0)
 		cgroup_warn("scope doesn't have expected suffix\n");
 
@@ -147,6 +150,7 @@ static int validate_scope_slice_name(const char * const scope_name, const char *
 		goto out;
 	}
 
+	/* cannot underflow as it has been checked earlier on scope_name */
 	len = strlen(_scope_name) - 6;	/* strlen(".scope") + '\0' */
 	_scope_name[len] = '\0';
 
