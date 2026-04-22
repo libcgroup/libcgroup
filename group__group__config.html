@@ -136,7 +136,7 @@ $(function(){ initResizable(false); });
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Physically create a new control group in kernel, based on given control group template and configuration file. If given template is not set in configuration file, then the procedure works create the control group using <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> function</p>
+<p>Physically create a new control group in kernel, based on given control group template and configuration file. If given template is not set in configuration file, then the procedure creates the control group using <a class="el" href="group__group__groups.html#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a> function</p>
 <p>Templates are loaded using cgroup_load_templates_cache_from_files function, which must be preceded by cgroup_templates_cache_set_source_files call.</p>
 <p>The flags can alter the behavior of this function: CGFLAG_USE_TEMPLATE_CACHE: Use cached templates instead of parsing the config file</p>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -218,7 +218,7 @@ $(function(){ initResizable(false); });
       </table>
 </div><div class="memdoc">
 <p>Delete all cgroups and unmount all mount points defined in specified config file.</p>
-<p>The groups are either removed recursively or only the empty ones, based on given flags. Mount point are always umounted only if they are empty, regardless of any flags.</p>
+<p>The groups are either removed recursively or only the empty ones, based on given flags. Mount points are always umounted only if they are empty, regardless of any flags.</p>
 <p>The groups are sorted before they are removed, so the removal of empty ones actually works (i.e. subgroups are removed first).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

@@ -89,7 +89,7 @@ $(function(){ initResizable(false); });
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader">Simple task assignment</h2></td></tr>
-<tr><td class="ititle" colspan="2"><p>Applications can use following functions to simply put a task into given control group and find a groups where given tasks is. </p>
+<tr><td class="ititle" colspan="2"><p>Applications can use the following functions to put a task into a given control group and find groups where a given task is. </p>
 </td></tr>
 <tr class="memitem:ga221ec5280a475ef096b3604a2e4a32e7" id="r_ga221ec5280a475ef096b3604a2e4a32e7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga221ec5280a475ef096b3604a2e4a32e7">cgroup_attach_task</a> (struct <a class="el" href="structcgroup.html">cgroup</a> *cgrp)</td></tr>
 <tr class="separator:ga221ec5280a475ef096b3604a2e4a32e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -205,7 +205,7 @@ $(function(){ initResizable(false); });
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Move given threads (=thread) to given control group. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Move a given thread (=task) to the given control group. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cgroup</td><td>Destination control group. </td></tr>
     <tr><td class="paramname">tid</td><td>The task to move.</td></tr>
@@ -231,7 +231,7 @@ $(function(){ initResizable(false); });
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Changes the cgroup of all running PIDs based on the rules in the config file. If a rules exists for a PID, then the PID is placed in the correct group.</p>
+<p>Changes the cgroup of all running PIDs based on the rules in the config file. If a rule exists for a PID, then the PID is placed in the correct group.</p>
 <p>This function may be called after creating new control groups to move running PIDs into the newly created control groups. </p><dl class="section return"><dt>Returns</dt><dd>0 on success, &lt; 0 on error </dd></dl>
 
 </div>
@@ -281,7 +281,7 @@ $(function(){ initResizable(false); });
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo</a></b></dt><dd>Determine thread-safeness and fix of not safe. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo</a></b></dt><dd>Determine thread safety and fix if not safe. </dd></dl>
 
 </div>
 </div>
@@ -404,7 +404,7 @@ $(function(){ initResizable(false); });
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000017">Todo</a></b></dt><dd>Determine thread-safeness and fix if not safe. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000017">Todo</a></b></dt><dd>Determine thread safety and fix if not safe. </dd></dl>
 
 </div>
 </div>
@@ -435,7 +435,7 @@ $(function(){ initResizable(false); });
   <table class="params">
     <tr><td class="paramname">pid</td><td>The task to find. </td></tr>
     <tr><td class="paramname">controller</td><td>The controller (hierarchy), where to find the task. </td></tr>
-    <tr><td class="paramname">current_path</td><td>The path to control group, where the task has been found. The patch is relative to the root of the hierarchy. The caller must free this memory.</td></tr>
+    <tr><td class="paramname">current_path</td><td>The path to control group, where the task has been found. The path is relative to the root of the hierarchy. The caller must free this memory.</td></tr>
   </table>
   </dd>
 </dl>
@@ -457,7 +457,7 @@ $(function(){ initResizable(false); });
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Initializes the rules cache and load it from /etc/cgrules.conf. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000015">Todo</a></b></dt><dd>add parameter with the filename? </dd></dl>
+<p>Initializes the rules cache and loads it from /etc/cgrules.conf. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000015">Todo</a></b></dt><dd>add parameter with the filename? </dd></dl>
 <p>Initializes the rules cache. </p><dl class="section return"><dt>Returns</dt><dd>0 on success, &gt; 0 on error </dd></dl>
 
 </div>
@@ -509,7 +509,7 @@ $(function(){ initResizable(false); });
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Register the unchanged process to a cgrulesengd daemon. This process is never moved to another control group by the daemon. If the daemon does not work, this function returns 0 as success. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Register the unchanged process to a cgrulesengd daemon. This process is never moved to another control group by the daemon. If the daemon does not work, this function returns 0 (success). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">pid</td><td>The task id. </td></tr>
     <tr><td class="paramname">flags</td><td>Bit flags to change the behavior, as defined in cgroup_daemon_type </td></tr>

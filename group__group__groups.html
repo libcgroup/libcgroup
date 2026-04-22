@@ -629,7 +629,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <p>Physically create a control group in kernel. The group is created in all hierarchies, which cover controllers added by <a class="el" href="#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>. All parameters set by cgroup_add_value_* functions are written. The created groups has owner which was set by <a class="el" href="#ga51f539b526d2a4939f03f0b4d4ed9040">cgroup_set_uid_gid()</a> and permissions set by cgroup_set_permissions. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cgrp</td><td></td></tr>
-    <tr><td class="paramname">ignore_ownership</td><td>When nozero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
+    <tr><td class="paramname">ignore_ownership</td><td>When nonzero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
   </table>
   </dd>
 </dl>
@@ -669,8 +669,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><!-- fragment --> <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo</a></b></dt><dd>what is this good for? Why the list of controllers added by <a class="el" href="#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a> is not used, like in <a class="el" href="#ga74c5b4a1d3bc7729af1383c131254fbd">cgroup_create_cgroup()</a>? I can't create subgroup of root group in just one hierarchy with this function!</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgrp</td><td>The cgroup to create. Only it's name is used, everything else is discarded. </td></tr>
-    <tr><td class="paramname">ignore_ownership</td><td>When nozero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup to create. Only its name is used, everything else is discarded. </td></tr>
+    <tr><td class="paramname">ignore_ownership</td><td>When nonzero, all errors are ignored when setting owner of the group and/or its tasks file. </td></tr>
   </table>
   </dd>
 </dl>
@@ -708,7 +708,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cgrp</td><td></td></tr>
-    <tr><td class="paramname">ignore_migration</td><td>When nozero, all errors are ignored when migrating tasks from the group to the parent group. </td></tr>
+    <tr><td class="paramname">ignore_migration</td><td>When nonzero, all errors are ignored when migrating tasks from the group to the parent group. </td></tr>
   </table>
   </dd>
 </dl>
@@ -814,7 +814,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
 </div><!-- fragment --><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo</a></b></dt><dd>what is this function good for? Why is not considered only the list of controllers attached by <a class="el" href="#ga86b514fe6f99ded356eb5e799787f3f5">cgroup_add_controller()</a>? What owners will return <a class="el" href="#ga3b560f12d9d50c177cc48d5016c93412">cgroup_get_uid_gid()</a> if the group is in multiple hierarchies, each with different owner of tasks file?</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">cgrp</td><td>The cgroup to load. Only it's name is used, everything else is replaced. </td></tr>
+    <tr><td class="paramname">cgrp</td><td>The cgroup to load. Only its name is used, everything else is replaced. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1338,7 +1338,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>cgroup_convert_cgroup<
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Physically modify a control group in kernel. All parameters added by cgroup_add_value_ or cgroup_set_value_ are written. Currently it's not possible to change and owner of a group.</p>
+<p>Physically modify a control group in kernel. All parameters added by cgroup_add_value_ or cgroup_set_value_ are written. Currently it's not possible to change the owner of a group.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">cgrp</td><td></td></tr>
