@@ -7,7 +7,7 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup, Mode
 import consts
 import ftests
 import sys
@@ -26,9 +26,9 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    if CgroupVersion.get_version('memory') != CgroupVersion.CGROUP_V1:
+    if Cgroup.get_cgroup_mode(config) == Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
-        cause = 'This test requires the cgroup v1 memory controller'
+        cause = 'This test requires the legacy/hybrid cgroup hierarchy'
 
     return result, cause
 
