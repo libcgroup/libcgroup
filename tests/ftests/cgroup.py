@@ -6,13 +6,13 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from container import ContainerError
 from controller import Controller
 from run import Run, RunError
 import multiprocessing as mp
 from libcgroup import Mode
 from enum import Enum
-import consts
 import utils
 import time
 import copy

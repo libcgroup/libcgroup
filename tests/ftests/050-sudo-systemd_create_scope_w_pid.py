@@ -7,6 +7,7 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from cgroup import CgroupVersion
 from libcgroup import Cgroup
@@ -14,7 +15,6 @@ from systemd import Systemd
 from process import Process
 from run import RunError
 import ftests
-import consts
 import sys
 import os
 

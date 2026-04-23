@@ -6,9 +6,9 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from container import Container
 from process import Process
-import consts
 import utils
 import os
 

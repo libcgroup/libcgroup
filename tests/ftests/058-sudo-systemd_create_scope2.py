@@ -8,13 +8,13 @@
 #
 
 from cgroup import CgroupVersion as CgroupCliVersion
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
 from systemd import Systemd
 from process import Process
 from run import RunError
 import ftests
-import consts
 import utils
 import stat
 import sys

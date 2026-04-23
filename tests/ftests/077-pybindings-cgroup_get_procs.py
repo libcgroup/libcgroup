@@ -7,10 +7,10 @@
 # Author: Tom Hromatka <tom.hromatka@oracle.com>
 #
 
+from distro import ConstsCommon as consts
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
 from process import Process
-import consts
 import ftests
 import sys
 import os
