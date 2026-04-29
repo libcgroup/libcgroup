@@ -4,7 +4,7 @@
 # cgxget functionality test - various cpuset settings
 #
 # Copyright (c) 2021-2025 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup, CgroupVersion

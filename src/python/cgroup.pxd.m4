@@ -3,7 +3,7 @@
 # Libcgroup Python Bindings
 #
 # Copyright (c) 2021-2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 # cython: language_level = 3str

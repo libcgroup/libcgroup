@@ -3,7 +3,7 @@
 # Libcgroup Python Bindings
 #
 # Copyright (c) 2021-2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 # cython: language_level = 3str
@@ -11,7 +11,7 @@
 """ Python bindings for the libcgroup library
 """
 
-__author__ = 'Tom Hromatka <tom.hromatka@oracle.com>'
+__author__ = 'Tom Hromatka <tom.hromatka@gmail.com>'
 __date__ = "25 October 2021"
 
 from posix.types cimport pid_t, mode_t

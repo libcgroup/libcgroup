@@ -6,7 +6,7 @@
 
 #
 # Copyright (c) 2021-2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from setuptools import Extension, setup
@@ -19,7 +19,7 @@ setup(
     description='Python bindings for libcgroup',
     url='https://github.com/libcgroup/libcgroup',
     maintainer='Tom Hromatka',
-    maintainer_email='tom.hromatka@oracle.com',
+    maintainer_email='tom.hromatka@gmail.com',
     license='LGPLv2.1',
     platforms='Linux',
 ifdef(`WITH_SYSTEMD',

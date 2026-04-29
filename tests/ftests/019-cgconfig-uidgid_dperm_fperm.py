@@ -4,7 +4,7 @@
 # cgconfigparser functionality test - '-a', '-d', '-f' flags
 #
 # Copyright (c) 2021 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from container import ContainerError

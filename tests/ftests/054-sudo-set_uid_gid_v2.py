@@ -4,7 +4,7 @@
 # Test to set the uid/gid on a cgroup v2 cgroup using the python bindings
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup as CgroupCli, CgroupVersion

@@ -3,7 +3,7 @@
  * Libcgroup abstraction layer mappings
  *
  * Copyright (c) 2021-2022 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include "abstraction-common.h"
