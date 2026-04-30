@@ -29,7 +29,7 @@ CGRP_VER_V1 = CgroupVersion.CGROUP_V1
 CGRP_VER_V2 = CgroupVersion.CGROUP_V2
 
 TABLE = [
-    # writesetting, writeval, writever, readsetting, readval, readver
+    # writesetting, writeval, writever, readsetting, readval, readver, optional
     ['cpu.shares', '512', CGRP_VER_V1, 'cpu.shares', '512', CGRP_VER_V1],
     ['cpu.shares', '512', CGRP_VER_V1, 'cpu.weight', '50',  CGRP_VER_V2],
 
@@ -59,7 +59,27 @@ TABLE = [
      'cpu.max',          'max 40000', CGRP_VER_V2],
     ['cpu.max',          'max 41000', CGRP_VER_V2,
      'cpu.cfs_quota_us', '-1',        CGRP_VER_V1],
+
+    ['cpu.cfs_burst_us', '5000', CGRP_VER_V1,
+     'cpu.cfs_burst_us', '5000', CGRP_VER_V1, True],
+    ['cpu.cfs_burst_us', '6000', CGRP_VER_V1,
+     'cpu.max.burst',    '6000', CGRP_VER_V2, True],
+    ['cpu.max.burst',    '7000', CGRP_VER_V2,
+     'cpu.max.burst',    '7000', CGRP_VER_V2, True],
+    ['cpu.max.burst',    '8000', CGRP_VER_V2,
+     'cpu.cfs_burst_us', '8000', CGRP_VER_V1, True],
 ]
+
+
+def _is_optional_unsupported(error):
+    unsupported_tokens = [
+        'requested group parameter does not exist',
+        'No such file or directory',
+        'Invalid argument',
+    ]
+
+    stderr = error.stderr or ''
+    return any(token in stderr for token in unsupported_tokens)
 
 
 def prereqs(config):
@@ -117,12 +137,19 @@ def test(config):
     cgrps = {SYSTEMD_CGNAME: False, OTHER_CGNAME: True}
     for i in cgrps:
         for entry in TABLE:
-            Cgroup.xset(config, cgname=i, setting=entry[0], value=entry[1],
-                        version=entry[2], ignore_systemd=cgrps[i])
+            optional = len(entry) > 6 and entry[6]
+            try:
+                Cgroup.xset(config, cgname=i, setting=entry[0], value=entry[1],
+                            version=entry[2], ignore_systemd=cgrps[i])
 
-            out = Cgroup.xget(config, cgname=i, setting=entry[3],
-                              version=entry[5], values_only=True,
-                              print_headers=False, ignore_systemd=cgrps[i])
+                out = Cgroup.xget(config, cgname=i, setting=entry[3],
+                                  version=entry[5], values_only=True,
+                                  print_headers=False, ignore_systemd=cgrps[i])
+            except RunError as re:
+                if optional and _is_optional_unsupported(re):
+                    continue
+                raise
+
             if out != entry[4]:
                 result = consts.TEST_FAILED
                 tmp_cause = (
