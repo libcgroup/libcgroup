@@ -68,6 +68,15 @@ TABLE = [
      'cpu.max.burst',    '7000', CGRP_VER_V2, True],
     ['cpu.max.burst',    '8000', CGRP_VER_V2,
      'cpu.cfs_burst_us', '8000', CGRP_VER_V1, True],
+
+    ['cpu.idle', '1', CGRP_VER_V1,
+     'cpu.idle', '1', CGRP_VER_V1, True],
+    ['cpu.idle', '0', CGRP_VER_V1,
+     'cpu.idle', '0', CGRP_VER_V2, True],
+    ['cpu.idle', '1', CGRP_VER_V2,
+     'cpu.idle', '1', CGRP_VER_V2, True],
+    ['cpu.idle', '0', CGRP_VER_V2,
+     'cpu.idle', '0', CGRP_VER_V1, True],
 ]
 
 
