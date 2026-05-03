@@ -25,6 +25,8 @@ const struct cgroup_abstraction_map cgroup_v1_to_v2_map[] = {
 	{cgroup_convert_cpu_quota_to_max, "cpu.cfs_quota_us", NULL, "cpu.max", NULL},
 	{cgroup_convert_cpu_period_to_max, "cpu.cfs_period_us", NULL, "cpu.max", NULL},
 	{cgroup_convert_passthrough, "cpu.idle", NULL, "cpu.idle", NULL},
+	{cgroup_convert_passthrough, "cpu.uclamp.min", NULL, "cpu.uclamp.min", NULL},
+	{cgroup_convert_passthrough, "cpu.uclamp.max", NULL, "cpu.uclamp.max", NULL},
 	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
@@ -59,6 +61,8 @@ const struct cgroup_abstraction_map cgroup_v2_to_v1_map[] = {
 	{cgroup_convert_cpu_max_to_quota, "cpu.max", NULL, "cpu.cfs_quota_us", NULL},
 	{cgroup_convert_cpu_max_to_period, "cpu.max", NULL, "cpu.cfs_period_us", NULL},
 	{cgroup_convert_passthrough, "cpu.idle", NULL, "cpu.idle", NULL},
+	{cgroup_convert_passthrough, "cpu.uclamp.min", NULL, "cpu.uclamp.min", NULL},
+	{cgroup_convert_passthrough, "cpu.uclamp.max", NULL, "cpu.uclamp.max", NULL},
 	{cgroup_convert_unmappable, "cpu.stat", NULL, "cpu.stat", NULL},
 
 	/* cpuset controller */
