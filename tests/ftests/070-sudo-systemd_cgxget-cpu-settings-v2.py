@@ -77,6 +77,19 @@ TABLE = [
      'cpu.idle', '1', CGRP_VER_V2, True],
     ['cpu.idle', '0', CGRP_VER_V2,
      'cpu.idle', '0', CGRP_VER_V1, True],
+
+    ['cpu.uclamp.min', '50.00', CGRP_VER_V1,
+     'cpu.uclamp.min', '50.00', CGRP_VER_V1, True],
+    ['cpu.uclamp.min', '60.00', CGRP_VER_V1,
+     'cpu.uclamp.min', '60.00', CGRP_VER_V2, True],
+    ['cpu.uclamp.min', '70.00', CGRP_VER_V2,
+     'cpu.uclamp.min', '70.00', CGRP_VER_V1, True],
+    ['cpu.uclamp.max', '90.00', CGRP_VER_V1,
+     'cpu.uclamp.max', '90.00', CGRP_VER_V1, True],
+    ['cpu.uclamp.max', '80.00', CGRP_VER_V1,
+     'cpu.uclamp.max', '80.00', CGRP_VER_V2, True],
+    ['cpu.uclamp.max', '70.00', CGRP_VER_V2,
+     'cpu.uclamp.max', '70.00', CGRP_VER_V1, True],
 ]
 
 
