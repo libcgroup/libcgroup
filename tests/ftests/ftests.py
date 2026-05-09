@@ -8,10 +8,10 @@
 #
 
 from config import Config
+import distro as consts
 from run import Run
 import datetime
 import argparse
-import consts
 import time
 import log
 import sys
@@ -131,6 +131,7 @@ def parse_args():
                         )
 
     config = Config(parser.parse_args())
+    consts.configure_expected_profile(config)
 
     if config.args.skip is None or config.args.skip == '':
         pass
