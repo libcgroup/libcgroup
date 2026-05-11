@@ -8,7 +8,7 @@
 #
 
 from cgroup import Cgroup
-import consts
+import distro as consts
 import ftests
 import utils
 import sys

@@ -10,7 +10,7 @@
 from cgroup import Cgroup as Cgroup, Mode
 from process import Process
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import sys
 import os

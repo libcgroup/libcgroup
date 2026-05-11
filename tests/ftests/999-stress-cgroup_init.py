@@ -8,8 +8,8 @@
 #
 
 from libcgroup import Cgroup
+import distro as consts
 from run import Run
-import consts
 import ftests
 import random
 import string

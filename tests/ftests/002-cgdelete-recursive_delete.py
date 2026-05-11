@@ -9,7 +9,7 @@
 
 from cgroup import Cgroup, CgroupVersion
 from libcgroup import Mode
-import consts
+import distro as consts
 import ftests
 import sys
 import os

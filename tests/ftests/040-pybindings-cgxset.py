@@ -10,8 +10,8 @@
 from cgroup import CgroupVersion as CgroupCliVersion
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
+import distro as consts
 from run import Run
-import consts
 import ftests
 import sys
 import os

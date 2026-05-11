@@ -9,7 +9,7 @@
 
 from cgroup import CgroupVersion, Cgroup
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import sys
 import os
