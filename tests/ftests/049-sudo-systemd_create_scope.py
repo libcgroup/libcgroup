@@ -13,8 +13,8 @@ from libcgroup import Cgroup
 from systemd import Systemd
 from process import Process
 from run import RunError
+import distro as consts
 import ftests
-import consts
 import sys
 import os
 

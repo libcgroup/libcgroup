@@ -10,7 +10,7 @@
 from cgroup import Cgroup, CgroupVersion
 from systemd import Systemd
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import utils
 import sys
