@@ -36,24 +36,27 @@ def test(config):
     out = Cgroup.get(config, controller=[CONTROLLER1, CONTROLLER2],
                      cgname=CGNAME)
     version = CgroupVersion.get_version(CONTROLLER1)
+    pids_expected = consts.get_expected_pids_out(config)
 
     if version == CgroupVersion.CGROUP_V1:
+        cpu_expected = consts.get_expected_cpu_out_v1(config)
         # Append pid controller [0] and cpu controller [N - 2]
-        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                        for expected_out in consts.EXPECTED_CPU_OUT_V1[:-2]]
+        EXPECTED_OUT = [OUT_PREFIX + pids_expected[0] + expected_out
+                        for expected_out in cpu_expected[:-2]]
         # Append pid controller [1] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V1[-2:])
+        EXPECTED_OUT.extend(OUT_PREFIX + pids_expected[1] + expected_out
+                            for expected_out in cpu_expected[-2:])
     else:
+        cpu_expected = consts.get_expected_cpu_out_v2(config)
         # Append pid controller [0] and cpu controller [N - 2]
-        EXPECTED_OUT = [OUT_PREFIX + consts.EXPECTED_PIDS_OUT[0] + expected_out
-                        for expected_out in consts.EXPECTED_CPU_OUT_V2[:-2]]
+        EXPECTED_OUT = [OUT_PREFIX + pids_expected[0] + expected_out
+                        for expected_out in cpu_expected[:-2]]
         # Append pid controller [1] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[1] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
+        EXPECTED_OUT.extend(OUT_PREFIX + pids_expected[1] + expected_out
+                            for expected_out in cpu_expected[-2:])
         # Append pid controller [2] and cpu controller [N, N - 1]
-        EXPECTED_OUT.extend(OUT_PREFIX + consts.EXPECTED_PIDS_OUT[2] + expected_out
-                            for expected_out in consts.EXPECTED_CPU_OUT_V2[-2:])
+        EXPECTED_OUT.extend(OUT_PREFIX + pids_expected[2] + expected_out
+                            for expected_out in cpu_expected[-2:])
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):
