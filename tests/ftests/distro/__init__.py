@@ -90,6 +90,29 @@ def get_active_profile():
     return _active_distro
 
 
-_set_profile(_active_profile)
+def get_profile(config=None):
+    """Return the selected profile object and distro name."""
+    if config is None:
+        return _active_profile, _active_distro
+
+    return DISTRO_SELECTOR.resolve(config=config)
+
+
+def get_expected_cpu_out_v1(config=None):
+    """Return expected cpu output variants for cgroup v1."""
+    profile, _ = get_profile(config=config)
+    return list(profile.expected_cpu_out_v1)
+
+
+def get_expected_cpu_out_v2(config=None):
+    """Return expected cpu output variants for cgroup v2."""
+    profile, _ = get_profile(config=config)
+    return list(profile.expected_cpu_out_v2)
+
+
+def get_expected_pids_out(config=None):
+    """Return expected pids output variants."""
+    profile, _ = get_profile(config=config)
+    return list(profile.expected_pids_out)
 
 # vim: set et ts=4 sw=4:
