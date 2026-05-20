@@ -57,20 +57,6 @@ DISTRO_SELECTOR = DistroConstsSelector(
 _active_distro = DISTRO_SELECTOR.default_distro
 _active_profile = SUPPORTED_DISTROS[_active_distro]
 
-EXPECTED_CPU_OUT_V1 = []
-EXPECTED_CPU_OUT_V2 = []
-EXPECTED_PIDS_OUT = []
-
-
-def _set_profile(profile):
-    global EXPECTED_CPU_OUT_V1
-    global EXPECTED_CPU_OUT_V2
-    global EXPECTED_PIDS_OUT
-
-    EXPECTED_CPU_OUT_V1 = list(profile.expected_cpu_out_v1)
-    EXPECTED_CPU_OUT_V2 = list(profile.expected_cpu_out_v2)
-    EXPECTED_PIDS_OUT = list(profile.expected_pids_out)
-
 
 def configure_expected_profile(config=None):
     """Configure expected output constants for the detected distro profile."""
@@ -80,7 +66,6 @@ def configure_expected_profile(config=None):
     profile, distro = DISTRO_SELECTOR.resolve(config=config)
     _active_profile = profile
     _active_distro = distro
-    _set_profile(profile)
 
     return _active_distro
 
