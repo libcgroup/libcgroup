@@ -8,9 +8,9 @@
 
 from run import Run, RunError
 from queue import Queue
+import distro as consts
 import threading as tp
 from log import Log
-import consts
 import time
 import os
 

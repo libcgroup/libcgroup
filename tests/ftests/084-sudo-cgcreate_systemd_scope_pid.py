@@ -12,7 +12,7 @@ from systemd import Systemd
 from libcgroup import Mode
 from cgroup import Cgroup
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import sys
 import os

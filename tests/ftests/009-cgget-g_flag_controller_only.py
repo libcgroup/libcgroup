@@ -8,7 +8,7 @@
 #
 
 from cgroup import Cgroup, CgroupVersion
-import consts
+import distro as consts
 import ftests
 import utils
 import sys
@@ -35,9 +35,11 @@ def test(config):
     version = CgroupVersion.get_version(CONTROLLER)
 
     if version == CgroupVersion.CGROUP_V1:
-        EXPECTED_OUT = [OUT_PREFIX + expected_out for expected_out in consts.EXPECTED_CPU_OUT_V1]
+        cpu_expected = consts.get_expected_cpu_out_v1(config)
+        EXPECTED_OUT = [OUT_PREFIX + expected_out for expected_out in cpu_expected]
     else:
-        EXPECTED_OUT = [OUT_PREFIX + expected_out for expected_out in consts.EXPECTED_CPU_OUT_V2]
+        cpu_expected = consts.get_expected_cpu_out_v2(config)
+        EXPECTED_OUT = [OUT_PREFIX + expected_out for expected_out in cpu_expected]
 
     for expected_out in EXPECTED_OUT:
         if len(out.splitlines()) == len(expected_out.splitlines()):

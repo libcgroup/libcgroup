@@ -12,7 +12,7 @@ from cgroup import Cgroup
 from process import Process
 from libcgroup import Mode
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import sys
 import os

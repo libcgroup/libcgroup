@@ -8,7 +8,7 @@
 
 from container import Container
 from process import Process
-import consts
+import distro as consts
 import utils
 import os
 

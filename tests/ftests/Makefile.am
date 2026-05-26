@@ -11,7 +11,12 @@ TESTS =
 EXTRA_DIST_PYTHON_UTILS = \
 			  cgroup.py \
 			  config.py \
-			  consts.py \
+			  distro/__init__.py \
+			  distro/consts_abstract.py \
+			  distro/consts_distro.py \
+			  distro/consts_exceptions.py \
+			  distro/consts_oracle.py \
+			  distro/consts_ubuntu.py \
 			  container.py \
 			  controller.py \
 			  ftests.py \

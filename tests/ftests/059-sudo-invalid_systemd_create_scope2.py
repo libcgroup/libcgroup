@@ -10,8 +10,8 @@
 from cgroup import CgroupVersion as CgroupCliVersion
 from libcgroup import Cgroup, Version
 from systemd import Systemd
+import distro as consts
 import ftests
-import consts
 import sys
 import os
 

@@ -11,8 +11,8 @@ from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
 from cgroup import CgroupVersion
 from process import Process
+import distro as consts
 import ftests
-import consts
 import sys
 import os
 

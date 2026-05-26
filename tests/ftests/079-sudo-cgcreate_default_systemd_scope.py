@@ -12,8 +12,8 @@ from systemd import Systemd
 from libcgroup import Mode
 from cgroup import Cgroup
 from run import RunError
+import distro as consts
 from log import Log
-import consts
 import ftests
 import sys
 import os

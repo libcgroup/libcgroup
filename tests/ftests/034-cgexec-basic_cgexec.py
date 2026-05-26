@@ -9,7 +9,7 @@
 
 from process import Process
 from cgroup import Cgroup
-import consts
+import distro as consts
 import ftests
 import sys
 import os

@@ -4,11 +4,15 @@
 AUTOMAKE_SKIPPED=77
 AUTOMAKE_HARD_ERROR=99
 
+# Only ubuntu (or ubuntu based distro's with lxc support) currently supported
+grep "Ubuntu" /etc/os-release || exit 0
+
 START_DIR=$PWD
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 if [ "$START_DIR" != "$SCRIPT_DIR" ]; then
 	cp "$SCRIPT_DIR"/*.py "$START_DIR"
+	cp -r "$SCRIPT_DIR"/distro "$START_DIR"
 fi
 
 PYTHON_LIBRARY_PATH=(../../src/python/build/lib*)
@@ -25,6 +29,7 @@ RET=$?
 if [ "$START_DIR" != "$SCRIPT_DIR" ]; then
 	rm -f "$START_DIR"/*.py
 	rm -fr "$START_DIR"/__pycache__
+	rm -fr "$START_DIR"/distro
 	rm -f ftests-container.py.log
 fi
 

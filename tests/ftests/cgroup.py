@@ -11,8 +11,8 @@ from controller import Controller
 from run import Run, RunError
 import multiprocessing as mp
 from libcgroup import Mode
+import distro as consts
 from enum import Enum
-import consts
 import utils
 import time
 import copy

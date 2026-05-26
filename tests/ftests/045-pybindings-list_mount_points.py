@@ -8,7 +8,7 @@
 #
 
 from libcgroup import Cgroup, Version
-import consts
+import distro as consts
 import ftests
 import sys
 import os

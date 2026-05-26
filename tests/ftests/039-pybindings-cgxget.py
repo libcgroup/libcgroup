@@ -10,7 +10,7 @@
 from cgroup import Cgroup as CgroupCli
 from libcgroup import Cgroup, Version
 from cgroup import CgroupVersion
-import consts
+import distro as consts
 import ftests
 import sys
 import os

@@ -10,7 +10,7 @@
 from cgroup import Cgroup, CgroupVersion
 from container import ContainerError
 from run import Run, RunError
-import consts
+import distro as consts
 import ftests
 import utils
 import sys

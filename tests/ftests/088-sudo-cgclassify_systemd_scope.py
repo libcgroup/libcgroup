@@ -11,7 +11,7 @@ from process import Process
 from systemd import Systemd
 from cgroup import Cgroup
 from run import RunError
-import consts
+import distro as consts
 import ftests
 import time
 import sys
