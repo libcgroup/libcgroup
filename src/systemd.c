@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-2.1-only */
 /**
  * Copyright (c) 2022 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  * Author: Silvia Chapa <silvia.chapa@oracle.com>
  */
 

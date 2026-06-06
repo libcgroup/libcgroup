@@ -4,7 +4,7 @@
 # Test to exercise that libcgroup properly handles cgroups that are marked as "domain invalid"
 #
 # Copyright (c) 2023 Oracle and/or its affiliates
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup as Cgroup, Mode

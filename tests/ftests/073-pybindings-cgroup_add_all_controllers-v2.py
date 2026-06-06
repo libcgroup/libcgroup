@@ -4,7 +4,7 @@
 # cgroup_add_all_controllers() test using the python bindings
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from libcgroup import Cgroup, Version, Mode

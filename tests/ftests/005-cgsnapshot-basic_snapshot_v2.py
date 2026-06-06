@@ -4,7 +4,7 @@
 # Basic cgsnapshot functionality test
 #
 # Copyright (c) 2020 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup, CgroupVersion

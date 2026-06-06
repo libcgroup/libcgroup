@@ -4,7 +4,7 @@
 # Basic cgget functionality test
 #
 # Copyright (c) 2019 Oracle and/or its affiliates.  All rights reserved.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from cgroup import Cgroup, CgroupVersion

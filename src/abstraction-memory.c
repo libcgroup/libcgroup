@@ -3,7 +3,7 @@
  * Libcgroup abstraction layer for the memory controller
  *
  * Copyright (c) 2021-2025 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include "abstraction-common.h"

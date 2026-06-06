@@ -3,7 +3,7 @@
 # Action to collate the libcgroup code coverage data
 #
 # Copyright (c) 2021-2022 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 name: Collate code coverage results

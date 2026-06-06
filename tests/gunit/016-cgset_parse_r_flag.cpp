@@ -3,7 +3,7 @@
  * libcgroup googletest for parse_r_flag() in cgset
  *
  * Copyright (c) 2021 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include <ftw.h>

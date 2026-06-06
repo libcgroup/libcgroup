@@ -3,7 +3,7 @@
 # libcgroup functional tests Makefile.am
 #
 # Copyright (c) 2019-2025 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 TESTS =

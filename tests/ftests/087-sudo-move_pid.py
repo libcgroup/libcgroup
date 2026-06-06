@@ -4,7 +4,7 @@
 # Test to move a pid to a cgroup
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 from libcgroup import Cgroup, Mode, Version

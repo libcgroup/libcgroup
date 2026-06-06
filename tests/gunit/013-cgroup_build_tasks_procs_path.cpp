@@ -3,7 +3,7 @@
  * libcgroup googletest for cgroup_build_tasks_procs_path()
  *
  * Copyright (c) 2020 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include "gtest/gtest.h"

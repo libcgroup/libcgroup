@@ -3,7 +3,7 @@
  * libcgroup googletest for get_next_rule_field()
  *
  * Copyright (c) 2025 Oracle and/or its affiliates.
- * Author: Tom Hromatka <tom.hromatka@oracle.com>
+ * Author: Tom Hromatka <tom.hromatka@gmail.com>
  */
 
 #include <ftw.h>

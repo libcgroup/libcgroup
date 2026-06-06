@@ -4,7 +4,7 @@
 # Advanced cgget functionality test - '-b' '-g' <controller> (cgroup v1)
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 
 from cgroup import Cgroup, CgroupVersion

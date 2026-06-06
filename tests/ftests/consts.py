@@ -3,7 +3,7 @@
 # Constants for the libcgroup functional tests
 #
 # Copyright (c) 2019-2021 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 import os

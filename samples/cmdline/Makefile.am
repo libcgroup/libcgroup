@@ -3,7 +3,7 @@
 # libcgroup cmdline samples Makefile.am
 #
 # Copyright (c) 2023 Oracle and/or its affiliates.
-# Author: Tom Hromatka <tom.hromatka@oracle.com>
+# Author: Tom Hromatka <tom.hromatka@gmail.com>
 #
 
 if WITH_SAMPLES
