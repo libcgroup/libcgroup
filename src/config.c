@@ -1809,13 +1809,16 @@ int cgroup_add_cgroup_templates(int offset)
  */
 int cgroup_expand_template_table(void)
 {
+	struct cgroup *new_template_table;
 	int i;
 
-	template_table = realloc(template_table,
+	new_template_table = realloc(template_table,
 				 (template_table_index + config_template_table_index)
 				 *sizeof(struct cgroup));
-	if (template_table == NULL)
+	if (new_template_table == NULL)
 		return -ECGOTHER;
+
+	template_table = new_template_table;
 
 	for (i = 0; i < config_template_table_index; i++)
 		template_table[i + template_table_index].index = 0;
