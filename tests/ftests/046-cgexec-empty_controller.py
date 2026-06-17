@@ -6,7 +6,7 @@
 # Author: Kamalesh Babulal <kamalesh.babulal@oracle.com>
 #
 
-from cgroup import Cgroup, CgroupVersion
+from cgroup import Cgroup, Mode
 from process import Process
 import consts
 import ftests
@@ -21,9 +21,9 @@ def prereqs(config):
     result = consts.TEST_PASSED
     cause = None
 
-    if CgroupVersion.get_version(CONTROLLER) != CgroupVersion.CGROUP_V2:
+    if Cgroup.get_cgroup_mode(config) != Mode.CGROUP_MODE_UNIFIED:
         result = consts.TEST_SKIPPED
-        cause = 'This test requires cgroup v2'
+        cause = 'This test requires the unified cgroup hierarchy'
 
     return result, cause
 
