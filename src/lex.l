@@ -29,14 +29,14 @@ jmp_buf parser_error_env;
 [ \t]	{/* DO NOTHING */}
 ^[ \t]*#.*[ \t]*  {/* Comments */}
 ^\*.*[ \t]* {/* Comments */}
-"mount"		{return MOUNT;}
-"task"		{return TASK;}
-"admin"		{return ADMIN;}
-"perm"		{return PERM;}
-"group"		{return GROUP;}
-"namespace"	{return NAMESPACE;}
-"template"	{return TEMPLATE;}
-"systemd"     	{return SYSTEMD;}
+"mount"		{yylval.name = NULL; return MOUNT;}
+"task"		{yylval.name = NULL; return TASK;}
+"admin"		{yylval.name = NULL; return ADMIN;}
+"perm"		{yylval.name = NULL; return PERM;}
+"group"		{yylval.name = NULL; return GROUP;}
+"namespace"	{yylval.name = NULL; return NAMESPACE;}
+"template"	{yylval.name = NULL; return TEMPLATE;}
+"systemd"     	{yylval.name = NULL; return SYSTEMD;}
 "default"	{yylval.name = strdup(yytext); return DEFAULT;}
 [a-zA-Z0-9_\-\/\.\,\%\@\\]+ {yylval.name = strdup(yytext); return ID;}
 \"[^"]*\"	{

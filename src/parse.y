@@ -44,6 +44,8 @@ int yywrap(void)
 %type <val> admin_conf task_conf task_or_admin group_conf group start
 %type <val> namespace namespace_conf default default_conf
 %type <values> namevalue_conf
+%destructor { if ($$) cgroup_dictionary_free($$); } <values>
+%destructor { if ($$) free($$); } <name>
 %type <val> template template_conf
 %type <val> template_task_or_admin template_task_namevalue_conf
 %type <val> template_admin_namevalue_conf template_task_conf
@@ -102,7 +104,7 @@ group   :       GROUP group_name '{' group_conf '}'
 	{
 		$$ = $4;
 		if ($$) {
-			$$ = cgroup_config_insert_cgroup($2);
+			$$ = cgroup_config_insert_cgroup(strdup($2));
 			if (!$$) {
 				fprintf(stderr, "failed to insert group check size and memory");
 				$$ = ECGOTHER;
@@ -119,17 +121,17 @@ group   :       GROUP group_name '{' group_conf '}'
 group_name
 	:	ID
 	{
-		$$ = $1;
+		$$ = strdup($1);
 	}
 	|	DEFAULT
 	{
-		$$ = $1;
+		$$ = strdup($1);
 	}
 
 group_conf
         :       ID '{' namevalue_conf '}'
 	{
-		$$ = cgroup_config_parse_controller_options($1, $3);
+		$$ = cgroup_config_parse_controller_options(strdup($1), $3);
 		cgroup_dictionary_free($3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
@@ -139,7 +141,7 @@ group_conf
 	}
         |       group_conf ID '{' namevalue_conf '}'
 	{
-		$$ = cgroup_config_parse_controller_options($2, $4);
+		$$ = cgroup_config_parse_controller_options(strdup($2), $4);
 		cgroup_dictionary_free($4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
@@ -162,7 +164,7 @@ template  :     TEMPLATE ID '{' template_conf '}'
 	{
 		$$ = $4;
 		if ($$) {
-			$$ = template_config_insert_cgroup($2);
+			$$ = template_config_insert_cgroup(strdup($2));
 			if (!$$) {
 				fprintf(stderr, "parsing failed at line number %d\n", line_no);
 				$$ = ECGOTHER;
@@ -180,7 +182,7 @@ template  :     TEMPLATE ID '{' template_conf '}'
 template_conf
 	:       ID '{' namevalue_conf '}'
 	{
-		$$ = template_config_parse_controller_options($1, $3);
+		$$ = template_config_parse_controller_options(strdup($1), $3);
 		cgroup_dictionary_free($3);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
@@ -190,7 +192,7 @@ template_conf
 	}
 	|       template_conf ID '{' namevalue_conf '}'
 	{
-		$$ = template_config_parse_controller_options($2, $4);
+		$$ = template_config_parse_controller_options(strdup($2), $4);
 		cgroup_dictionary_free($4);
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
@@ -238,7 +240,7 @@ namevalue_conf
 		int ret;
 		ret = cgroup_dictionary_create(&dict, 0);
 		if (ret == 0)
-			ret = cgroup_dictionary_add(dict, $1, $3);
+			ret = cgroup_dictionary_add(dict, strdup($1), strdup($3));
 		if (ret) {
 			fprintf(stderr, "parsing failed at line number %d:%s\n", line_no,
 				cgroup_strerror(ret));
@@ -251,7 +253,7 @@ namevalue_conf
         |       namevalue_conf ID '=' ID ';'
 	{
 		int ret = 0;
-		ret = cgroup_dictionary_add($1, $2, $4);
+		ret = cgroup_dictionary_add($1, strdup($2), strdup($4));
 		if (ret != 0) {
 			fprintf(stderr, "parsing failed at line number %d: %s\n", line_no,
 				cgroup_strerror(ret));
@@ -269,7 +271,7 @@ namevalue_conf
 task_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = cgroup_config_group_task_perm($1, $3);
+		$$ = cgroup_config_group_task_perm(strdup($1), strdup($3));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -278,7 +280,7 @@ task_namevalue_conf
 	}
         |       task_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && cgroup_config_group_task_perm($2, $4);
+		$$ = $1 && cgroup_config_group_task_perm(strdup($2), strdup($4));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -290,7 +292,7 @@ task_namevalue_conf
 admin_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = cgroup_config_group_admin_perm($1, $3);
+		$$ = cgroup_config_group_admin_perm(strdup($1), strdup($3));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -299,7 +301,7 @@ admin_namevalue_conf
 	}
         |       admin_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && cgroup_config_group_admin_perm($2, $4);
+		$$ = $1 && cgroup_config_group_admin_perm(strdup($2), strdup($4));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -311,7 +313,7 @@ admin_namevalue_conf
 template_task_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = template_config_group_task_perm($1, $3);
+		$$ = template_config_group_task_perm(strdup($1), strdup($3));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -320,7 +322,7 @@ template_task_namevalue_conf
 	}
         |       template_task_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && template_config_group_task_perm($2, $4);
+		$$ = $1 && template_config_group_task_perm(strdup($2), strdup($4));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -332,7 +334,7 @@ template_task_namevalue_conf
 template_admin_namevalue_conf
         :       ID '=' ID ';'
 	{
-		$$ = template_config_group_admin_perm($1, $3);
+		$$ = template_config_group_admin_perm(strdup($1), strdup($3));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -341,7 +343,7 @@ template_admin_namevalue_conf
 	}
         |       template_admin_namevalue_conf ID '=' ID ';'
 	{
-		$$ = $1 && template_config_group_admin_perm($2, $4);
+		$$ = $1 && template_config_group_admin_perm(strdup($2), strdup($4));
 		if (!$$) {
 			fprintf(stderr, "parsing failed at line number %d\n", line_no);
 			$$ = ECGCONFIGPARSEFAIL;
@@ -419,7 +421,7 @@ template_task_conf:	TASK '{' template_task_namevalue_conf '}'
 mountvalue_conf
         :       ID '=' ID ';'
 	{
-		if (!cgroup_config_insert_into_mount_table($1, $3)) {
+		if (!cgroup_config_insert_into_mount_table(strdup($1), strdup($3))) {
 			cgroup_config_cleanup_mount_table();
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
@@ -428,7 +430,7 @@ mountvalue_conf
 	}
         |       mountvalue_conf ID '=' ID ';'
 	{
-		if (!cgroup_config_insert_into_mount_table($2, $4)) {
+		if (!cgroup_config_insert_into_mount_table(strdup($2), strdup($4))) {
 			cgroup_config_cleanup_mount_table();
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
@@ -451,7 +453,7 @@ mount   :       MOUNT '{' mountvalue_conf '}'
 namespace_conf
         :       ID '=' ID ';'
 	{
-		if (!cgroup_config_insert_into_namespace_table($1, $3)) {
+		if (!cgroup_config_insert_into_namespace_table(strdup($1), strdup($3))) {
 			cgroup_config_cleanup_namespace_table();
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
@@ -460,7 +462,7 @@ namespace_conf
 	}
         |       namespace_conf ID '=' ID ';'
 	{
-		if (!cgroup_config_insert_into_namespace_table($2, $4)) {
+		if (!cgroup_config_insert_into_namespace_table(strdup($2), strdup($4))) {
 			cgroup_config_cleanup_namespace_table();
 			$$ = ECGCONFIGPARSEFAIL;
 			return $$;
