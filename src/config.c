@@ -1976,7 +1976,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_na
 				strncpy(t_cgroup->name, cgroup->name, FILENAME_MAX-1);
 				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
 
-				ret = cgroup_create_cgroup(t_cgroup, flags);
+				ret = cgroup_create_cgroup(t_cgroup, 0);
 
 				strncpy(t_cgroup->name, buffer,	FILENAME_MAX-1);
 				t_cgroup->name[sizeof(t_cgroup->name) - 1] = '\0';
@@ -2013,7 +2013,7 @@ int cgroup_config_create_template_group(struct cgroup *cgroup, char *template_na
 			fprintf(stderr, "cgroup %s can't be created\n", cgroup->name);
 			goto end;
 		}
-		ret = cgroup_create_cgroup(aux_cgroup, flags);
+		ret = cgroup_create_cgroup(aux_cgroup, 0);
 		if (ret) {
 			ret = ECGINVAL;
 			fprintf(stderr, "cgroup %s can't be created\n",	cgroup->name);
