@@ -18,14 +18,15 @@ extern "C" {
 #include <libcgroup.h>
 
 #include <pthread.h>
-#include <dirent.h>
 #include <limits.h>
-#include <mntent.h>
 #include <setjmp.h>
 #include <fts.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
+
+struct dirent;
+struct mntent;
 
 #define MAX_MNT_ELEMENTS	17	/* Maximum number of mount points/controllers */
 #define MAX_GROUP_ELEMENTS	128	/* Estimated number of groups created */
