@@ -31,7 +31,8 @@ int yywrap(void)
 
 %}
 
-%token <name> ID MOUNT GROUP PERM TASK ADMIN NAMESPACE DEFAULT TEMPLATE SYSTEMD
+%token <name> ID DEFAULT
+%token MOUNT GROUP PERM TASK ADMIN NAMESPACE TEMPLATE SYSTEMD
 
 %union {
 	char *name;
@@ -49,6 +50,8 @@ int yywrap(void)
 %type <val> template_admin_namevalue_conf template_task_conf
 %type <val> template_admin_conf
 %type <val> systemdvalue_conf systemd
+%destructor { free($$); } <name>
+%destructor { cgroup_dictionary_free($$); } <values>
 %start start
 %%
 
@@ -85,6 +88,7 @@ start   : start group
 default :       DEFAULT '{' default_conf '}'
 	{
 		$$ = $3;
+		free($1);
 		if ($$) {
 			cgroup_config_define_default();
 		}
