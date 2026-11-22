@@ -86,7 +86,7 @@ static int print_all_controllers_in_hierarchy(const char *tname, int hierarchy, 
 	struct controller_data info;
 	enum cg_version_t version;
 	cont_name_t cont_names = "\0";
-	cont_name_t cont_name;
+	cont_name_t cont_name = "\0";
 	int first = 1;
 	void *handle;
 	int ret = 0;
@@ -105,6 +105,8 @@ static int print_all_controllers_in_hierarchy(const char *tname, int hierarchy, 
 
 	while (ret != ECGEOF) {
 		ret = cgroup_get_controller_version(info.name, &version);
+		if (ret == ECGROUPNOTEXIST)
+			goto next;
 		if (ret)
 			goto end;
 
@@ -135,6 +137,10 @@ next:
 		if (ret && ret != ECGEOF)
 			goto end;
 	}
+
+	/* no mounted controller in this hierarchy */
+	if (first)
+		goto end;
 
 	ret = print_controller_mount(cont_name, flags, cont_names, hierarchy);
 end:
